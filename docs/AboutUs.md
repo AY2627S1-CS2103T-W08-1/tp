@@ -21,14 +21,14 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Project Advisor
 
-### Jane Doe
+### KohKoh-Nut
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/kohkoh-nut.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[homepage](https://kohkohnut.org/)]
+[[github](http://github.com/KohKoh-Nut)]
 
-* Role: Team Lead
+* Role: Developer
 * Responsibilities: UI
 
 ### Johnny Doe
