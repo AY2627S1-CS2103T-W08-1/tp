@@ -17,9 +17,9 @@ You can reach our team at the email `akoromy@gmail.com`
 <img src="images/jellehbelleh.png" width="200px">
 
 [[github](https://github.com/JellehBelleh)]
-[[portfolio](team/jellehbelleh.md)]
 
-* Role: Member 
+* Role: Developer
+* Responsibilities: Storage
 
 ### Solomon
 
@@ -29,13 +29,12 @@ You can reach our team at the email `akoromy@gmail.com`
 [[github](http://github.com/KohKoh-Nut)]
 
 * Role: Developer
-* Responsibilities: UI
 
 ### Raisa Nishat
 
 <img src="images/nraisa0408.png" width="200px">
 
-[[github](https://github.com/nraisa0408)] 
+[[github](https://github.com/nraisa0408)]
 
 * Role: Developer
 * Responsibilities: Data
