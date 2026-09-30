@@ -1,7 +1,7 @@
 {
   "baseUrl": "",
-  "titlePrefix": "MediConnect",
-  "titleSuffix": "AddressBook Level-3",
+  "titlePrefix": "",
+  "titleSuffix": "MediConnect",
   "faviconPath": "images/SeEduLogo.png",
   "style": {
     "codeTheme": "light"

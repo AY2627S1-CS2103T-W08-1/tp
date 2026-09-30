@@ -297,8 +297,39 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | user                                       | add a new person             |                                                                        |
 | `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
 | `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
+| `* *`    | caregiver                                  | edit a patient's profile details | correct or update their information as it changes |
+| `* *`    | caregiver                                  | find a patient by name | locate their profile quickly without scrolling through the whole list |
+| `* *`    | new user                                   | view a list of all available commands | learn how to use the app quickly |
+| `* *`    | expert user                                | add a patient with all their details in a single command | work faster without going through multi-step prompts |
+| `* *`    | caregiver                                  | archive a patient's profile instead of deleting it | keep their history without cluttering my active list |
+| `* *`    | caregiver                                  | add a healthcare or emergency contact to a patient's profile | know who to reach for specific needs |
+| `* *`    | caregiver                                  | edit a contact's details | keep contact information current |
+| `* *`    | caregiver                                  | delete a contact from a patient's profile | stop outdated contacts from cluttering the record |
+| `* *`    | caregiver                                  | attach a note to a contact | remember specific advice from each provider |
+| `* *`    | caregiver                                  | see which medications are due today | give them to the patient on time |
+| `* *`    | caregiver                                  | view a patient's full medication schedule at once | spot overlaps or issues easily |
+| `* *`    | caregiver                                  | add an appointment for a patient | keep track of upcoming visits |
+| `* *`    | caregiver                                  | see a list of upcoming appointments across all patients | plan my schedule |
+| `* *`    | caregiver                                  | record notes after an appointment | remember what was discussed for future reference |
+| `* *`    | caregiver                                  | view a patient's appointment history | see their past visits at a glance |
+| `* *`    | caregiver                                  | see a daily summary of everything due today across all patients | check all my responsibilities in one place |
+| `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
+| `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
+| `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
+| `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
+| `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
+| `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
+| `*`      | caregiver                                  | set a reminder for an appointment | remember to bring the patient to it |
+| `*`      | caregiver                                  | mark a care instruction as completed for the day | keep track of my daily caregiving routine |
+| `*`      | caregiver                                  | flag a task as urgent | make critical care items stand out from routine ones |
+| `*`      | caregiver                                  | log a symptom observation for a patient | track changes in their health over time |
+| `*`      | caregiver                                  | view a timeline of a patient's past symptom observations | identify patterns to raise with a doctor |
+| `*`      | caregiver with many patients               | filter patients by a medical condition | see everyone affected by a particular condition at once |
+| `*`      | caregiver with many patients               | sort patients by their next appointment or medication due | prioritise the patients who need attention soonest |
+| `*`      | caregiver                                  | pin the contacts I reach most often to the top of the list | find them faster |
+| `*`      | caregiver                                  | attach a photo of a document, such as a referral letter, to a patient's record | stop keeping track of the paper copy |
+| `*`      | caregiver                                  | see when a contact's details were last updated | tell at a glance whether they may be out of date |
+| `*`      | caregiver who travels for work             | give a family member temporary access to a patient's records | let them take over care while I am away |
 
 *{More to be added}*
 
@@ -329,15 +360,69 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 2.
 
+**Use case: UC3 - Add care information to a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients
+2.  MediConnect shows a list of patients
+3.  Caregiver requests to add care information (medications, allergens and/or care instructions) to a specific patient in the list
+4.  MediConnect adds the care information to the patient's record and shows the entries that were added
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 3b. No care information is given.
+
+    * 3b1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 3c. One of the given entries is blank.
+
+    * 3c1. MediConnect shows an error message and does not add any of the entries.
+
+      Use case resumes at step 2.
+
+* 3d. Some of the given entries already exist in the patient's record.
+
+    * 3d1. MediConnect adds only the new entries and tells the caregiver which entries were not added again.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
-2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
+2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
+3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
+4. MediConnect must store its data locally in a human-editable text file, with at least the same level of manual-editing support as AddressBook Level 3.
+5. MediConnect must not use a database management system.
+6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
+7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and update the displayed results within one second when managing up to 100 patient records on a typical modern computer.
+8. A user with above-average typing speed for regular English text should be able to perform common record-management tasks faster using commands than using mouse interactions.
+9. MediConnect's GUI should work without resolution-related inconvenience at resolutions of 1920x1080 or higher with 100% or 125% display scaling. All functions must remain accessible at resolutions of 1280x720 or higher with display scaling up to 150%.
 
 ### Glossary
 
