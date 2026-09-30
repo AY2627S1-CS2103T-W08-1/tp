@@ -7,7 +7,7 @@
 
 We are a team based in the [School of Computing, National University of Singapore](http://www.comp.nus.edu.sg).
 
-You can reach us at the email `gp@gmail.com`
+You can reach us at the email `e1591059@u.nus.edu`
 
 ## Project team
 
@@ -16,9 +16,9 @@ You can reach us at the email `gp@gmail.com`
 <img src="images/jellehbelleh.png" width="200px">
 
 [[github](https://github.com/JellehBelleh)]
-[[portfolio](team/jellehbelleh.md)]
 
-* Role: Member 
+* Role: Developer
+* Responsibilities: Storage
 
 ### Solomon
 
@@ -28,13 +28,12 @@ You can reach us at the email `gp@gmail.com`
 [[github](http://github.com/KohKoh-Nut)]
 
 * Role: Developer
-* Responsibilities: UI
 
 ### Raisa Nishat
 
 <img src="images/nraisa0408.png" width="200px">
 
-[[github](https://github.com/nraisa0408)] 
+[[github](https://github.com/nraisa0408)]
 
 * Role: Developer
 * Responsibilities: Data
