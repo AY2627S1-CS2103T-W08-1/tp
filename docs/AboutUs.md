@@ -55,3 +55,4 @@ You can reach our team at the email `akoromy@gmail.com`
 [[github](https://github.com/Gauhet)]
 
 * Role: Developer
+* Responsibilities: Completing assigned weekly tasks
