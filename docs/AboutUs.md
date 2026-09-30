@@ -35,7 +35,7 @@ You can reach us at the email `mingxuandidi@gmail.com`
 
 <img src="images/nraisa0408.png" width="200px">
 
-[[github](https://github.com/nraisa0408)] 
+[[github](https://github.com/nraisa0408)]
 
 * Role: Developer
 * Responsibilities: Data
