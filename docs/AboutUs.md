@@ -7,7 +7,7 @@
 
 We are a team based in the [School of Computing, National University of Singapore](http://www.comp.nus.edu.sg).
 
-You can reach us at the email `me@kohkohnut.org`
+You can reach us at the email `mingxuandidi@gmail.com`
 
 ## Project team
 
@@ -17,7 +17,8 @@ You can reach us at the email `me@kohkohnut.org`
 
 [[github](https://github.com/JellehBelleh)]
 
-* Role: Member 
+* Role: Developer
+* Responsibilities: Storage
 
 ### Solomon
 
@@ -32,7 +33,7 @@ You can reach us at the email `me@kohkohnut.org`
 
 <img src="images/nraisa0408.png" width="200px">
 
-[[github](https://github.com/nraisa0408)] 
+[[github](https://github.com/nraisa0408)]
 
 * Role: Developer
 * Responsibilities: Data
