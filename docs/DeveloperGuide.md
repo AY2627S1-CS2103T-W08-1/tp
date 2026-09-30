@@ -270,13 +270,21 @@ _{Explain here how the data archiving feature will be implemented}_
 
 **Target user profile**:
 
-* is a clinic receptionist or administrative staff member who manages a significant number of patient contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
+MediConnect is primarily for chronically ill patients and family caregivers in Singapore who coordinate care for
+elderly or chronically ill patients. Community nurses conducting home visits are a secondary user group. A typical
+user:
 
-**Value proposition**: Manage patient contact details faster than with a typical mouse-driven GUI application.
+* manages care information across multiple healthcare providers and emergency contacts
+* needs to track patient profiles, conditions, allergies, medications, appointments, and care instructions
+* currently relies on fragmented sources such as messaging threads, paper notes, and memory
+* needs quick access to accurate information during daily care, handovers, appointments, and emergencies
+* is comfortable with everyday applications but may not be technically proficient
+* prefers a local desktop application with a fast, keyboard-first workflow
+
+**Value proposition**: MediConnect centralizes patient profiles, care contacts, medical notes, appointment history,
+medication schedules, and care instructions in one local desktop application. It gives patients and caregivers a
+single, quickly accessible source of care information, reducing the risk of important details being missed and
+making day-to-day coordination and care handovers easier.
 
 
 ### User stories
