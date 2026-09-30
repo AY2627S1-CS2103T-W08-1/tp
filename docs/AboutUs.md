@@ -7,7 +7,7 @@
 
 We are a team based in the [School of Computing, National University of Singapore](http://www.comp.nus.edu.sg).
 
-You can reach us at the email `seer[at]comp.nus.edu.sg`
+You can reach us at the email `me@kohkohnut.org`
 
 ## Project team
 
@@ -16,7 +16,6 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 <img src="images/jellehbelleh.png" width="200px">
 
 [[github](https://github.com/JellehBelleh)]
-[[portfolio](team/jellehbelleh.md)]
 
 * Role: Member 
 
@@ -28,7 +27,6 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](http://github.com/KohKoh-Nut)]
 
 * Role: Developer
-* Responsibilities: UI
 
 ### Raisa Nishat
 
