@@ -3,13 +3,23 @@
 
 ![Ui](docs/images/Ui.png)
 
-* This is **a sample project for Software Engineering (SE) students**.<br>
-  Example usages:
-  * as a starting point of a course project (as opposed to writing everything from scratch)
-  * as a case study
-* The project simulates an ongoing software project for a desktop application (called _AddressBook_) used for managing contact details.
-  * It is **written in an object-oriented programming (OOP) style** and provides a **reasonably well-written** codebase of about 6 KLoC. It is **larger** than what students typically write in beginner-level software-engineering modules, without being overwhelming.
-  * It comes with a **reasonable level of user and developer documentation**.
-* It is named `AddressBook Level 3` (`AB3` for short) because it was initially created as a part of a series of `AddressBook` projects (`Level 1`, `Level 2`, `Level 3` ...).
-* For the detailed documentation of this project, see the **[Address Book Product Website](https://se-education.org/addressbook-level3)**.
-This project is based on the AddressBook-Level3 project created by the [SE-EDU initiative](https://se-education.org).
+# MediConnect
+
+MediConnect is a desktop patient-care coordination application for chronically ill patients and their caregivers.
+It helps family caregivers in Singapore keep an elderly or chronically ill patient's care information in one place,
+instead of across messaging threads, paper notes, and memory.
+
+MediConnect is designed to:
+
+* maintain patient profiles, including conditions and allergies
+* organize healthcare and emergency contacts, medical notes, medications, appointments, and care instructions
+* provide a consolidated view of each patient's care information for daily use and emergencies
+* support local backup, restoration, and export for care handovers
+
+Its keyboard-first command interface enables caregivers to update and retrieve information quickly, while the
+graphical interface keeps records easy to review. MediConnect supports care coordination but does not provide
+clinical advice, contact healthcare providers, or book appointments.
+
+For more information, visit the [MediConnect product website](https://ay2627s1-cs2103t-w08-1.github.io/tp/),
+[User Guide](https://ay2627s1-cs2103t-w08-1.github.io/tp/UserGuide.html), or
+[Developer Guide](https://ay2627s1-cs2103t-w08-1.github.io/tp/DeveloperGuide.html).
