@@ -16,7 +16,6 @@ You can reach us at the email `mingxuandidi@gmail.com`
 <img src="images/jellehbelleh.png" width="200px">
 
 [[github](https://github.com/JellehBelleh)]
-[[portfolio](team/jellehbelleh.md)]
 
 * Role: Developer
 * Responsibilities: Storage
@@ -29,7 +28,6 @@ You can reach us at the email `mingxuandidi@gmail.com`
 [[github](http://github.com/KohKoh-Nut)]
 
 * Role: Developer
-* Responsibilities: UI
 
 ### Raisa Nishat
 
