@@ -489,8 +489,56 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Glossary
 
-* **Mainstream OS**: Windows, Linux, Unix, or macOS
-* **Private contact detail**: A contact detail that is not meant to be shared with others
+* **Allergy**: A harmful reaction a patient has to a substance, such as a drug or a food. Each allergy is recorded by
+  the name of the substance that causes it (the *allergen*), e.g., `Penicillin`.
+* **Appointment**: A scheduled visit by a patient to a healthcare provider, recorded with its date, time, and provider.
+  Notes on what was discussed can be added after the visit.
+* **Archive**: To remove a patient's profile from the active patient list while keeping all of its records for future
+  reference. Unlike deleting, archiving does not remove any data.
+* **Care handover**: The transfer of responsibility for a patient's care from one person to another, e.g., from the
+  main caregiver to a relative while the caregiver is travelling.
+* **Care information**: The care-related records in a patient's profile, i.e., medical conditions, allergies,
+  medications, care instructions, appointments, contacts, and medical notes. It does not include the patient's basic
+  details.
+* **Care instruction**: A routine care task that does not involve medication, e.g., "check blood sugar before
+  breakfast".
+* **Caregiver**: A person who uses MediConnect to coordinate a patient's care, typically a family member of the
+  patient. A caregiver is not necessarily a healthcare professional.
+* **CLI (Command Line Interface)**: A way of using an application by typing text commands rather than by clicking on
+  elements with a mouse.
+* **Community nurse**: A nurse who cares for patients through scheduled home visits.
+* **Contact**: A person or organisation linked to a patient's profile, which is either a healthcare provider (e.g., a
+  GP, specialist, or pharmacist) or an emergency contact.
+* **Display scaling**: An operating system setting that enlarges text and other on-screen elements by a percentage
+  (e.g., 125%) to make them easier to read.
+* **Emergency contact**: A person to notify in an emergency involving the patient, such as a family member. An
+  emergency contact is not involved in the patient's medical treatment.
+* **Expert user**: A user who is familiar with MediConnect's commands and prefers to complete tasks using as few
+  commands as possible.
+* **GUI (Graphical User Interface)**: The visual part of MediConnect, consisting of windows, lists, and panels that
+  display information to the user.
+* **Human-editable text file**: A data file stored in a plain-text format that a user can open and modify using a
+  standard text editor.
+* **Index**: The number shown beside a patient in the currently displayed list, starting from 1. Commands use it to
+  refer to a specific patient. A patient's index can change when the displayed list changes, e.g., after a search or a
+  deletion.
+* **JAR file**: A Java Archive file. MediConnect is distributed as a single JAR file, which can be run on any computer
+  with Java installed.
+* **Medical condition**: A long-term illness or diagnosis that a patient has, e.g., diabetes or hypertension.
+* **Medical note**: A free-text note about a patient's health or treatment, e.g., advice given by a doctor during an
+  appointment.
+* **Medication**: A drug prescribed to a patient, recorded with its dosage (the amount per dose, e.g., `500mg`) and
+  frequency (how often it is taken, e.g., `twice daily`).
+* **MSS (Main Success Scenario)**: The sequence of steps in a use case that describes the most straightforward
+  interaction, in which nothing goes wrong.
+* **NRIC**: The identification number on a Singapore National Registration Identity Card, or a Foreign Identification
+  Number (FIN), in the format of 1 letter, 7 digits, and 1 letter (e.g., `S1234567A`). MediConnect uses the NRIC to
+  tell patients apart, since two patients can have the same name.
+* **Patient**: A person whose care is coordinated using MediConnect, typically an elderly or chronically ill person.
+* **Patient profile**: The record of a patient in MediConnect. It consists of the patient's basic details (name, NRIC,
+  date of birth, phone number, and address) and their care information.
+* **Sample data**: Example patient profiles that MediConnect displays when it is launched for the first time, so that
+  new users can see what a complete record looks like.
 
 --------------------------------------------------------------------------------------------------------------------
 
