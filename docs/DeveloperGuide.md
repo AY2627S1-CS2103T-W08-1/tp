@@ -320,7 +320,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
 | `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
 | `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
-| `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
+| `* *`    | caregiver                                  | edit a medication's dosage or frequency | keep the schedule correct when the doctor changes a prescription |
+| `* *`    | caregiver                                  | remove a medication that is no longer prescribed | stop it from appearing in the patient's schedule |
+| `* *`    | caregiver                                  | remove an allergy that was recorded by mistake | keep the patient's allergy information accurate |
+| `* *`    | caregiver                                  | edit or remove a care instruction | stop following routines that are no longer recommended |
+| `* *`    | caregiver                                  | edit or cancel an appointment | keep the schedule accurate when a visit is rescheduled |
+| `* *`    | new user                                   | see sample patient data when I first open the app | understand what a complete record looks like before entering real data |
+| `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients || `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
 | `*`      | caregiver                                  | set a reminder for an appointment | remember to bring the patient to it |
@@ -334,7 +340,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | caregiver                                  | attach a photo of a document, such as a referral letter, to a patient's record | stop keeping track of the paper copy |
 | `*`      | caregiver                                  | see when a contact's details were last updated | tell at a glance whether they may be out of date |
 | `*`      | caregiver who travels for work             | give a family member temporary access to a patient's records | let them take over care while I am away |
-
+| `*`      | expert user                                | use short aliases for common commands | type commands faster |
+| `*`      | caregiver                                  | filter a patient's contacts by role (e.g., pharmacist) | find the right provider quickly when I am in a hurry |
+| `*`      | caregiver                                  | search a patient's notes by keyword | find when an issue was first mentioned before a check-up |
+| `*`      | caregiver                                  | group contacts under a custom tag (e.g., "heart & blood pressure") | see all providers involved in one area of care together |
+| `*`      | caregiver returning from a break           | see what changed in a patient's records while I was away | catch up after another caregiver has taken over |
+| `*`      | caregiver                                  | give a community nurse view-only access to a patient's records | avoid repeating the patient's background at every visit |
+| `*`      | caregiver                                  | export all my data | move to another app without losing my records |
 *{More to be added}*
 
 ### Use cases
