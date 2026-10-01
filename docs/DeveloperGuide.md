@@ -293,10 +293,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 | Priority | As a …                                    | I want to …                 | So that I can…                                                        |
 |----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person             |                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
+| `* * *`  | caregiver                                  | add a new patient profile with basic details (name, NRIC, date of birth, phone, address) | start tracking their care information |
+| `* * *`  | caregiver                                  | view a list of all my patients | see at a glance who I am responsible for |
+| `* * *`  | caregiver                                  | view a patient's full profile, including all recorded care information | review everything relevant to that patient in one place |
+| `* * *`  | caregiver                                  | delete a patient profile | remove patients no longer under my care |
+| `* * *`  | caregiver                                  | record a patient's medical conditions (e.g., diabetes, hypertension) | keep their diagnoses in one place for everyone involved in their care |
+| `* * *`  | caregiver                                  | record a patient's allergies | make sure no one gives them a medication or food they react to |
+| `* * *`  | caregiver                                  | add a medication to a patient's profile, including its dosage and frequency | keep track of what they need to take |
+| `* * *`  | caregiver                                  | add a general care instruction to a patient's profile (e.g., "check blood sugar before breakfast") | remember non-medication routine tasks |
 | `* *`    | caregiver                                  | edit a patient's profile details | correct or update their information as it changes |
 | `* *`    | caregiver                                  | find a patient by name | locate their profile quickly without scrolling through the whole list |
 | `* *`    | new user                                   | view a list of all available commands | learn how to use the app quickly |
