@@ -293,10 +293,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 | Priority | As a …                                    | I want to …                 | So that I can…                                                        |
 |----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person             |                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
+| `* * *`  | caregiver                                  | add a new patient profile with basic details (name, NRIC, date of birth, phone, address) | start tracking their care information |
+| `* * *`  | caregiver                                  | view a list of all my patients | see at a glance who I am responsible for |
+| `* * *`  | caregiver                                  | view a patient's full profile, including all recorded care information | review everything relevant to that patient in one place |
+| `* * *`  | caregiver                                  | delete a patient profile | remove patients no longer under my care |
+| `* * *`  | caregiver                                  | record a patient's medical conditions (e.g., diabetes, hypertension) | keep their diagnoses in one place for everyone involved in their care |
+| `* * *`  | caregiver                                  | record a patient's allergies | make sure no one gives them a medication or food they react to |
+| `* * *`  | caregiver                                  | add a medication to a patient's profile, including its dosage and frequency | keep track of what they need to take |
+| `* * *`  | caregiver                                  | add a general care instruction to a patient's profile (e.g., "check blood sugar before breakfast") | remember non-medication routine tasks |
 | `* *`    | caregiver                                  | edit a patient's profile details | correct or update their information as it changes |
 | `* *`    | caregiver                                  | find a patient by name | locate their profile quickly without scrolling through the whole list |
 | `* *`    | new user                                   | view a list of all available commands | learn how to use the app quickly |
@@ -316,7 +320,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
 | `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
 | `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
-| `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
+| `* *`    | caregiver                                  | edit a medication's dosage or frequency | keep the schedule correct when the doctor changes a prescription |
+| `* *`    | caregiver                                  | remove a medication that is no longer prescribed | stop it from appearing in the patient's schedule |
+| `* *`    | caregiver                                  | remove an allergy that was recorded by mistake | keep the patient's allergy information accurate |
+| `* *`    | caregiver                                  | edit or remove a care instruction | stop following routines that are no longer recommended |
+| `* *`    | caregiver                                  | edit or cancel an appointment | keep the schedule accurate when a visit is rescheduled |
+| `* *`    | new user                                   | see sample patient data when I first open the app | understand what a complete record looks like before entering real data |
+| `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients || `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
 | `*`      | caregiver                                  | set a reminder for an appointment | remember to bring the patient to it |
@@ -330,25 +340,78 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | caregiver                                  | attach a photo of a document, such as a referral letter, to a patient's record | stop keeping track of the paper copy |
 | `*`      | caregiver                                  | see when a contact's details were last updated | tell at a glance whether they may be out of date |
 | `*`      | caregiver who travels for work             | give a family member temporary access to a patient's records | let them take over care while I am away |
-
+| `*`      | expert user                                | use short aliases for common commands | type commands faster |
+| `*`      | caregiver                                  | filter a patient's contacts by role (e.g., pharmacist) | find the right provider quickly when I am in a hurry |
+| `*`      | caregiver                                  | search a patient's notes by keyword | find when an issue was first mentioned before a check-up |
+| `*`      | caregiver                                  | group contacts under a custom tag (e.g., "heart & blood pressure") | see all providers involved in one area of care together |
+| `*`      | caregiver returning from a break           | see what changed in a patient's records while I was away | catch up after another caregiver has taken over |
+| `*`      | caregiver                                  | give a community nurse view-only access to a patient's records | avoid repeating the patient's background at every visit |
+| `*`      | caregiver                                  | export all my data | move to another app without losing my records |
 *{More to be added}*
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `MediConnect` and the **Actor** is the `caregiver`, unless specified otherwise)
 
-**Use case: Delete a person**
+**Use case: UC1 - Add a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
 
 **MSS**
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+1.  Caregiver requests to add a patient, providing the patient's name, NRIC, date of birth, phone number, and address.
+2.  MediConnect adds the patient and shows the new patient's details.
 
     Use case ends.
 
 **Extensions**
+
+* 1a. A required detail is missing.
+
+    * 1a1. MediConnect shows an error message with the correct command format.
+
+      Use case ends.
+
+* 1b. A given detail is invalid (e.g., the NRIC is not in a valid format, or the date of birth is in the future).
+
+    * 1b1. MediConnect shows an error message describing the invalid detail.
+
+      Use case ends.
+
+* 1c. The same detail is given more than once (e.g., two names).
+
+    * 1c1. MediConnect shows an error message naming the repeated detail.
+
+      Use case ends.
+
+* 1d. A patient with the same NRIC already exists.
+
+    * 1d1. MediConnect shows an error message stating that the patient already exists.
+
+      Use case ends.
+
+**Use case: UC2 - Delete a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to delete a specific patient in the list.
+4.  MediConnect deletes the patient and shows the deleted patient's name and NRIC.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
 
 * 2a. The list is empty.
 
@@ -356,7 +419,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 3a. The given index is invalid.
 
-    * 3a1. AddressBook shows an error message.
+    * 3a1. MediConnect shows an error message.
 
       Use case resumes at step 2.
 
