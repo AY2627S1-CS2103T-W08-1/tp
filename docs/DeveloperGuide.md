@@ -351,20 +351,67 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `MediConnect` and the **Actor** is the `caregiver`, unless specified otherwise)
 
-**Use case: Delete a person**
+**Use case: UC1 - Add a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
 
 **MSS**
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+1.  Caregiver requests to add a patient, providing the patient's name, NRIC, date of birth, phone number, and address.
+2.  MediConnect adds the patient and shows the new patient's details.
 
     Use case ends.
 
 **Extensions**
+
+* 1a. A required detail is missing.
+
+    * 1a1. MediConnect shows an error message with the correct command format.
+
+      Use case ends.
+
+* 1b. A given detail is invalid (e.g., the NRIC is not in a valid format, or the date of birth is in the future).
+
+    * 1b1. MediConnect shows an error message describing the invalid detail.
+
+      Use case ends.
+
+* 1c. The same detail is given more than once (e.g., two names).
+
+    * 1c1. MediConnect shows an error message naming the repeated detail.
+
+      Use case ends.
+
+* 1d. A patient with the same NRIC already exists.
+
+    * 1d1. MediConnect shows an error message stating that the patient already exists.
+
+      Use case ends.
+
+**Use case: UC2 - Delete a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to delete a specific patient in the list.
+4.  MediConnect deletes the patient and shows the deleted patient's name and NRIC.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
 
 * 2a. The list is empty.
 
@@ -372,7 +419,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 3a. The given index is invalid.
 
-    * 3a1. AddressBook shows an error message.
+    * 3a1. MediConnect shows an error message.
 
       Use case resumes at step 2.
 
