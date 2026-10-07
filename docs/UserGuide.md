@@ -67,11 +67,14 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
+Opens a help window listing every command, its format, and a one-line description.
 
 ![help message](images/helpMessage.png)
 
 Format: `help`
+
+* You can also open the help window with the `Help` menu or by pressing `F1`.
+* Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
 
 
 ### Adding a patient: `add`
