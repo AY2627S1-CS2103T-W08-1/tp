@@ -3,9 +3,13 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import seedu.address.commons.core.GuiSettings;
@@ -21,6 +25,7 @@ public class ModelManager implements Model {
     private final AddressBook addressBook;
     private final UserPrefs userPrefs;
     private final FilteredList<Patient> filteredPatients;
+    private final ObjectProperty<Patient> viewedPatient = new SimpleObjectProperty<>();
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs.
@@ -62,6 +67,10 @@ public class ModelManager implements Model {
     @Override
     public void setAddressBook(ReadOnlyAddressBook addressBook) {
         this.addressBook.resetData(addressBook);
+
+        if (!this.addressBook.getPatientList().contains(viewedPatient.get())) {
+            viewedPatient.set(null);
+        }
     }
 
     @Override
@@ -78,6 +87,10 @@ public class ModelManager implements Model {
     @Override
     public void deletePatient(Patient target) {
         addressBook.removePatient(target);
+
+        if (target.equals(viewedPatient.get())) {
+            viewedPatient.set(null);
+        }
     }
 
     @Override
@@ -91,6 +104,10 @@ public class ModelManager implements Model {
         requireAllNonNull(target, editedPatient);
 
         addressBook.setPatient(target, editedPatient);
+
+        if (target.equals(viewedPatient.get())) {
+            viewedPatient.set(editedPatient);
+        }
     }
 
     //=========== Filtered Patient List Accessors =============================================================
@@ -110,6 +127,21 @@ public class ModelManager implements Model {
         filteredPatients.setPredicate(predicate);
     }
 
+    //=========== Viewed Patient Accessors ===================================================================
+
+    @Override
+    public ObservableValue<Patient> getViewedPatient() {
+        return viewedPatient;
+    }
+
+    @Override
+    public void setViewedPatient(Patient patient) {
+        requireNonNull(patient);
+        assert addressBook.hasPatient(patient) : "Viewed patient must exist in the address book";
+
+        viewedPatient.set(patient);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -123,7 +155,8 @@ public class ModelManager implements Model {
 
         return addressBook.equals(otherModelManager.addressBook)
                 && userPrefs.equals(otherModelManager.userPrefs)
-                && filteredPatients.equals(otherModelManager.filteredPatients);
+                && filteredPatients.equals(otherModelManager.filteredPatients)
+                && Objects.equals(viewedPatient.get(), otherModelManager.viewedPatient.get());
     }
 
 }
