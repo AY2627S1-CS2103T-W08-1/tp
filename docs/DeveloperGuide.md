@@ -71,7 +71,7 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/se-
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
@@ -80,7 +80,7 @@ The `UI` component,
 * executes user commands using the `Logic` component.
 * listens for changes to `Model` data so that the UI can be updated with the modified data.
 * keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component because it displays `Person` objects from the model.
+* depends on some classes in the `Model` component because it displays `Patient` objects from the model.
 
 ### Logic component
 
@@ -104,7 +104,7 @@ How the `Logic` component works:
 
 1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
+1. The command can communicate with the `Model` when it is executed (e.g. to delete a patient).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
 1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
 
@@ -124,15 +124,15 @@ How the parsing works:
 
 The `Model` component,
 
-* stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
-* stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
+* stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
+* stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
 
 
 <box type="info" seamless>
 
-**Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Person` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
+**Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Patient` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Patient` holding its own `Tag` objects.<br>
 
 <puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
 </box>
@@ -177,11 +177,11 @@ Step 1. The user launches the application for the first time. The `VersionedAddr
 
 <puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+Step 2. The user executes `delete 5` command to delete the 5th patient in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
 
 <puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+Step 3. The user executes `add n/David …​` to add a new patient. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
 
 <puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
 
@@ -190,7 +190,7 @@ Step 3. The user executes `add n/David …​` to add a new person. The `add` co
 **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
 </box>
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+Step 4. The user now decides that adding the patient was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
 
 <puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
 
@@ -243,7 +243,7 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 * **Alternative 2:** Individual command knows how to undo/redo by
   itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
+  * Pros: Will use less memory (e.g. for `delete`, just save the patient being deleted).
   * Cons: We must ensure that the implementation of each individual command is correct.
 
 _{more aspects and alternatives to be added}_
@@ -495,23 +495,23 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   Notes on what was discussed can be added after the visit.
 * **Archive**: To remove a patient's profile from the active patient list while keeping all of its records for future
   reference. Unlike deleting, archiving does not remove any data.
-* **Care handover**: The transfer of responsibility for a patient's care from one person to another, e.g., from the
+* **Care handover**: The transfer of responsibility for a patient's care from one patient to another, e.g., from the
   main caregiver to a relative while the caregiver is travelling.
 * **Care information**: The care-related records in a patient's profile, i.e., medical conditions, allergies,
   medications, care instructions, appointments, contacts, and medical notes. It does not include the patient's basic
   details.
 * **Care instruction**: A routine care task that does not involve medication, e.g., "check blood sugar before
   breakfast".
-* **Caregiver**: A person who uses MediConnect to coordinate a patient's care, typically a family member of the
+* **Caregiver**: A patient who uses MediConnect to coordinate a patient's care, typically a family member of the
   patient. A caregiver is not necessarily a healthcare professional.
 * **CLI (Command Line Interface)**: A way of using an application by typing text commands rather than by clicking on
   elements with a mouse.
 * **Community nurse**: A nurse who cares for patients through scheduled home visits.
-* **Contact**: A person or organisation linked to a patient's profile, which is either a healthcare provider (e.g., a
+* **Contact**: A patient or organisation linked to a patient's profile, which is either a healthcare provider (e.g., a
   GP, specialist, or pharmacist) or an emergency contact.
 * **Display scaling**: An operating system setting that enlarges text and other on-screen elements by a percentage
   (e.g., 125%) to make them easier to read.
-* **Emergency contact**: A person to notify in an emergency involving the patient, such as a family member. An
+* **Emergency contact**: A patient to notify in an emergency involving the patient, such as a family member. An
   emergency contact is not involved in the patient's medical treatment.
 * **Expert user**: A user who is familiar with MediConnect's commands and prefers to complete tasks using as few
   commands as possible.
@@ -534,7 +534,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **NRIC**: The identification number on a Singapore National Registration Identity Card, or a Foreign Identification
   Number (FIN), in the format of 1 letter, 7 digits, and 1 letter (e.g., `S1234567A`). MediConnect uses the NRIC to
   tell patients apart, since two patients can have the same name.
-* **Patient**: A person whose care is coordinated using MediConnect, typically an elderly or chronically ill person.
+* **Patient**: A patient whose care is coordinated using MediConnect, typically an elderly or chronically ill patient.
 * **Patient profile**: The record of a patient in MediConnect. It consists of the patient's basic details (name, NRIC,
   date of birth, phone number, and address) and their care information.
 * **Sample data**: Example patient profiles that MediConnect displays when it is launched for the first time, so that
@@ -570,17 +570,17 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases … }_
 
-### Deleting a person
+### Deleting a patient
 
-1. Deleting a person while all persons are being shown
+1. Deleting a patient while all patients are being shown
 
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `delete 1`<br>
       Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
 
    1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
+      Expected: No patient is deleted. The status message shows error details.
 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
