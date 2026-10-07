@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
@@ -22,6 +23,7 @@ import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.EditPatientDescriptorBuilder;
 import seedu.address.testutil.PatientBuilder;
 import seedu.address.testutil.PatientUtil;
 
@@ -47,6 +49,14 @@ public class AddressBookParserTest {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " " + INDEX_FIRST_PATIENT.getOneBased());
         assertEquals(new DeleteCommand(INDEX_FIRST_PATIENT), command);
+    }
+
+    @Test
+    public void parseCommand_edit() throws Exception {
+        EditCommand command = (EditCommand) parser.parseCommand(
+                EditCommand.COMMAND_WORD + " " + INDEX_FIRST_PATIENT.getOneBased() + " n/Amy Bee");
+        assertEquals(new EditCommand(INDEX_FIRST_PATIENT,
+                new EditPatientDescriptorBuilder().withName("Amy Bee").build()), command);
     }
 
     @Test
