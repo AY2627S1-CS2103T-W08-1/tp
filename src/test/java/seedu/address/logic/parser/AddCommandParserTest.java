@@ -49,7 +49,7 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_requiredFieldMissing_failure() {
-        String expected = "Invalid command format!\nadd: Adds a patient to MediConnect. "
+        String expected = "Invalid command format!\nadd: Adds a patient to the list. "
                 + "Parameters: n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS\n"
                 + "Example: add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3";
         for (String field : List.of("n/John Tan", "ic/S1234567A", "dob/1950-04-12", "p/91234567",
