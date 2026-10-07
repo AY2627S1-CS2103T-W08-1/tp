@@ -1,56 +1,59 @@
 package seedu.address.testutil;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 import seedu.address.model.patient.Address;
-import seedu.address.model.patient.Email;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.Phone;
-import seedu.address.model.tag.Tag;
-import seedu.address.model.util.SampleDataUtil;
 
 /**
- * A utility class to help with building Patient objects.
+ * Builds patients for tests.
  */
 public class PatientBuilder {
 
     public static final String DEFAULT_NAME = "Amy Bee";
+    public static final String DEFAULT_NRIC = "S9999999A";
+    public static final String DEFAULT_DOB = "1950-01-01";
     public static final String DEFAULT_PHONE = "85355255";
-    public static final String DEFAULT_EMAIL = "amy@gmail.com";
     public static final String DEFAULT_ADDRESS = "123, Jurong West Ave 6, #08-111";
 
     private Name name;
+    private String nric;
+    private String dob;
     private Phone phone;
-    private Email email;
     private Address address;
-    private Set<Tag> tags;
+    private List<String> medications = List.of();
+    private List<String> allergens = List.of();
+    private List<String> careInstructions = List.of();
 
     /**
-     * Creates a {@code PatientBuilder} with the default details.
+     * Creates a builder with default patient details and empty care lists.
      */
     public PatientBuilder() {
         name = new Name(DEFAULT_NAME);
+        nric = DEFAULT_NRIC;
+        dob = DEFAULT_DOB;
         phone = new Phone(DEFAULT_PHONE);
-        email = new Email(DEFAULT_EMAIL);
         address = new Address(DEFAULT_ADDRESS);
-        tags = new HashSet<>();
     }
 
     /**
-     * Initializes the PatientBuilder with the data of {@code patientToCopy}.
+     * Copies the details of a patient.
      */
     public PatientBuilder(Patient patientToCopy) {
         name = patientToCopy.getName();
+        nric = patientToCopy.getNric();
+        dob = patientToCopy.getDob();
         phone = patientToCopy.getPhone();
-        email = patientToCopy.getEmail();
         address = patientToCopy.getAddress();
-        tags = new HashSet<>(patientToCopy.getTags());
+        medications = patientToCopy.getMedications();
+        allergens = patientToCopy.getAllergens();
+        careInstructions = patientToCopy.getCareInstructions();
     }
 
     /**
-     * Sets the {@code Name} of the {@code Patient} that we are building.
+     * Sets the patient's name.
      */
     public PatientBuilder withName(String name) {
         this.name = new Name(name);
@@ -58,23 +61,23 @@ public class PatientBuilder {
     }
 
     /**
-     * Parses the {@code tags} into a {@code Set<Tag>} and sets it to the {@code Patient} that we are building.
+     * Sets the patient's nric.
      */
-    public PatientBuilder withTags(String ... tags) {
-        this.tags = SampleDataUtil.getTagSet(tags);
+    public PatientBuilder withNric(String nric) {
+        this.nric = nric;
         return this;
     }
 
     /**
-     * Sets the {@code Address} of the {@code Patient} that we are building.
+     * Sets the patient's dob.
      */
-    public PatientBuilder withAddress(String address) {
-        this.address = new Address(address);
+    public PatientBuilder withDob(String dob) {
+        this.dob = dob;
         return this;
     }
 
     /**
-     * Sets the {@code Phone} of the {@code Patient} that we are building.
+     * Sets the patient's phone.
      */
     public PatientBuilder withPhone(String phone) {
         this.phone = new Phone(phone);
@@ -82,15 +85,41 @@ public class PatientBuilder {
     }
 
     /**
-     * Sets the {@code Email} of the {@code Patient} that we are building.
+     * Sets the patient's address.
      */
-    public PatientBuilder withEmail(String email) {
-        this.email = new Email(email);
+    public PatientBuilder withAddress(String address) {
+        this.address = new Address(address);
         return this;
     }
 
-    public Patient build() {
-        return new Patient(name, phone, email, address, tags);
+    /**
+     * Sets the patient's medications.
+     */
+    public PatientBuilder withMedications(String... entries) {
+        this.medications = List.of(entries);
+        return this;
     }
 
+    /**
+     * Sets the patient's allergens.
+     */
+    public PatientBuilder withAllergens(String... entries) {
+        this.allergens = List.of(entries);
+        return this;
+    }
+
+    /**
+     * Sets the patient's careInstructions.
+     */
+    public PatientBuilder withCareInstructions(String... entries) {
+        this.careInstructions = List.of(entries);
+        return this;
+    }
+
+    /**
+     * Builds an immutable patient.
+     */
+    public Patient build() {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions);
+    }
 }

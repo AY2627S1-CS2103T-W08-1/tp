@@ -1,10 +1,7 @@
 package seedu.address.ui;
 
-import java.util.Comparator;
-
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.model.patient.Patient;
@@ -37,9 +34,7 @@ public class PatientCard extends UiPart<Region> {
     @FXML
     private Label address;
     @FXML
-    private Label email;
-    @FXML
-    private FlowPane tags;
+    private Label nric;
 
     /**
      * Creates a {@code PatientCard} with the given {@code Patient} and index to display.
@@ -51,9 +46,6 @@ public class PatientCard extends UiPart<Region> {
         name.setText(patient.getName().fullName);
         phone.setText(patient.getPhone().value);
         address.setText(patient.getAddress().value);
-        email.setText(patient.getEmail().value);
-        patient.getTags().stream()
-                .sorted(Comparator.comparing(tag -> tag.tagName))
-                .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+        nric.setText(patient.getNric());
     }
 }

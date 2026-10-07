@@ -2,15 +2,14 @@ package seedu.address.model.patient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BOB;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,81 +18,82 @@ import seedu.address.testutil.PatientBuilder;
 public class PatientTest {
 
     @Test
-    public void asObservableList_modifyList_throwsUnsupportedOperationException() {
+    public void constructor_emptyCareLists() {
         Patient patient = new PatientBuilder().build();
-        assertThrows(UnsupportedOperationException.class, () -> patient.getTags().remove(0));
+        assertTrue(patient.getMedications().isEmpty());
+        assertTrue(patient.getAllergens().isEmpty());
+        assertTrue(patient.getCareInstructions().isEmpty());
+    }
+
+    @Test
+    public void constructor_plainNricAndDob_preservesValues() {
+        Patient patient = new PatientBuilder().withNric("plain identifier").withDob("plain date").build();
+        assertEquals("plain identifier", patient.getNric());
+        assertEquals("plain date", patient.getDob());
+    }
+
+    @Test
+    public void constructor_careLists_defensivelyCopied() {
+        List<String> medications = new ArrayList<>(List.of("Metformin"));
+        List<String> allergens = new ArrayList<>(List.of("Penicillin"));
+        List<String> instructions = new ArrayList<>(List.of("Check blood sugar"));
+        Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
+                ALICE.getAddress(), medications, allergens, instructions);
+        medications.clear();
+        allergens.clear();
+        instructions.clear();
+        assertEquals(List.of("Metformin"), patient.getMedications());
+        assertEquals(List.of("Penicillin"), patient.getAllergens());
+        assertEquals(List.of("Check blood sugar"), patient.getCareInstructions());
+        assertThrows(UnsupportedOperationException.class, () -> patient.getMedications().add("Aspirin"));
+        assertThrows(UnsupportedOperationException.class, () -> patient.getAllergens().clear());
+        assertThrows(UnsupportedOperationException.class, () -> patient.getCareInstructions().remove(0));
+    }
+
+    @Test
+    public void constructor_nullField_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new Patient(null, ALICE.getNric(), ALICE.getDob(),
+                ALICE.getPhone(), ALICE.getAddress()));
+        assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), null, ALICE.getDob(),
+                ALICE.getPhone(), ALICE.getAddress()));
+        assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), null,
+                ALICE.getPhone(), ALICE.getAddress()));
+        assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
+                ALICE.getPhone(), ALICE.getAddress(), null, List.of(), List.of()));
     }
 
     @Test
     public void isSamePatient() {
-        // same object -> returns true
         assertTrue(ALICE.isSamePatient(ALICE));
-
-        // null -> returns false
         assertFalse(ALICE.isSamePatient(null));
-
-        // same name, all other attributes different -> returns true
-        Patient editedAlice = new PatientBuilder(ALICE).withPhone(VALID_PHONE_BOB).withEmail(VALID_EMAIL_BOB)
-                .withAddress(VALID_ADDRESS_BOB).withTags(VALID_TAG_HUSBAND).build();
-        assertTrue(ALICE.isSamePatient(editedAlice));
-
-        // different name, all other attributes same -> returns false
-        editedAlice = new PatientBuilder(ALICE).withName(VALID_NAME_BOB).build();
-        assertFalse(ALICE.isSamePatient(editedAlice));
-
-        // name differs in case, all other attributes same -> returns false
-        Patient editedBob = new PatientBuilder(BOB).withName(VALID_NAME_BOB.toLowerCase()).build();
-        assertFalse(BOB.isSamePatient(editedBob));
-
-        // name has trailing spaces, all other attributes same -> returns false
-        String nameWithTrailingSpaces = VALID_NAME_BOB + " ";
-        editedBob = new PatientBuilder(BOB).withName(nameWithTrailingSpaces).build();
-        assertFalse(BOB.isSamePatient(editedBob));
+        assertTrue(ALICE.isSamePatient(new PatientBuilder(BOB).withNric(ALICE.getNric().toLowerCase()).build()));
+        assertFalse(ALICE.isSamePatient(new PatientBuilder(ALICE).withNric(BOB.getNric()).build()));
+        assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withName("Other Name").build()));
     }
 
     @Test
     public void equals() {
-        // same values -> returns true
-        Patient aliceCopy = new PatientBuilder(ALICE).build();
-        assertTrue(ALICE.equals(aliceCopy));
-
-        // same object -> returns true
-        assertTrue(ALICE.equals(ALICE));
-
-        // null -> returns false
+        Patient copy = new PatientBuilder(ALICE).build();
+        assertEquals(ALICE, copy);
+        assertEquals(ALICE.hashCode(), copy.hashCode());
         assertFalse(ALICE.equals(null));
-
-        // different type -> returns false
         assertFalse(ALICE.equals(5));
-
-        // different patient -> returns false
-        assertFalse(ALICE.equals(BOB));
-
-        // different name -> returns false
-        Patient editedAlice = new PatientBuilder(ALICE).withName(VALID_NAME_BOB).build();
-        assertFalse(ALICE.equals(editedAlice));
-
-        // different phone -> returns false
-        editedAlice = new PatientBuilder(ALICE).withPhone(VALID_PHONE_BOB).build();
-        assertFalse(ALICE.equals(editedAlice));
-
-        // different email -> returns false
-        editedAlice = new PatientBuilder(ALICE).withEmail(VALID_EMAIL_BOB).build();
-        assertFalse(ALICE.equals(editedAlice));
-
-        // different address -> returns false
-        editedAlice = new PatientBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).build();
-        assertFalse(ALICE.equals(editedAlice));
-
-        // different tags -> returns false
-        editedAlice = new PatientBuilder(ALICE).withTags(VALID_TAG_HUSBAND).build();
-        assertFalse(ALICE.equals(editedAlice));
+        assertNotEquals(ALICE, BOB);
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withName("Other Name").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withNric(BOB.getNric()).build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withDob("1940-01-01").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withPhone("91234567").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withAddress("Other address").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withMedications("Metformin").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withAllergens("Penicillin").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withCareInstructions("Rest").build());
     }
 
     @Test
     public void toStringMethod() {
         String expected = Patient.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
-                + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
+                + ", nric=" + ALICE.getNric() + ", dob=" + ALICE.getDob() + ", address=" + ALICE.getAddress()
+                + ", medications=[], allergens=[], careInstructions=[]}";
         assertEquals(expected, ALICE.toString());
     }
 }

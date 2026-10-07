@@ -2,12 +2,14 @@
   "persons": [ {
     "name": "Valid Person",
     "phone": "9482424",
-    "email": "hans@example.com",
+    "nric": "S0000001A",
+    "dob": "1950-01-01",
     "address": "4th street"
   }, {
     "name": "Person With Invalid Phone Field",
     "phone": "948asdf2424",
-    "email": "hans@example.com",
+    "nric": "S0000002A",
+    "dob": "1950-01-01",
     "address": "4th street"
   } ]
 }
