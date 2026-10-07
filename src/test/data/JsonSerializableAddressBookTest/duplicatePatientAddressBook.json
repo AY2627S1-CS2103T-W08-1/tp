@@ -1,0 +1,15 @@
+{
+  "persons": [ {
+    "name": "Alice Pauline",
+    "phone": "94351253",
+    "nric": "S0000001A",
+    "address": "123, Jurong West Ave 6, #08-111",
+    "dob": "1950-01-01"
+  }, {
+    "name": "Other Name",
+    "phone": "94351253",
+    "nric": "s0000001a",
+    "dob": "1950-01-01",
+    "address": "4th street"
+  } ]
+}

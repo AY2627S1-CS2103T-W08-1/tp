@@ -1,0 +1,9 @@
+{
+  "persons": [ {
+    "name": "Hans@Muster",
+    "phone": "9482424",
+    "nric": "S0000001A",
+    "dob": "1950-01-01",
+    "address": "4th street"
+  } ]
+}
