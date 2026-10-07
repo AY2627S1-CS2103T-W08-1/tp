@@ -13,13 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import seedu.address.commons.core.index.Index;
-import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
-import seedu.address.testutil.EditPatientDescriptorBuilder;
 
 /**
  * Contains helper methods for testing commands.
@@ -53,11 +51,6 @@ public class CommandTestUtil {
     public static final String INVALID_NRIC_DESC = " " + PREFIX_NRIC + "invalid"; // invalid NRIC
     public static final String INVALID_ADDRESS_DESC = " " + PREFIX_ADDRESS; // empty string not allowed for addresses
     public static final String INVALID_DOB_DESC = " " + PREFIX_DOB + "2021-02-30"; // invalid date
-
-    public static final EditPatientDescriptor DESC_AMY = new EditPatientDescriptorBuilder()
-            .withName(VALID_NAME_AMY).withPhone(VALID_PHONE_AMY).withAddress(VALID_ADDRESS_AMY).build();
-    public static final EditPatientDescriptor DESC_BOB = new EditPatientDescriptorBuilder()
-            .withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB).withAddress(VALID_ADDRESS_BOB).build();
 
     public static final String PREAMBLE_WHITESPACE = "\t  \r  \n";
     public static final String PREAMBLE_NON_EMPTY = "NonEmptyPreamble";
