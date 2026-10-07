@@ -132,7 +132,7 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Patient` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Patient` holding its own `Tag` objects.<br>
+**Note:** The diagram below illustrates the original AB3 alternative design for sharing tags between patients. Email and tags are removed from the MediConnect MVP.<br>
 
 <puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
 </box>
