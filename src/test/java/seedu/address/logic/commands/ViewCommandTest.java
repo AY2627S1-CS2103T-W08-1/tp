@@ -47,6 +47,12 @@ public class ViewCommandTest {
     }
 
     @Test
+    public void execute_validIndex_showsPatientName() throws Exception {
+        CommandResult result = new ViewCommand(INDEX_FIRST_PATIENT).execute(model);
+        assertEquals("Showing patient: Alice Pauline", result.getFeedbackToUser());
+    }
+
+    @Test
     public void execute_lastIndexUnfilteredList_success() {
         Index lastIndex = Index.fromOneBased(model.getFilteredPatientList().size());
         Patient patientToView = model.getFilteredPatientList().get(lastIndex.getZeroBased());
