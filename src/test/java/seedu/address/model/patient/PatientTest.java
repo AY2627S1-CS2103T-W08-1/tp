@@ -69,6 +69,8 @@ public class PatientTest {
         assertTrue(ALICE.isSamePatient(new PatientBuilder(BOB).withNric(ALICE.getNric().toLowerCase()).build()));
         assertFalse(ALICE.isSamePatient(new PatientBuilder(ALICE).withNric(BOB.getNric()).build()));
         assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withName("Other Name").build()));
+        assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withMedications("Metformin")
+                .withAllergens("Penicillin").withCareInstructions("Rest").build()));
     }
 
     @Test

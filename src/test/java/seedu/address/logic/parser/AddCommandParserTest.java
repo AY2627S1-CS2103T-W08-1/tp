@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -8,7 +7,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Name;
@@ -42,7 +40,7 @@ public class AddCommandParserTest {
     public void parse_repeatedPrefix_failure() {
         for (String field : List.of("n/John Tan", "ic/S1234567A", "dob/1950-04-12", "p/91234567", "a/21 Lorong 3")) {
             String prefix = field.substring(0, field.indexOf('/') + 1);
-            String expected = Messages.MESSAGE_DUPLICATE_FIELDS + prefix;
+            String expected = "Multiple values specified for a single-valued field: " + prefix;
             assertParseFailure(parser, VALID_ARGS + " " + field, expected);
             assertParseFailure(parser, " " + prefix + VALID_ARGS, expected);
             assertParseFailure(parser, VALID_ARGS + " " + prefix, expected);
@@ -51,7 +49,9 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_requiredFieldMissing_failure() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
+        String expected = "Invalid command format!\nadd: Adds a patient to MediConnect. "
+                + "Parameters: n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS\n"
+                + "Example: add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3";
         for (String field : List.of("n/John Tan", "ic/S1234567A", "dob/1950-04-12", "p/91234567",
                 "a/21 Lorong 3, #05-10")) {
             assertParseFailure(parser, VALID_ARGS.replace(field, ""), expected);

@@ -76,20 +76,27 @@ Shows a message explaining how to access the help page.
 Format: `help`
 
 
-### Adding a person: `add`
+### Adding a patient: `add`
 
-Adds a person to the address book.
+Adds a patient's basic details to MediConnect, with empty medication, allergen, and care instruction lists.
 
-Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]... `
+Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 
-<box type="tip" seamless>
-
-**Tip:** A person can have any number of tags, including zero.
-</box>
+* All five fields are required and can appear in any order.
+* Each prefix must appear only once. Repeated prefixes are rejected, e.g.,
+  `Multiple values specified for a single-valued field: n/`.
+* Patients with the same NRIC, ignoring letter case, are rejected with
+  `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
 
 Examples:
-* `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
-* `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
+
+* `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
+* `add n/Mary Lim ic/S7654321B dob/1945-11-02 p/98765432 a/Blk 12 Ang Mo Kio Ave 4`
+
+The first example returns:
+`New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; Phone: 91234567; Address: 21 Lorong 3, #05-10;`
+
+If a required field is missing, the command is rejected with `Invalid command format!` followed by the usage and example.
 
 ### Listing all persons: `list`
 

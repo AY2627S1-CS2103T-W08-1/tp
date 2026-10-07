@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
@@ -34,11 +33,13 @@ public class AddCommandTest {
     @Test
     public void execute_patientAcceptedByModel_addSuccessful() throws Exception {
         ModelStubAcceptingPatientAdded modelStub = new ModelStubAcceptingPatientAdded();
-        Patient validPatient = new PatientBuilder().build();
+        Patient validPatient = new PatientBuilder().withName("John Tan").withNric("S1234567A")
+                .withDob("1950-04-12").withPhone("91234567").withAddress("21 Lorong 3, #05-10").build();
 
         CommandResult commandResult = new AddCommand(validPatient).execute(modelStub);
 
-        assertEquals(String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPatient)),
+        assertEquals("New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; "
+                + "Phone: 91234567; Address: 21 Lorong 3, #05-10;",
                 commandResult.getFeedbackToUser());
         assertEquals(List.of(validPatient), modelStub.patientsAdded);
     }
@@ -50,6 +51,27 @@ public class AddCommandTest {
         ModelStub modelStub = new ModelStubWithPatient(validPatient);
 
         assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PATIENT, () -> addCommand.execute(modelStub));
+    }
+
+    @Test
+    public void execute_sameNricDifferentCaseAndName_throwsCommandException() {
+        Patient existing = new PatientBuilder().withNric("S1234567A").build();
+        Patient duplicate = new PatientBuilder(existing).withName("Other Name").withNric("s1234567a").build();
+
+        assertThrows(CommandException.class, "This patient (identified by NRIC) already exists in MediConnect.", ()
+            -> new AddCommand(duplicate).execute(new ModelStubWithPatient(existing)));
+    }
+
+    @Test
+    public void execute_sameNameDifferentNric_addSuccessful() throws Exception {
+        ModelStubAcceptingPatientAdded modelStub = new ModelStubAcceptingPatientAdded();
+        Patient first = new PatientBuilder().withNric("S1234567A").build();
+        Patient second = new PatientBuilder(first).withNric("S7654321B").build();
+        new AddCommand(first).execute(modelStub);
+
+        new AddCommand(second).execute(modelStub);
+
+        assertEquals(List.of(first, second), modelStub.patientsAdded);
     }
 
     @Test
