@@ -20,22 +20,23 @@ public class AddCommand extends Command {
 
     public static final String COMMAND_WORD = "add";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds a person to the address book. "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds a patient to MediConnect. "
             + "Parameters: "
             + PREFIX_NAME + "NAME "
-            + PREFIX_PHONE + "PHONE "
             + PREFIX_NRIC + "NRIC "
-            + PREFIX_ADDRESS + "ADDRESS "
-            + PREFIX_DOB + "DOB\n"
+            + PREFIX_DOB + "DOB "
+            + PREFIX_PHONE + "PHONE "
+            + PREFIX_ADDRESS + "ADDRESS\n"
             + "Example: " + COMMAND_WORD + " "
-            + PREFIX_NAME + "John Doe "
-            + PREFIX_PHONE + "98765432 "
+            + PREFIX_NAME + "John Tan "
             + PREFIX_NRIC + "S1234567A "
-            + PREFIX_ADDRESS + "311, Clementi Ave 2, #02-25 "
-            + PREFIX_DOB + "1950-04-12";
+            + PREFIX_DOB + "1950-04-12 "
+            + PREFIX_PHONE + "91234567 "
+            + PREFIX_ADDRESS + "21 Lorong 3";
 
-    public static final String MESSAGE_SUCCESS = "New person added: %1$s";
-    public static final String MESSAGE_DUPLICATE_PATIENT = "This person already exists in the address book.";
+    public static final String MESSAGE_SUCCESS = "New patient added: %1$s;";
+    public static final String MESSAGE_DUPLICATE_PATIENT =
+            "This patient (identified by NRIC) already exists in MediConnect.";
 
     private final Patient toAdd;
 
