@@ -137,6 +137,22 @@ Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
 * `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
 
+### Viewing a patient's full details: `view`
+
+Shows all the details of the specified patient in the panel to the right of the patient list.
+
+Format: `view INDEX`
+
+* Shows the patient at the specified `INDEX`.
+* The index refers to the index number shown in the displayed patient list.
+* The index **must be a positive integer** 1, 2, 3, ...
+* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their medications, allergens, and care instructions. An empty care list shows `None recorded`.
+* The panel keeps showing the patient after other commands, such as `list` or `find`. It updates when that patient's details change, and is cleared when that patient is deleted.
+
+Examples:
+* `list` followed by `view 2` shows the details of the 2nd patient in the list.
+* `find Betsy` followed by `view 1` shows the details of the 1st patient in the results of the `find` command.
+
 ### Clearing all entries: `clear`
 
 Clears all entries from the address book.
@@ -194,4 +210,5 @@ Action     | Format, Examples
 **Edit**   | Not implemented in the MVP.
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list`
+**View**   | `view INDEX`<br> e.g., `view 2`
 **Help**   | `help`
