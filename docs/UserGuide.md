@@ -85,6 +85,10 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   `Multiple values specified for a single-valued field: n/`.
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
+* `NAME` can only contain letters, spaces, `/` and `.`, e.g., `Tan Ah Kow s/o Lim`.
+  Multiple spaces between words are reduced to one.
+* `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
+  It is stored without the `+65`.
 
 Examples:
 

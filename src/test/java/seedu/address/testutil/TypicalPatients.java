@@ -34,21 +34,21 @@ public class TypicalPatients {
             .withPhone("87652533")
             .withAddress("10th street").build();
     public static final Patient ELLE = new PatientBuilder().withNric("S0000005A").withName("Elle Meyer")
-            .withPhone("9482224")
+            .withPhone("94822240")
             .withAddress("michegan ave").build();
     public static final Patient FIONA = new PatientBuilder().withNric("S0000006A").withName("Fiona Kunz")
-            .withPhone("9482427")
+            .withPhone("94824270")
             .withAddress("little tokyo").build();
     public static final Patient GEORGE = new PatientBuilder().withNric("S0000007A").withName("George Best")
-            .withPhone("9482442")
+            .withPhone("94824420")
             .withAddress("4th street").build();
 
     // Manually added
     public static final Patient HOON = new PatientBuilder().withNric("S0000008A").withName("Hoon Meier")
-            .withPhone("8482424")
+            .withPhone("84824240")
             .withAddress("little india").build();
     public static final Patient IDA = new PatientBuilder().withNric("S0000009A").withName("Ida Mueller")
-            .withPhone("8482131")
+            .withPhone("84821310")
             .withAddress("chicago ave").build();
 
     // Manually added - Patient's details found in {@code CommandTestUtil}
