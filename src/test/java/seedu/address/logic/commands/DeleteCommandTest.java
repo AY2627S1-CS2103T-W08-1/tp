@@ -8,6 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
+import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.AddressBookBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -33,7 +35,7 @@ public class DeleteCommandTest {
         DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PATIENT);
 
         String expectedMessage = String.format(DeleteCommand.MESSAGE_DELETE_PATIENT_SUCCESS,
-                Messages.format(patientToDelete));
+                patientToDelete.getName(), patientToDelete.getNric());
 
         ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.deletePatient(patientToDelete);
@@ -57,13 +59,30 @@ public class DeleteCommandTest {
         DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PATIENT);
 
         String expectedMessage = String.format(DeleteCommand.MESSAGE_DELETE_PATIENT_SUCCESS,
-                Messages.format(patientToDelete));
+                patientToDelete.getName(), patientToDelete.getNric());
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.deletePatient(patientToDelete);
         showNoPatient(expectedModel);
 
         assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_lastPatientInUnfilteredList_success() {
+        Model lastPatientModel = new ModelManager(new AddressBookBuilder().withPatient(ALICE).build(),
+                new UserPrefs());
+        Patient patientToDelete = lastPatientModel.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
+        DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PATIENT);
+
+        String expectedMessage = String.format(DeleteCommand.MESSAGE_DELETE_PATIENT_SUCCESS,
+                patientToDelete.getName(), patientToDelete.getNric());
+
+        Model expectedModel = new ModelManager(lastPatientModel.getAddressBook(), new UserPrefs());
+        expectedModel.deletePatient(patientToDelete);
+
+        assertCommandSuccess(deleteCommand, lastPatientModel, expectedMessage, expectedModel);
+        assertTrue(expectedModel.getFilteredPatientList().isEmpty());
     }
 
     @Test
