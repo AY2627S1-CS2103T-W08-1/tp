@@ -74,6 +74,46 @@ public class FindCommandTest {
     }
 
     @Test
+    public void execute_singleKeyword_singlePatientFound() {
+        String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 1);
+        NameContainsKeywordsPredicate predicate = preparePredicate("Elle");
+        FindCommand command = new FindCommand(predicate);
+        expectedModel.updateFilteredPatientList(predicate);
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+        assertEquals(List.of(ELLE), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void execute_caseInsensitiveKeyword_patientFound() {
+        String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 1);
+        NameContainsKeywordsPredicate predicate = preparePredicate("kurz");
+        FindCommand command = new FindCommand(predicate);
+        expectedModel.updateFilteredPatientList(predicate);
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+        assertEquals(List.of(CARL), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void execute_partialWordKeyword_noPatientFound() {
+        String expectedMessage = FindCommand.MESSAGE_NO_PATIENTS_FOUND;
+        NameContainsKeywordsPredicate predicate = preparePredicate("Ale");
+        FindCommand command = new FindCommand(predicate);
+        expectedModel.updateFilteredPatientList(predicate);
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+        assertEquals(List.of(), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void execute_numericKeyword_noPatientFound() {
+        String expectedMessage = FindCommand.MESSAGE_NO_PATIENTS_FOUND;
+        NameContainsKeywordsPredicate predicate = preparePredicate("123");
+        FindCommand command = new FindCommand(predicate);
+        expectedModel.updateFilteredPatientList(predicate);
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+        assertEquals(List.of(), model.getFilteredPatientList());
+    }
+
+    @Test
     public void toStringMethod() {
         NameContainsKeywordsPredicate predicate = new NameContainsKeywordsPredicate(List.of("keyword"));
         FindCommand findCommand = new FindCommand(predicate);
