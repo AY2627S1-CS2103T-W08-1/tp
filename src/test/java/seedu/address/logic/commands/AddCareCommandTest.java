@@ -87,15 +87,24 @@ public class AddCareCommandTest {
         Patient patient = new PatientBuilder(ALICE)
                 .withMedications("Metformin")
                 .withAllergens("Penicillin")
+                .withCareInstructions("Check blood sugar")
                 .build();
         Model actualModel = new ModelManager();
         actualModel.addPatient(patient);
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
-                List.of("METFORMIN"), List.of("penicillin"), List.of());
+                List.of("METFORMIN"), List.of("penicillin"), List.of("check blood sugar"));
 
         String expectedMessage = AddCareCommand.MESSAGE_DUPLICATE_MEDICATION
-                + "\n" + AddCareCommand.MESSAGE_DUPLICATE_ALLERGEN;
+                + "\n" + AddCareCommand.MESSAGE_DUPLICATE_ALLERGEN
+                + "\n" + AddCareCommand.MESSAGE_DUPLICATE_CARE_INSTRUCTION;
         assertCommandFailure(command, actualModel, expectedMessage);
+    }
+
+    @Test
+    public void execute_noCareEntries_throwsCommandException() {
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of());
+
+        assertCommandFailure(command, model, AddCareCommand.MESSAGE_NO_CARE_INFO);
     }
 
     @Test
@@ -116,11 +125,17 @@ public class AddCareCommandTest {
                 List.of("Metformin"), List.of(), List.of());
         AddCareCommand differentEntryCommand = new AddCareCommand(INDEX_FIRST_PATIENT,
                 List.of("Aspirin"), List.of(), List.of());
+        AddCareCommand differentAllergenCommand = new AddCareCommand(INDEX_FIRST_PATIENT,
+                List.of("Metformin"), List.of("Penicillin"), List.of());
+        AddCareCommand differentCareInstructionCommand = new AddCareCommand(INDEX_FIRST_PATIENT,
+                List.of("Metformin"), List.of(), List.of("Check blood sugar"));
 
         assertTrue(command.equals(command));
         assertTrue(command.equals(sameCommand));
         assertFalse(command.equals(differentIndexCommand));
         assertFalse(command.equals(differentEntryCommand));
+        assertFalse(command.equals(differentAllergenCommand));
+        assertFalse(command.equals(differentCareInstructionCommand));
         assertFalse(command.equals(null));
         assertFalse(command.equals(1));
     }
