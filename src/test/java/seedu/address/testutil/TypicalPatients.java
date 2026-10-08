@@ -32,7 +32,9 @@ public class TypicalPatients {
             .withAddress("wall street").build();
     public static final Patient DANIEL = new PatientBuilder().withNric("S0000004A").withName("Daniel Meier")
             .withPhone("87652533")
-            .withAddress("10th street").build();
+            .withAddress("10th street")
+            .withMedications("Metformin").withAllergens("Penicillin")
+            .withCareInstructions("Check blood sugar").build();
     public static final Patient ELLE = new PatientBuilder().withNric("S0000005A").withName("Elle Meyer")
             .withPhone("94822240")
             .withAddress("michegan ave").build();
