@@ -71,7 +71,7 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/se-
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, `PatientDetailPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
@@ -126,6 +126,7 @@ The `Model` component,
 
 * stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates when the list changes.
+* stores the patient being viewed, if any. It exposes this patient as an `ObservableValue<Patient>` that the UI observes, so the detail panel updates when the viewed patient changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
 
@@ -158,6 +159,42 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### View patient feature
+
+The `view INDEX` command shows the full details of a patient in the `PatientDetailPanel`, next to the patient list.
+
+#### Implementation
+
+`ModelManager` keeps the patient being viewed in an `ObjectProperty<Patient>`. It is exposed through `Model#getViewedPatient()` and `Logic#getViewedPatient()` as a read-only `ObservableValue<Patient>`, whose value is `null` when no patient is being viewed.
+
+The sequence diagram below shows how `view 1` goes through the `Logic` component.
+
+<puml src="diagrams/ViewSequenceDiagram.puml" alt="Interactions Inside the Logic Component for the `view 1` Command" />
+
+1. `ViewCommandParser` parses the index in the same way as `DeleteCommandParser`, so `view` accepts the same `INDEX` values as `delete`.
+1. `ViewCommand#execute()` checks the index against the filtered patient list. An index beyond the list size produces the same invalid-index message as `delete`.
+1. `ViewCommand` calls `Model#setViewedPatient()` with the selected patient.
+1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, or care instruction list.
+
+`ModelManager` keeps the viewed patient consistent with the address book:
+
+* `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information.
+* `deletePatient(target)` clears the viewed patient if `target` is being viewed.
+* `setAddressBook(...)`, which the `clear` command uses, clears the viewed patient if it is not in the new data.
+
+Filtering the patient list (e.g., with `find`) does not change the viewed patient.
+
+#### Design considerations
+
+**Aspect: Where the viewed patient is stored**
+
+* **Alternative 1 (current choice):** In the `Model`, as an observable value.
+  * Pros: Commands that change patients can keep the panel up to date without knowing about the UI. The behavior can be unit tested in `ModelManagerTest`.
+  * Cons: Adds a small amount of UI-related state to the `Model`.
+* **Alternative 2:** Return the patient in `CommandResult` and let `MainWindow` update the panel.
+  * Pros: The `Model` stays unchanged.
+  * Cons: The panel would show stale data after the patient is edited or deleted by another command.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -586,6 +623,28 @@ testers are expected to do more *exploratory* testing.
       Expected: Similar to previous.
 
 1. _{ more test cases … }_
+
+### Viewing a patient
+
+1. Viewing a patient while all patients are being shown
+
+   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
+
+   1. Test case: `view 1`<br>
+      Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
+
+   1. Test case: `view 0`<br>
+      Expected: The detail panel is unchanged. The status message shows the invalid command format error.
+
+   1. Other incorrect view commands to try: `view`, `view x`, `view 1 2`, `view y` (where y is larger than the list size)<br>
+      Expected: The detail panel is unchanged. The status message shows an error.
+
+1. Deleting the patient being viewed
+
+   1. Prerequisites: `view 1` has been run.
+
+   1. Test case: `delete 1`<br>
+      Expected: The detail panel returns to the placeholder message.
 
 ### Saving data
 

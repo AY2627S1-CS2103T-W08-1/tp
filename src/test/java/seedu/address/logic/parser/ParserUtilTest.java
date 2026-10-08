@@ -18,7 +18,7 @@ public class ParserUtilTest {
     private static final String INVALID_ADDRESS = " ";
 
     private static final String VALID_NAME = "Rachel Walker";
-    private static final String VALID_PHONE = "123456";
+    private static final String VALID_PHONE = "91234567";
     private static final String VALID_ADDRESS = "123 Main Street #0505";
 
     private static final String WHITESPACE = " \t\r\n";
@@ -64,6 +64,12 @@ public class ParserUtilTest {
         String nameWithWhitespace = WHITESPACE + VALID_NAME + WHITESPACE;
         Name expectedName = new Name(VALID_NAME);
         assertEquals(expectedName, ParserUtil.parseName(nameWithWhitespace));
+    }
+
+    @Test
+    public void parseName_multipleSpacesBetweenWords_returnsCollapsedName() throws Exception {
+        Name expectedName = new Name("Rachel Walker");
+        assertEquals(expectedName, ParserUtil.parseName("Rachel   Walker"));
     }
 
     @Test

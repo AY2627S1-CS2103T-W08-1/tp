@@ -67,11 +67,14 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
+Opens a help window listing every command, its format, and a one-line description.
 
 ![help message](images/helpMessage.png)
 
 Format: `help`
+
+* You can also open the help window with the `Help` menu or by pressing `F1`.
+* Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
 
 
 ### Adding a patient: `add`
@@ -83,8 +86,15 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * All five fields are required and can appear in any order.
 * Each prefix must appear only once. Repeated prefixes are rejected, e.g.,
   `Multiple values specified for a single-valued field: n/`.
+* `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
+  It is not case-sensitive and is stored in uppercase.
+* `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, and cannot be in the future.
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
+* `NAME` can only contain letters, spaces, `/` and `.`, e.g., `Tan Ah Kow s/o Lim`.
+  Multiple spaces between words are reduced to one.
+* `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
+  It is stored without the `+65`.
 
 Examples:
 
@@ -95,6 +105,35 @@ The first example returns:
 `New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; Phone: 91234567; Address: 21 Lorong 3, #05-10;`
 
 If a required field is missing, the command is rejected with `Invalid command format!` followed by the usage and example.
+
+### Adding care information: `addcare`
+
+Appends medications, allergens, or care instructions to the patient at the displayed index.
+Existing care information is never overwritten.
+
+Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...`
+
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
+* Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
+* Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
+  same command are still added.
+
+Examples:
+
+* `addcare 1 med/Metformin 500mg twice daily`
+* `addcare 2 al/Penicillin al/Shellfish`
+* `addcare 1 ci/Check blood sugar before breakfast`
+
+A successful command returns `Updated care info for NAME. Added: ITEMS.` Duplicate entries produce category-specific
+feedback:
+
+* `This medication already exists for this patient and was not added again.`
+* `This allergen already exists for this patient and was not added again.`
+* `This instruction already exists for this patient and was not added again.`
+
+The command is rejected without changing the patient when the index is invalid, no care prefix is provided, any entry
+is blank, or every entry is a duplicate.
 
 ### Listing all persons: `list`
 
@@ -136,6 +175,22 @@ Format: `delete INDEX`
 Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
 * `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
+
+### Viewing a patient's full details: `view`
+
+Shows all the details of the specified patient in the panel to the right of the patient list.
+
+Format: `view INDEX`
+
+* Shows the patient at the specified `INDEX`.
+* The index refers to the index number shown in the displayed patient list.
+* The index **must be a positive integer** 1, 2, 3, ...
+* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their medications, allergens, and care instructions. An empty care list shows `None recorded`.
+* The panel keeps showing the patient after other commands, such as `list` or `find`. It updates when that patient's details change, and is cleared when that patient is deleted.
+
+Examples:
+* `list` followed by `view 2` shows the details of the 2nd patient in the list.
+* `find Betsy` followed by `view 1` shows the details of the 1st patient in the results of the `find` command.
 
 ### Clearing all entries: `clear`
 
@@ -194,4 +249,5 @@ Action     | Format, Examples
 **Edit**   | Not implemented in the MVP.
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list`
+**View**   | `view INDEX`<br> e.g., `view 2`
 **Help**   | `help`

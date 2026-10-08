@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -20,6 +21,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
@@ -35,6 +37,13 @@ public class AddressBookParserTest {
         Patient patient = new PatientBuilder().build();
         AddCommand command = (AddCommand) parser.parseCommand(PatientUtil.getAddCommand(patient));
         assertEquals(new AddCommand(patient), command);
+    }
+
+    @Test
+    public void parseCommand_addCare() throws Exception {
+        AddCareCommand command = (AddCareCommand) parser.parseCommand("addcare 1 med/Metformin al/Penicillin");
+        assertEquals(new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Metformin"), List.of("Penicillin"), List.of()),
+                command);
     }
 
     @Test
@@ -81,6 +90,18 @@ public class AddressBookParserTest {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 123") instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_view() throws Exception {
+        ViewCommand command = (ViewCommand) parser.parseCommand(
+                ViewCommand.COMMAND_WORD + " " + INDEX_FIRST_PATIENT.getOneBased());
+        assertEquals(new ViewCommand(INDEX_FIRST_PATIENT), command);
+
+        // missing index
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, expectedMessage, ()
+                -> parser.parseCommand(ViewCommand.COMMAND_WORD));
     }
 
     @Test

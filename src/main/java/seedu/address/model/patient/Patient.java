@@ -9,15 +9,15 @@ import seedu.address.commons.util.ToStringBuilder;
 
 /**
  * Represents a Patient in the address book.
- * Guarantees: details are present and not null, immutable. NRIC and DOB are plain values pending field validation.
+ * Guarantees: details are present and not null, field values are validated, immutable.
  */
 public class Patient {
 
     // Identity fields
     private final Name name;
     private final Phone phone;
-    private final String nric;
-    private final String dob;
+    private final Nric nric;
+    private final Dob dob;
 
     // Data fields
     private final Address address;
@@ -28,7 +28,7 @@ public class Patient {
     /**
      * Every field must be present and not null.
      */
-    public Patient(Name name, String nric, String dob, Phone phone, Address address,
+    public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<String> medications, List<String> allergens, List<String> careInstructions) {
         requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions);
         this.name = name;
@@ -44,7 +44,7 @@ public class Patient {
     /**
      * Creates a patient with empty care lists.
      */
-    public Patient(Name name, String nric, String dob, Phone phone, Address address) {
+    public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address) {
         this(name, nric, dob, phone, address, List.of(), List.of(), List.of());
     }
 
@@ -56,11 +56,11 @@ public class Patient {
         return phone;
     }
 
-    public String getNric() {
+    public Nric getNric() {
         return nric;
     }
 
-    public String getDob() {
+    public Dob getDob() {
         return dob;
     }
 
@@ -90,7 +90,7 @@ public class Patient {
         }
 
         return otherPatient != null
-                && otherPatient.getNric().equalsIgnoreCase(getNric());
+                && otherPatient.getNric().equals(getNric());
     }
 
     /**

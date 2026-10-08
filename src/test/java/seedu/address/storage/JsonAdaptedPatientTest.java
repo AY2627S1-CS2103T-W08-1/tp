@@ -11,19 +11,23 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Phone;
 import seedu.address.testutil.PatientBuilder;
 
 public class JsonAdaptedPatientTest {
     private static final String INVALID_NAME = "R@chel";
     private static final String INVALID_PHONE = "+651234";
+    private static final String INVALID_NRIC = "S123A";
+    private static final String INVALID_DOB = "2021-02-30";
     private static final String INVALID_ADDRESS = " ";
 
     private static final String VALID_NAME = BENSON.getName().toString();
     private static final String VALID_PHONE = BENSON.getPhone().toString();
-    private static final String VALID_NRIC = BENSON.getNric();
-    private static final String VALID_DOB = BENSON.getDob();
+    private static final String VALID_NRIC = BENSON.getNric().toString();
+    private static final String VALID_DOB = BENSON.getDob().toString();
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
 
     @Test
@@ -67,6 +71,15 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_invalidNric_throwsIllegalValueException() {
+        JsonAdaptedPatient patient =
+                new JsonAdaptedPatient(VALID_NAME, INVALID_NRIC, VALID_DOB, VALID_PHONE, VALID_ADDRESS,
+                List.of(), List.of(), List.of());
+        String expectedMessage = Nric.MESSAGE_CONSTRAINTS;
+        assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
+    }
+
+    @Test
     public void toModelType_nullNric_throwsIllegalValueException() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, null, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of());
@@ -91,6 +104,15 @@ public class JsonAdaptedPatientTest {
         assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
     }
 
+
+    @Test
+    public void toModelType_invalidDob_throwsIllegalValueException() {
+        JsonAdaptedPatient patient =
+                new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, INVALID_DOB, VALID_PHONE, VALID_ADDRESS,
+                List.of(), List.of(), List.of());
+        String expectedMessage = Dob.MESSAGE_CONSTRAINTS;
+        assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
+    }
 
     @Test
     public void toModelType_nullDob_throwsIllegalValueException() {

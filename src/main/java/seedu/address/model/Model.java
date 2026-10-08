@@ -2,6 +2,7 @@ package seedu.address.model;
 
 import java.util.function.Predicate;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.patient.Patient;
@@ -69,4 +70,16 @@ public interface Model {
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate);
+
+    /**
+     * Returns the patient whose full details are being viewed.
+     * The value is null when no patient is being viewed.
+     */
+    ObservableValue<Patient> getViewedPatient();
+
+    /**
+     * Sets the patient whose full details are being viewed.
+     * {@code patient} must exist in the address book.
+     */
+    void setViewedPatient(Patient patient);
 }

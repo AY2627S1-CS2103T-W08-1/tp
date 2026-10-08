@@ -47,6 +47,9 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane patientListPanelPlaceholder;
 
     @FXML
+    private StackPane patientDetailPanelPlaceholder;
+
+    @FXML
     private StackPane resultDisplayPlaceholder;
 
     @FXML
@@ -116,6 +119,9 @@ public class MainWindow extends UiPart<Stage> {
     void fillInnerParts() {
         patientListPanel = new PatientListPanel(logic.getFilteredPatientList());
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
+
+        PatientDetailPanel patientDetailPanel = new PatientDetailPanel(logic.getViewedPatient());
+        patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());

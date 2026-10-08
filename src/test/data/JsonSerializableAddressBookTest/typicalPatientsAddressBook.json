@@ -23,22 +23,25 @@
     "phone" : "87652533",
     "nric" : "S0000004A",
     "address" : "10th street",
-    "dob" : "1950-01-01"
+    "dob" : "1950-01-01",
+    "medications" : [ "Metformin" ],
+    "allergens" : [ "Penicillin" ],
+    "careInstructions" : [ "Check blood sugar" ]
   }, {
     "name" : "Elle Meyer",
-    "phone" : "9482224",
+    "phone" : "94822240",
     "nric" : "S0000005A",
     "address" : "michegan ave",
     "dob" : "1950-01-01"
   }, {
     "name" : "Fiona Kunz",
-    "phone" : "9482427",
+    "phone" : "94824270",
     "nric" : "S0000006A",
     "address" : "little tokyo",
     "dob" : "1950-01-01"
   }, {
     "name" : "George Best",
-    "phone" : "9482442",
+    "phone" : "94824420",
     "nric" : "S0000007A",
     "address" : "4th street",
     "dob" : "1950-01-01"
