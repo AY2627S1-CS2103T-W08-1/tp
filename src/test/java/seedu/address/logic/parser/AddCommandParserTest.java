@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Phone;
 import seedu.address.testutil.PatientBuilder;
 
@@ -63,6 +65,8 @@ public class AddCommandParserTest {
     @Test
     public void parse_invalidValue_failure() {
         assertParseFailure(parser, VALID_ARGS.replace("John Tan", "John&"), Name.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ARGS.replace("S1234567A", "A1234567B"), Nric.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ARGS.replace("1950-04-12", "2021-02-30"), Dob.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ARGS.replace("91234567", "9123abc"), Phone.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ARGS.replace("21 Lorong 3, #05-10", ""), Address.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ARGS.replace("John Tan", "John&").replace("S1234567A", "invalid"),

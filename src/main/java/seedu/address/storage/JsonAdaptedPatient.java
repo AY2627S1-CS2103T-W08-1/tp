@@ -8,7 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.Phone;
 
@@ -59,8 +61,8 @@ class JsonAdaptedPatient {
     public JsonAdaptedPatient(Patient source) {
         name = source.getName().fullName;
         phone = source.getPhone().value;
-        nric = source.getNric();
-        dob = source.getDob();
+        nric = source.getNric().value;
+        dob = source.getDob().toString();
         address = source.getAddress().value;
         medications.addAll(source.getMedications());
         allergens.addAll(source.getAllergens());
@@ -92,9 +94,18 @@ class JsonAdaptedPatient {
         if (nric == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, "NRIC"));
         }
+        if (!Nric.isValidNric(nric)) {
+            throw new IllegalValueException(Nric.MESSAGE_CONSTRAINTS);
+        }
+        final Nric modelNric = new Nric(nric);
+
         if (dob == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, "DOB"));
         }
+        if (!Dob.isValidDob(dob)) {
+            throw new IllegalValueException(Dob.MESSAGE_CONSTRAINTS);
+        }
+        final Dob modelDob = new Dob(dob);
 
         if (address == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Address.class.getSimpleName()));
@@ -105,7 +116,7 @@ class JsonAdaptedPatient {
         final Address modelAddress = new Address(address);
 
         try {
-            return new Patient(modelName, nric, dob, modelPhone, modelAddress,
+            return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
                     medications, allergens, careInstructions);
         } catch (NullPointerException e) {
             throw new IllegalValueException("Care entries must not be null.");

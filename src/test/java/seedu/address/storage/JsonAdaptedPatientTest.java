@@ -22,8 +22,8 @@ public class JsonAdaptedPatientTest {
 
     private static final String VALID_NAME = BENSON.getName().toString();
     private static final String VALID_PHONE = BENSON.getPhone().toString();
-    private static final String VALID_NRIC = BENSON.getNric();
-    private static final String VALID_DOB = BENSON.getDob();
+    private static final String VALID_NRIC = BENSON.getNric().toString();
+    private static final String VALID_DOB = BENSON.getDob().toString();
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
 
     @Test
