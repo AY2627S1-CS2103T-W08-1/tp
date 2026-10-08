@@ -23,7 +23,7 @@ public class DeleteCommand extends Command {
             + "Parameters: INDEX (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
 
-    public static final String MESSAGE_DELETE_PATIENT_SUCCESS = "Deleted person: %1$s";
+    public static final String MESSAGE_DELETE_PATIENT_SUCCESS = "Deleted patient: %1$s; NRIC: %2$s";
 
     private final Index targetIndex;
 
@@ -42,7 +42,8 @@ public class DeleteCommand extends Command {
 
         Patient patientToDelete = lastShownList.get(targetIndex.getZeroBased());
         model.deletePatient(patientToDelete);
-        return new CommandResult(String.format(MESSAGE_DELETE_PATIENT_SUCCESS, Messages.format(patientToDelete)));
+        return new CommandResult(String.format(MESSAGE_DELETE_PATIENT_SUCCESS,
+                patientToDelete.getName(), patientToDelete.getNric()));
     }
 
     @Override
