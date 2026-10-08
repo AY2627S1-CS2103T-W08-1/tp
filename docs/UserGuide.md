@@ -96,6 +96,35 @@ The first example returns:
 
 If a required field is missing, the command is rejected with `Invalid command format!` followed by the usage and example.
 
+### Adding care information: `addcare`
+
+Appends medications, allergens, or care instructions to the patient at the displayed index.
+Existing care information is never overwritten.
+
+Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...`
+
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
+* Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
+* Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
+  same command are still added.
+
+Examples:
+
+* `addcare 1 med/Metformin 500mg twice daily`
+* `addcare 2 al/Penicillin al/Shellfish`
+* `addcare 1 ci/Check blood sugar before breakfast`
+
+A successful command returns `Updated care info for NAME. Added: ITEMS.` Duplicate entries produce category-specific
+feedback:
+
+* `This medication already exists for this patient and was not added again.`
+* `This allergen already exists for this patient and was not added again.`
+* `This instruction already exists for this patient and was not added again.`
+
+The command is rejected without changing the patient when the index is invalid, no care prefix is provided, any entry
+is blank, or every entry is a duplicate.
+
 ### Listing all persons: `list`
 
 Shows a list of all persons in the address book.
