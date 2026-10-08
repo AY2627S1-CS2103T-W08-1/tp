@@ -20,6 +20,8 @@ public class FindCommand extends Command {
             + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
             + "Example: " + COMMAND_WORD + " alice bob charlie";
 
+    public static final String MESSAGE_NO_PATIENTS_FOUND = "No patients found matching the given keyword(s).";
+
     private final NameContainsKeywordsPredicate predicate;
 
     public FindCommand(NameContainsKeywordsPredicate predicate) {
@@ -30,6 +32,11 @@ public class FindCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.updateFilteredPatientList(predicate);
+
+        if (model.getFilteredPatientList().isEmpty()) {
+            return new CommandResult(MESSAGE_NO_PATIENTS_FOUND);
+        }
+
         return new CommandResult(
                 String.format(Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW, model.getFilteredPatientList().size()));
     }

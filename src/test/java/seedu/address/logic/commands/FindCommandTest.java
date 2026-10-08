@@ -55,7 +55,7 @@ public class FindCommandTest {
 
     @Test
     public void execute_zeroKeywords_noPatientFound() {
-        String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 0);
+        String expectedMessage = FindCommand.MESSAGE_NO_PATIENTS_FOUND;
         NameContainsKeywordsPredicate predicate = preparePredicate(" ");
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPatientList(predicate);
