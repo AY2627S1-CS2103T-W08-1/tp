@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -17,7 +16,19 @@ public class FindCommandParserTest {
 
     @Test
     public void parse_emptyArg_throwsParseException() {
-        assertParseFailure(parser, "     ", String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
+        assertParseFailure(parser, "", FindCommandParser.MESSAGE_NO_KEYWORDS);
+    }
+
+    @Test
+    public void parse_blankArg_throwsParseException() {
+        assertParseFailure(parser, "     ", FindCommandParser.MESSAGE_NO_KEYWORDS);
+    }
+
+    @Test
+    public void parse_singleKeyword_returnsFindCommand() {
+        FindCommand expectedFindCommand =
+                new FindCommand(new NameContainsKeywordsPredicate(List.of("Alice")));
+        assertParseSuccess(parser, "Alice", expectedFindCommand);
     }
 
     @Test
@@ -29,6 +40,13 @@ public class FindCommandParserTest {
 
         // multiple whitespaces between keywords
         assertParseSuccess(parser, " \n Alice \n \t Bob  \t", expectedFindCommand);
+    }
+
+    @Test
+    public void parse_numericKeyword_returnsFindCommand() {
+        FindCommand expectedFindCommand =
+                new FindCommand(new NameContainsKeywordsPredicate(List.of("123")));
+        assertParseSuccess(parser, "123", expectedFindCommand);
     }
 
 }
