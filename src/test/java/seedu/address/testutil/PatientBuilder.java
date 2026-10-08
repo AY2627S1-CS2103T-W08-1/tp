@@ -3,7 +3,9 @@ package seedu.address.testutil;
 import java.util.List;
 
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.Phone;
 
@@ -19,8 +21,8 @@ public class PatientBuilder {
     public static final String DEFAULT_ADDRESS = "123, Jurong West Ave 6, #08-111";
 
     private Name name;
-    private String nric;
-    private String dob;
+    private Nric nric;
+    private Dob dob;
     private Phone phone;
     private Address address;
     private List<String> medications = List.of();
@@ -32,8 +34,8 @@ public class PatientBuilder {
      */
     public PatientBuilder() {
         name = new Name(DEFAULT_NAME);
-        nric = DEFAULT_NRIC;
-        dob = DEFAULT_DOB;
+        nric = new Nric(DEFAULT_NRIC);
+        dob = new Dob(DEFAULT_DOB);
         phone = new Phone(DEFAULT_PHONE);
         address = new Address(DEFAULT_ADDRESS);
     }
@@ -64,7 +66,7 @@ public class PatientBuilder {
      * Sets the patient's nric.
      */
     public PatientBuilder withNric(String nric) {
-        this.nric = nric;
+        this.nric = new Nric(nric);
         return this;
     }
 
@@ -72,7 +74,7 @@ public class PatientBuilder {
      * Sets the patient's dob.
      */
     public PatientBuilder withDob(String dob) {
-        this.dob = dob;
+        this.dob = new Dob(dob);
         return this;
     }
 

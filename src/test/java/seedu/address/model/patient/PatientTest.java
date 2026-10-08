@@ -26,13 +26,6 @@ public class PatientTest {
     }
 
     @Test
-    public void constructor_plainNricAndDob_preservesValues() {
-        Patient patient = new PatientBuilder().withNric("plain identifier").withDob("plain date").build();
-        assertEquals("plain identifier", patient.getNric());
-        assertEquals("plain date", patient.getDob());
-    }
-
-    @Test
     public void constructor_careLists_defensivelyCopied() {
         List<String> medications = new ArrayList<>(List.of("Metformin"));
         List<String> allergens = new ArrayList<>(List.of("Penicillin"));
@@ -66,8 +59,8 @@ public class PatientTest {
     public void isSamePatient() {
         assertTrue(ALICE.isSamePatient(ALICE));
         assertFalse(ALICE.isSamePatient(null));
-        assertTrue(ALICE.isSamePatient(new PatientBuilder(BOB).withNric(ALICE.getNric().toLowerCase()).build()));
-        assertFalse(ALICE.isSamePatient(new PatientBuilder(ALICE).withNric(BOB.getNric()).build()));
+        assertTrue(ALICE.isSamePatient(new PatientBuilder(BOB).withNric(ALICE.getNric().value.toLowerCase()).build()));
+        assertFalse(ALICE.isSamePatient(new PatientBuilder(ALICE).withNric(BOB.getNric().value).build()));
         assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withName("Other Name").build()));
         assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withMedications("Metformin")
                 .withAllergens("Penicillin").withCareInstructions("Rest").build()));
@@ -82,7 +75,7 @@ public class PatientTest {
         assertFalse(ALICE.equals(5));
         assertNotEquals(ALICE, BOB);
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withName("Other Name").build());
-        assertNotEquals(ALICE, new PatientBuilder(ALICE).withNric(BOB.getNric()).build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withNric(BOB.getNric().value).build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withDob("1940-01-01").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withPhone("91234567").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withAddress("Other address").build());
