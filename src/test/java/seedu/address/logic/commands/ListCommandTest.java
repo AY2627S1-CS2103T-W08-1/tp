@@ -36,4 +36,11 @@ public class ListCommandTest {
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
         assertCommandSuccess(new ListCommand(), model, ListCommand.MESSAGE_SUCCESS, expectedModel);
     }
+
+    @Test
+    public void execute_emptyAddressBook_showsNoPatientsMessage() {
+        Model emptyModel = new ModelManager();
+        Model expectedEmptyModel = new ModelManager();
+        assertCommandSuccess(new ListCommand(), emptyModel, ListCommand.MESSAGE_NO_PATIENTS, expectedEmptyModel);
+    }
 }
