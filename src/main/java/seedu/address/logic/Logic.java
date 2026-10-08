@@ -1,5 +1,6 @@
 package seedu.address.logic;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
@@ -22,6 +23,12 @@ public interface Logic {
 
     /** Returns an unmodifiable view of the filtered list of patients */
     ObservableList<Patient> getFilteredPatientList();
+
+    /**
+     * Returns the patient whose full details are being viewed.
+     * The value is null when no patient is being viewed.
+     */
+    ObservableValue<Patient> getViewedPatient();
 
     /**
      * Returns the user prefs' GUI settings.

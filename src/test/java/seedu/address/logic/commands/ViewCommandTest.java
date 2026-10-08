@@ -42,6 +42,7 @@ public class ViewCommandTest {
         String expectedMessage = String.format(ViewCommand.MESSAGE_VIEW_PATIENT_SUCCESS,
                 patientToView.getName());
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.setViewedPatient(patientToView);
 
         assertCommandSuccess(viewCommand, model, expectedMessage, expectedModel);
     }
@@ -61,6 +62,7 @@ public class ViewCommandTest {
         String expectedMessage = String.format(ViewCommand.MESSAGE_VIEW_PATIENT_SUCCESS,
                 patientToView.getName());
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.setViewedPatient(patientToView);
 
         assertCommandSuccess(viewCommand, model, expectedMessage, expectedModel);
     }
@@ -84,6 +86,7 @@ public class ViewCommandTest {
                 patientToView.getName());
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         showPatientAtIndex(expectedModel, INDEX_FIRST_PATIENT);
+        expectedModel.setViewedPatient(patientToView);
 
         assertCommandSuccess(viewCommand, model, expectedMessage, expectedModel);
     }
@@ -99,6 +102,18 @@ public class ViewCommandTest {
         ViewCommand viewCommand = new ViewCommand(outOfBoundIndex);
 
         assertCommandFailure(viewCommand, model, Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_invalidIndexWhileViewingPatient_viewedPatientUnchanged() {
+        Patient viewedPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
+        model.setViewedPatient(viewedPatient);
+
+        Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPatientList().size() + 1);
+        ViewCommand viewCommand = new ViewCommand(outOfBoundIndex);
+
+        assertCommandFailure(viewCommand, model, Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
+        assertEquals(viewedPatient, model.getViewedPatient().getValue());
     }
 
     @Test
