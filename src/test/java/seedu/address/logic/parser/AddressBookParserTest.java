@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -36,6 +37,13 @@ public class AddressBookParserTest {
         Patient patient = new PatientBuilder().build();
         AddCommand command = (AddCommand) parser.parseCommand(PatientUtil.getAddCommand(patient));
         assertEquals(new AddCommand(patient), command);
+    }
+
+    @Test
+    public void parseCommand_addCare() throws Exception {
+        AddCareCommand command = (AddCareCommand) parser.parseCommand("addcare 1 med/Metformin al/Penicillin");
+        assertEquals(new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Metformin"), List.of("Penicillin"), List.of()),
+                command);
     }
 
     @Test
