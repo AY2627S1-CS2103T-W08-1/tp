@@ -114,6 +114,7 @@
         "features": "Features",
         "viewing-help-help": "Viewing help: help",
         "adding-a-patient-add": "Adding a patient: add",
+        "adding-care-information-addcare": "Adding care information: addcare",
         "listing-all-persons-list": "Listing all persons: list",
         "editing-a-patient-edit": "Editing a patient: edit",
         "locating-persons-by-name-find": "Locating persons by name: find",
