@@ -1,11 +1,12 @@
 package seedu.address.ui;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.model.patient.Patient;
@@ -20,7 +21,9 @@ public class PatientDetailPanel extends UiPart<Region> {
     public static final String MESSAGE_NONE_RECORDED = "None recorded";
 
     private static final String FXML = "PatientDetailPanel.fxml";
-    private static final String ENTRY_BULLET = "- ";
+    private static final String ENTRY_BULLET = "\u2022";
+    private static final double ENTRY_BULLET_GAP = 6;
+    private static final String ENTRY_STYLE_CLASS = "label-bright";
 
     @FXML
     private Label placeholder;
@@ -37,11 +40,11 @@ public class PatientDetailPanel extends UiPart<Region> {
     @FXML
     private Label address;
     @FXML
-    private Label medications;
+    private VBox medications;
     @FXML
-    private Label allergens;
+    private VBox allergens;
     @FXML
-    private Label careInstructions;
+    private VBox careInstructions;
 
     /**
      * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
@@ -75,23 +78,37 @@ public class PatientDetailPanel extends UiPart<Region> {
         dob.setText("DOB: " + patient.getDob());
         phone.setText("Phone: " + patient.getPhone());
         address.setText("Address: " + patient.getAddress());
-        medications.setText(formatEntries(patient.getMedications()));
-        allergens.setText(formatEntries(patient.getAllergens()));
-        careInstructions.setText(formatEntries(patient.getCareInstructions()));
+        fillEntries(medications, patient.getMedications());
+        fillEntries(allergens, patient.getAllergens());
+        fillEntries(careInstructions, patient.getCareInstructions());
     }
 
     /**
-     * Returns {@code entries} with one bulleted entry per line.
-     * Returns {@code MESSAGE_NONE_RECORDED} instead if {@code entries} is empty.
+     * Replaces the contents of {@code container} with one bulleted row per entry in {@code entries},
+     * or a single {@code MESSAGE_NONE_RECORDED} label if {@code entries} is empty.
+     * Each entry is a separate row so that a long entry wraps under its own bullet.
      */
-    static String formatEntries(List<String> entries) {
+    private static void fillEntries(VBox container, List<String> entries) {
+        container.getChildren().clear();
+
         if (entries.isEmpty()) {
-            return MESSAGE_NONE_RECORDED;
+            container.getChildren().add(createLabel(MESSAGE_NONE_RECORDED));
+            return;
         }
 
-        return entries.stream()
-                .map(entry -> ENTRY_BULLET + entry)
-                .collect(Collectors.joining("\n"));
+        for (String entry : entries) {
+            Label entryLabel = createLabel(entry);
+            entryLabel.setMinWidth(0);
+            HBox.setHgrow(entryLabel, Priority.ALWAYS);
+            container.getChildren().add(new HBox(ENTRY_BULLET_GAP, createLabel(ENTRY_BULLET), entryLabel));
+        }
+    }
+
+    private static Label createLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add(ENTRY_STYLE_CLASS);
+        label.setWrapText(true);
+        return label;
     }
 
     private static void setShown(Region region, boolean isShown) {
