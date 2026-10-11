@@ -1,0 +1,90 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":AddCareCommandParser" as AddCareCommandParser LOGIC_COLOR
+participant "a:AddCareCommand" as AddCareCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+box UI UI_COLOR_T1
+participant "p:PatientDetailPanel" as PatientDetailPanel UI_COLOR
+end box
+
+[-> LogicManager : execute("addcare 1 med/Metformin")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand("addcare 1 med/Metformin")
+activate AddressBookParser
+
+create AddCareCommandParser
+AddressBookParser -> AddCareCommandParser
+activate AddCareCommandParser
+
+AddCareCommandParser --> AddressBookParser
+deactivate AddCareCommandParser
+
+AddressBookParser -> AddCareCommandParser : parse("1 med/Metformin")
+activate AddCareCommandParser
+
+create AddCareCommand
+AddCareCommandParser -> AddCareCommand
+activate AddCareCommand
+
+AddCareCommand --> AddCareCommandParser
+deactivate AddCareCommand
+
+AddCareCommandParser --> AddressBookParser : a
+deactivate AddCareCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+AddCareCommandParser -[hidden]-> AddressBookParser
+destroy AddCareCommandParser
+
+AddressBookParser --> LogicManager : a
+deactivate AddressBookParser
+
+LogicManager -> AddCareCommand : execute(m)
+activate AddCareCommand
+
+AddCareCommand -> Model : getFilteredPatientList()
+activate Model
+
+Model --> AddCareCommand : patients
+deactivate Model
+
+AddCareCommand -> AddCareCommand : append new, unique entries
+
+AddCareCommand -> Model : setPatient(patientToEdit, editedPatient)
+activate Model
+
+opt patientToEdit is currently viewed
+Model -> PatientDetailPanel : viewed patient changed
+activate PatientDetailPanel
+
+PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
+deactivate PatientDetailPanel
+end
+
+Model --> AddCareCommand
+deactivate Model
+
+create CommandResult
+AddCareCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> AddCareCommand : r
+deactivate CommandResult
+
+AddCareCommand --> LogicManager : r
+deactivate AddCareCommand
+
+[<-- LogicManager
+deactivate LogicManager
+@enduml
