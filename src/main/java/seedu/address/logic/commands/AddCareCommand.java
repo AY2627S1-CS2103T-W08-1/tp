@@ -35,12 +35,10 @@ public class AddCareCommand extends Command {
     public static final String MESSAGE_BLANK_MEDICATION = "Medication entries cannot be blank.";
     public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
     public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
-    public static final String MESSAGE_DUPLICATE_MEDICATION =
-            "This medication already exists for this patient and was not added again.";
-    public static final String MESSAGE_DUPLICATE_ALLERGEN =
-            "This allergen already exists for this patient and was not added again.";
-    public static final String MESSAGE_DUPLICATE_CARE_INSTRUCTION =
-            "This instruction already exists for this patient and was not added again.";
+    public static final String MESSAGE_DUPLICATE_EXISTING =
+            "%1$s \"%2$s\" was not added: it already exists for this patient.";
+    public static final String MESSAGE_DUPLICATE_IN_COMMAND =
+            "%1$s \"%2$s\" was not added: it was repeated in this command.";
     public static final String MESSAGE_SUCCESS = "Updated care info for %1$s. Added: %2$s.";
 
     private final Index targetIndex;
@@ -79,15 +77,10 @@ public class AddCareCommand extends Command {
         List<String> addedEntries = new ArrayList<>();
         List<String> duplicateMessages = new ArrayList<>();
 
-        if (appendNewEntries(updatedMedications, medications, addedEntries)) {
-            duplicateMessages.add(MESSAGE_DUPLICATE_MEDICATION);
-        }
-        if (appendNewEntries(updatedAllergens, allergens, addedEntries)) {
-            duplicateMessages.add(MESSAGE_DUPLICATE_ALLERGEN);
-        }
-        if (appendNewEntries(updatedCareInstructions, careInstructions, addedEntries)) {
-            duplicateMessages.add(MESSAGE_DUPLICATE_CARE_INSTRUCTION);
-        }
+        appendNewEntries(updatedMedications, medications, "Medication", addedEntries, duplicateMessages);
+        appendNewEntries(updatedAllergens, allergens, "Allergen", addedEntries, duplicateMessages);
+        appendNewEntries(updatedCareInstructions, careInstructions, "Care instruction", addedEntries,
+                duplicateMessages);
 
         if (addedEntries.isEmpty()) {
             String message = duplicateMessages.isEmpty()
@@ -109,21 +102,27 @@ public class AddCareCommand extends Command {
         return new CommandResult(successMessage);
     }
 
-    private static boolean appendNewEntries(List<String> existingEntries, List<String> requestedEntries,
-            List<String> addedEntries) {
-        boolean hasDuplicate = false;
+    private static void appendNewEntries(List<String> existingEntries, List<String> requestedEntries,
+            String entryType, List<String> addedEntries, List<String> duplicateMessages) {
+        List<String> seenInCommand = new ArrayList<>();
         for (String requestedEntry : requestedEntries) {
             String trimmedEntry = requestedEntry.trim();
-            boolean isDuplicate = existingEntries.stream()
-                    .anyMatch(existingEntry -> existingEntry.trim().equalsIgnoreCase(trimmedEntry));
-            if (isDuplicate) {
-                hasDuplicate = true;
+            if (containsIgnoreCase(seenInCommand, trimmedEntry)) {
+                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_IN_COMMAND, entryType, trimmedEntry));
+                continue;
+            }
+            seenInCommand.add(trimmedEntry);
+            if (containsIgnoreCase(existingEntries, trimmedEntry)) {
+                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_EXISTING, entryType, trimmedEntry));
                 continue;
             }
             existingEntries.add(trimmedEntry);
             addedEntries.add(trimmedEntry);
         }
-        return hasDuplicate;
+    }
+
+    private static boolean containsIgnoreCase(List<String> entries, String requestedEntry) {
+        return entries.stream().anyMatch(entry -> entry.trim().equalsIgnoreCase(requestedEntry));
     }
 
     @Override

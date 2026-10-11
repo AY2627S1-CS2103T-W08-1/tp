@@ -48,12 +48,12 @@ public class AddCareCommandTest {
     }
 
     @Test
-    public void execute_partialDuplicates_addsUniqueEntriesAndReportsDuplicate() {
+    public void execute_existingAndRepeatedDuplicates_addsUniqueEntryAndReportsEachDuplicate() {
         Patient patient = new PatientBuilder(ALICE).withMedications("Metformin").build();
         Model actualModel = new ModelManager();
         actualModel.addPatient(patient);
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
-                List.of(" metformin ", " Atorvastatin ", "ATORVASTATIN"), List.of(), List.of());
+                List.of(" metformin ", "METFORMIN", " Atorvastatin ", "ATORVASTATIN"), List.of(), List.of());
 
         Patient editedPatient = new PatientBuilder(patient)
                 .withMedications("Metformin", "Atorvastatin")
@@ -62,7 +62,9 @@ public class AddCareCommandTest {
         expectedModel.setPatient(patient, editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(), "Atorvastatin")
-                + "\n" + AddCareCommand.MESSAGE_DUPLICATE_MEDICATION;
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING, "Medication", "metformin")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_IN_COMMAND, "Medication", "METFORMIN")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_IN_COMMAND, "Medication", "ATORVASTATIN");
         assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
     }
 
@@ -94,9 +96,12 @@ public class AddCareCommandTest {
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
                 List.of("METFORMIN"), List.of("penicillin"), List.of("check blood sugar"));
 
-        String expectedMessage = AddCareCommand.MESSAGE_DUPLICATE_MEDICATION
-                + "\n" + AddCareCommand.MESSAGE_DUPLICATE_ALLERGEN
-                + "\n" + AddCareCommand.MESSAGE_DUPLICATE_CARE_INSTRUCTION;
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                "Medication", "METFORMIN")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                        "Allergen", "penicillin")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                        "Care instruction", "check blood sugar");
         assertCommandFailure(command, actualModel, expectedMessage);
     }
 
@@ -111,6 +116,15 @@ public class AddCareCommandTest {
     public void execute_invalidIndex_throwsCommandException() {
         Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPatientList().size() + 1);
         AddCareCommand command = new AddCareCommand(outOfBoundsIndex, List.of("Metformin"), List.of(), List.of());
+
+        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_invalidIndexFilteredList_throwsCommandException() {
+        showPatientAtIndex(model, INDEX_FIRST_PATIENT);
+        AddCareCommand command = new AddCareCommand(INDEX_SECOND_PATIENT,
+                List.of("Metformin"), List.of(), List.of());
 
         assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
     }
