@@ -67,7 +67,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
 ### Viewing help: `help`
 
-Opens a help window listing every command, its format, and a one-line description.
+Opens a help window that lists every command with its format and a one-line description.
 
 ![help message](images/helpMessage.png)
 
@@ -75,6 +75,9 @@ Format: `help`
 
 * You can also open the help window with the `Help` menu or by pressing `F1`.
 * Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
+* If the help window is already open, no second help window is opened.
+
+The command returns `Opened help window.`
 
 
 ### Adding a patient: `add`
@@ -182,15 +185,27 @@ Shows all the details of the specified patient in the panel to the right of the 
 
 Format: `view INDEX`
 
-* Shows the patient at the specified `INDEX`.
-* The index refers to the index number shown in the displayed patient list.
+* Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
-* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their medications, allergens, and care instructions. An empty care list shows `None recorded`.
-* The panel keeps showing the patient after other commands, such as `list` or `find`. It updates when that patient's details change, and is cleared when that patient is deleted.
+* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
+  medications, allergens, and care instructions, one entry per line. An empty list shows `None recorded`.
+* Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+* The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
+  patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
+  to the message above when the patient is deleted or all patients are cleared.
 
 Examples:
+
 * `list` followed by `view 2` shows the details of the 2nd patient in the list.
-* `find Betsy` followed by `view 1` shows the details of the 1st patient in the results of the `find` command.
+* `find Bernice` followed by `view 1` shows the details of the 1st patient in the results of the `find` command.
+
+A successful command returns `Showing patient: NAME`, e.g., `Showing patient: Bernice Yu`.
+
+If `INDEX` is larger than the number of patients in the displayed list, the command is rejected with
+`The patient index provided is invalid.` If `INDEX` is missing, is not a positive integer (e.g., `0`, `-1`, or `abc`),
+is too large to be a valid number (e.g., `99999999999`), or is followed by extra words, the command is rejected with
+`Invalid command format!` followed by the usage and example. In both cases, the panel keeps showing the patient it
+showed before.
 
 ### Clearing all entries: `clear`
 
@@ -241,13 +256,14 @@ _Details coming soon ..._
 
 ## Command summary
 
-Action     | Format, Examples
------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
-**Clear**  | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | Not implemented in the MVP.
-**Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list`
-**View**   | `view INDEX`<br> e.g., `view 2`
-**Help**   | `help`
+Action            | Format, Examples
+------------------|------------------------------------------------------------------------------------------------------------------
+**Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
+**Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Clear**         | `clear`
+**Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Exit**          | `exit`
+**Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
+**Help**          | `help`
+**List**          | `list`
+**View**          | `view INDEX` <br> e.g., `view 2`
