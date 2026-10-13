@@ -593,19 +593,27 @@ testers are expected to do more *exploratory* testing.
 
 1. Initial launch
 
-   1. Download the JAR file and copy it into an empty folder.
+   1. Download `mediconnect.jar` and copy it into an empty folder.
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+   1. Open a terminal in that folder and run `java -jar mediconnect.jar`.<br>
+      Expected: The GUI opens with a set of sample patients. The window size may not be optimal.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
+   1. Relaunch the app with `java -jar mediconnect.jar`.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases … }_
+1. Closing the app
+
+   1. Prerequisites: The app is running.
+
+   1. Test case: Type `exit` in the command box and press Enter.<br>
+      Expected: The status message shows `Exiting MediConnect as requested ...` and the app window closes.
+
+   1. Test case: Close the window using the window's close button.<br>
+      Expected: The app window closes. The window size and location are retained on the next launch.
 
 ### Deleting a person
 
