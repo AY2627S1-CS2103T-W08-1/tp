@@ -663,6 +663,27 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `delete 2`<br>
       Expected: No patient is deleted. The status message shows `The patient index provided is invalid.`, because the index refers to the filtered list.
 
+### Finding patients
+
+1. Finding patients by name
+
+   1. Prerequisites: The sample data is loaded, with patients named `Alex Yeoh`, `Bernice Yu`, `Charlotte Oliveiro` and `David Li`.
+
+   1. Test case: `find Alex`<br>
+      Expected: Only `Alex Yeoh` is shown in the patient list. The status message shows `1 patient(s) listed!`
+
+   1. Test case: `find aLeX`<br>
+      Expected: Same as `find Alex`, because keywords are matched case-insensitively.
+
+   1. Test case: `find alex david`<br>
+      Expected: `Alex Yeoh` and `David Li` are shown. The status message shows `2 patient(s) listed!`
+
+   1. Test case: `find Zebra`<br>
+      Expected: The patient list is empty. The status message shows `No patients found matching the given keyword(s).`
+
+   1. Test case: `find`<br>
+      Expected: The patient list is unchanged. The status message shows `Please provide at least one keyword to search for.`
+
 ### Viewing a patient
 
 1. Viewing a patient while all patients are being shown
