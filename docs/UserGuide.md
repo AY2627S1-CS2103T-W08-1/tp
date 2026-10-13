@@ -206,17 +206,17 @@ Format: `exit`
 
 ### Saving the data
 
-AddressBook automatically saves data after every command. You do not need to save manually.
+MediConnect automatically saves data after every command. You do not need to save manually.
 
 ### Editing the data file
 
-AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+MediConnect data is saved automatically as a JSON file `[JAR file location]/data/mediconnect.json`. Advanced users are welcome to update data directly by editing that data file.
 
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
+If your changes make the data file invalid, MediConnect starts with no patients at the next run. The invalid file remains on disk until you run a command (MediConnect saves after every command). Still, we recommend backing up the file before editing it.<br>
+Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
 ### Archiving data files `[coming in v2.0]`
@@ -227,8 +227,11 @@ _Details coming soon ..._
 
 ## FAQ
 
+**Q**: Where is my data saved?<br>
+**A**: In `[JAR file location]/data/mediconnect.json`. If this file does not exist, MediConnect starts with sample patients and creates the file after the first command you run. After that, it saves to the file after every command.
+
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
 
 --------------------------------------------------------------------------------------------------------------------
 
