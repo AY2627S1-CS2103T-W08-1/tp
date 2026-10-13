@@ -615,6 +615,26 @@ testers are expected to do more *exploratory* testing.
    1. Test case: Close the window using the window's close button.<br>
       Expected: The app window closes. The window size and location are retained on the next launch.
 
+### Listing patients
+
+1. Listing patients when there is data
+
+   1. Prerequisites: The app has at least one patient, e.g. the sample data on first launch.
+
+   1. Test case: `list`<br>
+      Expected: All patients are shown in the patient list. The status message shows `Listed all patients.`
+
+   1. Test case: `find John` followed by `list`<br>
+      Expected: The filter is cleared and all patients are shown again. The status message shows `Listed all patients.`
+
+1. Listing patients when there is no data
+
+   1. Prerequisites: Clear all data using the `clear` command.<br>
+      Expected: The status message shows `All patients have been cleared!`
+
+   1. Test case: `list`<br>
+      Expected: The patient list is empty. The status message shows `No patients found. Use the 'add' command to add a patient.`
+
 ### Deleting a person
 
 1. Deleting a person while all persons are being shown
