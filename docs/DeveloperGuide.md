@@ -141,14 +141,18 @@ The `Model` component,
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
 <puml src="diagrams/StorageClassDiagram.puml" width="550" />
 
 The `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
+* can save both patient data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+
+The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
+
+Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address as strings, and the medications, allergens and care instructions as lists of strings. The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read, `JsonAdaptedPatient#toModelType()` checks every field with the same rules as the `add` command. If any patient is invalid, or two patients have the same NRIC, the whole file is rejected and MediConnect starts with no patients.
 
 ### Common classes
 
@@ -648,8 +652,16 @@ testers are expected to do more *exploratory* testing.
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+1. Dealing with missing data files
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+   1. Prerequisites: The app is closed. Delete `data/mediconnect.json`.
 
-1. _{ more test cases … }_
+   1. Launch the app.<br>
+      Expected: The app starts with the sample patients. A new `data/mediconnect.json` is created after the first command.
+
+1. Dealing with corrupted data files
+
+   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
+
+   1. Launch the app.<br>
+      Expected: The app starts with no patients. The invalid file is kept until the first command, which overwrites it with an empty patient list.
