@@ -21,13 +21,14 @@ public class ArgumentTokenizerTest {
 
     @Test
     public void verifyNoInvalidPrefixes_allowedTokens_success() throws Exception {
-        ArgumentTokenizer.verifyNoInvalidPrefixes("p/value s/o d/o S/O D/O 21/3 /hello", pSlash);
+        ArgumentTokenizer.verifyNoInvalidPrefixes("p/value/suffix s/o d/o S/O D/O", pSlash);
         ArgumentTokenizer.verifyNoInvalidPrefixes(" -t value ^Q value", dashT, hatQ);
     }
 
     @Test
     public void verifyNoInvalidPrefixes_unknownToken_throwsParseException() {
-        for (String token : List.of("x/123", "x/", "s/123", "d/123", "x/s/o", "s/oops")) {
+        for (String token : List.of("x/123", "x/", "s/123", "d/123", "x/s/o", "s/oops",
+                "x1/123", "21/3", "_/value", "--bad/value", "名字/value", "/hello", "/", "A/B")) {
             String prefix = token.substring(0, token.indexOf('/') + 1);
             String expected = "Unrecognized parameter: " + prefix + ". Please check the command format.";
             assertThrows(ParseException.class, expected, () ->

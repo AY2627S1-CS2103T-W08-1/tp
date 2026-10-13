@@ -71,6 +71,11 @@ public class AddCommandParserTest {
         assertParseFailure(parser, " x/123", expected);
         assertParseFailure(parser, VALID_ARGS + " med/Aspirin",
                 "Unrecognized parameter: med/. Please check the command format.");
+        for (String token : List.of("x1/123", "21/3", "_/value", "/hello", "A/B")) {
+            String prefix = token.substring(0, token.indexOf('/') + 1);
+            assertParseFailure(parser, VALID_ARGS + " " + token,
+                    "Unrecognized parameter: " + prefix + ". Please check the command format.");
+        }
     }
 
     @Test

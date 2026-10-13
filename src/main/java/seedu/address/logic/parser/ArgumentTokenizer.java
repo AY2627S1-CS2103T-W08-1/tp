@@ -21,7 +21,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class ArgumentTokenizer {
 
-    private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
+    private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]*/)\\S*");
     private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o");
 
     /**
@@ -38,7 +38,8 @@ public class ArgumentTokenizer {
     }
 
     /**
-     * Rejects unrecognized alphabetic slash prefixes at word boundaries.
+     * Rejects unrecognized slash prefixes at token boundaries, including empty prefix names.
+     * A prefix candidate consists of the characters before a token's first slash, followed by that slash.
      * Standalone tokens in {@code ALLOWED_SLASH_TOKENS} are treated as ordinary text, ignoring case.
      *
      * @param argsString Original command arguments to check.
