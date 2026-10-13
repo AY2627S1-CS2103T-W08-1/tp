@@ -86,13 +86,11 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * All five fields are required and can appear in any order.
 * Each prefix must appear only once. Repeated prefixes are rejected, e.g.,
   `Multiple values specified for a single-valued field: n/`.
-* Unknown prefixes made of letters followed by `/`, such as `x/123` or `med/Aspirin`, are rejected with
-  `Unrecognized parameter: x/. Please check the command format.` Prefix candidates must start a token
-  (at the beginning of the arguments or after whitespace); this also reserves tokens such as `A/B`.
-* Standalone `s/o`, `d/o`, and `c/o` tokens are exempt from prefix rejection anywhere in the `add` arguments,
-  ignoring letter case. They are intended for names and addresses; normal field validation still applies.
-  They must be complete tokens: `s/o,` is not an exception. Numeric slash text such as `21/3` and URLs are not
-  treated as prefix candidates and can appear in addresses.
+* Unrecognized letters followed by `/` at the start of a word, such as `x/123`, `med/Aspirin`, or `A/B`, are
+  rejected. For example, `x/123` gives `Unrecognized parameter: x/. Please check the command format.`
+* Standalone `s/o`, `d/o`, and `c/o` are allowed anywhere in the `add` arguments, ignoring letter case.
+  Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
+  Addresses can include numeric slash text such as `21/3` and URLs.
 * `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
   It is not case-sensitive and is stored in uppercase.
 * `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, and cannot be in the future.
