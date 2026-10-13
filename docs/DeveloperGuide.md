@@ -635,22 +635,33 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No patients found. Use the 'add' command to add a patient.`
 
-### Deleting a person
+### Deleting a patient
 
-1. Deleting a person while all persons are being shown
+1. Deleting a patient while all patients are being shown
 
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+      Expected: The first patient is deleted from the list. The status message shows `Deleted patient: NAME; NRIC: NRIC` with the deleted patient's name and NRIC, e.g. `Deleted patient: Alex Yeoh; NRIC: S0000001A` for the sample data.
 
    1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
+      Expected: No patient is deleted. The status message shows `Invalid command format!` followed by the `delete` usage: `delete: Deletes the patient at the specified INDEX.`, `Parameters: INDEX (must be a positive integer)` and `Example: delete 3`.
 
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
+   1. Test case: `delete x` where x is larger than the list size<br>
+      Expected: No patient is deleted. The status message shows `The patient index provided is invalid.`
 
-1. _{ more test cases … }_
+   1. Other incorrect delete commands to try: `delete`, `delete abc`, `delete -1`<br>
+      Expected: Similar to `delete 0`.
+
+1. Deleting a patient after finding patients
+
+   1. Prerequisites: The sample data is loaded. Run `find Alex` so that only one patient is shown.
+
+   1. Test case: `delete 1`<br>
+      Expected: The patient found by `find Alex` is deleted, not the first patient of the full list. The status message shows `Deleted patient: Alex Yeoh; NRIC: S0000001A`.
+
+   1. Test case: `delete 2`<br>
+      Expected: No patient is deleted. The status message shows `The patient index provided is invalid.`, because the index refers to the filtered list.
 
 ### Viewing a patient
 
