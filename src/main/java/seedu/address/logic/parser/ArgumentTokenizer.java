@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import seedu.address.logic.Messages;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
@@ -21,7 +22,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class ArgumentTokenizer {
 
-    private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]*/)\\S*");
+    private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -37,8 +38,8 @@ public class ArgumentTokenizer {
     }
 
     /**
-     * Rejects unrecognized slash prefixes at token boundaries, including empty prefix names.
-     * A prefix candidate consists of the characters before a token's first slash, followed by that slash.
+     * Rejects unrecognized alphabetic slash prefixes at token boundaries.
+     * A prefix candidate consists of one or more letters followed immediately by a slash.
      * Standalone tokens in {@code allowedSlashTokens} are treated as ordinary text, ignoring case.
      *
      * @param argsString Original command arguments to check.
@@ -62,9 +63,7 @@ public class ArgumentTokenizer {
             String candidate = matcher.group(1);
 
             if (!allowed.contains(candidate)) {
-                throw new ParseException(
-                        "Unrecognized parameter: " + candidate
-                                + ". Please check the command format.");
+                throw new ParseException(String.format(Messages.MESSAGE_UNKNOWN_PREFIX, candidate));
             }
         }
     }

@@ -12,6 +12,8 @@ import seedu.address.model.patient.Patient;
  */
 public class Messages {
 
+    public static final String MESSAGE_UNKNOWN_PREFIX =
+            "Unrecognized parameter: %1$s. Please check the command format.";
     public static final String MESSAGE_UNKNOWN_COMMAND = "Unknown command.";
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format!\n%1$s";
     public static final String MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX = "The patient index provided is invalid.";

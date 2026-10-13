@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 public class ArgumentTokenizerTest {
@@ -24,15 +25,16 @@ public class ArgumentTokenizerTest {
     public void verifyNoInvalidPrefixes_allowedTokens_success() throws Exception {
         ArgumentTokenizer.verifyNoInvalidPrefixes("p/value/suffix custom/token CUSTOM/TOKEN",
                 Set.of("custom/token"), pSlash);
-        ArgumentTokenizer.verifyNoInvalidPrefixes(" -t value ^Q value", Set.of(), dashT, hatQ);
+        ArgumentTokenizer.verifyNoInvalidPrefixes(" -t value ^Q value 21/3 x1/123 /hello _/value https://example.com",
+                Set.of(), dashT, hatQ);
     }
 
     @Test
     public void verifyNoInvalidPrefixes_unknownToken_throwsParseException() {
         for (String token : List.of("x/123", "x/", "s/123", "d/123", "x/s/o", "s/oops",
-                "x1/123", "21/3", "_/value", "--bad/value", "名字/value", "/hello", "/", "A/B", "s/o", "d/o")) {
+                "A/B", "s/o", "d/o", "c/o", "s/o,")) {
             String prefix = token.substring(0, token.indexOf('/') + 1);
-            String expected = "Unrecognized parameter: " + prefix + ". Please check the command format.";
+            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix);
             assertThrows(ParseException.class, expected, () ->
                     ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of(), pSlash));
             assertThrows(ParseException.class, expected, () ->

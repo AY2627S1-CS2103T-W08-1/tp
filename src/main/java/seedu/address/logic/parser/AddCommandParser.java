@@ -24,7 +24,7 @@ import seedu.address.model.patient.Phone;
  */
 public class AddCommandParser implements Parser<AddCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o");
 
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
