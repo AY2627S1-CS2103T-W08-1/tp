@@ -33,7 +33,7 @@ public class ModelManager implements Model {
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
         requireAllNonNull(addressBook, userPrefs);
 
-        logger.fine("Initializing with address book: " + addressBook + " and user prefs " + userPrefs);
+        logger.fine("Initializing with MediConnect: " + addressBook + " and user prefs " + userPrefs);
 
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
@@ -137,7 +137,7 @@ public class ModelManager implements Model {
     @Override
     public void setViewedPatient(Patient patient) {
         requireNonNull(patient);
-        assert addressBook.hasPatient(patient) : "Viewed patient must exist in the address book";
+        assert addressBook.hasPatient(patient) : "Viewed patient must exist in MediConnect";
 
         viewedPatient.set(patient);
     }
