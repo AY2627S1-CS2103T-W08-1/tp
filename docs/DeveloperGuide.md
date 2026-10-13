@@ -209,7 +209,7 @@ clarity.
 <puml src="diagrams/AddCareSequenceDiagram.puml" alt="Interactions for the `addcare` Command" />
 
 1. `AddCareCommandParser` parses a positive index and the values supplied under `med/`, `al/`, and `ci/`. At least one
-   non-blank care entry is required.
+   care prefix is required, and every entry must be non-blank.
 1. `AddCareCommand#execute()` resolves the index against the filtered patient list, trims each entry, and compares it
    case-insensitively with entries in the same category.
 1. The command appends only unique entries, creates a replacement immutable `Patient`, and calls
