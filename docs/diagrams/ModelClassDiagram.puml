@@ -3,6 +3,7 @@
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR
 skinparam classBackgroundColor MODEL_COLOR
+skinparam classAttributeFontColor #FFFFFF
 
 Package Model as ModelPackage <<Rectangle>>{
 Class "<<interface>>\nReadOnlyAddressBook" as ReadOnlyAddressBook
@@ -14,14 +15,15 @@ Class UserPrefs
 
 Class UniquePatientList
 Class Patient {
-  String nric
-  String dob
   List<String> medications
   List<String> allergens
   List<String> careInstructions
 }
+show Patient fields
 Class Address
 Class Name
+Class Nric
+Class Dob
 Class Phone
 
 Class I #FFFFFF
@@ -42,6 +44,8 @@ UserPrefs .up.|> ReadOnlyUserPrefs
 AddressBook *--> "1" UniquePatientList
 UniquePatientList --> "~* all" Patient
 Patient *--> Name
+Patient *--> Nric
+Patient *--> Dob
 Patient *--> Phone
 Patient *--> Address
 
@@ -51,5 +55,5 @@ UniquePatientList -[hidden]right-> I
 Name -[hidden]right-> Phone
 Phone -[hidden]right-> Address
 
-ModelManager --> "~* filtered" Patient
+ModelManager --> Patient : filtered patients
 @enduml

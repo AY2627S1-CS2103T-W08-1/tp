@@ -117,7 +117,7 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
 <puml src="diagrams/ModelClassDiagram.puml" width="450" />
 
@@ -133,9 +133,13 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Note:** The diagram below illustrates the original AB3 alternative design for sharing tags between patients. Email and tags are removed from the MediConnect MVP.<br>
+**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus three
+`List<String>` care lists: medications, allergens and care instructions. The care lists default to empty and are
+defensively copied with `List.copyOf`, so callers cannot modify them through the getters. Updating a patient creates
+a replacement `Patient`, which the model stores using `setPatient`.
 
-<puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
+**Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
+is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
 </box>
 
 
