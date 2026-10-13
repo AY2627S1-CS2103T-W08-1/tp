@@ -192,11 +192,13 @@ Examples:
 * `list` followed by `view 2` shows the details of the 2nd patient in the list.
 * `find Betsy` followed by `view 1` shows the details of the 1st patient in the results of the `find` command.
 
-### Clearing all entries: `clear`
+### Clearing all patients: `clear`
 
-Clears all entries from the address book.
+Clears all patients and their care information from MediConnect, and resets the viewed patient selection.
 
 Format: `clear`
+
+Returns `All patients have been cleared.`, including when there are no patients to clear.
 
 ### Exiting the program: `exit`
 
