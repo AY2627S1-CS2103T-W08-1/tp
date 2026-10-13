@@ -22,7 +22,6 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class ArgumentTokenizer {
 
     private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]*/)\\S*");
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -40,13 +39,15 @@ public class ArgumentTokenizer {
     /**
      * Rejects unrecognized slash prefixes at token boundaries, including empty prefix names.
      * A prefix candidate consists of the characters before a token's first slash, followed by that slash.
-     * Standalone tokens in {@code ALLOWED_SLASH_TOKENS} are treated as ordinary text, ignoring case.
+     * Standalone tokens in {@code allowedSlashTokens} are treated as ordinary text, ignoring case.
      *
      * @param argsString Original command arguments to check.
+     * @param allowedSlashTokens Lowercase tokens allowed as ordinary text by the command.
      * @param validPrefixes Prefixes allowed by the command.
      * @throws ParseException If an unrecognized prefix candidate is found.
      */
-    public static void verifyNoInvalidPrefixes(String argsString, Prefix... validPrefixes) throws ParseException {
+    public static void verifyNoInvalidPrefixes(String argsString, Set<String> allowedSlashTokens,
+            Prefix... validPrefixes) throws ParseException {
         Matcher matcher = PREFIX_CANDIDATE_PATTERN.matcher(argsString);
 
         Set<String> allowed = Arrays.stream(validPrefixes)
@@ -54,7 +55,7 @@ public class ArgumentTokenizer {
                 .collect(Collectors.toSet());
 
         while (matcher.find()) {
-            if (ALLOWED_SLASH_TOKENS.contains(matcher.group().toLowerCase(Locale.ROOT))) {
+            if (allowedSlashTokens.contains(matcher.group().toLowerCase(Locale.ROOT))) {
                 continue;
             }
 
