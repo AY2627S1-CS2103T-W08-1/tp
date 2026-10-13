@@ -31,12 +31,17 @@ public class NameTest {
         assertFalse(Name.isValidName("peter*")); // contains non-alphabetic characters
         assertFalse(Name.isValidName("12345")); // numbers only
         assertFalse(Name.isValidName("peter the 2nd")); // contains numbers
+        assertFalse(Name.isValidName("Alex2")); // ends with a number
+        assertFalse(Name.isValidName("-Alex")); // does not start with a letter
 
         // valid name
         assertTrue(Name.isValidName("peter jack")); // alphabets only
         assertTrue(Name.isValidName("Capital Tan")); // with capital letters
         assertTrue(Name.isValidName("Tan Ah Kow s/o Lim")); // with forward slash
         assertTrue(Name.isValidName("J. Doe")); // with period
+        assertTrue(Name.isValidName("Tan Ah Kow Jr.")); // ends with a period
+        assertTrue(Name.isValidName("O'Brien")); // with apostrophe
+        assertTrue(Name.isValidName("Mary-Jane")); // with hyphen
         assertTrue(Name.isValidName("David Roger Jackson Ray Jr")); // long names
     }
 
