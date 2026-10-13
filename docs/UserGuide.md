@@ -89,7 +89,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * Unknown prefixes made of letters followed by `/`, such as `x/123` or `med/Aspirin`, are rejected with
   `Unrecognized parameter: x/. Please check the command format.` Prefix candidates must start a token
   (at the beginning of the arguments or after whitespace); this also reserves tokens such as `A/B`.
-* Standalone `s/o` and `d/o` tokens are allowed in names, and `c/o` is allowed in addresses, ignoring letter case.
+* Standalone `s/o`, `d/o`, and `c/o` tokens are exempt from prefix rejection anywhere in the `add` arguments,
+  ignoring letter case. They are intended for names and addresses; normal field validation still applies.
   They must be complete tokens: `s/o,` is not an exception. Numeric slash text such as `21/3` and URLs are not
   treated as prefix candidates and can appear in addresses.
 * `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
