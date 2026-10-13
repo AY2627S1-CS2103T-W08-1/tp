@@ -104,18 +104,19 @@ public class AddCareCommand extends Command {
 
     private static void appendNewEntries(List<String> existingEntries, List<String> requestedEntries,
             String entryType, List<String> addedEntries, List<String> duplicateMessages) {
+        List<String> originalEntries = List.copyOf(existingEntries);
         List<String> seenInCommand = new ArrayList<>();
         for (String requestedEntry : requestedEntries) {
             String trimmedEntry = requestedEntry.trim();
+            if (containsIgnoreCase(originalEntries, trimmedEntry)) {
+                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_EXISTING, entryType, trimmedEntry));
+                continue;
+            }
             if (containsIgnoreCase(seenInCommand, trimmedEntry)) {
                 duplicateMessages.add(String.format(MESSAGE_DUPLICATE_IN_COMMAND, entryType, trimmedEntry));
                 continue;
             }
             seenInCommand.add(trimmedEntry);
-            if (containsIgnoreCase(existingEntries, trimmedEntry)) {
-                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_EXISTING, entryType, trimmedEntry));
-                continue;
-            }
             existingEntries.add(trimmedEntry);
             addedEntries.add(trimmedEntry);
         }

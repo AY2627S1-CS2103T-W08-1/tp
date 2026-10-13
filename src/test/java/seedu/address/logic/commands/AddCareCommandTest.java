@@ -63,7 +63,7 @@ public class AddCareCommandTest {
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(), "Atorvastatin")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING, "Medication", "metformin")
-                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_IN_COMMAND, "Medication", "METFORMIN")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING, "Medication", "METFORMIN")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_IN_COMMAND, "Medication", "ATORVASTATIN");
         assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
     }
