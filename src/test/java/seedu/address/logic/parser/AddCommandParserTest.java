@@ -63,6 +63,27 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_unknownPrefix_failure() {
+        String expected = "Unrecognized parameter: x/. Please check the command format.";
+        assertParseFailure(parser, " x/123" + VALID_ARGS, expected);
+        assertParseFailure(parser, VALID_ARGS.replace(" dob/", " x/123 dob/"), expected);
+        assertParseFailure(parser, VALID_ARGS + " x/123", expected);
+        assertParseFailure(parser, " x/123", expected);
+        assertParseFailure(parser, VALID_ARGS + " med/Aspirin",
+                "Unrecognized parameter: med/. Please check the command format.");
+    }
+
+    @Test
+    public void parse_allowedSlashTokenInName_success() {
+        for (String token : List.of("s/o", "d/o", "S/O", "D/O")) {
+            String name = "John Tan " + token + " Lim";
+            AddCommand expected = new AddCommand(new PatientBuilder().withName(name).withNric("S1234567A")
+                    .withDob("1950-04-12").withPhone("91234567").withAddress("21 Lorong 3, #05-10").build());
+            assertParseSuccess(parser, VALID_ARGS.replace("John Tan", name), expected);
+        }
+    }
+
+    @Test
     public void parse_invalidValue_failure() {
         assertParseFailure(parser, VALID_ARGS.replace("John Tan", "John&"), Name.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ARGS.replace("S1234567A", "A1234567B"), Nric.MESSAGE_CONSTRAINTS);

@@ -3,7 +3,13 @@ package seedu.address.logic.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
  * Tokenizes arguments string of the form: {@code preamble <prefix>value <prefix>value ...}<br>
@@ -14,6 +20,9 @@ import java.util.stream.Collectors;
  *    in the above example.<br>
  */
 public class ArgumentTokenizer {
+
+    private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -26,6 +35,36 @@ public class ArgumentTokenizer {
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
         List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
         return extractArguments(argsString, positions);
+    }
+
+    /**
+     * Rejects unrecognized alphabetic slash prefixes at word boundaries.
+     * Standalone tokens in {@code ALLOWED_SLASH_TOKENS} are treated as ordinary text, ignoring case.
+     *
+     * @param argsString Original command arguments to check.
+     * @param validPrefixes Prefixes allowed by the command.
+     * @throws ParseException If an unrecognized prefix candidate is found.
+     */
+    public static void verifyNoInvalidPrefixes(String argsString, Prefix... validPrefixes) throws ParseException {
+        Matcher matcher = PREFIX_CANDIDATE_PATTERN.matcher(argsString);
+
+        Set<String> allowed = Arrays.stream(validPrefixes)
+                .map(Prefix::getPrefix)
+                .collect(Collectors.toSet());
+
+        while (matcher.find()) {
+            if (ALLOWED_SLASH_TOKENS.contains(matcher.group().toLowerCase(Locale.ROOT))) {
+                continue;
+            }
+
+            String candidate = matcher.group(1);
+
+            if (!allowed.contains(candidate)) {
+                throw new ParseException(
+                        "Unrecognized parameter: " + candidate
+                                + ". Please check the command format.");
+            }
+        }
     }
 
     /**
