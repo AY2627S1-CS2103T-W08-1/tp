@@ -113,7 +113,7 @@ Field   | Prefix | Format | Example
 Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, not in the future. | `1950-04-12`
-Phone   | `p/`   | 8 digits, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
+Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
 Address | `a/`   | Any value, but not blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
