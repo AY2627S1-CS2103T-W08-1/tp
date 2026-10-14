@@ -116,7 +116,7 @@ DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, not in the future. | `19
 Phone   | `p/`   | 8 digits, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
 Address | `a/`   | Any value, but not blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
-Leading and trailing spaces in every field are ignored.
+Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
 ### Adding care information: `addcare`
 
