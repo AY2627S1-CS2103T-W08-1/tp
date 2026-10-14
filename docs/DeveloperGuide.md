@@ -117,14 +117,14 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
 <puml src="diagrams/ModelClassDiagram.puml" width="450" />
 
 
 The `Model` component,
 
-* stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
+* stores the patient data, i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores the patient being viewed, if any. It exposes this patient as an `ObservableValue<Patient>` that the UI observes, so the detail panel updates when the viewed patient changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
@@ -133,22 +133,30 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Note:** The diagram below illustrates the original AB3 alternative design for sharing tags between patients. Email and tags are removed from the MediConnect MVP.<br>
+**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus three
+`List<String>` care lists: medications, allergens and care instructions. The care lists default to empty and are
+defensively copied with `List.copyOf`, so callers cannot modify them through the getters. Updating a patient creates
+a replacement `Patient`, which the model stores using `setPatient`.
 
-<puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
+**Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
+is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
 </box>
 
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
 <puml src="diagrams/StorageClassDiagram.puml" width="550" />
 
 The `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
+* can save both patient data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+
+The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
+
+Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address as strings, and the medications, allergens and care instructions as lists of strings. The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read, `JsonAdaptedPatient#toModelType()` checks every field with the same rules as the `add` command. If any patient is invalid, or two patients have the same NRIC, the whole file is rejected and MediConnect starts with no patients.
 
 ### Common classes
 
@@ -195,6 +203,53 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
 * **Alternative 2:** Return the patient in `CommandResult` and let `MainWindow` update the panel.
   * Pros: The `Model` stays unchanged.
   * Cons: The panel would show stale data after the patient is edited or deleted by another command.
+
+### Add care info feature
+
+The `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` command appends care
+information to a patient in the displayed list.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `addcare 1 med/Metformin`. Error paths are omitted for
+clarity.
+
+<puml src="diagrams/AddCareSequenceDiagram.puml" alt="Interactions for the `addcare` Command" />
+
+1. `AddCareCommandParser` parses a positive index and the values supplied under `med/`, `al/`, and `ci/`. At least one
+   care prefix is required, and every entry must be non-blank.
+1. `AddCareCommand#execute()` resolves the index against the filtered patient list, trims each entry, and compares it
+   case-insensitively with entries in the same category.
+1. The command appends only unique entries, creates a replacement immutable `Patient`, and calls
+   `Model#setPatient(patientToEdit, editedPatient)`.
+1. If the edited patient is currently being viewed, `ModelManager#setPatient()` also updates `viewedPatient`. The
+   observable listener then causes `PatientDetailPanel` to redraw immediately with the updated care information.
+
+Each skipped duplicate is named in the command feedback. The command distinguishes an entry already stored for the
+patient from an entry repeated earlier in the same command. Unique entries are still added; if every supplied entry
+is a duplicate, the command fails without changing the patient.
+
+#### Design considerations
+
+**Aspect: Appending or overwriting care information**
+
+* **Alternative 1 (current choice):** Append new entries to the patient's existing care information.
+  * Pros: Existing medication, allergen, and instruction records are preserved, reducing the risk of accidental data
+    loss.
+  * Cons: Correcting or removing an existing entry requires a separate command in a future version.
+* **Alternative 2:** Replace the full list whenever a care category is supplied.
+  * Pros: Users could correct or remove entries with the same command.
+  * Cons: Users would need to re-enter every value they want to keep, making accidental data loss more likely.
+
+**Aspect: Handling duplicate entries**
+
+* **Alternative 1 (current choice):** Skip trimmed, case-insensitive duplicates and continue adding other unique
+  entries. Feedback names each skipped entry and whether it already existed or was repeated in the command.
+  * Pros: Valid new information is retained even when the same command contains duplicates.
+  * Cons: The success result can contain both an added-entry summary and duplicate warnings.
+* **Alternative 2:** Reject the entire command when any duplicate is found.
+  * Pros: The operation has simpler all-or-nothing behavior.
+  * Cons: One duplicate prevents all valid new entries in the same command from being added.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -648,8 +703,16 @@ testers are expected to do more *exploratory* testing.
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+1. Dealing with missing data files
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+   1. Prerequisites: The app is closed. Delete `data/mediconnect.json`.
 
-1. _{ more test cases … }_
+   1. Launch the app.<br>
+      Expected: The app starts with the sample patients. A new `data/mediconnect.json` containing them is created on launch.
+
+1. Dealing with corrupted data files
+
+   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
+
+   1. Launch the app.<br>
+      Expected: The app starts with no patients. The invalid file is kept until the first command, which overwrites it with an empty patient list.

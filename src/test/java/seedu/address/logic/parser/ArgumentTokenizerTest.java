@@ -4,8 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
+
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+
+import seedu.address.logic.Messages;
+import seedu.address.logic.parser.exceptions.ParseException;
 
 public class ArgumentTokenizerTest {
 
@@ -13,6 +20,27 @@ public class ArgumentTokenizerTest {
     private final Prefix pSlash = new Prefix("p/");
     private final Prefix dashT = new Prefix("-t");
     private final Prefix hatQ = new Prefix("^Q");
+
+    @Test
+    public void verifyNoInvalidPrefixes_allowedTokens_success() throws Exception {
+        ArgumentTokenizer.verifyNoInvalidPrefixes("p/value/suffix custom/token CUSTOM/TOKEN",
+                Set.of("custom/token"), pSlash);
+        ArgumentTokenizer.verifyNoInvalidPrefixes(" -t value ^Q value 21/3 x1/123 /hello _/value https://example.com",
+                Set.of(), dashT, hatQ);
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_unknownToken_throwsParseException() {
+        for (String token : List.of("x/123", "x/", "s/123", "d/123", "x/s/o", "s/oops",
+                "A/B", "s/o", "d/o", "c/o", "s/o,")) {
+            String prefix = token.substring(0, token.indexOf('/') + 1);
+            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix);
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of(), pSlash));
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(" p/value\t" + token, Set.of(), pSlash));
+        }
+    }
 
     @Test
     public void tokenize_emptyArgsString_noValues() {

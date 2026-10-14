@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
@@ -60,6 +61,42 @@ public class AddCommandParserTest {
         }
         assertParseFailure(parser, "", expected);
         assertParseFailure(parser, "unexpected" + VALID_ARGS, expected);
+    }
+
+    @Test
+    public void parse_unknownPrefix_failure() {
+        String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/");
+        assertParseFailure(parser, " x/123" + VALID_ARGS, expected);
+        assertParseFailure(parser, VALID_ARGS.replace(" dob/", " x/123 dob/"), expected);
+        assertParseFailure(parser, VALID_ARGS + " x/123", expected);
+        assertParseFailure(parser, " x/123", expected);
+        assertParseFailure(parser, VALID_ARGS + " med/Aspirin",
+                String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "med/"));
+        for (String token : List.of("A/B", "s/o,", "d/o,", "c/o,")) {
+            String prefix = token.substring(0, token.indexOf('/') + 1);
+            assertParseFailure(parser, VALID_ARGS + " " + token,
+                    String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix));
+        }
+    }
+
+    @Test
+    public void parse_allowedSlashTokenInName_success() {
+        for (String token : List.of("s/o", "d/o", "S/O", "D/O")) {
+            String name = "John Tan " + token + " Lim";
+            AddCommand expected = new AddCommand(new PatientBuilder().withName(name).withNric("S1234567A")
+                    .withDob("1950-04-12").withPhone("91234567").withAddress("21 Lorong 3, #05-10").build());
+            assertParseSuccess(parser, VALID_ARGS.replace("John Tan", name), expected);
+        }
+    }
+
+    @Test
+    public void parse_slashTextInAddress_success() {
+        for (String address : List.of("Blk 21/3 Ang Mo Kio", "c/o 12 Bedok North", "C/O 12 Bedok North",
+                "https://example.com", "Block x1/123", "/hello")) {
+            AddCommand expected = new AddCommand(new PatientBuilder().withName("John Tan").withNric("S1234567A")
+                    .withDob("1950-04-12").withPhone("91234567").withAddress(address).build());
+            assertParseSuccess(parser, VALID_ARGS.replace("21 Lorong 3, #05-10", address), expected);
+        }
     }
 
     @Test
