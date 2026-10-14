@@ -2,12 +2,15 @@ package seedu.address;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.util.FileUtil;
+import seedu.address.model.Model;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -42,5 +45,22 @@ public class MainAppTest {
         new MainApp().initModelManager(storage, new UserPrefs());
 
         assertEquals("invalid data", FileUtil.readFromFile(dataFile));
+    }
+
+    @Test
+    public void initModelManager_saveFails_startsWithSampleData() throws Exception {
+        JsonAddressBookStorage addressBookStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("mediconnect.json")) {
+                    @Override
+                    public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                        throw new IOException("dummy IO exception");
+                    }
+                };
+        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
+        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+
+        Model model = new MainApp().initModelManager(storage, new UserPrefs());
+
+        assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
     }
 }
