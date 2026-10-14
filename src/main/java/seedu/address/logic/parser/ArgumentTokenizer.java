@@ -3,7 +3,14 @@ package seedu.address.logic.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import seedu.address.logic.Messages;
+import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
  * Tokenizes arguments string of the form: {@code preamble <prefix>value <prefix>value ...}<br>
@@ -14,6 +21,8 @@ import java.util.stream.Collectors;
  *    in the above example.<br>
  */
 public class ArgumentTokenizer {
+
+    private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -26,6 +35,37 @@ public class ArgumentTokenizer {
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
         List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
         return extractArguments(argsString, positions);
+    }
+
+    /**
+     * Rejects unrecognized alphabetic slash prefixes at token boundaries.
+     * A prefix candidate consists of one or more letters followed immediately by a slash.
+     * Standalone tokens in {@code allowedSlashTokens} are treated as ordinary text, ignoring case.
+     *
+     * @param argsString Original command arguments to check.
+     * @param allowedSlashTokens Lowercase tokens allowed as ordinary text by the command.
+     * @param validPrefixes Prefixes allowed by the command.
+     * @throws ParseException If an unrecognized prefix candidate is found.
+     */
+    public static void verifyNoInvalidPrefixes(String argsString, Set<String> allowedSlashTokens,
+            Prefix... validPrefixes) throws ParseException {
+        Matcher matcher = PREFIX_CANDIDATE_PATTERN.matcher(argsString);
+
+        Set<String> allowed = Arrays.stream(validPrefixes)
+                .map(Prefix::getPrefix)
+                .collect(Collectors.toSet());
+
+        while (matcher.find()) {
+            if (allowedSlashTokens.contains(matcher.group().toLowerCase(Locale.ROOT))) {
+                continue;
+            }
+
+            String candidate = matcher.group(1);
+
+            if (!allowed.contains(candidate)) {
+                throw new ParseException(String.format(Messages.MESSAGE_UNKNOWN_PREFIX, candidate));
+            }
+        }
     }
 
     /**

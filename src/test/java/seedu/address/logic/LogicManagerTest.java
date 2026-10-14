@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
@@ -98,6 +99,17 @@ public class LogicManagerTest {
         model.addPatient(ALICE);
         logic.execute(ViewCommand.COMMAND_WORD + " 1");
         assertEquals(ALICE, logic.getViewedPatient().getValue());
+    }
+
+    @Test
+    public void execute_addCareOnViewedPatient_updatesViewedPatient() throws Exception {
+        model.addPatient(ALICE);
+        logic.execute(ViewCommand.COMMAND_WORD + " 1");
+
+        logic.execute(AddCareCommand.COMMAND_WORD + " 1 med/Metformin");
+
+        Patient expectedPatient = new PatientBuilder(ALICE).withMedications("Metformin").build();
+        assertEquals(expectedPatient, logic.getViewedPatient().getValue());
     }
 
     /**

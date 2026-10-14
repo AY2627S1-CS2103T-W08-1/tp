@@ -22,13 +22,13 @@
       <Label fx:id="address" styleClass="label-bright" wrapText="true" />
 
       <Label text="Medications" styleClass="detail-heading" />
-      <Label fx:id="medications" styleClass="label-bright" wrapText="true" />
+      <VBox fx:id="medications" spacing="2" />
 
       <Label text="Allergens" styleClass="detail-heading" />
-      <Label fx:id="allergens" styleClass="label-bright" wrapText="true" />
+      <VBox fx:id="allergens" spacing="2" />
 
       <Label text="Care Instructions" styleClass="detail-heading" />
-      <Label fx:id="careInstructions" styleClass="label-bright" wrapText="true" />
+      <VBox fx:id="careInstructions" spacing="2" />
     </VBox>
   </VBox>
 </ScrollPane>

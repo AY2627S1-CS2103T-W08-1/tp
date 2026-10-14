@@ -4,9 +4,9 @@
   pageNav: 3
 ---
 
-# AB-3 User Guide
+# MediConnect User Guide
 
-AddressBook Level 3 (AB3) is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, AB3 can help you manage contacts faster than traditional GUI applications.
+MediConnect is a **desktop application for managing patient records and care information, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, MediConnect can help you manage patient records faster than traditional GUI applications.
 
 <!-- * Table of Contents -->
 <page-nav-print />
@@ -18,24 +18,26 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest `.jar` file from [here](https://github.com/se-edu/addressbook-level3/releases).
+1. Download `mediconnect.jar` from the [Releases page](https://github.com/AY2627S1-CS2103T-W08-1/tp/releases).
 
-1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
+1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
-   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
+1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
+   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands.<br>
    ![Ui](images/Ui.png)
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
-   Some example commands you can try:
+   Some example commands you can try, in this order:
 
-   * `list` : Lists all contacts.
+   * `list` : Lists all patients.
 
-   * `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10` : Adds a patient named `John Tan` to MediConnect.
+   * `add n/John Tan ic/S1234567A dob/1990-05-14 p/91234567 a/Blk 123 Clementi Ave 3` : Adds a patient named `John Tan` to MediConnect.
 
-   * `delete 3` : Deletes the 3rd contact shown in the current list.
+   * `view 1` : Shows the full details of the 1st patient in the current list.
 
-   * `clear` : Deletes all contacts.
+   * `find John` : Lists all patients whose name contains `John`.
+
+   * `delete 1` : Deletes the 1st patient shown in the current list. Right after `find John`, this deletes `John Tan`.
 
    * `exit` : Exits the app.
 
@@ -67,7 +69,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
 ### Viewing help: `help`
 
-Opens a help window listing every command, its format, and a one-line description.
+Opens a help window that lists every command with its format and a one-line description.
 
 ![help message](images/helpMessage.png)
 
@@ -75,6 +77,9 @@ Format: `help`
 
 * You can also open the help window with the `Help` menu or by pressing `F1`.
 * Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
+* If the help window is already open, no second help window is opened.
+
+The command returns `Opened help window.`
 
 
 ### Adding a patient: `add`
@@ -86,12 +91,18 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * All five fields are required and can appear in any order.
 * Each prefix must appear only once. Repeated prefixes are rejected, e.g.,
   `Multiple values specified for a single-valued field: n/`.
+* Unrecognized letters followed by `/` at the start of a word, such as `x/123`, `med/Aspirin`, or `A/B`, are
+  rejected. For example, `x/123` gives `Unrecognized parameter: x/. Please check the command format.`
+* Standalone `s/o`, `d/o`, and `c/o` are allowed anywhere in the `add` arguments, ignoring letter case.
+  Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
+  Addresses can include numeric slash text such as `21/3` and URLs.
 * `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
   It is not case-sensitive and is stored in uppercase.
 * `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, and cannot be in the future.
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
-* `NAME` can only contain letters, spaces, `/` and `.`, e.g., `Tan Ah Kow s/o Lim`.
+* `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
+  e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
   Multiple spaces between words are reduced to one.
 * `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
   It is stored without the `+65`.
@@ -105,6 +116,18 @@ The first example returns:
 `New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; Phone: 91234567; Address: 21 Lorong 3, #05-10;`
 
 If a required field is missing, the command is rejected with `Invalid command format!` followed by the usage and example.
+
+### Field formats
+
+Field   | Prefix | Format | Example
+--------|--------|--------|--------
+Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
+NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
+DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, not in the future. | `1950-04-12`
+Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
+Address | `a/`   | Any value, but not blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+
+Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
 ### Adding care information: `addcare`
 
@@ -125,19 +148,31 @@ Examples:
 * `addcare 2 al/Penicillin al/Shellfish`
 * `addcare 1 ci/Check blood sugar before breakfast`
 
-A successful command returns `Updated care info for NAME. Added: ITEMS.` Duplicate entries produce category-specific
-feedback:
+A successful command returns `Updated care info for NAME. Added: ITEMS.`
 
-* `This medication already exists for this patient and was not added again.`
-* `This allergen already exists for this patient and was not added again.`
-* `This instruction already exists for this patient and was not added again.`
+Each skipped duplicate is named in the feedback. For example:
 
-The command is rejected without changing the patient when the index is invalid, no care prefix is provided, any entry
-is blank, or every entry is a duplicate.
+* An entry already stored for the patient returns
+  `Medication "Metformin" was not added: it already exists for this patient.`
+* An entry repeated within the same command returns
+  `Medication "Aspirin" was not added: it was repeated in this command.`
 
-### Listing all persons: `list`
+The same wording is used for allergens and care instructions, with `Allergen` or `Care instruction` in place of
+`Medication`. Unique entries in the command are still added. If every supplied entry is a duplicate, the command is
+rejected without changing the patient.
 
-Shows a list of all persons in the address book.
+Other errors are reported as follows:
+
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* A command with no care prefix returns `Please specify at least one of med/, al/, or ci/ to add.`
+* A blank value returns `Medication entries cannot be blank.`, `Allergen entries cannot be blank.`, or
+  `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
+* A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
+  the command usage.
+
+### Listing all patients: `list`
+
+Shows a list of all patients in MediConnect.
 
 Format: `list`
 
@@ -145,36 +180,36 @@ Format: `list`
 
 Not implemented in the MVP. The command returns `Edit command is not implemented yet.` without changing patient data.
 
-### Locating persons by name: `find`
+### Locating patients by name: `find`
 
-Finds persons whose names contain any of the given keywords.
+Finds patients whose names contain any of the given keywords.
 
 Format: `find KEYWORD [MORE_KEYWORDS]`
 
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
+* The search is case-insensitive; for example, `alex` matches `Alex`.
+* Keyword order does not matter; for example, `Alex David` matches `David Alex`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Only full words match; for example, `Ale` does not match `Alex`.
+* Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
-* `find John` returns `john` and `John Doe`
+* `find Bernice` returns `Bernice Yu`
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
   ![result for 'find alex david'](images/findAlexDavidResult.png)
 
-### Deleting a person: `delete`
+### Deleting a patient: `delete`
 
-Deletes the specified person from the address book.
+Deletes the specified patient from MediConnect.
 
 Format: `delete INDEX`
 
-* Deletes the person at the specified `INDEX`.
-* The index refers to the index number shown in the displayed person list.
+* Deletes the patient at the specified `INDEX`.
+* The index refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
+* `list` followed by `delete 2` deletes the 2nd patient in MediConnect.
+* `find Alex` followed by `delete 1` deletes the 1st patient in the results of the `find` command.
 
 ### Viewing a patient's full details: `view`
 
@@ -182,21 +217,35 @@ Shows all the details of the specified patient in the panel to the right of the 
 
 Format: `view INDEX`
 
-* Shows the patient at the specified `INDEX`.
-* The index refers to the index number shown in the displayed patient list.
+* Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
-* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their medications, allergens, and care instructions. An empty care list shows `None recorded`.
-* The panel keeps showing the patient after other commands, such as `list` or `find`. It updates when that patient's details change, and is cleared when that patient is deleted.
+* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
+  medications, allergens, and care instructions, one entry per line. An empty list shows `None recorded`.
+* Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+* The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
+  patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
+  to the message above when the patient is deleted or all patients are cleared.
 
 Examples:
+
 * `list` followed by `view 2` shows the details of the 2nd patient in the list.
-* `find Betsy` followed by `view 1` shows the details of the 1st patient in the results of the `find` command.
+* `find Bernice` followed by `view 1` shows the details of the 1st patient in the results of the `find` command.
 
-### Clearing all entries: `clear`
+A successful command returns `Showing patient: NAME`, e.g., `Showing patient: Bernice Yu`.
 
-Clears all entries from the address book.
+If `INDEX` is larger than the number of patients in the displayed list, the command is rejected with
+`The patient index provided is invalid.` If `INDEX` is missing, is not a positive integer (e.g., `0`, `-1`, or `abc`),
+is too large to be a valid number (e.g., `99999999999`), or is followed by extra words, the command is rejected with
+`Invalid command format!` followed by the usage and example. In both cases, the panel keeps showing the patient it
+showed before.
+
+### Clearing all patients: `clear`
+
+Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
 
 Format: `clear`
+
+Returns `All patients have been cleared.`, including when there are no patients to clear.
 
 ### Exiting the program: `exit`
 
@@ -206,17 +255,17 @@ Format: `exit`
 
 ### Saving the data
 
-AddressBook automatically saves data after every command. You do not need to save manually.
+MediConnect automatically saves data after every command. You do not need to save manually.
 
 ### Editing the data file
 
-AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
 
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
+If your changes make the data file invalid, MediConnect starts with no patients at the next run. The invalid file remains on disk until you run a command (MediConnect saves after every command). Still, we recommend backing up the file before editing it.<br>
+Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
 ### Archiving data files `[coming in v2.0]`
@@ -227,8 +276,11 @@ _Details coming soon ..._
 
 ## FAQ
 
+**Q**: Where is my data saved?<br>
+**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command.
+
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -241,13 +293,14 @@ _Details coming soon ..._
 
 ## Command summary
 
-Action     | Format, Examples
------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
-**Clear**  | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | Not implemented in the MVP.
-**Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list`
-**View**   | `view INDEX`<br> e.g., `view 2`
-**Help**   | `help`
+Action            | Format, Examples
+------------------|------------------------------------------------------------------------------------------------------------------
+**Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
+**Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Clear**         | `clear`
+**Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Exit**          | `exit`
+**Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
+**Help**          | `help`
+**List**          | `list`
+**View**          | `view INDEX` <br> e.g., `view 2`

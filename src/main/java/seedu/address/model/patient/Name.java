@@ -10,14 +10,14 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 public class Name {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Names should only contain alphabetic characters, spaces, forward slash, and periods, "
-            + "and should not be blank.";
+            "Names should start with a letter, only contain alphabetic characters, spaces, apostrophes ('), "
+            + "hyphens (-), forward slashes (/) and periods (.), and should not be blank.";
 
     /*
-     * The first character of the name must not be a whitespace,
+     * The first character of the name must be a letter,
      * otherwise " " (a blank string) becomes a valid input.
      */
-    public static final String VALIDATION_REGEX = "[\\p{Alpha}/.][\\p{Alpha} /.]*";
+    public static final String VALIDATION_REGEX = "\\p{Alpha}[\\p{Alpha} /.'-]*";
 
     public final String fullName;
 

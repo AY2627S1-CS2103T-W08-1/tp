@@ -122,14 +122,14 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
 <puml src="diagrams/ModelClassDiagram.puml" width="450" />
 
 
 The `Model` component,
 
-* stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
+* stores the patient data, i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores the patient being viewed, if any. It exposes this patient as an `ObservableValue<Patient>` that the UI observes, so the detail panel updates when the viewed patient changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
@@ -138,22 +138,30 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Note:** The diagram below illustrates the original AB3 alternative design for sharing tags between patients. Email and tags are removed from the MediConnect MVP.<br>
+**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus three
+`List<String>` care lists: medications, allergens and care instructions. The care lists default to empty and are
+defensively copied with `List.copyOf`, so callers cannot modify them through the getters. Updating a patient creates
+a replacement `Patient`, which the model stores using `setPatient`.
 
-<puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
+**Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
+is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
 </box>
 
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
 <puml src="diagrams/StorageClassDiagram.puml" width="550" />
 
 The `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
+* can save both patient data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+
+The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
+
+Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address as strings, and the medications, allergens and care instructions as lists of strings. The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read, `JsonAdaptedPatient#toModelType()` checks every field with the same rules as the `add` command. If any patient is invalid, or two patients have the same NRIC, the whole file is rejected and MediConnect starts with no patients.
 
 ### Common classes
 
@@ -200,6 +208,53 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
 * **Alternative 2:** Return the patient in `CommandResult` and let `MainWindow` update the panel.
   * Pros: The `Model` stays unchanged.
   * Cons: The panel would show stale data after the patient is edited or deleted by another command.
+
+### Add care info feature
+
+The `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` command appends care
+information to a patient in the displayed list.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `addcare 1 med/Metformin`. Error paths are omitted for
+clarity.
+
+<puml src="diagrams/AddCareSequenceDiagram.puml" alt="Interactions for the `addcare` Command" />
+
+1. `AddCareCommandParser` parses a positive index and the values supplied under `med/`, `al/`, and `ci/`. At least one
+   care prefix is required, and every entry must be non-blank.
+1. `AddCareCommand#execute()` resolves the index against the filtered patient list, trims each entry, and compares it
+   case-insensitively with entries in the same category.
+1. The command appends only unique entries, creates a replacement immutable `Patient`, and calls
+   `Model#setPatient(patientToEdit, editedPatient)`.
+1. If the edited patient is currently being viewed, `ModelManager#setPatient()` also updates `viewedPatient`. The
+   observable listener then causes `PatientDetailPanel` to redraw immediately with the updated care information.
+
+Each skipped duplicate is named in the command feedback. The command distinguishes an entry already stored for the
+patient from an entry repeated earlier in the same command. Unique entries are still added; if every supplied entry
+is a duplicate, the command fails without changing the patient.
+
+#### Design considerations
+
+**Aspect: Appending or overwriting care information**
+
+* **Alternative 1 (current choice):** Append new entries to the patient's existing care information.
+  * Pros: Existing medication, allergen, and instruction records are preserved, reducing the risk of accidental data
+    loss.
+  * Cons: Correcting or removing an existing entry requires a separate command in a future version.
+* **Alternative 2:** Replace the full list whenever a care category is supplied.
+  * Pros: Users could correct or remove entries with the same command.
+  * Cons: Users would need to re-enter every value they want to keep, making accidental data loss more likely.
+
+**Aspect: Handling duplicate entries**
+
+* **Alternative 1 (current choice):** Skip trimmed, case-insensitive duplicates and continue adding other unique
+  entries. Feedback names each skipped entry and whether it already existed or was repeated in the command.
+  * Pros: Valid new information is retained even when the same command contains duplicates.
+  * Cons: The success result can contain both an added-entry summary and duplicate warnings.
+* **Alternative 2:** Reject the entire command when any duplicate is found.
+  * Pros: The operation has simpler all-or-nothing behavior.
+  * Cons: One duplicate prevents all valid new entries in the same command from being added.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -598,36 +653,96 @@ testers are expected to do more *exploratory* testing.
 
 1. Initial launch
 
-   1. Download the JAR file and copy it into an empty folder.
+   1. Download `mediconnect.jar` and copy it into an empty folder.
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+   1. Open a terminal in that folder and run `java -jar mediconnect.jar`.<br>
+      Expected: The GUI opens with a set of sample patients. The window size may not be optimal.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
+   1. Relaunch the app with `java -jar mediconnect.jar`.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases … }_
+1. Closing the app
 
-### Deleting a person
+   1. Prerequisites: The app is running.
 
-1. Deleting a person while all persons are being shown
+   1. Test case: Type `exit` in the command box and press Enter.<br>
+      Expected: The app window closes.
 
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Test case: Close the window using the window's close button.<br>
+      Expected: The app window closes. The window size and location are retained on the next launch.
+
+### Listing patients
+
+1. Listing patients when there is data
+
+   1. Prerequisites: The app has at least one patient, e.g. the sample data on first launch.
+
+   1. Test case: `list`<br>
+      Expected: All patients are shown in the patient list. The status message shows `Listed all patients.`
+
+   1. Test case: `find John` followed by `list`<br>
+      Expected: The filter is cleared and all patients are shown again. The status message shows `Listed all patients.`
+
+1. Listing patients when there is no data
+
+   1. Prerequisites: Clear all data using the `clear` command.<br>
+      Expected: The status message shows `All patients have been cleared.`
+
+   1. Test case: `list`<br>
+      Expected: The patient list is empty. The status message shows `No patients found. Use the 'add' command to add a patient.`
+
+### Deleting a patient
+
+1. Deleting a patient while all patients are being shown
+
+   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+      Expected: The first patient is deleted from the list. The status message shows `Deleted patient: NAME; NRIC: NRIC` with the deleted patient's name and NRIC, e.g. `Deleted patient: Alex Yeoh; NRIC: S0000001A` for the sample data.
 
    1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
+      Expected: No patient is deleted. The status message shows `Invalid command format!` followed by the `delete` usage: `delete: Deletes the patient at the specified INDEX.`, `Parameters: INDEX (must be a positive integer)` and `Example: delete 3`.
 
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
+   1. Test case: `delete x` where x is larger than the list size<br>
+      Expected: No patient is deleted. The status message shows `The patient index provided is invalid.`
 
-1. _{ more test cases … }_
+   1. Other incorrect delete commands to try: `delete`, `delete abc`, `delete -1`<br>
+      Expected: Similar to `delete 0`.
+
+1. Deleting a patient after finding patients
+
+   1. Prerequisites: The sample data is loaded. Run `find Alex` so that only one patient is shown.
+
+   1. Test case: `delete 1`<br>
+      Expected: The patient found by `find Alex` is deleted, not the first patient of the full list. The status message shows `Deleted patient: Alex Yeoh; NRIC: S0000001A`.
+
+   1. Test case: `delete 2`<br>
+      Expected: No patient is deleted. The status message shows `The patient index provided is invalid.`, because the index refers to the filtered list.
+
+### Finding patients
+
+1. Finding patients by name
+
+   1. Prerequisites: The sample data is loaded, with patients named `Alex Yeoh`, `Bernice Yu`, `Charlotte Oliveiro` and `David Li`.
+
+   1. Test case: `find Alex`<br>
+      Expected: Only `Alex Yeoh` is shown in the patient list. The status message shows `1 patient(s) listed!`
+
+   1. Test case: `find aLeX`<br>
+      Expected: Same as `find Alex`, because keywords are matched case-insensitively.
+
+   1. Test case: `find alex david`<br>
+      Expected: `Alex Yeoh` and `David Li` are shown. The status message shows `2 patient(s) listed!`
+
+   1. Test case: `find Zebra`<br>
+      Expected: The patient list is empty. The status message shows `No patients found matching the given keyword(s).`
+
+   1. Test case: `find`<br>
+      Expected: The patient list is unchanged. The status message shows `Please provide at least one keyword to search for.`
 
 ### Viewing a patient
 
@@ -653,8 +768,16 @@ testers are expected to do more *exploratory* testing.
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+1. Dealing with missing data files
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+   1. Prerequisites: The app is closed. Delete `data/mediconnect.json`.
 
-1. _{ more test cases … }_
+   1. Launch the app.<br>
+      Expected: The app starts with the sample patients. A new `data/mediconnect.json` containing them is created on launch.
+
+1. Dealing with corrupted data files
+
+   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
+
+   1. Launch the app.<br>
+      Expected: The app starts with no patients. The invalid file is kept until the first command, which overwrites it with an empty patient list.
