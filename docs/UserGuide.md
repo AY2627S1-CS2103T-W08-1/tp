@@ -184,14 +184,14 @@ Finds patients whose names contain any of the given keywords.
 
 Format: `find KEYWORD [MORE_KEYWORDS]`
 
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
+* The search is case-insensitive; for example, `alex` matches `Alex`.
+* Keyword order does not matter; for example, `Alex David` matches `David Alex`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* Patients matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Only full words match; for example, `Ale` does not match `Alex`.
+* Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
-* `find John` returns `john` and `John Doe`
+* `find Bernice` returns `Bernice Yu`
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
   ![result for 'find alex david'](images/findAlexDavidResult.png)
 
@@ -207,7 +207,7 @@ Format: `delete INDEX`
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd patient in MediConnect.
-* `find Betsy` followed by `delete 1` deletes the 1st patient in the results of the `find` command.
+* `find Alex` followed by `delete 1` deletes the 1st patient in the results of the `find` command.
 
 ### Viewing a patient's full details: `view`
 
