@@ -196,6 +196,53 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
   * Pros: The `Model` stays unchanged.
   * Cons: The panel would show stale data after the patient is edited or deleted by another command.
 
+### Add care info feature
+
+The `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` command appends care
+information to a patient in the displayed list.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `addcare 1 med/Metformin`. Error paths are omitted for
+clarity.
+
+<puml src="diagrams/AddCareSequenceDiagram.puml" alt="Interactions for the `addcare` Command" />
+
+1. `AddCareCommandParser` parses a positive index and the values supplied under `med/`, `al/`, and `ci/`. At least one
+   care prefix is required, and every entry must be non-blank.
+1. `AddCareCommand#execute()` resolves the index against the filtered patient list, trims each entry, and compares it
+   case-insensitively with entries in the same category.
+1. The command appends only unique entries, creates a replacement immutable `Patient`, and calls
+   `Model#setPatient(patientToEdit, editedPatient)`.
+1. If the edited patient is currently being viewed, `ModelManager#setPatient()` also updates `viewedPatient`. The
+   observable listener then causes `PatientDetailPanel` to redraw immediately with the updated care information.
+
+Each skipped duplicate is named in the command feedback. The command distinguishes an entry already stored for the
+patient from an entry repeated earlier in the same command. Unique entries are still added; if every supplied entry
+is a duplicate, the command fails without changing the patient.
+
+#### Design considerations
+
+**Aspect: Appending or overwriting care information**
+
+* **Alternative 1 (current choice):** Append new entries to the patient's existing care information.
+  * Pros: Existing medication, allergen, and instruction records are preserved, reducing the risk of accidental data
+    loss.
+  * Cons: Correcting or removing an existing entry requires a separate command in a future version.
+* **Alternative 2:** Replace the full list whenever a care category is supplied.
+  * Pros: Users could correct or remove entries with the same command.
+  * Cons: Users would need to re-enter every value they want to keep, making accidental data loss more likely.
+
+**Aspect: Handling duplicate entries**
+
+* **Alternative 1 (current choice):** Skip trimmed, case-insensitive duplicates and continue adding other unique
+  entries. Feedback names each skipped entry and whether it already existed or was repeated in the command.
+  * Pros: Valid new information is retained even when the same command contains duplicates.
+  * Cons: The success result can contain both an added-entry summary and duplicate warnings.
+* **Alternative 2:** Reject the entire command when any duplicate is found.
+  * Pros: The operation has simpler all-or-nothing behavior.
+  * Cons: One duplicate prevents all valid new entries in the same command from being added.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
