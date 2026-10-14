@@ -657,7 +657,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app is closed. Delete `data/mediconnect.json`.
 
    1. Launch the app.<br>
-      Expected: The app starts with the sample patients. A new `data/mediconnect.json` is created after the first command.
+      Expected: The app starts with the sample patients. A new `data/mediconnect.json` containing them is created on launch.
 
 1. Dealing with corrupted data files
 
