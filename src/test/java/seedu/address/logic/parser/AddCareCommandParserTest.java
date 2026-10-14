@@ -49,6 +49,7 @@ public class AddCareCommandParserTest {
     @Test
     public void parse_invalidIndex_throwsParseException() {
         String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCareCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "0 med/x", expectedMessage);
         assertParseFailure(parser, "not-an-index med/Metformin", expectedMessage);
         assertParseFailure(parser, "not-an-index", expectedMessage);
         assertParseFailure(parser, "", expectedMessage);

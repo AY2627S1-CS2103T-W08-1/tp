@@ -125,15 +125,27 @@ Examples:
 * `addcare 2 al/Penicillin al/Shellfish`
 * `addcare 1 ci/Check blood sugar before breakfast`
 
-A successful command returns `Updated care info for NAME. Added: ITEMS.` Duplicate entries produce category-specific
-feedback:
+A successful command returns `Updated care info for NAME. Added: ITEMS.`
 
-* `This medication already exists for this patient and was not added again.`
-* `This allergen already exists for this patient and was not added again.`
-* `This instruction already exists for this patient and was not added again.`
+Each skipped duplicate is named in the feedback. For example:
 
-The command is rejected without changing the patient when the index is invalid, no care prefix is provided, any entry
-is blank, or every entry is a duplicate.
+* An entry already stored for the patient returns
+  `Medication "Metformin" was not added: it already exists for this patient.`
+* An entry repeated within the same command returns
+  `Medication "Aspirin" was not added: it was repeated in this command.`
+
+The same wording is used for allergens and care instructions, with `Allergen` or `Care instruction` in place of
+`Medication`. Unique entries in the command are still added. If every supplied entry is a duplicate, the command is
+rejected without changing the patient.
+
+Other errors are reported as follows:
+
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* A command with no care prefix returns `Please specify at least one of med/, al/, or ci/ to add.`
+* A blank value returns `Medication entries cannot be blank.`, `Allergen entries cannot be blank.`, or
+  `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
+* A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
+  the command usage.
 
 ### Listing all persons: `list`
 
