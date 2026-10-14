@@ -610,7 +610,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app is running.
 
    1. Test case: Type `exit` in the command box and press Enter.<br>
-      Expected: The status message shows `Exiting MediConnect as requested ...` and the app window closes.
+      Expected: The app window closes.
 
    1. Test case: Close the window using the window's close button.<br>
       Expected: The app window closes. The window size and location are retained on the next launch.
@@ -630,7 +630,7 @@ testers are expected to do more *exploratory* testing.
 1. Listing patients when there is no data
 
    1. Prerequisites: Clear all data using the `clear` command.<br>
-      Expected: The status message shows `All patients have been cleared!`
+      Expected: The status message shows `All patients have been cleared.`
 
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No patients found. Use the 'add' command to add a patient.`
