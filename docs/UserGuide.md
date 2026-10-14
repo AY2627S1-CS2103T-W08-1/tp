@@ -194,7 +194,7 @@ Examples:
 
 ### Clearing all patients: `clear`
 
-Clears all patients and their care information from MediConnect, and resets the viewed patient selection.
+Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
 
 Format: `clear`
 

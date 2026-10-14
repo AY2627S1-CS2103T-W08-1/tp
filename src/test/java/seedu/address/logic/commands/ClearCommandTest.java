@@ -13,12 +13,15 @@ import seedu.address.model.UserPrefs;
 
 public class ClearCommandTest {
 
+    private static final String EXPECTED_CLEAR_SUCCESS_MESSAGE = "All patients have been cleared.";
+
+    // Checks the required wording independently of the production message constant.
     @Test
     public void execute_emptyAddressBook_success() {
         Model model = new ModelManager();
         Model expectedModel = new ModelManager();
 
-        assertCommandSuccess(new ClearCommand(), model, "All patients have been cleared.", expectedModel);
+        assertCommandSuccess(new ClearCommand(), model, EXPECTED_CLEAR_SUCCESS_MESSAGE, expectedModel);
     }
 
     @Test
