@@ -33,6 +33,8 @@ public class NameTest {
         assertFalse(Name.isValidName("peter the 2nd")); // contains numbers
         assertFalse(Name.isValidName("Alex2")); // ends with a number
         assertFalse(Name.isValidName("-Alex")); // does not start with a letter
+        assertFalse(Name.isValidName("/Alex")); // starts with a forward slash
+        assertFalse(Name.isValidName(".Alex")); // starts with a period
 
         // valid name
         assertTrue(Name.isValidName("peter jack")); // alphabets only
