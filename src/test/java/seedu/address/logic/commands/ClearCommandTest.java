@@ -27,7 +27,7 @@ public class ClearCommandTest {
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.setAddressBook(new AddressBook());
 
-        assertCommandSuccess(new ClearCommand(), model, "All patients have been cleared.", expectedModel);
+        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
     }
 
     @Test
@@ -36,7 +36,7 @@ public class ClearCommandTest {
         model.setViewedPatient(model.getFilteredPatientList().get(0));
         Model expectedModel = new ModelManager();
 
-        assertCommandSuccess(new ClearCommand(), model, "All patients have been cleared.", expectedModel);
+        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
         assertNull(model.getViewedPatient().getValue());
     }
 
