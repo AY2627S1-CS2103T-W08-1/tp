@@ -55,5 +55,6 @@ UniquePatientList -[hidden]right-> I
 Name -[hidden]right-> Phone
 Phone -[hidden]right-> Address
 
-ModelManager --> Patient : filtered patients
+ModelManager --> "0..*" Patient : filtered patients
+ModelManager --> "0..1" Patient : viewed patient
 @enduml

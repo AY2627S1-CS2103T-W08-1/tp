@@ -124,7 +124,7 @@ How the parsing works:
 
 The `Model` component,
 
-* stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
+* stores the patient data, i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores the patient being viewed, if any. It exposes this patient as an `ObservableValue<Patient>` that the UI observes, so the detail panel updates when the viewed patient changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
