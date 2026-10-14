@@ -117,14 +117,14 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
 <puml src="diagrams/ModelClassDiagram.puml" width="450" />
 
 
 The `Model` component,
 
-* stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
+* stores the patient data, i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores the patient being viewed, if any. It exposes this patient as an `ObservableValue<Patient>` that the UI observes, so the detail panel updates when the viewed patient changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
@@ -133,9 +133,13 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Note:** The diagram below illustrates the original AB3 alternative design for sharing tags between patients. Email and tags are removed from the MediConnect MVP.<br>
+**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus three
+`List<String>` care lists: medications, allergens and care instructions. The care lists default to empty and are
+defensively copied with `List.copyOf`, so callers cannot modify them through the getters. Updating a patient creates
+a replacement `Patient`, which the model stores using `setPatient`.
 
-<puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
+**Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
+is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
 </box>
 
 
