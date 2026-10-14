@@ -1,5 +1,6 @@
 package seedu.address.logic.commands;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
@@ -12,12 +13,15 @@ import seedu.address.model.UserPrefs;
 
 public class ClearCommandTest {
 
+    private static final String EXPECTED_CLEAR_SUCCESS_MESSAGE = "All patients have been cleared.";
+
+    // Checks the required wording independently of the production message constant.
     @Test
     public void execute_emptyAddressBook_success() {
         Model model = new ModelManager();
         Model expectedModel = new ModelManager();
 
-        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
+        assertCommandSuccess(new ClearCommand(), model, EXPECTED_CLEAR_SUCCESS_MESSAGE, expectedModel);
     }
 
     @Test
@@ -27,6 +31,16 @@ public class ClearCommandTest {
         expectedModel.setAddressBook(new AddressBook());
 
         assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
+    }
+
+    @Test
+    public void execute_viewedPatient_clearsPatientsAndViewedPatient() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        model.setViewedPatient(model.getFilteredPatientList().get(0));
+        Model expectedModel = new ModelManager();
+
+        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
+        assertNull(model.getViewedPatient().getValue());
     }
 
 }

@@ -224,11 +224,13 @@ is too large to be a valid number (e.g., `99999999999`), or is followed by extra
 `Invalid command format!` followed by the usage and example. In both cases, the panel keeps showing the patient it
 showed before.
 
-### Clearing all entries: `clear`
+### Clearing all patients: `clear`
 
-Clears all entries from the address book.
+Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
 
 Format: `clear`
+
+Returns `All patients have been cleared.`, including when there are no patients to clear.
 
 ### Exiting the program: `exit`
 
