@@ -210,7 +210,7 @@ MediConnect automatically saves data after every command. You do not need to sav
 
 ### Editing the data file
 
-MediConnect data is saved automatically as a JSON file `[JAR file location]/data/mediconnect.json`. Advanced users are welcome to update data directly by editing that data file.
+MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
 
 <box type="warning" seamless>
 
@@ -228,7 +228,7 @@ _Details coming soon ..._
 ## FAQ
 
 **Q**: Where is my data saved?<br>
-**A**: In `[JAR file location]/data/mediconnect.json`. If this file does not exist, MediConnect starts with sample patients and creates the file after the first command you run. After that, it saves to the file after every command.
+**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command.
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.

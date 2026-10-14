@@ -1,6 +1,7 @@
 package seedu.address;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -62,10 +63,11 @@ public class MainApp extends Application {
 
     /**
      * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
-     * The data from the sample address book will be used instead if {@code storage}'s address book is not found,
+     * The data from the sample address book will be used instead, and saved to a new data file,
+     * if {@code storage}'s address book is not found,
      * or an empty address book will be used instead if errors occur when reading {@code storage}'s address book.
      */
-    private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
+    protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
         logger.info("Using data file : " + storage.getAddressBookFilePath());
 
         Optional<ReadOnlyAddressBook> addressBookOptional;
@@ -83,7 +85,23 @@ public class MainApp extends Application {
             initialData = new AddressBook();
         }
 
+        createDataFileIfMissing(storage, initialData);
         return new ModelManager(initialData, userPrefs);
+    }
+
+    /**
+     * Saves {@code data} to {@code storage}'s data file if the file does not exist yet.
+     */
+    private void createDataFileIfMissing(Storage storage, ReadOnlyAddressBook data) {
+        if (Files.exists(storage.getAddressBookFilePath())) {
+            return;
+        }
+        try {
+            storage.saveAddressBook(data);
+        } catch (IOException e) {
+            logger.warning("Could not create the data file " + storage.getAddressBookFilePath()
+                    + ": " + StringUtil.getDetails(e));
+        }
     }
 
     /**
