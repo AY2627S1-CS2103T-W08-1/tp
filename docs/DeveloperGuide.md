@@ -648,36 +648,96 @@ testers are expected to do more *exploratory* testing.
 
 1. Initial launch
 
-   1. Download the JAR file and copy it into an empty folder.
+   1. Download `mediconnect.jar` and copy it into an empty folder.
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+   1. Open a terminal in that folder and run `java -jar mediconnect.jar`.<br>
+      Expected: The GUI opens with a set of sample patients. The window size may not be optimal.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
+   1. Relaunch the app with `java -jar mediconnect.jar`.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases … }_
+1. Closing the app
 
-### Deleting a person
+   1. Prerequisites: The app is running.
 
-1. Deleting a person while all persons are being shown
+   1. Test case: Type `exit` in the command box and press Enter.<br>
+      Expected: The app window closes.
 
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Test case: Close the window using the window's close button.<br>
+      Expected: The app window closes. The window size and location are retained on the next launch.
+
+### Listing patients
+
+1. Listing patients when there is data
+
+   1. Prerequisites: The app has at least one patient, e.g. the sample data on first launch.
+
+   1. Test case: `list`<br>
+      Expected: All patients are shown in the patient list. The status message shows `Listed all patients.`
+
+   1. Test case: `find John` followed by `list`<br>
+      Expected: The filter is cleared and all patients are shown again. The status message shows `Listed all patients.`
+
+1. Listing patients when there is no data
+
+   1. Prerequisites: Clear all data using the `clear` command.<br>
+      Expected: The status message shows `All patients have been cleared.`
+
+   1. Test case: `list`<br>
+      Expected: The patient list is empty. The status message shows `No patients found. Use the 'add' command to add a patient.`
+
+### Deleting a patient
+
+1. Deleting a patient while all patients are being shown
+
+   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+      Expected: The first patient is deleted from the list. The status message shows `Deleted patient: NAME; NRIC: NRIC` with the deleted patient's name and NRIC, e.g. `Deleted patient: Alex Yeoh; NRIC: S0000001A` for the sample data.
 
    1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
+      Expected: No patient is deleted. The status message shows `Invalid command format!` followed by the `delete` usage: `delete: Deletes the patient at the specified INDEX.`, `Parameters: INDEX (must be a positive integer)` and `Example: delete 3`.
 
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
+   1. Test case: `delete x` where x is larger than the list size<br>
+      Expected: No patient is deleted. The status message shows `The patient index provided is invalid.`
 
-1. _{ more test cases … }_
+   1. Other incorrect delete commands to try: `delete`, `delete abc`, `delete -1`<br>
+      Expected: Similar to `delete 0`.
+
+1. Deleting a patient after finding patients
+
+   1. Prerequisites: The sample data is loaded. Run `find Alex` so that only one patient is shown.
+
+   1. Test case: `delete 1`<br>
+      Expected: The patient found by `find Alex` is deleted, not the first patient of the full list. The status message shows `Deleted patient: Alex Yeoh; NRIC: S0000001A`.
+
+   1. Test case: `delete 2`<br>
+      Expected: No patient is deleted. The status message shows `The patient index provided is invalid.`, because the index refers to the filtered list.
+
+### Finding patients
+
+1. Finding patients by name
+
+   1. Prerequisites: The sample data is loaded, with patients named `Alex Yeoh`, `Bernice Yu`, `Charlotte Oliveiro` and `David Li`.
+
+   1. Test case: `find Alex`<br>
+      Expected: Only `Alex Yeoh` is shown in the patient list. The status message shows `1 patient(s) listed!`
+
+   1. Test case: `find aLeX`<br>
+      Expected: Same as `find Alex`, because keywords are matched case-insensitively.
+
+   1. Test case: `find alex david`<br>
+      Expected: `Alex Yeoh` and `David Li` are shown. The status message shows `2 patient(s) listed!`
+
+   1. Test case: `find Zebra`<br>
+      Expected: The patient list is empty. The status message shows `No patients found matching the given keyword(s).`
+
+   1. Test case: `find`<br>
+      Expected: The patient list is unchanged. The status message shows `Please provide at least one keyword to search for.`
 
 ### Viewing a patient
 
