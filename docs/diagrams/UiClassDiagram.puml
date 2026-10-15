@@ -36,7 +36,7 @@ MainWindow *-down-> "1" ResultDisplay
 MainWindow *-down-> "1" PatientListPanel
 MainWindow *-down-> "1" PatientDetailPanel
 MainWindow *-down-> "1" StatusBarFooter
-MainWindow --> "0..1" HelpWindow
+MainWindow --> "1" HelpWindow
 
 PatientListPanel -down-> "*" PatientCard
 
@@ -55,6 +55,7 @@ PatientDetailPanel ..> Model
 UiManager -right-> Logic
 MainWindow -left-> Logic
 
+PatientDetailPanel -[hidden]left- PatientListPanel
 PatientListPanel -[hidden]left- HelpWindow
 HelpWindow -[hidden]left- CommandBox
 CommandBox -[hidden]left- ResultDisplay
