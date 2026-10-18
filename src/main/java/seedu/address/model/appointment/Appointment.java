@@ -104,6 +104,26 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
+     * Returns true if both appointments are at the same date and time, whoever they are with.
+     */
+    public boolean isAtSameTimeAs(Appointment otherAppointment) {
+        return otherAppointment != null
+                && date.equals(otherAppointment.date)
+                && time.equals(otherAppointment.time);
+    }
+
+    /**
+     * Returns true if both appointments are at the same date and time with the same provider,
+     * ignoring letter case and repeated spaces in the provider. Notes are not compared.
+     * This defines a weaker notion of equality between two appointments.
+     */
+    public boolean isSameAppointment(Appointment otherAppointment) {
+        return isAtSameTimeAs(otherAppointment)
+                && provider.replaceAll("\\s+", " ")
+                        .equalsIgnoreCase(otherAppointment.provider.replaceAll("\\s+", " "));
+    }
+
+    /**
      * Orders appointments by date, then time.
      * Two different appointments at the same date and time compare as equal in this order.
      */

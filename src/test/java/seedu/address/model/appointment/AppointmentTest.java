@@ -63,6 +63,36 @@ public class AppointmentTest {
     }
 
     @Test
+    public void isAtSameTimeAs() {
+        Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "");
+
+        // same date and time, different provider -> returns true
+        assertTrue(appointment.isAtSameTimeAs(new Appointment(DATE, TIME, "Dr Lim", "")));
+
+        // null -> returns false
+        assertFalse(appointment.isAtSameTimeAs(null));
+
+        // different date or time -> returns false
+        assertFalse(appointment.isAtSameTimeAs(new Appointment(DATE.plusDays(1), TIME, "Dr Tan", "")));
+        assertFalse(appointment.isAtSameTimeAs(new Appointment(DATE, TIME.plusMinutes(1), "Dr Tan", "")));
+    }
+
+    @Test
+    public void isSameAppointment() {
+        Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "");
+
+        // same provider, ignoring case, repeated spaces and note -> returns true
+        assertTrue(appointment.isSameAppointment(new Appointment(DATE, TIME, "dr  TAN", "Fasting")));
+
+        // null -> returns false
+        assertFalse(appointment.isSameAppointment(null));
+
+        // different provider or time -> returns false
+        assertFalse(appointment.isSameAppointment(new Appointment(DATE, TIME, "Dr Lim", "")));
+        assertFalse(appointment.isSameAppointment(new Appointment(DATE, TIME.plusMinutes(1), "Dr Tan", "")));
+    }
+
+    @Test
     public void equals() {
         Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "");
 
