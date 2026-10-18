@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import seedu.address.model.patient.Patient;
 
@@ -24,6 +25,9 @@ public class PatientFormatter {
 
     /** Heading of the list of care instructions. */
     public static final String HEADING_CARE_INSTRUCTIONS = "Care Instructions";
+
+    /** A line break inside an entry, with any spaces around it. */
+    private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\s*\\R\\s*");
 
     private PatientFormatter() {} // prevents instantiation
 
@@ -57,7 +61,7 @@ public class PatientFormatter {
 
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < entries.size(); i++) {
-            String entry = entries.get(i).replaceAll("\\s*\\R\\s*", " ").strip();
+            String entry = LINE_BREAK_PATTERN.matcher(entries.get(i)).replaceAll(" ").strip();
             lines.add((i + 1) + ". " + entry);
         }
         return lines;

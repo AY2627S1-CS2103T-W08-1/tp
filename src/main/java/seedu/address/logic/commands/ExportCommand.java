@@ -105,21 +105,30 @@ public class ExportCommand extends Command {
         }
 
         Patient patient = lastShownList.get(targetIndex.getZeroBased());
-        String name = patient.getName().fullName;
         Path exportFile = exportDir.resolve(patient.getNric() + FILE_EXTENSION);
+        writeRecord(patient, exportFile);
 
+        logger.info("Exported a patient record to " + exportFile);
+        return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName().fullName,
+                exportFile.toAbsolutePath().normalize()));
+    }
+
+    /**
+     * Writes the record of {@code patient} to {@code exportFile}, after creating the export folder if it does not
+     * exist. An earlier export of the patient is replaced.
+     *
+     * @throws CommandException if the folder or the file cannot be written.
+     */
+    private void writeRecord(Patient patient, Path exportFile) throws CommandException {
         try {
             Files.createDirectories(exportDir);
             Files.write(exportFile, createRecord(patient), StandardCharsets.UTF_8);
         } catch (IOException ioe) {
             logger.warning("Could not export a patient record to " + exportFile + ": " + ioe);
             String reason = Messages.describeWriteFailure(ioe);
-            throw new CommandException(
-                    String.format(MESSAGE_FAILURE, name, exportFile.toAbsolutePath().normalize(), reason), ioe);
+            throw new CommandException(String.format(MESSAGE_FAILURE, patient.getName().fullName,
+                    exportFile.toAbsolutePath().normalize(), reason), ioe);
         }
-
-        logger.info("Exported a patient record to " + exportFile);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, name, exportFile.toAbsolutePath().normalize()));
     }
 
     /**
