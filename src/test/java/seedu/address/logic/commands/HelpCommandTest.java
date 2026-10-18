@@ -17,6 +17,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +62,7 @@ public class HelpCommandTest {
         commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
-        return commands;
+        return Collections.unmodifiableMap(commands);
     }
 
     @Test
