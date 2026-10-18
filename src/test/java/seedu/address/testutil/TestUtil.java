@@ -39,7 +39,7 @@ public class TestUtil {
      * Returns {@code path} relative to the working directory, and skips the calling test if there is no such
      * path, e.g., when {@code path} is on another drive on Windows.
      */
-    public static Path relativeToWorkingDir(Path path) {
+    public static Path toPathRelativeToWorkingDir(Path path) {
         Path workingDir = Paths.get("").toAbsolutePath();
         assumeTrue(workingDir.getRoot().equals(path.getRoot()));
         Path relativePath = workingDir.relativize(path);

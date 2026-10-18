@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
-import static seedu.address.testutil.TestUtil.relativeToWorkingDir;
+import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
 import static seedu.address.testutil.TypicalPatients.IDA;
@@ -73,26 +73,26 @@ public class RestoreCommandTest {
 
     @Test
     public void execute_nullModel_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> restoreCommand().execute(null));
+        assertThrows(NullPointerException.class, () -> createRestoreCommand().execute(null));
     }
 
     @Test
     public void execute_validBackup_replacesDataAndBacksUpCurrentData() throws Exception {
-        AddressBook backupData = addressBookOf(HOON, IDA);
+        AddressBook backupData = createAddressBook(HOON, IDA);
         writeBackup(backupData);
         Model expectedModel = new ModelManager(backupData, new UserPrefs());
 
-        assertCommandSuccess(restoreCommand(), model, expectedSuccessMessage(2, "patients"), expectedModel);
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"), expectedModel);
         // the automatic backup holds the data from before the restore
         assertEquals(getTypicalAddressBook(), readAddressBook(temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME)));
     }
 
     @Test
     public void execute_backupWithOnePatient_saysPatient() throws Exception {
-        AddressBook backupData = addressBookOf(HOON);
+        AddressBook backupData = createAddressBook(HOON);
         writeBackup(backupData);
 
-        assertCommandSuccess(restoreCommand(), model, expectedSuccessMessage(1, "patient"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(1, "patient"),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -100,7 +100,8 @@ public class RestoreCommandTest {
     public void execute_emptyBackup_removesAllPatients() throws Exception {
         writeBackup(new AddressBook());
 
-        assertCommandSuccess(restoreCommand(), model, expectedSuccessMessage(0, "patients"), new ModelManager());
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(0, "patients"),
+                new ModelManager());
     }
 
     @Test
@@ -108,17 +109,17 @@ public class RestoreCommandTest {
         model.updateFilteredPatientList(patient -> false);
         writeBackup(getTypicalAddressBook());
 
-        assertCommandSuccess(restoreCommand(), model, expectedSuccessMessage(7, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients"),
                 new ModelManager(getTypicalAddressBook(), new UserPrefs()));
     }
 
     @Test
     public void execute_viewedPatientNotInBackup_clearsViewedPatient() throws Exception {
         model.setViewedPatient(ALICE);
-        AddressBook backupData = addressBookOf(HOON, IDA);
+        AddressBook backupData = createAddressBook(HOON, IDA);
         writeBackup(backupData);
 
-        assertCommandSuccess(restoreCommand(), model, expectedSuccessMessage(2, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -129,17 +130,17 @@ public class RestoreCommandTest {
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.setViewedPatient(ALICE);
 
-        assertCommandSuccess(restoreCommand(), model, expectedSuccessMessage(7, "patients"), expectedModel);
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients"), expectedModel);
     }
 
     @Test
     public void execute_relativeBackupFolder_showsFullPathOfAutomaticBackup() throws Exception {
-        AddressBook backupData = addressBookOf(HOON);
+        AddressBook backupData = createAddressBook(HOON);
         writeBackup(backupData);
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
-                relativeToWorkingDir(temporaryFolder));
+                toPathRelativeToWorkingDir(temporaryFolder));
 
-        assertCommandSuccess(restoreCommand, model, expectedSuccessMessage(1, "patient"),
+        assertCommandSuccess(restoreCommand, model, getExpectedSuccessMessage(1, "patient"),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -149,15 +150,15 @@ public class RestoreCommandTest {
         new BackupCommand(earlierClock, temporaryFolder).execute(model);
         model.deletePatient(ALICE);
 
-        restoreCommand().execute(model);
+        createRestoreCommand().execute(model);
 
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
     }
 
     @Test
     public void execute_automaticBackupRestored_undoesEarlierRestore() throws Exception {
-        writeBackup(addressBookOf(HOON));
-        restoreCommand().execute(model);
+        writeBackup(createAddressBook(HOON));
+        createRestoreCommand().execute(model);
 
         new RestoreCommand(AUTOMATIC_BACKUP_NAME, FIXED_CLOCK, temporaryFolder).execute(model);
 
@@ -174,7 +175,7 @@ public class RestoreCommandTest {
     @Test
     public void execute_missingBackupInRelativeFolder_showsFullFolderPath() {
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
-                relativeToWorkingDir(temporaryFolder));
+                toPathRelativeToWorkingDir(temporaryFolder));
 
         assertCommandFailure(restoreCommand, model,
                 String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, temporaryFolder));
@@ -220,7 +221,7 @@ public class RestoreCommandTest {
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
     public void execute_unreadableBackup_throwsCommandException() throws Exception {
-        writeBackup(addressBookOf(HOON));
+        writeBackup(createAddressBook(HOON));
         Path backupFile = temporaryFolder.resolve(BACKUP_NAME);
         assertTrue(backupFile.toFile().setReadable(false));
         try {
@@ -236,7 +237,7 @@ public class RestoreCommandTest {
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
     public void execute_currentDataCannotBeBackedUp_throwsCommandExceptionAndRestoresNothing() throws Exception {
-        writeBackup(addressBookOf(HOON));
+        writeBackup(createAddressBook(HOON));
         assertTrue(temporaryFolder.toFile().setWritable(false));
         try {
             // users with admin rights (e.g., root) can still write, so the test only applies to others
@@ -246,7 +247,7 @@ public class RestoreCommandTest {
 
             // a relative folder also checks that the message shows the full path
             RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
-                    relativeToWorkingDir(temporaryFolder));
+                    toPathRelativeToWorkingDir(temporaryFolder));
 
             assertCommandFailure(restoreCommand, model, expectedMessage);
             try (Stream<Path> files = Files.list(temporaryFolder)) {
@@ -260,7 +261,7 @@ public class RestoreCommandTest {
     @Test
     public void equals() {
         Clock otherClock = Clock.fixed(Instant.parse("2026-10-22T09:00:00Z"), ZoneOffset.UTC);
-        RestoreCommand restoreCommand = restoreCommand();
+        RestoreCommand restoreCommand = createRestoreCommand();
 
         // same object -> returns true
         assertTrue(restoreCommand.equals(restoreCommand));
@@ -289,35 +290,35 @@ public class RestoreCommandTest {
     public void toStringMethod() {
         String expected = RestoreCommand.class.getCanonicalName() + "{fileName=" + BACKUP_NAME
                 + ", clock=" + FIXED_CLOCK + ", backupDir=" + temporaryFolder + "}";
-        assertEquals(expected, restoreCommand().toString());
+        assertEquals(expected, createRestoreCommand().toString());
     }
 
-    private RestoreCommand restoreCommand() {
+    private RestoreCommand createRestoreCommand() {
         return new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder);
     }
 
-    private String expectedSuccessMessage(int patientCount, String patientWord) {
+    private String getExpectedSuccessMessage(int patientCount, String patientWord) {
         return String.format(RestoreCommand.MESSAGE_SUCCESS, patientCount, patientWord, BACKUP_NAME,
                 temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
     }
 
     /**
-     * Saves {@code data} as the backup file that {@code restoreCommand()} restores.
+     * Saves {@code data} as the backup file that {@code createRestoreCommand()} restores.
      */
     private void writeBackup(ReadOnlyAddressBook data) throws IOException {
         new JsonAddressBookStorage(temporaryFolder.resolve(BACKUP_NAME)).saveAddressBook(data);
     }
 
     /**
-     * Confirms that {@code restoreCommand()} fails with {@code expectedMessage}, leaves {@code model} unchanged,
+     * Confirms that {@code createRestoreCommand()} fails with {@code expectedMessage}, leaves {@code model} unchanged,
      * and does not back up the current data.
      */
     private void assertRestoreFailure(String expectedMessage) {
-        assertCommandFailure(restoreCommand(), model, expectedMessage);
+        assertCommandFailure(createRestoreCommand(), model, expectedMessage);
         assertFalse(Files.exists(temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME)));
     }
 
-    private static AddressBook addressBookOf(Patient... patients) {
+    private static AddressBook createAddressBook(Patient... patients) {
         AddressBook addressBook = new AddressBook();
         for (Patient patient : patients) {
             addressBook.addPatient(patient);
