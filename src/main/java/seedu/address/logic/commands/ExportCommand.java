@@ -126,8 +126,9 @@ public class ExportCommand extends Command {
         } catch (IOException ioe) {
             logger.warning("Could not export a patient record to " + exportFile + ": " + ioe);
             String reason = Messages.describeWriteFailure(ioe);
-            throw new CommandException(String.format(MESSAGE_FAILURE, patient.getName().fullName,
-                    exportFile.toAbsolutePath().normalize(), reason), ioe);
+            String message = String.format(MESSAGE_FAILURE, patient.getName().fullName,
+                    exportFile.toAbsolutePath().normalize(), reason);
+            throw new CommandException(message, ioe);
         }
     }
 
