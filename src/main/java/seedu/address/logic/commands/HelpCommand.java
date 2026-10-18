@@ -3,11 +3,15 @@ package seedu.address.logic.commands;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ALLERGEN;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CARE_INSTRUCTION;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICATION;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TIME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_WITH;
 
 import seedu.address.model.Model;
 
@@ -39,6 +43,9 @@ public class HelpCommand extends Command {
             formatEntry(AddCareCommand.COMMAND_WORD + " INDEX [" + PREFIX_MEDICATION + "MEDICATION]... ["
                     + PREFIX_ALLERGEN + "ALLERGEN]... [" + PREFIX_CARE_INSTRUCTION + "CARE_INSTRUCTION]...",
                     "Adds care information (at least one entry) to the patient at INDEX."),
+            formatEntry(AddApptCommand.COMMAND_WORD + " INDEX " + PREFIX_DATE + "DATE "
+                    + PREFIX_TIME + "TIME " + PREFIX_WITH + "WITH [" + PREFIX_NOTE + "NOTE]",
+                    "Adds an appointment to the patient at INDEX."),
             formatEntry(ViewCommand.COMMAND_WORD + " INDEX",
                     "Shows the full details of the patient at INDEX."),
             formatEntry(FindCommand.COMMAND_WORD + " KEYWORD [MORE_KEYWORDS]...",

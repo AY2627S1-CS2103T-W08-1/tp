@@ -47,6 +47,10 @@ public class HelpCommandTest {
             Map.entry("MEDICATION", "Metformin 500mg"),
             Map.entry("ALLERGEN", "Penicillin"),
             Map.entry("CARE_INSTRUCTION", "Check blood sugar"),
+            Map.entry("DATE", "2026-11-05"),
+            Map.entry("TIME", "09:30"),
+            Map.entry("WITH", "Dr Tan"),
+            Map.entry("NOTE", "Fasting"),
             Map.entry("KEYWORD", "alice"),
             Map.entry("MORE_KEYWORDS", "bob"));
 
@@ -56,6 +60,7 @@ public class HelpCommandTest {
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
+        commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
         commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
@@ -140,7 +145,7 @@ public class HelpCommandTest {
     @Test
     public void commandSummary_indexCommands_takeIndex() {
         for (String commandWord : List.of(DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
-                AddCareCommand.COMMAND_WORD)) {
+                AddCareCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }
