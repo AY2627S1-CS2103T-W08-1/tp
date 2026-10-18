@@ -259,7 +259,13 @@ Format: `backup`
 
 Returns `Backup saved to: ` followed by the full path of the backup file.
 
-If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows `Could not save the backup: ` with the reason, and your data is not changed.
+If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows `Could not save the backup to ` followed by the folder and the reason, and your data is not changed.
+
+<box type="warning" seamless>
+
+**Caution:**
+`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, do not run `backup` or any other command. Close MediConnect and copy `data/mediconnect.json` somewhere safe by hand first, because the next command replaces that file.
+</box>
 
 <box type="tip" seamless>
 
