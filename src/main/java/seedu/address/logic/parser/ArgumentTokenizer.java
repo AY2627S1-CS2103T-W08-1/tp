@@ -23,6 +23,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class ArgumentTokenizer {
 
     private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
+    private static final Pattern TRAILING_PUNCTUATION_PATTERN = Pattern.compile("\\p{P}+$");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -41,6 +42,7 @@ public class ArgumentTokenizer {
      * Rejects unrecognized alphabetic slash prefixes at token boundaries.
      * A prefix candidate consists of one or more letters followed immediately by a slash.
      * Standalone tokens in {@code allowedSlashTokens} are treated as ordinary text, ignoring case.
+     * Allowed tokens with trailing punctuation are rejected with a correction.
      *
      * @param argsString Original command arguments to check.
      * @param allowedSlashTokens Lowercase tokens allowed as ordinary text by the command.
@@ -62,9 +64,22 @@ public class ArgumentTokenizer {
 
             String candidate = matcher.group(1);
 
-            if (!allowed.contains(candidate)) {
-                throw new ParseException(String.format(Messages.MESSAGE_UNKNOWN_PREFIX, candidate));
+            // Allow recognised command prefixes.
+            if (allowed.contains(candidate)) {
+                continue;
             }
+
+            // Explain how to correct an allowed slash word with trailing punctuation.
+            String token = matcher.group();
+            String unpunctuatedToken = TRAILING_PUNCTUATION_PATTERN.matcher(token).replaceFirst("");
+
+            if (allowedSlashTokens.contains(unpunctuatedToken.toLowerCase(Locale.ROOT))) {
+                throw new ParseException(String.format(
+                        Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken));
+            }
+
+            // Report other unrecognised prefixes.
+            throw new ParseException(String.format(Messages.MESSAGE_UNKNOWN_PREFIX, candidate));
         }
     }
 

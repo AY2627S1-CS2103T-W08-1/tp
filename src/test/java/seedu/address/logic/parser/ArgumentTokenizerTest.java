@@ -43,6 +43,26 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
+    public void verifyNoInvalidPrefixes_punctuatedAllowedToken_throwsParseException() {
+        for (String token : List.of("custom/token,", "CUSTOM/TOKEN.", "custom/token…")) {
+            String unpunctuatedToken = token.substring(0, token.length() - 1);
+            String expected = String.format(
+                    Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken);
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of("custom/token"), pSlash));
+        }
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_allowedTokenSubstring_throwsParseException() {
+        for (String token : List.of("custom/tokenized", "custom/token/extra")) {
+            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "custom/");
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of("custom/token"), pSlash));
+        }
+    }
+
+    @Test
     public void tokenize_emptyArgsString_noValues() {
         String argsString = "  ";
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash);
