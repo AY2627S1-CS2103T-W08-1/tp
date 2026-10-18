@@ -15,7 +15,7 @@ import seedu.address.ui.PatientDetailPanel;
 public class PatientFormatterTest {
 
     @Test
-    public void noneRecorded_sameAsDetailPanel() {
+    public void noneRecorded_detailPanelConstant_sameText() {
         assertEquals(PatientDetailPanel.MESSAGE_NONE_RECORDED, PatientFormatter.NONE_RECORDED);
     }
 
