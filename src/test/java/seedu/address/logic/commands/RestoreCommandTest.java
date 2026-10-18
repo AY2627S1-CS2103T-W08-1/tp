@@ -28,6 +28,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.logic.Messages;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -242,7 +243,7 @@ public class RestoreCommandTest {
             // users with admin rights (e.g., root) can still write, so the test only applies to others
             assumeFalse(Files.isWritable(temporaryFolder));
             String expectedMessage = String.format(RestoreCommand.MESSAGE_BACKUP_FAILED, temporaryFolder,
-                    BackupCommand.MESSAGE_NO_PERMISSION);
+                    Messages.MESSAGE_NO_WRITE_PERMISSION);
 
             // a relative folder also checks that the message shows the full path
             RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,

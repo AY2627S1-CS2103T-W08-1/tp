@@ -1,5 +1,10 @@
 package seedu.address.logic;
 
+import static java.util.Objects.requireNonNull;
+
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileSystemException;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,6 +25,12 @@ public class Messages {
     public static final String MESSAGE_PATIENTS_LISTED_OVERVIEW = "%1$d patient(s) listed!";
     public static final String MESSAGE_DUPLICATE_FIELDS =
                 "Multiple values specified for a single-valued field: ";
+
+    /** Reason given by {@code describeWriteFailure} when MediConnect is not allowed to write to a folder. */
+    public static final String MESSAGE_NO_WRITE_PERMISSION = "MediConnect does not have permission to write there";
+
+    /** Reason given by {@code describeWriteFailure} when the file system does not give a reason of its own. */
+    public static final String MESSAGE_FILE_SYSTEM_ERROR = "the folder or file could not be created";
 
     /**
      * Returns an error message indicating the duplicate prefixes.
@@ -44,6 +55,34 @@ public class Messages {
                 .append("; Phone: ").append(patient.getPhone())
                 .append("; Address: ").append(patient.getAddress());
         return builder.toString();
+    }
+
+    /**
+     * Returns a short, readable reason for {@code ioe}, a failure to write a file, suitable for showing to the user.
+     * File system exceptions use the file path as their message, so their reason is used instead.
+     * Trailing full stops are removed, as the messages that show the reason add their own.
+     *
+     * @param ioe Exception thrown while writing the file.
+     * @return the reason, without a full stop at the end.
+     */
+    public static String describeWriteFailure(IOException ioe) {
+        requireNonNull(ioe);
+        if (ioe instanceof AccessDeniedException) {
+            return MESSAGE_NO_WRITE_PERMISSION;
+        }
+
+        String reason;
+        String fallback;
+        if (ioe instanceof FileSystemException fileSystemException) {
+            reason = fileSystemException.getReason();
+            fallback = MESSAGE_FILE_SYSTEM_ERROR;
+        } else {
+            reason = ioe.getMessage();
+            fallback = ioe.getClass().getSimpleName();
+        }
+
+        String trimmedReason = reason == null ? "" : reason.replaceAll("[\\s.]+$", "").strip();
+        return trimmedReason.isEmpty() ? fallback : trimmedReason;
     }
 
 }
