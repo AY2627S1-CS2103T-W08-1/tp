@@ -269,8 +269,24 @@ If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows
 
 <box type="tip" seamless>
 
-**Tip:** Run `backup` before editing the data file by hand or before making many changes at once.
+**Tip:** Run `backup` before editing the data file by hand or before making many changes at once. To go back to a backup later, use `restore`.
 </box>
+
+### Restoring data from a backup: `restore`
+
+Replaces all patient data with the data in a backup file from the `data/backups` folder.
+
+Format: `restore FILENAME`
+
+* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
+* MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
+* Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
+* After a restore, the list shows all restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+
+Examples:
+* `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
+
+Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup.
 
 ### Exiting the program: `exit`
 
@@ -325,4 +341,5 @@ Action            | Format, Examples
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
 **List**          | `list`
+**Restore**       | `restore FILENAME` <br> e.g., `restore mediconnect-20261020-083015.json`
 **View**          | `view INDEX` <br> e.g., `view 2`
