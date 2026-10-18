@@ -75,7 +75,7 @@ public class PatientFormatterTest {
 
     @Test
     public void formatRecord_patientWithCareInfo_listsEachCareListUnderItsHeading() {
-        List<String> expected = List.of(
+        List<String> expectedLines = List.of(
                 "Daniel Meier",
                 "NRIC: S0000004A",
                 "DOB: " + DANIEL.getDob(),
@@ -91,12 +91,12 @@ public class PatientFormatterTest {
                 "Care Instructions",
                 "1. Check blood sugar");
 
-        assertEquals(expected, PatientFormatter.formatRecord(DANIEL));
+        assertEquals(expectedLines, PatientFormatter.formatRecord(DANIEL));
     }
 
     @Test
     public void formatRecord_patientWithoutCareInfo_showsNoneRecordedInEachSection() {
-        List<String> expected = List.of(
+        List<String> expectedLines = List.of(
                 "Alice Pauline",
                 "NRIC: S0000001A",
                 "DOB: " + ALICE.getDob(),
@@ -112,6 +112,6 @@ public class PatientFormatterTest {
                 "Care Instructions",
                 "None recorded");
 
-        assertEquals(expected, PatientFormatter.formatRecord(ALICE));
+        assertEquals(expectedLines, PatientFormatter.formatRecord(ALICE));
     }
 }
