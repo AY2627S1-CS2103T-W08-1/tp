@@ -1,5 +1,8 @@
 package seedu.address.testutil;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +33,18 @@ public class TestUtil {
             throw new RuntimeException(e);
         }
         return SANDBOX_FOLDER.resolve(fileName);
+    }
+
+    /**
+     * Returns {@code path} relative to the working directory, and skips the calling test if there is no such
+     * path, e.g., when {@code path} is on another drive on Windows.
+     */
+    public static Path relativeToWorkingDir(Path path) {
+        Path workingDir = Paths.get("").toAbsolutePath();
+        assumeTrue(workingDir.getRoot().equals(path.getRoot()));
+        Path relativePath = workingDir.relativize(path);
+        assertFalse(relativePath.isAbsolute());
+        return relativePath;
     }
 
     /**

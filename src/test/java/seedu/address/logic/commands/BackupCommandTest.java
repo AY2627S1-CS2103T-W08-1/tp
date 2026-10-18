@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.relativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.io.IOException;
@@ -332,18 +332,6 @@ public class BackupCommandTest {
 
         assertCommandSuccess(backupCommand, model, expectedMessage, expectedModel);
         assertTrue(Files.exists(expectedFile));
-    }
-
-    /**
-     * Returns {@code path} relative to the working directory, and skips the test if there is no such path.
-     */
-    private static Path relativeToWorkingDir(Path path) {
-        Path workingDir = Paths.get("").toAbsolutePath();
-        // on Windows the temporary folder can be on another drive, where no relative path exists
-        assumeTrue(workingDir.getRoot().equals(path.getRoot()));
-        Path relativePath = workingDir.relativize(path);
-        assertFalse(relativePath.isAbsolute());
-        return relativePath;
     }
 
     /**
