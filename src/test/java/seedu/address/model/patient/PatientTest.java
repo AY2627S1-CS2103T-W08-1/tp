@@ -85,6 +85,13 @@ public class PatientTest {
     }
 
     @Test
+    public void withAppointments_newList_replacesOnlyAppointments() {
+        Patient patient = new PatientBuilder(ALICE).withMedications("Metformin").build();
+        Patient expected = new PatientBuilder(patient).withAppointments(CHECKUP).build();
+        assertEquals(expected, patient.withAppointments(List.of(CHECKUP)));
+    }
+
+    @Test
     public void equals() {
         Patient copy = new PatientBuilder(ALICE).build();
         assertEquals(ALICE, copy);

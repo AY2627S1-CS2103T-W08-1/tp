@@ -90,6 +90,14 @@ public class Patient {
     }
 
     /**
+     * Returns a copy of this patient with {@code appointments} in place of the current appointments.
+     */
+    public Patient withAppointments(List<Appointment> appointments) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                appointments);
+    }
+
+    /**
      * Returns true if both patients have the same NRIC (case-insensitive).
      * This defines a weaker notion of equality between two patients.
      */

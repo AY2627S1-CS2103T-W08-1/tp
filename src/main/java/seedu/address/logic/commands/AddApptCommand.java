@@ -83,11 +83,7 @@ public class AddApptCommand extends Command {
 
         List<Appointment> updatedAppointments = new ArrayList<>(patientToEdit.getAppointments());
         updatedAppointments.add(toAdd);
-        Patient editedPatient = new Patient(patientToEdit.getName(), patientToEdit.getNric(),
-                patientToEdit.getDob(), patientToEdit.getPhone(), patientToEdit.getAddress(),
-                patientToEdit.getMedications(), patientToEdit.getAllergens(),
-                patientToEdit.getCareInstructions(), updatedAppointments);
-        model.setPatient(patientToEdit, editedPatient);
+        model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
 
         return new CommandResult(buildSuccessMessage(patientToEdit));
     }
