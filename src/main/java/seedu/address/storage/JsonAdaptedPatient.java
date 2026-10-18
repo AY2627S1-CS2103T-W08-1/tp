@@ -2,11 +2,13 @@ package seedu.address.storage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Name;
@@ -20,6 +22,7 @@ import seedu.address.model.patient.Phone;
 class JsonAdaptedPatient {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Patient's %s field is missing!";
+    public static final String MESSAGE_NULL_APPOINTMENT = "Appointments must not be null.";
 
     private final String name;
     private final String phone;
@@ -29,6 +32,7 @@ class JsonAdaptedPatient {
     private final List<String> medications = new ArrayList<>();
     private final List<String> allergens = new ArrayList<>();
     private final List<String> careInstructions = new ArrayList<>();
+    private final List<JsonAdaptedAppointment> appointments = new ArrayList<>();
 
     /**
      * Constructs a {@code JsonAdaptedPatient} with the given patient details.
@@ -38,7 +42,8 @@ class JsonAdaptedPatient {
             @JsonProperty("dob") String dob, @JsonProperty("phone") String phone,
             @JsonProperty("address") String address, @JsonProperty("medications") List<String> medications,
             @JsonProperty("allergens") List<String> allergens,
-            @JsonProperty("careInstructions") List<String> careInstructions) {
+            @JsonProperty("careInstructions") List<String> careInstructions,
+            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments) {
         this.name = name;
         this.nric = nric;
         this.dob = dob;
@@ -52,6 +57,9 @@ class JsonAdaptedPatient {
         }
         if (careInstructions != null) {
             this.careInstructions.addAll(careInstructions);
+        }
+        if (appointments != null) {
+            this.appointments.addAll(appointments);
         }
     }
 
@@ -67,6 +75,8 @@ class JsonAdaptedPatient {
         medications.addAll(source.getMedications());
         allergens.addAll(source.getAllergens());
         careInstructions.addAll(source.getCareInstructions());
+        appointments.addAll(source.getAppointments().stream().map(JsonAdaptedAppointment::new)
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -115,12 +125,30 @@ class JsonAdaptedPatient {
         }
         final Address modelAddress = new Address(address);
 
+        final List<Appointment> modelAppointments = toModelAppointments();
+
         try {
             return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
-                    medications, allergens, careInstructions, List.of());
+                    medications, allergens, careInstructions, modelAppointments);
         } catch (NullPointerException e) {
             throw new IllegalValueException("Care entries must not be null.");
         }
+    }
+
+    /**
+     * Converts the adapted appointments into the model's {@code Appointment} objects.
+     *
+     * @throws IllegalValueException if an appointment is missing or violates its data constraints.
+     */
+    private List<Appointment> toModelAppointments() throws IllegalValueException {
+        List<Appointment> modelAppointments = new ArrayList<>();
+        for (JsonAdaptedAppointment appointment : appointments) {
+            if (appointment == null) {
+                throw new IllegalValueException(MESSAGE_NULL_APPOINTMENT);
+            }
+            modelAppointments.add(appointment.toModelType());
+        }
+        return modelAppointments;
     }
 
 }

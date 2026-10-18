@@ -26,7 +26,13 @@
     "dob" : "1950-01-01",
     "medications" : [ "Metformin" ],
     "allergens" : [ "Penicillin" ],
-    "careInstructions" : [ "Check blood sugar" ]
+    "careInstructions" : [ "Check blood sugar" ],
+    "appointments" : [ {
+      "date" : "2026-11-05",
+      "time" : "09:30",
+      "provider" : "Dr Tan",
+      "note" : "Fasting"
+    } ]
   }, {
     "name" : "Elle Meyer",
     "phone" : "94822240",

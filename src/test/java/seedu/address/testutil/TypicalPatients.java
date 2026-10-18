@@ -6,6 +6,7 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +35,9 @@ public class TypicalPatients {
             .withPhone("87652533")
             .withAddress("10th street")
             .withMedications("Metformin").withAllergens("Penicillin")
-            .withCareInstructions("Check blood sugar").build();
+            .withCareInstructions("Check blood sugar")
+            .withAppointments(CHECKUP)
+            .build();
     public static final Patient ELLE = new PatientBuilder().withNric("S0000005A").withName("Elle Meyer")
             .withPhone("94822240")
             .withAddress("michegan ave").build();
