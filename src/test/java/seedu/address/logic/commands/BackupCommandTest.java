@@ -59,8 +59,9 @@ public class BackupCommandTest {
     }
 
     @Test
-    public void constructor_noArguments_usesSystemClockAndDefaultFolder() {
-        assertEquals(new BackupCommand(Clock.systemDefaultZone(), BackupCommand.DEFAULT_BACKUP_DIR),
+    public void constructor_noArguments_usesSystemClockAndDataBackupsFolder() {
+        // the UG and help text tell users that backups go to data/backups
+        assertEquals(new BackupCommand(Clock.systemDefaultZone(), Paths.get("data", "backups")),
                 new BackupCommand());
     }
 
@@ -135,14 +136,21 @@ public class BackupCommandTest {
 
     @Test
     public void execute_relativeBackupFolder_showsFullPath() {
-        Path workingDir = Paths.get("").toAbsolutePath();
-        // on Windows the temporary folder can be on another drive, where no relative path exists
-        assumeTrue(workingDir.getRoot().equals(temporaryFolder.getRoot()));
-        Path relativeBackupDir = workingDir.relativize(temporaryFolder);
-        assertFalse(relativeBackupDir.isAbsolute());
+        Path relativeBackupDir = relativeToWorkingDir(temporaryFolder);
 
         assertCommandSucceedsAndCreates(new BackupCommand(FIXED_CLOCK, relativeBackupDir),
-                temporaryFolder.resolve(EXPECTED_FILE_NAME).toAbsolutePath());
+                temporaryFolder.resolve(EXPECTED_FILE_NAME));
+    }
+
+    @Test
+    public void execute_relativeBackupFolderCannotBeCreated_showsFullPathInError() throws Exception {
+        Path backupDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("backups");
+        BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, relativeToWorkingDir(backupDir));
+
+        String message = Assertions.assertThrows(CommandException.class, () -> backupCommand.execute(model))
+                .getMessage();
+
+        assertTrue(message.startsWith("Could not save the backup to " + backupDir + ": "));
     }
 
     @Test
@@ -324,6 +332,18 @@ public class BackupCommandTest {
 
         assertCommandSuccess(backupCommand, model, expectedMessage, expectedModel);
         assertTrue(Files.exists(expectedFile));
+    }
+
+    /**
+     * Returns {@code path} relative to the working directory, and skips the test if there is no such path.
+     */
+    private static Path relativeToWorkingDir(Path path) {
+        Path workingDir = Paths.get("").toAbsolutePath();
+        // on Windows the temporary folder can be on another drive, where no relative path exists
+        assumeTrue(workingDir.getRoot().equals(path.getRoot()));
+        Path relativePath = workingDir.relativize(path);
+        assertFalse(relativePath.isAbsolute());
+        return relativePath;
     }
 
     /**
