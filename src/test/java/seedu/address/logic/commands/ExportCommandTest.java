@@ -53,7 +53,7 @@ public class ExportCommandTest {
     private static final Index INDEX_DANIEL = Index.fromOneBased(4);
 
     @TempDir
-    public Path temporaryFolder;
+    private Path temporaryFolder;
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
