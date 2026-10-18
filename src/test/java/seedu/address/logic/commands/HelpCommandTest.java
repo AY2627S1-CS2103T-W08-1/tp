@@ -63,6 +63,7 @@ public class HelpCommandTest {
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
         commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
         commands.put(RestoreCommand.COMMAND_WORD, RestoreCommand.class);
+        commands.put(ExportCommand.COMMAND_WORD, ExportCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
         return commands;
     }
@@ -143,7 +144,7 @@ public class HelpCommandTest {
     @Test
     public void commandSummary_indexCommands_takeIndex() {
         for (String commandWord : List.of(DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
-                AddCareCommand.COMMAND_WORD)) {
+                AddCareCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }

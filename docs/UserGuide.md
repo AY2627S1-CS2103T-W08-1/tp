@@ -288,6 +288,25 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup.
 
+### Exporting a patient's record: `export`
+
+Saves the full record of a patient to a text file in the `data/exports` folder, for printing or sharing.
+
+Format: `export INDEX`
+
+* Exports the patient at the specified `INDEX`.
+* The index refers to the index number shown in the displayed patient list.
+* The index **must be a positive integer** 1, 2, 3, ...
+* The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file.
+* The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications, allergens and care instructions. An empty list shows `None recorded`.
+* MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
+
+Examples:
+* `list` followed by `export 2` exports the 2nd patient in MediConnect.
+* `find Alex` followed by `export 1` exports the 1st patient in the results of the `find` command.
+
+Returns, for example, `Exported Alex Yeoh's record to: ` followed by the full path of the file.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -338,6 +357,7 @@ Action            | Format, Examples
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Exit**          | `exit`
+**Export**        | `export INDEX` <br> e.g., `export 2`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
 **List**          | `list`

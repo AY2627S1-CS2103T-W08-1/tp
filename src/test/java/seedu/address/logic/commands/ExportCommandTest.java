@@ -1,0 +1,374 @@
+package seedu.address.logic.commands;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
+import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
+import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.relativeToWorkingDir;
+import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
+import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
+import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.BENSON;
+import static seedu.address.testutil.TypicalPatients.DANIEL;
+import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.io.TempDir;
+
+import seedu.address.commons.core.index.Index;
+import seedu.address.logic.Messages;
+import seedu.address.logic.PatientFormatter;
+import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.model.AddressBook;
+import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.Patient;
+import seedu.address.testutil.PatientBuilder;
+
+public class ExportCommandTest {
+
+    // an afternoon time, so that a 12-hour clock would show it differently
+    private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-10-20T14:30:15Z"), ZoneOffset.UTC);
+    private static final Index INDEX_DANIEL = Index.fromOneBased(4);
+
+    @TempDir
+    public Path temporaryFolder;
+
+    private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void constructor_nullIndex_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new ExportCommand(null, FIXED_CLOCK, temporaryFolder));
+    }
+
+    @Test
+    public void constructor_nullClock_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new ExportCommand(INDEX_FIRST_PATIENT, null, temporaryFolder));
+    }
+
+    @Test
+    public void constructor_nullExportDir_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, null));
+    }
+
+    @Test
+    public void constructor_indexOnly_usesSystemClockAndDataExportsFolder() {
+        // the UG and help text tell users that records go to data/exports
+        assertEquals(new ExportCommand(INDEX_FIRST_PATIENT, Clock.systemDefaultZone(), Paths.get("data", "exports")),
+                new ExportCommand(INDEX_FIRST_PATIENT));
+    }
+
+    @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> exportCommand(INDEX_FIRST_PATIENT).execute(null));
+    }
+
+    @Test
+    public void execute_patientWithCareInfo_writesFullRecordToNricFile() throws Exception {
+        Path expectedFile = temporaryFolder.resolve("S0000004A.txt");
+        List<String> expectedLines = List.of(
+                "MediConnect patient record",
+                "Exported on 2026-10-20 14:30",
+                "",
+                "Daniel Meier",
+                "NRIC: S0000004A",
+                "DOB: " + DANIEL.getDob(),
+                "Phone: 87652533",
+                "Address: 10th street",
+                "",
+                "Medications",
+                "1. Metformin",
+                "",
+                "Allergens",
+                "1. Penicillin",
+                "",
+                "Care Instructions",
+                "1. Check blood sugar");
+
+        assertCommandSuccess(exportCommand(INDEX_DANIEL), model, expectedSuccessMessage(DANIEL, expectedFile),
+                typicalModel());
+        assertEquals(expectedLines, Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_patientWithoutCareInfo_showsNoneRecorded() throws Exception {
+        exportCommand(INDEX_FIRST_PATIENT).execute(model);
+
+        List<String> lines = Files.readAllLines(temporaryFolder.resolve("S0000001A.txt"), StandardCharsets.UTF_8);
+        assertEquals(expectedRecord(ALICE), lines);
+        assertEquals(3, Collections.frequency(lines, PatientFormatter.NONE_RECORDED));
+    }
+
+    @Test
+    public void execute_earlierExportOfPatient_replacesFile() throws Exception {
+        Path exportFile = temporaryFolder.resolve("S0000001A.txt");
+        List<String> oldLines = new ArrayList<>();
+        for (int i = 1; i <= 40; i++) {
+            oldLines.add("old line " + i);
+        }
+        Files.write(exportFile, oldLines);
+
+        exportCommand(INDEX_FIRST_PATIENT).execute(model);
+
+        // the new record is shorter than the old file, so no old lines may be left at the end
+        assertEquals(expectedRecord(ALICE), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_twoPatients_writesSeparateFiles() throws Exception {
+        exportCommand(INDEX_FIRST_PATIENT).execute(model);
+        exportCommand(INDEX_SECOND_PATIENT).execute(model);
+
+        assertEquals(expectedRecord(ALICE),
+                Files.readAllLines(temporaryFolder.resolve("S0000001A.txt"), StandardCharsets.UTF_8));
+        assertEquals(expectedRecord(BENSON),
+                Files.readAllLines(temporaryFolder.resolve("S0000002A.txt"), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_nonAsciiAndApostrophes_savedAsUtf8() throws Exception {
+        // an apostrophe in the name, then Chinese characters, an en dash, an accented letter and curly quotes
+        Patient patient = new PatientBuilder().withName("Mary O'Brien")
+                .withAddress("新加坡 Blk 8 – café")
+                .withCareInstructions("Say ‘good morning’ first").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPatient(patient);
+        Model singlePatientModel = new ModelManager(addressBook, new UserPrefs());
+        Path expectedFile = temporaryFolder.resolve(patient.getNric() + ".txt");
+
+        assertCommandSuccess(exportCommand(INDEX_FIRST_PATIENT), singlePatientModel,
+                expectedSuccessMessage(patient, expectedFile), new ModelManager(addressBook, new UserPrefs()));
+        assertEquals(expectedRecord(patient), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_clockInOtherTimeZone_showsLocalTime() throws Exception {
+        // 14:30 UTC is 22:30 in Singapore (UTC+8)
+        Clock singaporeClock = FIXED_CLOCK.withZone(ZoneId.of("Asia/Singapore"));
+
+        new ExportCommand(INDEX_FIRST_PATIENT, singaporeClock, temporaryFolder).execute(model);
+
+        List<String> lines = Files.readAllLines(temporaryFolder.resolve("S0000001A.txt"), StandardCharsets.UTF_8);
+        assertEquals("Exported on 2026-10-20 22:30", lines.get(1));
+    }
+
+    @Test
+    public void execute_indexOutOfRange_throwsCommandExceptionAndWritesNothing() throws Exception {
+        Index outOfRangeIndex = Index.fromOneBased(model.getFilteredPatientList().size() + 1);
+
+        assertCommandFailure(exportCommand(outOfRangeIndex), model, Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
+        assertFolderEmpty(temporaryFolder);
+    }
+
+    @Test
+    public void execute_filteredList_exportsDisplayedPatient() throws Exception {
+        showPatientAtIndex(model, INDEX_SECOND_PATIENT);
+        Model expectedModel = typicalModel();
+        showPatientAtIndex(expectedModel, INDEX_SECOND_PATIENT);
+        Path expectedFile = temporaryFolder.resolve("S0000002A.txt");
+
+        assertCommandSuccess(exportCommand(INDEX_FIRST_PATIENT), model, expectedSuccessMessage(BENSON, expectedFile),
+                expectedModel);
+        assertEquals(expectedRecord(BENSON), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_filteredListIndexOutOfRange_throwsCommandException() throws Exception {
+        showPatientAtIndex(model, INDEX_FIRST_PATIENT);
+
+        // the second patient is in MediConnect, but not in the displayed list
+        assertCommandFailure(exportCommand(INDEX_SECOND_PATIENT), model,
+                Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
+        assertFolderEmpty(temporaryFolder);
+    }
+
+    @Test
+    public void execute_missingExportFolder_createsFolder() throws Exception {
+        Path exportDir = temporaryFolder.resolve("data").resolve("exports");
+        assertFalse(Files.exists(exportDir));
+
+        assertExportsAlice(exportDir, exportDir);
+    }
+
+    @Test
+    public void execute_relativeExportFolder_showsFullPath() throws Exception {
+        assertExportsAlice(relativeToWorkingDir(temporaryFolder), temporaryFolder);
+    }
+
+    @Test
+    public void execute_exportFolderCannotBeCreated_throwsCommandException() throws Exception {
+        // a regular file where the export folder's parent should be makes creating the folder fail on every OS
+        Path exportDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("exports");
+        Path exportFile = exportDir.resolve("S0000001A.txt");
+        ExportCommand exportCommand = new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir);
+        String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
+                .getMessage();
+
+        assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", exportDir);
+        assertCommandFailure(exportCommand, model, message);
+    }
+
+    @Test
+    public void execute_fileInPlaceOfExportFolder_throwsCommandException() throws Exception {
+        Path exportDir = Files.createFile(temporaryFolder.resolve("exports"));
+        String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                exportDir.resolve("S0000001A.txt"), Messages.MESSAGE_FILE_SYSTEM_ERROR);
+
+        assertCommandFailure(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model, expectedMessage);
+        assertTrue(Files.isRegularFile(exportDir));
+    }
+
+    @Test
+    public void execute_folderInPlaceOfExportFile_throwsCommandException() throws Exception {
+        Path exportFile = Files.createDirectory(temporaryFolder.resolve("S0000001A.txt"));
+        ExportCommand exportCommand = exportCommand(INDEX_FIRST_PATIENT);
+
+        String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
+                .getMessage();
+
+        assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", exportFile);
+        assertTrue(Files.isDirectory(exportFile));
+    }
+
+    @Test
+    public void execute_relativeExportFolderCannotBeCreated_showsFullPathInError() throws Exception {
+        Path exportDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("exports");
+        ExportCommand exportCommand = new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK,
+                relativeToWorkingDir(exportDir));
+
+        String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
+                .getMessage();
+
+        assertTrue(message.startsWith("Could not export Alice Pauline's record to "
+                + exportDir.resolve("S0000001A.txt") + ": "));
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
+    public void execute_readOnlyEarlierExport_throwsCommandExceptionAndKeepsFile() throws Exception {
+        Path exportFile = temporaryFolder.resolve("S0000001A.txt");
+        Files.write(exportFile, List.of("earlier export"));
+        assertTrue(exportFile.toFile().setWritable(false));
+        try {
+            // users with admin rights (e.g., root) can still write, so the test only applies to others
+            assumeFalse(Files.isWritable(exportFile));
+            String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                    exportFile, Messages.MESSAGE_NO_WRITE_PERMISSION);
+
+            assertCommandFailure(exportCommand(INDEX_FIRST_PATIENT), model, expectedMessage);
+            assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+        } finally {
+            exportFile.toFile().setWritable(true);
+        }
+    }
+
+    @Test
+    public void equals() {
+        Clock otherClock = Clock.fixed(Instant.parse("2026-10-21T09:00:00Z"), ZoneOffset.UTC);
+        ExportCommand exportCommand = exportCommand(INDEX_FIRST_PATIENT);
+
+        // same object -> returns true
+        assertTrue(exportCommand.equals(exportCommand));
+
+        // same values -> returns true
+        assertTrue(exportCommand.equals(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, temporaryFolder)));
+
+        // null -> returns false
+        assertFalse(exportCommand.equals(null));
+
+        // different types -> returns false
+        assertFalse(exportCommand.equals(new ViewCommand(INDEX_FIRST_PATIENT)));
+
+        // different index -> returns false
+        assertFalse(exportCommand.equals(exportCommand(INDEX_SECOND_PATIENT)));
+
+        // different clock -> returns false
+        assertFalse(exportCommand.equals(new ExportCommand(INDEX_FIRST_PATIENT, otherClock, temporaryFolder)));
+
+        // different export folder -> returns false
+        assertFalse(exportCommand.equals(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK,
+                temporaryFolder.resolve("other"))));
+    }
+
+    @Test
+    public void toStringMethod() {
+        String expected = ExportCommand.class.getCanonicalName() + "{targetIndex=" + INDEX_FIRST_PATIENT
+                + ", clock=" + FIXED_CLOCK + ", exportDir=" + temporaryFolder + "}";
+        assertEquals(expected, exportCommand(INDEX_FIRST_PATIENT).toString());
+    }
+
+    private ExportCommand exportCommand(Index index) {
+        return new ExportCommand(index, FIXED_CLOCK, temporaryFolder);
+    }
+
+    private static Model typicalModel() {
+        return new ModelManager(getTypicalAddressBook(), new UserPrefs());
+    }
+
+    private static String expectedSuccessMessage(Patient patient, Path exportFile) {
+        return String.format(ExportCommand.MESSAGE_SUCCESS, patient.getName().fullName, exportFile);
+    }
+
+    /**
+     * Returns the lines that an export of {@code patient} with {@code FIXED_CLOCK} should contain.
+     */
+    private static List<String> expectedRecord(Patient patient) {
+        List<String> lines = new ArrayList<>(List.of(ExportCommand.RECORD_TITLE,
+                ExportCommand.EXPORTED_ON_PREFIX + "2026-10-20 14:30", ""));
+        lines.addAll(PatientFormatter.formatRecord(patient));
+        return lines;
+    }
+
+    private static void assertFolderEmpty(Path folder) throws Exception {
+        try (Stream<Path> files = Files.list(folder)) {
+            assertEquals(0, files.count());
+        }
+    }
+
+    /**
+     * Confirms that {@code message} starts with {@code expectedStart} and ends with a reason that is not blank,
+     * does not end with a full stop and does not repeat {@code path}. The reason itself comes from the OS.
+     */
+    private static void assertReadableReason(String message, String expectedStart, Path path) {
+        assertTrue(message.startsWith(expectedStart), message);
+        assertTrue(message.endsWith("."), message);
+        String reason = message.substring(expectedStart.length(), message.length() - 1);
+        assertFalse(reason.isBlank(), message);
+        assertFalse(reason.endsWith("."), message);
+        assertFalse(reason.contains(path.toString()), message);
+    }
+
+    /**
+     * Exports the first patient, Alice, to {@code exportDir}, and confirms that the message shows her file in
+     * {@code expectedFolder}, the full form of {@code exportDir}, that the file holds her record, and that
+     * the model is unchanged.
+     */
+    private void assertExportsAlice(Path exportDir, Path expectedFolder) throws Exception {
+        Path expectedFile = expectedFolder.resolve("S0000001A.txt");
+
+        assertCommandSuccess(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model,
+                expectedSuccessMessage(ALICE, expectedFile), typicalModel());
+        assertEquals(expectedRecord(ALICE), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+    }
+}
