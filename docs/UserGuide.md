@@ -264,7 +264,7 @@ If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows
 <box type="warning" seamless>
 
 **Caution:**
-`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, do not run `backup` or any other command. Close MediConnect and copy `data/mediconnect.json` somewhere safe by hand first, because the next command replaces that file.
+`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, do not run `backup` or any other command, not even `exit`, because the next command replaces that file. Instead, close MediConnect with the window's close button or **File** > **Exit**, then copy `data/mediconnect.json` somewhere safe by hand.
 </box>
 
 <box type="tip" seamless>
