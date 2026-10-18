@@ -46,6 +46,8 @@ public class HelpCommand extends Command {
             formatEntry(AddApptCommand.COMMAND_WORD + " INDEX " + PREFIX_DATE + "DATE "
                     + PREFIX_TIME + "TIME " + PREFIX_WITH + "WITH [" + PREFIX_NOTE + "NOTE]",
                     "Adds an appointment to the patient at INDEX."),
+            formatEntry(CancelApptCommand.COMMAND_WORD + " INDEX APPT_INDEX",
+                    "Cancels appointment APPT_INDEX of the patient at INDEX."),
             formatEntry(ViewCommand.COMMAND_WORD + " INDEX",
                     "Shows the full details of the patient at INDEX."),
             formatEntry(FindCommand.COMMAND_WORD + " KEYWORD [MORE_KEYWORDS]...",

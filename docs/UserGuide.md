@@ -210,6 +210,34 @@ Other errors are reported as follows:
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
   command usage.
 
+### Cancelling an appointment: `cancelappt`
+
+Removes an appointment from the patient at the displayed index.
+
+Format: `cancelappt INDEX APPT_INDEX`
+
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* `APPT_INDEX` is the appointment's number in the Appointments section of the patient's detail panel, counting from
+  1. Appointments are listed by date, then time.
+* Both indexes **must be positive integers** 1, 2, 3, ...
+* The appointment is removed, not kept as cancelled.
+
+Examples:
+
+* `view 1` followed by `cancelappt 1 2` cancels the 2nd appointment of the 1st patient.
+
+A successful command returns `Cancelled appointment for NAME: APPOINTMENT`, with the appointment shown as in the
+detail panel. For example, the example above returns
+`Cancelled appointment for Alex Yeoh: 2026-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+
+Errors are reported as follows:
+
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* An `APPT_INDEX` larger than the number of the patient's appointments returns
+  `The appointment index provided is invalid.`
+* A missing, zero, negative, or non-numeric index, or more than two indexes, returns `Invalid command format!`,
+  followed by the command usage.
+
 ### Listing all patients: `list`
 
 Shows a list of all patients in MediConnect.
@@ -339,6 +367,7 @@ Action            | Format, Examples
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
 **Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2026-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Exit**          | `exit`
