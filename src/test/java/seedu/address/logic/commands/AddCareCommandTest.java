@@ -11,10 +11,12 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.nio.file.Path;
 import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
@@ -23,9 +25,15 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
+import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.testutil.PatientBuilder;
 
 public class AddCareCommandTest {
+
+    private static final int LONG_TEXT_LENGTH = 5000;
+
+    @TempDir
+    public Path testFolder;
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
@@ -65,6 +73,23 @@ public class AddCareCommandTest {
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(), "Aspirin");
         assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_specialCharactersAndLongText_addedAndSurvivesStorageRoundTrip() throws Exception {
+        String special = "<b>\"';DROP TABLE--&\u00e9\u4e2d\u6587/x";
+        String longText = "x".repeat(LONG_TEXT_LENGTH);
+        Patient patient = new PatientBuilder(ALICE).build();
+        Model actualModel = new ModelManager();
+        actualModel.addPatient(patient);
+        new AddCareCommand(INDEX_FIRST_PATIENT, List.of(special, longText), List.of(), List.of())
+                .execute(actualModel);
+
+        Patient edited = actualModel.getFilteredPatientList().get(0);
+        assertEquals(List.of(new Medication(special), new Medication(longText)), edited.getMedications());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("addressbook.json"));
+        storage.saveAddressBook(actualModel.getAddressBook());
+        assertEquals(List.of(edited), storage.readAddressBook().get().getPatientList());
     }
 
     @Test

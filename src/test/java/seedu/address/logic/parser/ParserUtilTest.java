@@ -132,7 +132,8 @@ public class ParserUtilTest {
     public void parseTime_invalidInput_throwsParseException() {
         String message = Medication.MESSAGE_TIME_CONSTRAINTS;
         for (String invalidTime : new String[] {"", WHITESPACE, "24:00", "08:60", "8:30", "08:5", "0830", "08.30",
-            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30"}) {
+            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30",
+            "\uff10\uff18:\uff13\uff10", "0\u0663:30"}) {
             assertThrows(ParseException.class, message, () -> ParserUtil.parseTime(invalidTime));
         }
     }
