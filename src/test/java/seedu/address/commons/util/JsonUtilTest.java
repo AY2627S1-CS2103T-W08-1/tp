@@ -21,7 +21,7 @@ public class JsonUtilTest {
     private static final Path SERIALIZATION_FILE = TestUtil.getFilePathInSandboxFolder("serialize.json");
 
     @TempDir
-    public Path temporaryFolder;
+    private Path temporaryFolder;
 
     @Test
     public void serializeObjectToJsonFile_noExceptionThrown() throws IOException {
