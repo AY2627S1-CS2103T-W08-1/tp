@@ -59,6 +59,14 @@ public class BackupCommand extends Command {
         this.backupDir = backupDir;
     }
 
+    /**
+     * Saves all patient data in {@code model} to a new timestamped file in the backup folder.
+     * The model is not changed, whether or not the backup succeeds.
+     *
+     * @param model {@code Model} whose patient data is backed up.
+     * @return a result showing the full path of the backup file.
+     * @throws CommandException if the backup file cannot be written.
+     */
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
@@ -91,6 +99,9 @@ public class BackupCommand extends Command {
         return backupFile;
     }
 
+    /**
+     * Returns true if {@code other} is a {@code BackupCommand} with the same clock and backup folder.
+     */
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -106,6 +117,9 @@ public class BackupCommand extends Command {
                 && backupDir.equals(otherBackupCommand.backupDir);
     }
 
+    /**
+     * Returns a string showing the clock and backup folder of this command.
+     */
     @Override
     public String toString() {
         return new ToStringBuilder(this)
