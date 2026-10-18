@@ -117,7 +117,7 @@ class JsonAdaptedPatient {
 
         try {
             return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
-                    medications, allergens, careInstructions);
+                    medications, allergens, careInstructions, List.of());
         } catch (NullPointerException e) {
             throw new IllegalValueException("Care entries must not be null.");
         }

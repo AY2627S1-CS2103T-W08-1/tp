@@ -2,6 +2,7 @@ package seedu.address.testutil;
 
 import java.util.List;
 
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Name;
@@ -28,6 +29,7 @@ public class PatientBuilder {
     private List<String> medications = List.of();
     private List<String> allergens = List.of();
     private List<String> careInstructions = List.of();
+    private List<Appointment> appointments = List.of();
 
     /**
      * Creates a builder with default patient details and empty care lists.
@@ -52,6 +54,7 @@ public class PatientBuilder {
         medications = patientToCopy.getMedications();
         allergens = patientToCopy.getAllergens();
         careInstructions = patientToCopy.getCareInstructions();
+        appointments = patientToCopy.getAppointments();
     }
 
     /**
@@ -119,9 +122,18 @@ public class PatientBuilder {
     }
 
     /**
+     * Sets the patient's appointments.
+     */
+    public PatientBuilder withAppointments(Appointment... appointments) {
+        this.appointments = List.of(appointments);
+        return this;
+    }
+
+    /**
      * Builds an immutable patient.
      */
     public Patient build() {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                appointments);
     }
 }

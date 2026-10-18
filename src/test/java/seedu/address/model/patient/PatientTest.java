@@ -5,14 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BOB;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.appointment.Appointment;
 import seedu.address.testutil.PatientBuilder;
 
 public class PatientTest {
@@ -31,7 +35,7 @@ public class PatientTest {
         List<String> allergens = new ArrayList<>(List.of("Penicillin"));
         List<String> instructions = new ArrayList<>(List.of("Check blood sugar"));
         Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
-                ALICE.getAddress(), medications, allergens, instructions);
+                ALICE.getAddress(), medications, allergens, instructions, List.of());
         medications.clear();
         allergens.clear();
         instructions.clear();
@@ -44,6 +48,18 @@ public class PatientTest {
     }
 
     @Test
+    public void constructor_unsortedAppointments_sortedByDateThenTime() {
+        Appointment laterDate = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(8, 0), "Dr Lee", "");
+        Appointment laterTime = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(14, 0), "Dr Lim", "");
+        Appointment earliest = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(9, 30), "Dr Tan", "");
+        List<Appointment> appointments = new ArrayList<>(List.of(laterDate, laterTime, earliest));
+        Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
+                ALICE.getAddress(), List.of(), List.of(), List.of(), appointments);
+        assertEquals(List.of(earliest, laterTime, laterDate), patient.getAppointments());
+        assertEquals(List.of(laterDate, laterTime, earliest), appointments);
+    }
+
+    @Test
     public void constructor_nullField_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new Patient(null, ALICE.getNric(), ALICE.getDob(),
                 ALICE.getPhone(), ALICE.getAddress()));
@@ -52,7 +68,9 @@ public class PatientTest {
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), null,
                 ALICE.getPhone(), ALICE.getAddress()));
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
-                ALICE.getPhone(), ALICE.getAddress(), null, List.of(), List.of()));
+                ALICE.getPhone(), ALICE.getAddress(), null, List.of(), List.of(), List.of()));
+        assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
+                ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), null));
     }
 
     @Test
@@ -82,13 +100,14 @@ public class PatientTest {
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withMedications("Metformin").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withAllergens("Penicillin").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withCareInstructions("Rest").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withAppointments(CHECKUP).build());
     }
 
     @Test
     public void toStringMethod() {
         String expected = Patient.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", nric=" + ALICE.getNric() + ", dob=" + ALICE.getDob() + ", address=" + ALICE.getAddress()
-                + ", medications=[], allergens=[], careInstructions=[]}";
+                + ", medications=[], allergens=[], careInstructions=[], appointments=[]}";
         assertEquals(expected, ALICE.toString());
     }
 }
