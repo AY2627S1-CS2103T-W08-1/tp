@@ -42,6 +42,7 @@ public class BackupCommand extends Command {
 
     private static final String FILE_NAME_PREFIX = "mediconnect-";
     private static final String FILE_EXTENSION = ".json";
+    private static final String SUFFIX_SEPARATOR = "-";
     // Locale.ROOT keeps file names the same whatever the computer's language settings are
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss", Locale.ROOT);
@@ -105,7 +106,7 @@ public class BackupCommand extends Command {
         Path backupFile = backupDir.resolve(baseName + FILE_EXTENSION);
 
         for (int suffix = 1; Files.exists(backupFile); suffix++) {
-            backupFile = backupDir.resolve(baseName + "-" + suffix + FILE_EXTENSION);
+            backupFile = backupDir.resolve(baseName + SUFFIX_SEPARATOR + suffix + FILE_EXTENSION);
         }
 
         return backupFile;
