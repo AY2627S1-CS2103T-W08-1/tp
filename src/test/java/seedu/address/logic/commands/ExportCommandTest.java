@@ -8,7 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.Assert.assertThrows;
-import static seedu.address.testutil.TestUtil.relativeToWorkingDir;
+import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
@@ -213,7 +213,7 @@ public class ExportCommandTest {
 
     @Test
     public void execute_relativeExportFolder_showsFullPath() throws Exception {
-        assertExportsAlice(relativeToWorkingDir(temporaryFolder), temporaryFolder);
+        assertExportsAlice(toPathRelativeToWorkingDir(temporaryFolder), temporaryFolder);
     }
 
     @Test
@@ -255,7 +255,7 @@ public class ExportCommandTest {
     public void execute_relativeExportFolderCannotBeCreated_showsFullPathInError() throws Exception {
         Path exportDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("exports");
         ExportCommand exportCommand = new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK,
-                relativeToWorkingDir(exportDir));
+                toPathRelativeToWorkingDir(exportDir));
 
         String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
                 .getMessage();
