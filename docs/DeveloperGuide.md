@@ -816,3 +816,80 @@ testers are expected to do more *exploratory* testing.
 
    1. Launch the app.<br>
       Expected: The app starts with no patients. The invalid file is kept until the first command, which overwrites it with an empty patient list.
+
+### Backing up data
+
+1. Backing up the current data
+
+   1. Test case: `backup`<br>
+      Expected: A new file named after the current date and time, e.g., `mediconnect-20261020-083015.json`, appears in `data/backups`, holding the same patients as `data/mediconnect.json`. The status message shows `Backup saved to:` followed by the full path of the file.
+
+1. Backing up when the backup folder cannot be created
+
+   1. Prerequisites: The app is closed. In the `data` folder, delete the `backups` folder if there is one, and create an empty file named `backups` (with no extension) in its place.
+
+   1. Launch the app, then enter `backup`.<br>
+      Expected: No backup is saved. The status message shows `Could not save the backup to` followed by the folder and a reason, and says that your data has not been changed.
+
+### Restoring data
+
+1. Restoring a backup
+
+   1. Prerequisites: Enter `backup` and note the name of the file in the status message. Then delete a patient, e.g., with `delete 1`.
+
+   1. Test case: `restore FILENAME`, where `FILENAME` is the name you noted<br>
+      Expected: The deleted patient is back, and the list shows all patients. The status message shows how many patients were restored, and the full path of an automatic backup of the data from just before the restore.
+
+   1. Test case: `restore FILENAME`, where `FILENAME` is the name of the automatic backup from the previous test case<br>
+      Expected: The data from before the previous restore is back, i.e., the patient is deleted again.
+
+1. Restoring a file that cannot be restored
+
+   1. Test case: `restore nosuchfile.json`<br>
+      Expected: The data is unchanged, and no automatic backup is saved. The status message says that no backup named `nosuchfile.json` was found in `data/backups`.
+
+   1. Test case: `restore ../mediconnect.json`<br>
+      Expected: The data is unchanged. The status message asks for only the name of a backup file, not a path.
+
+   1. Prerequisites: Create a file `bad.json` in `data/backups` containing only the text `hello`.<br>
+      Test case: `restore bad.json`<br>
+      Expected: The data is unchanged. The status message says that the backup could not be read.
+
+   1. Prerequisites: In `data/backups`, copy a backup to `invalid.json`, and change a patient's `nric` in it to `123`.<br>
+      Test case: `restore invalid.json`<br>
+      Expected: The data is unchanged. The status message says that the backup has invalid data, followed by the NRIC format as the details.
+
+   1. Other incorrect restore commands to try: `restore`, `restore .`, `restore data/backups/bad.json`<br>
+      Expected: The data is unchanged. The status message shows an error.
+
+### Exporting a patient's record
+
+1. Exporting a patient while all patients are being shown
+
+   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
+
+   1. Test case: `export 1`<br>
+      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications, allergens and care instructions, with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
+
+   1. Test case: `addcare 1 med/Paracetamol 500mg`, then `export 1` again<br>
+      Expected: The same file is replaced, and now lists `Paracetamol 500mg` under Medications.
+
+   1. Test case: `export 0`<br>
+      Expected: No file is written. The status message shows the invalid command format error.
+
+   1. Other incorrect export commands to try: `export`, `export x`, `export y` (where y is larger than the list size)<br>
+      Expected: No file is written. The status message shows an error.
+
+1. Exporting from a filtered list
+
+   1. Prerequisites: `find Bernice` shows exactly one patient.
+
+   1. Test case: `export 1`<br>
+      Expected: The file for the patient shown is written, named after their NRIC, not the file for the first patient in the full list.
+
+1. Exporting when the export folder cannot be created
+
+   1. Prerequisites: The app is closed. In the `data` folder, delete the `exports` folder if there is one, and create an empty file named `exports` (with no extension) in its place.
+
+   1. Launch the app, then enter `export 1`.<br>
+      Expected: No file is written. The status message shows `Could not export`, the patient's name, the path of the file and a reason.
