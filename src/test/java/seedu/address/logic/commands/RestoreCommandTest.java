@@ -46,7 +46,7 @@ public class RestoreCommandTest {
     private static final String AUTOMATIC_BACKUP_NAME = "mediconnect-20261021-090000.json";
 
     @TempDir
-    public Path temporaryFolder;
+    private Path temporaryFolder;
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
