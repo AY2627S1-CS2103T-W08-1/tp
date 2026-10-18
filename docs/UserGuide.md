@@ -141,6 +141,7 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
 * Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
   same command are still added.
+* A medication added with `med/` has no daily times yet.
 
 Examples:
 
@@ -220,7 +221,9 @@ Format: `view INDEX`
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, and care instructions, one entry per line. An empty list shows `None recorded`.
+  medications, allergens, and care instructions. Each list is numbered (`1.`, `2.`, ...), one entry per line.
+  A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+  An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
