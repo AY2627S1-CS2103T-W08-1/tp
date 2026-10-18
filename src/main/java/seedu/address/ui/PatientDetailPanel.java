@@ -22,8 +22,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     public static final String MESSAGE_NONE_RECORDED = "None recorded";
 
     private static final String FXML = "PatientDetailPanel.fxml";
-    private static final String ENTRY_BULLET = "\u2022";
-    private static final double ENTRY_BULLET_GAP = 6;
+    private static final String ENTRY_NUMBER_SUFFIX = ".";
+    private static final double ENTRY_NUMBER_GAP = 6;
     private static final String ENTRY_STYLE_CLASS = "label-bright";
 
     @FXML
@@ -85,9 +85,9 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
-     * Replaces the contents of {@code container} with one bulleted row per entry in {@code entries},
-     * or a single {@code MESSAGE_NONE_RECORDED} label if {@code entries} is empty.
-     * Each entry is a separate row so that a long entry wraps under its own bullet.
+     * Replaces the contents of {@code container} with one numbered row ("1.", "2.", ...) per entry in
+     * {@code entries}, or a single {@code MESSAGE_NONE_RECORDED} label if {@code entries} is empty.
+     * Each entry is a separate row so that a long entry wraps beside its own number.
      */
     private static void fillEntries(VBox container, List<String> entries) {
         container.getChildren().clear();
@@ -97,11 +97,13 @@ public class PatientDetailPanel extends UiPart<Region> {
             return;
         }
 
-        for (String entry : entries) {
-            Label entryLabel = createLabel(entry);
+        for (int i = 0; i < entries.size(); i++) {
+            Label numberLabel = createLabel((i + 1) + ENTRY_NUMBER_SUFFIX);
+            numberLabel.setMinWidth(Region.USE_PREF_SIZE);
+            Label entryLabel = createLabel(entries.get(i));
             entryLabel.setMinWidth(0);
             HBox.setHgrow(entryLabel, Priority.ALWAYS);
-            container.getChildren().add(new HBox(ENTRY_BULLET_GAP, createLabel(ENTRY_BULLET), entryLabel));
+            container.getChildren().add(new HBox(ENTRY_NUMBER_GAP, numberLabel, entryLabel));
         }
     }
 
