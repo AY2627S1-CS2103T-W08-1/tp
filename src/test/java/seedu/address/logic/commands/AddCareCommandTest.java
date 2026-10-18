@@ -11,6 +11,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
 
@@ -45,6 +47,24 @@ public class AddCareCommandTest {
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patientToEdit.getName(),
                 "Metformin 500mg twice daily, Penicillin, Check blood sugar before breakfast");
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_newMedication_keepsExistingTimesAndAddsNewWithNoTimes() {
+        Medication scheduled = new Medication("Metformin", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0)));
+        Patient patient = new PatientBuilder(ALICE).withMedications(scheduled).build();
+        Model actualModel = new ModelManager();
+        actualModel.addPatient(patient);
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Aspirin"), List.of(), List.of());
+
+        Patient editedPatient = new PatientBuilder(patient)
+                .withMedications(scheduled, new Medication("Aspirin"))
+                .build();
+        Model expectedModel = new ModelManager(actualModel.getAddressBook(), new UserPrefs());
+        expectedModel.setPatient(patient, editedPatient);
+
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(), "Aspirin");
+        assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
     }
 
     @Test

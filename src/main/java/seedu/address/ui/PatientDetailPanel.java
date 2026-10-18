@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -78,7 +79,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         dob.setText("DOB: " + patient.getDob());
         phone.setText("Phone: " + patient.getPhone());
         address.setText("Address: " + patient.getAddress());
-        fillEntries(medications, patient.getMedications());
+        fillEntries(medications, patient.getMedications().stream().map(Medication::toString).toList());
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
     }
