@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
@@ -90,6 +91,11 @@ public class AppointmentTest {
         // different provider or time -> returns false
         assertFalse(appointment.isSameAppointment(new Appointment(DATE, TIME, "Dr Lim", "")));
         assertFalse(appointment.isSameAppointment(new Appointment(DATE, TIME.plusMinutes(1), "Dr Tan", "")));
+    }
+
+    @Test
+    public void getDateTime() {
+        assertEquals(LocalDateTime.of(DATE, TIME), new Appointment(DATE, TIME, "Dr Tan", "").getDateTime());
     }
 
     @Test

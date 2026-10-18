@@ -4,6 +4,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
@@ -101,6 +102,13 @@ public class Appointment implements Comparable<Appointment> {
 
     public String getNote() {
         return note;
+    }
+
+    /**
+     * Returns the date and time of the appointment together.
+     */
+    public LocalDateTime getDateTime() {
+        return LocalDateTime.of(date, time);
     }
 
     /**
