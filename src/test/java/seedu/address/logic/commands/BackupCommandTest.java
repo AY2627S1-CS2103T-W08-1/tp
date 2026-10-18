@@ -44,7 +44,7 @@ public class BackupCommandTest {
     private static final String EXPECTED_FILE_NAME = "mediconnect-20261020-083015.json";
 
     @TempDir
-    public Path temporaryFolder;
+    private Path temporaryFolder;
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
