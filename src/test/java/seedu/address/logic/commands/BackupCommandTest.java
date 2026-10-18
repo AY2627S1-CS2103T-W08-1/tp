@@ -229,6 +229,28 @@ public class BackupCommandTest {
     }
 
     @Test
+    public void saveBackup_nullAddressBook_throwsNullPointerException() {
+        BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, temporaryFolder);
+
+        assertThrows(NullPointerException.class, () -> backupCommand.saveBackup(null));
+    }
+
+    @Test
+    public void saveBackup_addressBook_savesFileAndReturnsItsPath() throws Exception {
+        Path backupFile = new BackupCommand(FIXED_CLOCK, temporaryFolder).saveBackup(getTypicalAddressBook());
+
+        assertEquals(temporaryFolder.resolve(EXPECTED_FILE_NAME), backupFile);
+        assertEquals(getTypicalAddressBook(), readBackup(backupFile));
+    }
+
+    @Test
+    public void saveBackup_folderCannotBeCreated_throwsIoException() throws Exception {
+        Path backupDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("backups");
+
+        assertThrows(IOException.class, () -> new BackupCommand(FIXED_CLOCK, backupDir).saveBackup(new AddressBook()));
+    }
+
+    @Test
     public void describeFailure_nullException_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> BackupCommand.describeFailure(null));
     }

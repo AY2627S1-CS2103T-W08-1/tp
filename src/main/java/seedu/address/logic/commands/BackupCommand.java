@@ -18,6 +18,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.storage.JsonAddressBookStorage;
 
 /**
@@ -82,18 +83,34 @@ public class BackupCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        Path backupFile = getBackupFilePath();
-
         try {
-            new JsonAddressBookStorage(backupFile).saveAddressBook(model.getAddressBook());
+            Path backupFile = saveBackup(model.getAddressBook());
+            return new CommandResult(String.format(MESSAGE_SUCCESS, backupFile.toAbsolutePath().normalize()));
         } catch (IOException ioe) {
-            logger.warning("Could not save backup to " + backupFile + ": " + ioe);
             throw new CommandException(
                     String.format(MESSAGE_FAILURE, backupDir.toAbsolutePath().normalize(), describeFailure(ioe)), ioe);
         }
+    }
+
+    /**
+     * Saves {@code addressBook} to a new timestamped file in the backup folder and returns the file's path.
+     * {@code RestoreCommand} also uses this, to back up the current data before replacing it.
+     *
+     * @throws IOException if the backup file cannot be written.
+     */
+    Path saveBackup(ReadOnlyAddressBook addressBook) throws IOException {
+        requireNonNull(addressBook);
+        Path backupFile = getBackupFilePath();
+
+        try {
+            new JsonAddressBookStorage(backupFile).saveAddressBook(addressBook);
+        } catch (IOException ioe) {
+            logger.warning("Could not save backup to " + backupFile + ": " + ioe);
+            throw ioe;
+        }
 
         logger.info("Saved backup to " + backupFile);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, backupFile.toAbsolutePath().normalize()));
+        return backupFile;
     }
 
     /**
