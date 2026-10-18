@@ -196,22 +196,26 @@ public class BackupCommandTest {
 
     @Test
     public void execute_backupFolderCannotBeCreated_throwsCommandExceptionAndModelUnchanged() throws Exception {
-        // A regular file where the backup folder's parent should be makes creating the folder fail on every OS.
+        // a regular file where the backup folder's parent should be makes creating the folder fail on every OS
         Path blockingFile = temporaryFolder.resolve("blocked");
         Files.createFile(blockingFile);
         Path backupDir = blockingFile.resolve("backups");
         model.setViewedPatient(model.getFilteredPatientList().get(0));
         BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, backupDir);
+        String expectedStart = "Could not save the backup to " + backupDir.toAbsolutePath() + ": ";
+        String expectedEnd = ". Your data has not been changed.";
 
-        CommandException exception =
-                Assertions.assertThrows(CommandException.class, () -> backupCommand.execute(model));
+        String message = Assertions.assertThrows(CommandException.class, () -> backupCommand.execute(model))
+                .getMessage();
 
-        // the reason comes from the OS, so only the parts MediConnect adds are checked
-        assertTrue(exception.getMessage().startsWith(
-                "Could not save the backup to " + backupDir.toAbsolutePath() + ": "));
-        assertTrue(exception.getMessage().endsWith(". Your data has not been changed."));
-        assertFalse(exception.getMessage().contains("null"));
-        assertCommandFailure(backupCommand, model, exception.getMessage());
+        // the reason comes from the OS, so it is checked only for the problems describeFailure guards against
+        assertTrue(message.startsWith(expectedStart));
+        assertTrue(message.endsWith(expectedEnd));
+        String reason = message.substring(expectedStart.length(), message.length() - expectedEnd.length());
+        assertFalse(reason.isBlank());
+        assertFalse(reason.endsWith("."));
+        assertFalse(reason.contains(backupDir.toString()));
+        assertCommandFailure(backupCommand, model, message);
     }
 
     @Test
@@ -267,6 +271,33 @@ public class BackupCommandTest {
     @Test
     public void describeFailure_ioExceptionWithoutMessage_returnsExceptionType() {
         assertEquals("IOException", BackupCommand.describeFailure(new IOException()));
+    }
+
+    @Test
+    public void describeFailure_reasonEndingWithFullStop_fullStopRemoved() {
+        // Windows reasons end with a full stop, which MESSAGE_FAILURE already adds after the reason
+        IOException exception = new FileSystemException("C:\\data\\backups", null, "The directory name is invalid.");
+
+        assertEquals("The directory name is invalid", BackupCommand.describeFailure(exception));
+    }
+
+    @Test
+    public void describeFailure_blankReason_returnsGenericReason() {
+        IOException exception = new FileSystemException("/data/backups", null, "  ");
+
+        assertEquals(BackupCommand.MESSAGE_FILE_SYSTEM_ERROR, BackupCommand.describeFailure(exception));
+    }
+
+    @Test
+    public void describeFailure_messageEndingWithFullStopAndSpace_trimmed() {
+        IOException exception = new IOException("No space left on device. ");
+
+        assertEquals("No space left on device", BackupCommand.describeFailure(exception));
+    }
+
+    @Test
+    public void describeFailure_blankMessage_returnsExceptionType() {
+        assertEquals("IOException", BackupCommand.describeFailure(new IOException(" ")));
     }
 
     @Test

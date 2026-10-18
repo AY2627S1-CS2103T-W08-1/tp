@@ -108,6 +108,7 @@ public class BackupCommand extends Command {
     /**
      * Returns a short, readable reason for {@code ioe}, suitable for showing to the user.
      * File system exceptions use the file path as their message, so their reason is used instead.
+     * Trailing full stops are removed, as {@code MESSAGE_FAILURE} adds its own after the reason.
      * Package-private so that tests can cover failures that are hard to cause on a real file system.
      */
     static String describeFailure(IOException ioe) {
@@ -115,11 +116,19 @@ public class BackupCommand extends Command {
         if (ioe instanceof AccessDeniedException) {
             return MESSAGE_NO_PERMISSION;
         }
+
+        String reason;
+        String fallback;
         if (ioe instanceof FileSystemException fileSystemException) {
-            String reason = fileSystemException.getReason();
-            return reason != null ? reason : MESSAGE_FILE_SYSTEM_ERROR;
+            reason = fileSystemException.getReason();
+            fallback = MESSAGE_FILE_SYSTEM_ERROR;
+        } else {
+            reason = ioe.getMessage();
+            fallback = ioe.getClass().getSimpleName();
         }
-        return ioe.getMessage() != null ? ioe.getMessage() : ioe.getClass().getSimpleName();
+
+        String trimmedReason = reason == null ? "" : reason.replaceAll("[\\s.]+$", "").strip();
+        return trimmedReason.isEmpty() ? fallback : trimmedReason;
     }
 
     /**
