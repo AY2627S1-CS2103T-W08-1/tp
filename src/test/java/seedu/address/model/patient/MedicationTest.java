@@ -105,6 +105,11 @@ public class MedicationTest {
     }
 
     @Test
+    public void toTime_invalidTime_failsAssertion() {
+        assertThrows(AssertionError.class, () -> Medication.toTime("24:00"));
+    }
+
+    @Test
     public void isSameMedication() {
         Medication medication = new Medication(DESCRIPTION, List.of(MORNING));
 
