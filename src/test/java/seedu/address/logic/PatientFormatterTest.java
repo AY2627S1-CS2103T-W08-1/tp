@@ -25,7 +25,7 @@ public class PatientFormatterTest {
     }
 
     @Test
-    public void formatDetails_patient_returnsLabelledLinesInPanelOrder() {
+    public void formatDetails_patient_returnsLabeledLinesInPanelOrder() {
         assertEquals(List.of("NRIC: S0000001A", "DOB: " + ALICE.getDob(), "Phone: 94351253",
                 "Address: 123, Jurong West Ave 6, #08-111"), PatientFormatter.formatDetails(ALICE));
     }

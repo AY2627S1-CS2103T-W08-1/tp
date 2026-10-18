@@ -32,7 +32,7 @@ public class PatientFormatter {
     private PatientFormatter() {} // prevents instantiation
 
     /**
-     * Returns the basic details of {@code patient} other than the name, one labelled line each,
+     * Returns the basic details of {@code patient} other than the name, one labeled line each,
      * e.g., "NRIC: S1234567A".
      *
      * @param patient Patient whose details are formatted.
