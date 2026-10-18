@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -26,21 +27,24 @@ public class BackupCommand extends Command {
 
     public static final String COMMAND_WORD = "backup";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Saves a copy of all patient data to the data/backups folder.\n"
-            + "Example: " + COMMAND_WORD;
-
     public static final String MESSAGE_SUCCESS = "Backup saved to: %1$s";
     public static final String MESSAGE_FAILURE =
             "Could not save the backup to %1$s: %2$s. Your data has not been changed.";
+
+    /** Reason shown in {@code MESSAGE_FAILURE} when MediConnect is not allowed to write to the backup folder. */
     public static final String MESSAGE_NO_PERMISSION = "MediConnect does not have permission to write there";
+
+    /** Reason shown in {@code MESSAGE_FAILURE} when the file system does not give a reason of its own. */
     public static final String MESSAGE_FILE_SYSTEM_ERROR = "the folder or file could not be created";
 
+    /** Folder that backups are saved to, relative to the folder MediConnect is launched from. */
     public static final Path DEFAULT_BACKUP_DIR = Paths.get("data", "backups");
 
     private static final String FILE_NAME_PREFIX = "mediconnect-";
     private static final String FILE_EXTENSION = ".json";
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+    // Locale.ROOT keeps file names the same whatever the computer's language settings are
+    private static final DateTimeFormatter TIMESTAMP_FORMAT =
+            DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss", Locale.ROOT);
 
     private static final Logger logger = LogsCenter.getLogger(BackupCommand.class);
 
@@ -56,6 +60,9 @@ public class BackupCommand extends Command {
 
     /**
      * Creates a BackupCommand that saves to {@code backupDir}, timestamped with {@code clock}.
+     *
+     * @param clock {@code Clock} that gives the date and time in the backup file name.
+     * @param backupDir Folder to save backups to. It is created if it does not exist.
      */
     public BackupCommand(Clock clock, Path backupDir) {
         requireNonNull(clock);

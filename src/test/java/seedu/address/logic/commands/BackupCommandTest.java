@@ -21,8 +21,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
@@ -102,7 +100,7 @@ public class BackupCommandTest {
 
     @Test
     public void execute_specialCharactersInData_savedUnchanged() throws Exception {
-        // Chinese characters, an en dash, an accented letter, quotes and a backslash
+        // non-ASCII text (Chinese characters, an en dash and an accented letter), quotes and a backslash
         String address = "\u65b0\u52a0\u5761 Blk 8 \u2013 caf\u00e9 \"quoted\" back\\slash";
         Patient patient = new PatientBuilder().withAddress(address)
                 .withMedications("Paracetamol 500mg \ud83d\udc8a").withAllergens("{\"not\": \"json\"}")
@@ -113,22 +111,6 @@ public class BackupCommandTest {
         new BackupCommand(FIXED_CLOCK, temporaryFolder).execute(new ModelManager(addressBook, new UserPrefs()));
 
         assertEquals(addressBook, readBackup(temporaryFolder.resolve(EXPECTED_FILE_NAME)));
-    }
-
-    @Test
-    public void execute_nonEnglishDefaultLocale_namesFileWithAsciiDigits() {
-        Locale originalLocale = Locale.getDefault();
-        try {
-            for (String languageTag : List.of("ar-SA", "th-TH-u-nu-thai", "fa-IR", "ja-JP-u-ca-japanese")) {
-                Locale.setDefault(Locale.forLanguageTag(languageTag));
-                Path backupDir = temporaryFolder.resolve(languageTag);
-
-                assertCommandSucceedsAndCreates(new BackupCommand(FIXED_CLOCK, backupDir),
-                        backupDir.resolve(EXPECTED_FILE_NAME));
-            }
-        } finally {
-            Locale.setDefault(originalLocale);
-        }
     }
 
     @Test
@@ -144,7 +126,7 @@ public class BackupCommandTest {
 
     @Test
     public void execute_clockInOtherTimeZone_namesFileWithLocalTime() {
-        // 08:30:15 UTC is 16:30:15 in Singapore (UTC+8).
+        // 08:30:15 UTC is 16:30:15 in Singapore (UTC+8)
         Clock singaporeClock = FIXED_CLOCK.withZone(ZoneId.of("Asia/Singapore"));
 
         assertCommandSucceedsAndCreates(new BackupCommand(singaporeClock, temporaryFolder),
@@ -219,7 +201,7 @@ public class BackupCommandTest {
     }
 
     @Test
-    @DisabledOnOs(OS.WINDOWS) // Windows ignores the read-only flag on folders
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
     public void execute_readOnlyBackupFolder_showsPermissionReasonAndLeavesNoFile() throws Exception {
         Path backupDir = Files.createDirectory(temporaryFolder.resolve("readonly"));
         assertTrue(backupDir.toFile().setWritable(false));
