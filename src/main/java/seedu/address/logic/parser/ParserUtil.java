@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
@@ -92,6 +93,36 @@ public class ParserUtil {
             throw new ParseException(Appointment.MESSAGE_DATE_CONSTRAINTS);
         }
         return LocalDate.parse(trimmedDate);
+    }
+
+    /**
+     * Parses a {@code String time} into a {@code LocalTime}.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code time} is not a real time in HH:MM 24-hour format.
+     */
+    public static LocalTime parseTime(String time) throws ParseException {
+        requireNonNull(time);
+        String trimmedTime = time.trim();
+        if (!Appointment.isValidTime(trimmedTime)) {
+            throw new ParseException(Appointment.MESSAGE_TIME_CONSTRAINTS);
+        }
+        return LocalTime.parse(trimmedTime);
+    }
+
+    /**
+     * Parses a {@code String provider}, who an appointment is with.
+     * Leading and trailing whitespaces will be trimmed, and multiple spaces between words reduced to one.
+     *
+     * @throws ParseException if the given {@code provider} is blank.
+     */
+    public static String parseProvider(String provider) throws ParseException {
+        requireNonNull(provider);
+        String trimmedProvider = provider.trim().replaceAll("\\s+", " ");
+        if (!Appointment.isValidProvider(trimmedProvider)) {
+            throw new ParseException(Appointment.MESSAGE_PROVIDER_CONSTRAINTS);
+        }
+        return trimmedProvider;
     }
 
     /**
