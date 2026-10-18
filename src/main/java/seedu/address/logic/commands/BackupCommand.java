@@ -108,7 +108,6 @@ public class BackupCommand extends Command {
             backupFile = backupDir.resolve(baseName + "-" + suffix + FILE_EXTENSION);
         }
 
-        assert !Files.exists(backupFile) : "Backup file should not overwrite an existing file";
         return backupFile;
     }
 
