@@ -256,6 +256,46 @@ is a duplicate, the command fails without changing the patient.
   * Pros: The operation has simpler all-or-nothing behavior.
   * Cons: One duplicate prevents all valid new entries in the same command from being added.
 
+### Backup and restore feature
+
+The `backup` command saves a copy of all patient data to the `data/backups` folder, and `restore FILENAME` replaces all patient data with one of those copies.
+
+#### Implementation
+
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, and returns the path of the file. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+
+The sequence diagram below shows a successful `restore old.json`.
+
+<puml src="diagrams/RestoreSequenceDiagram.puml" alt="Interactions for the `restore old.json` Command" />
+
+1. `RestoreCommandParser` checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
+1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
+1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
+1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows all patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored and the path of the automatic backup.
+1. As after every command, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
+
+Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
+
+#### Design considerations
+
+**Aspect: Keeping the current data safe during a restore**
+
+* **Alternative 1 (current choice):** Check the whole backup first, then back up the current data automatically, and only then replace it.
+  * Pros: A missing or invalid backup never changes the current data, and any restore can be undone by restoring the automatic backup it reports.
+  * Cons: Every restore adds a file to `data/backups`.
+* **Alternative 2:** Ask the user to confirm the restore, and keep no automatic backup.
+  * Pros: No extra files.
+  * Cons: Adds a step to every restore, and a restore confirmed by mistake cannot be undone.
+
+**Aspect: What a backup copies**
+
+* **Alternative 1 (current choice):** Save the patient data currently loaded in MediConnect, through `JsonAddressBookStorage`.
+  * Pros: Needs no changes to `LogicManager` or `Storage`, and every backup holds valid data in the current format.
+  * Cons: If `data/mediconnect.json` could not be loaded at startup, a backup holds the empty data MediConnect started with, not the unreadable file.
+* **Alternative 2:** Copy `data/mediconnect.json` byte for byte.
+  * Pros: An unreadable data file is kept, for repair by hand.
+  * Cons: The path of the data file would have to be passed from `Storage` through `LogicManager` to the command, and a backup could hold data that `restore` then rejects.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -344,11 +384,6 @@ The following activity diagram summarizes what happens when a user executes a ne
   * Cons: We must ensure that the implementation of each individual command is correct.
 
 _{more aspects and alternatives to be added}_
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
 
 --------------------------------------------------------------------------------------------------------------------
 

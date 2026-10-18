@@ -1,0 +1,102 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+' an opaque ref frame, so that the lifelines behind it do not cross its text
+skinparam sequenceReferenceBackgroundColor #FFFFFF
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant "c:RestoreCommand" as RestoreCommand LOGIC_COLOR
+participant "b:BackupCommand" as BackupCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+box Storage STORAGE_COLOR_T1
+participant ":JsonAddressBookStorage" as JsonAddressBookStorage STORAGE_COLOR
+end box
+
+[-> LogicManager : execute("restore old.json")
+activate LogicManager
+
+ref over LogicManager, RestoreCommand
+AddressBookParser and RestoreCommandParser parse
+the input into c, as for other commands, after
+checking that old.json is only a file name
+end ref
+
+LogicManager -> RestoreCommand : execute(m)
+activate RestoreCommand
+
+create JsonAddressBookStorage
+RestoreCommand -> JsonAddressBookStorage
+activate JsonAddressBookStorage
+
+JsonAddressBookStorage --> RestoreCommand
+deactivate JsonAddressBookStorage
+
+RestoreCommand -> JsonAddressBookStorage : readAddressBook()
+activate JsonAddressBookStorage
+
+JsonAddressBookStorage --> RestoreCommand : restoredData
+deactivate JsonAddressBookStorage
+
+create BackupCommand
+RestoreCommand -> BackupCommand
+activate BackupCommand
+
+BackupCommand --> RestoreCommand
+deactivate BackupCommand
+
+RestoreCommand -> Model : getAddressBook()
+activate Model
+
+Model --> RestoreCommand : currentData
+deactivate Model
+
+RestoreCommand -> BackupCommand : saveBackup(currentData)
+activate BackupCommand
+
+BackupCommand --> RestoreCommand : automaticBackupFile
+deactivate BackupCommand
+
+note right of RestoreCommand
+If the backup is missing, cannot be read
+or is invalid, or the automatic backup cannot
+be saved, c throws a CommandException before
+this point, so the data is not changed.
+end note
+
+RestoreCommand -> Model : setAddressBook(restoredData)
+activate Model
+
+Model --> RestoreCommand
+deactivate Model
+
+RestoreCommand -> Model : updateFilteredPatientList(...)
+activate Model
+
+Model --> RestoreCommand
+deactivate Model
+
+create CommandResult
+RestoreCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> RestoreCommand
+deactivate CommandResult
+
+RestoreCommand --> LogicManager : r
+deactivate RestoreCommand
+
+note right of LogicManager
+As after every command, LogicManager then
+saves m, which replaces data/mediconnect.json.
+end note
+
+[<-- LogicManager
+deactivate LogicManager
+@enduml
