@@ -29,6 +29,9 @@
 
       <Label text="Care Instructions" styleClass="detail-heading" />
       <VBox fx:id="careInstructions" spacing="2" />
+
+      <Label text="Appointments" styleClass="detail-heading" />
+      <VBox fx:id="appointments" spacing="2" />
     </VBox>
   </VBox>
 </ScrollPane>

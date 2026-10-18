@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
@@ -103,7 +104,7 @@ public class PatientDetailPanelTest {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
 
-        for (String id : List.of("#medications", "#allergens", "#careInstructions")) {
+        for (String id : List.of("#medications", "#allergens", "#careInstructions", "#appointments")) {
             VBox entries = (VBox) lookup(content, id);
             assertEquals(1, entries.getChildren().size());
             assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
@@ -117,11 +118,13 @@ public class PatientDetailPanelTest {
                 .withMedications("Metformin 500mg", "Amlodipine 5mg")
                 .withAllergens("Penicillin")
                 .withCareInstructions("Check blood sugar before breakfast")
+                .withAppointments(CHECKUP)
                 .build());
 
         assertEquals(List.of("Metformin 500mg", "Amlodipine 5mg"), getEntryTexts(content, "#medications"));
         assertEquals(List.of("Penicillin"), getEntryTexts(content, "#allergens"));
         assertEquals(List.of("Check blood sugar before breakfast"), getEntryTexts(content, "#careInstructions"));
+        assertEquals(List.of(CHECKUP.toString()), getEntryTexts(content, "#appointments"));
 
         HBox row = (HBox) ((VBox) lookup(content, "#medications")).getChildren().get(0);
         assertTrue(((Label) row.getChildren().get(1)).isWrapText());

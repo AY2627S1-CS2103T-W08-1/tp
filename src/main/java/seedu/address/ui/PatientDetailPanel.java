@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -9,6 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -45,6 +47,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private VBox allergens;
     @FXML
     private VBox careInstructions;
+    @FXML
+    private VBox appointments;
 
     /**
      * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
@@ -70,7 +74,7 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
-     * Fills the detail labels with the fields and care lists of {@code patient}.
+     * Fills the detail labels with the fields, care lists and appointments of {@code patient}.
      */
     private void fillDetails(Patient patient) {
         name.setText(patient.getName().fullName);
@@ -81,6 +85,8 @@ public class PatientDetailPanel extends UiPart<Region> {
         fillEntries(medications, patient.getMedications());
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
+        fillEntries(appointments, patient.getAppointments().stream().map(Appointment::toString)
+                .collect(Collectors.toList()));
     }
 
     /**
