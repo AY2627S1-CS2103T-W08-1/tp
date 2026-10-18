@@ -227,7 +227,7 @@ public class RestoreCommandTest {
             // users with admin rights (e.g., root) can still read it, so the test only applies to others
             assumeFalse(Files.isReadable(backupFile));
 
-            assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NO_PERMISSION, BACKUP_NAME));
+            assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NO_READ_PERMISSION, BACKUP_NAME));
         } finally {
             backupFile.toFile().setReadable(true);
         }

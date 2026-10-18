@@ -39,7 +39,7 @@ public class RestoreCommand extends Command {
             "Restored %1$d %2$s from %3$s. Your previous data was backed up to: %4$s";
     public static final String MESSAGE_NOT_FOUND =
             "No backup named %1$s was found in %2$s. Your data has not been changed.";
-    public static final String MESSAGE_NO_PERMISSION =
+    public static final String MESSAGE_NO_READ_PERMISSION =
             "MediConnect does not have permission to read %1$s. Your data has not been changed.";
     public static final String MESSAGE_UNREADABLE = "The backup %1$s could not be read. It may be damaged, "
             + "or not a MediConnect data file. Your data has not been changed.";
@@ -95,15 +95,13 @@ public class RestoreCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         ReadOnlyAddressBook restoredData = readBackup();
-        Path preRestoreBackup = backUpCurrentData(model);
+        Path automaticBackupFile = backUpCurrentData(model);
 
         model.setAddressBook(restoredData);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
 
-        int patientCount = restoredData.getPatientList().size();
-        logger.info("Restored " + patientCount + " patients from " + backupDir.resolve(fileName));
-        return new CommandResult(String.format(MESSAGE_SUCCESS, patientCount,
-                patientCount == 1 ? "patient" : "patients", fileName, preRestoreBackup.toAbsolutePath().normalize()));
+        logger.info("Restored the backup " + backupDir.resolve(fileName));
+        return createSuccessResult(restoredData, automaticBackupFile);
     }
 
     /**
@@ -137,9 +135,21 @@ public class RestoreCommand extends Command {
         try {
             return new BackupCommand(clock, backupDir).saveBackup(model.getAddressBook());
         } catch (IOException ioe) {
-            throw new CommandException(String.format(MESSAGE_BACKUP_FAILED, backupDir.toAbsolutePath().normalize(),
-                    BackupCommand.describeFailure(ioe)), ioe);
+            String reason = BackupCommand.describeFailure(ioe);
+            throw new CommandException(
+                    String.format(MESSAGE_BACKUP_FAILED, backupDir.toAbsolutePath().normalize(), reason), ioe);
         }
+    }
+
+    /**
+     * Returns the result to show after restoring {@code restoredData}: how many patients were restored, and the full
+     * path of {@code automaticBackupFile}, which holds the data from before the restore.
+     */
+    private CommandResult createSuccessResult(ReadOnlyAddressBook restoredData, Path automaticBackupFile) {
+        int patientCount = restoredData.getPatientList().size();
+        String patientWord = patientCount == 1 ? "patient" : "patients";
+        return new CommandResult(String.format(MESSAGE_SUCCESS, patientCount, patientWord, fileName,
+                automaticBackupFile.toAbsolutePath().normalize()));
     }
 
     /**
@@ -151,7 +161,7 @@ public class RestoreCommand extends Command {
             return String.format(MESSAGE_INVALID_DATA, fileName, cause.getMessage());
         }
         if (cause instanceof AccessDeniedException) {
-            return String.format(MESSAGE_NO_PERMISSION, fileName);
+            return String.format(MESSAGE_NO_READ_PERMISSION, fileName);
         }
         return String.format(MESSAGE_UNREADABLE, fileName);
     }
