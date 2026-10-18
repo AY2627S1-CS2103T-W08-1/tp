@@ -34,12 +34,13 @@ public class ParserUtil {
     /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed, and multiple spaces between words reduced to one.
+     * Curly apostrophes (’) are replaced with straight ones (').
      *
      * @throws ParseException if the given {@code name} is invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        String trimmedName = name.trim().replaceAll("\\s+", " ");
+        String trimmedName = name.trim().replaceAll("\\s+", " ").replace('’', '\'');
         if (!Name.isValidName(trimmedName)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
