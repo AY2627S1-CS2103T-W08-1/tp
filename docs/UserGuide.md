@@ -51,6 +51,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 **Notes about the command format:**<br>
 
+* Pressing Enter when the command box is empty or contains only whitespace does nothing.
+  The text in the command box and the previous result remain unchanged.
+
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
 
