@@ -41,6 +41,7 @@ public class Messages {
     public static final String MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION =
             "Medication \"%1$s\" was not updated: it already exists for this patient.";
     public static final String MESSAGE_EDIT_MEDICATION_SUCCESS = "Updated medication %1$d of %2$s: %3$s";
+    public static final String MESSAGE_DELETE_MEDICATION_SUCCESS = "Deleted medication %1$d of %2$s: %3$s";
     public static final String MESSAGE_PATIENTS_LISTED_OVERVIEW = "%1$d patient(s) listed!";
     public static final String MESSAGE_DUPLICATE_FIELDS =
                 "Multiple values specified for a single-valued field: ";
