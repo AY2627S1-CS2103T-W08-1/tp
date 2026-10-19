@@ -2,7 +2,6 @@ package seedu.address.storage;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -75,8 +74,7 @@ class JsonAdaptedPatient {
         medications.addAll(source.getMedications());
         allergens.addAll(source.getAllergens());
         careInstructions.addAll(source.getCareInstructions());
-        appointments.addAll(source.getAppointments().stream().map(JsonAdaptedAppointment::new)
-                .collect(Collectors.toList()));
+        appointments.addAll(source.getAppointments().stream().map(JsonAdaptedAppointment::new).toList());
     }
 
     /**

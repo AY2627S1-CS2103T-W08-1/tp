@@ -1,7 +1,6 @@
 package seedu.address.ui;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -85,8 +84,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         fillEntries(medications, patient.getMedications());
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
-        fillEntries(appointments, patient.getAppointments().stream().map(Appointment::toString)
-                .collect(Collectors.toList()));
+        fillEntries(appointments, patient.getAppointments().stream().map(Appointment::toString).toList());
     }
 
     /**

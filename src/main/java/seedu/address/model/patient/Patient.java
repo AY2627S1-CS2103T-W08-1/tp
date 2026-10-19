@@ -2,8 +2,6 @@ package seedu.address.model.patient;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,9 +43,7 @@ public class Patient {
         this.medications = List.copyOf(medications);
         this.allergens = List.copyOf(allergens);
         this.careInstructions = List.copyOf(careInstructions);
-        List<Appointment> sortedAppointments = new ArrayList<>(appointments);
-        Collections.sort(sortedAppointments);
-        this.appointments = List.copyOf(sortedAppointments);
+        this.appointments = appointments.stream().sorted().toList();
     }
 
     /**
