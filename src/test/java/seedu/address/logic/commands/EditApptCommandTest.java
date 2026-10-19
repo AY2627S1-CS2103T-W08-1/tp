@@ -9,6 +9,7 @@ import static seedu.address.logic.commands.AddApptCommand.MESSAGE_PAST_APPOINTME
 import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.logic.commands.CommandTestUtil.createModelWithAppointments;
 import static seedu.address.logic.commands.EditApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CARDIOLOGY;
@@ -24,10 +25,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
-import seedu.address.model.Model;
-import seedu.address.model.ModelManager;
 import seedu.address.model.appointment.Appointment;
-import seedu.address.testutil.PatientBuilder;
 
 public class EditApptCommandTest {
 
@@ -200,14 +198,5 @@ public class EditApptCommandTest {
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP),
                 String.format(MESSAGE_SUCCESS, ALICE.getName(), editedAppointment) + expectedWarnings,
                 createModelWithAppointments(editedAppointment));
-    }
-
-    /**
-     * Returns a model whose only patient is Alice with the given {@code appointments}.
-     */
-    private static Model createModelWithAppointments(Appointment... appointments) {
-        Model model = new ModelManager();
-        model.addPatient(new PatientBuilder(ALICE).withAppointments(appointments).build());
-        return model;
     }
 }

@@ -8,6 +8,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalPatients.ALICE;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -19,8 +20,11 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.PatientBuilder;
 
 /**
  * Contains helper methods for testing commands.
@@ -114,6 +118,15 @@ public class CommandTestUtil {
         model.updateFilteredPatientList(new NameContainsKeywordsPredicate(List.of(splitName[0])));
 
         assertEquals(1, model.getFilteredPatientList().size());
+    }
+
+    /**
+     * Returns a model whose only patient is Alice with the given {@code appointments}.
+     */
+    public static Model createModelWithAppointments(Appointment... appointments) {
+        Model model = new ModelManager();
+        model.addPatient(new PatientBuilder(ALICE).withAppointments(appointments).build());
+        return model;
     }
 
 }

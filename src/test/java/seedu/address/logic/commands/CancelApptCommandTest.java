@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CancelApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.logic.commands.CommandTestUtil.createModelWithAppointments;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CARDIOLOGY;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
@@ -17,9 +18,6 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
-import seedu.address.model.ModelManager;
-import seedu.address.model.appointment.Appointment;
-import seedu.address.testutil.PatientBuilder;
 
 public class CancelApptCommandTest {
 
@@ -79,14 +77,5 @@ public class CancelApptCommandTest {
         String expected = CancelApptCommand.class.getCanonicalName()
                 + "{targetIndex=" + INDEX_FIRST_PATIENT + ", appointmentIndex=" + INDEX_SECOND_PATIENT + "}";
         assertEquals(expected, command.toString());
-    }
-
-    /**
-     * Returns a model whose only patient is Alice with the given {@code appointments}.
-     */
-    private static Model createModelWithAppointments(Appointment... appointments) {
-        Model model = new ModelManager();
-        model.addPatient(new PatientBuilder(ALICE).withAppointments(appointments).build());
-        return model;
     }
 }
