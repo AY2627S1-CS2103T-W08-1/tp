@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
@@ -46,6 +47,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private VBox allergens;
     @FXML
     private VBox careInstructions;
+    @FXML
+    private VBox contacts;
 
     /**
      * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
@@ -82,6 +85,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         fillEntries(medications, patient.getMedications().stream().map(Medication::toString).toList());
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
+        fillEntries(contacts, patient.getContacts().stream().map(Contact::toString).toList());
     }
 
     /**
