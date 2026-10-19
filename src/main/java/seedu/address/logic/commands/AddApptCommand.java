@@ -17,6 +17,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -85,25 +86,29 @@ public class AddApptCommand extends Command {
         updatedAppointments.add(toAdd);
         model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
 
-        return new CommandResult(buildSuccessMessage(patientToEdit));
+        String message = String.format(MESSAGE_SUCCESS, patientToEdit.getName(), toAdd)
+                + buildWarnings(patientToEdit.getName(), toAdd, patientToEdit.getAppointments(), clock);
+        return new CommandResult(message);
     }
 
     /**
-     * Returns the success message for adding the appointment to {@code patient}, followed by a note
-     * if the appointment is in the past and a warning for each appointment at the same date and time.
+     * Returns a note if {@code appointment} is in the past according to {@code clock}, and a warning for
+     * each of the patient's {@code otherAppointments} at the same date and time, each on a new line.
+     * Returns an empty string if there is nothing to warn about.
      */
-    private String buildSuccessMessage(Patient patient) {
-        String message = String.format(MESSAGE_SUCCESS, patient.getName(), toAdd);
-        boolean isInPast = toAdd.getDateTime().isBefore(LocalDateTime.now(clock));
+    static String buildWarnings(Name patientName, Appointment appointment,
+            List<Appointment> otherAppointments, Clock clock) {
+        String warnings = "";
+        boolean isInPast = appointment.getDateTime().isBefore(LocalDateTime.now(clock));
         if (isInPast) {
-            message += "\n" + MESSAGE_PAST_APPOINTMENT;
+            warnings += "\n" + MESSAGE_PAST_APPOINTMENT;
         }
-        for (Appointment appointment : patient.getAppointments()) {
-            if (toAdd.isAtSameTimeAs(appointment)) {
-                message += "\n" + String.format(MESSAGE_CLASH, patient.getName(), appointment.getProvider());
+        for (Appointment otherAppointment : otherAppointments) {
+            if (appointment.isAtSameTimeAs(otherAppointment)) {
+                warnings += "\n" + String.format(MESSAGE_CLASH, patientName, otherAppointment.getProvider());
             }
         }
-        return message;
+        return warnings;
     }
 
     @Override
