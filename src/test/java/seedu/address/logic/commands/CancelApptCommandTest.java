@@ -7,13 +7,11 @@ import static seedu.address.logic.commands.CancelApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalAppointments.CARDIOLOGY;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,9 +23,6 @@ import seedu.address.testutil.PatientBuilder;
 
 public class CancelApptCommandTest {
 
-    private static final Appointment LATER_APPOINTMENT =
-            new Appointment(LocalDate.of(2026, 12, 10), LocalTime.of(14, 0), "Cardiology clinic", "");
-
     @Test
     public void constructor_nullArguments_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new CancelApptCommand(null, INDEX_FIRST_PATIENT));
@@ -36,11 +31,11 @@ public class CancelApptCommandTest {
 
     @Test
     public void execute_validIndexes_removesAppointment() {
-        Model model = createModelWithAppointments(CHECKUP, LATER_APPOINTMENT);
+        Model model = createModelWithAppointments(CHECKUP, CARDIOLOGY);
         Model expectedModel = createModelWithAppointments(CHECKUP);
 
         assertCommandSuccess(new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), model,
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), LATER_APPOINTMENT), expectedModel);
+                String.format(MESSAGE_SUCCESS, ALICE.getName(), CARDIOLOGY), expectedModel);
     }
 
     @Test

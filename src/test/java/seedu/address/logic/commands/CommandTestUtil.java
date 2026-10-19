@@ -9,6 +9,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +55,10 @@ public class CommandTestUtil {
 
     public static final String PREAMBLE_WHITESPACE = "\t  \r  \n";
     public static final String PREAMBLE_NON_EMPTY = "NonEmptyPreamble";
+
+    /** Fixes the current date and time at 2026-10-18 12:00. */
+    public static final Clock FIXED_CLOCK =
+            Clock.fixed(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
 
     /**
      * Executes the given {@code command}, confirms that <br>

@@ -7,6 +7,7 @@ import static seedu.address.logic.commands.AddApptCommand.MESSAGE_CLASH;
 import static seedu.address.logic.commands.AddApptCommand.MESSAGE_DUPLICATE_APPOINTMENT;
 import static seedu.address.logic.commands.AddApptCommand.MESSAGE_PAST_APPOINTMENT;
 import static seedu.address.logic.commands.AddApptCommand.MESSAGE_SUCCESS;
+import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -15,11 +16,8 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,10 +29,6 @@ import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
 
 public class AddApptCommandTest {
-
-    /** Fixes the current date and time at 2026-10-18 12:00. */
-    private static final Clock FIXED_CLOCK =
-            Clock.fixed(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
 
     @Test
     public void constructor_nullArguments_throwsNullPointerException() {
