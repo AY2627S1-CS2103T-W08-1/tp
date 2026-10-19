@@ -242,6 +242,49 @@ is too large to be a valid number (e.g., `99999999999`), or is followed by extra
 `Invalid command format!` followed by the usage and example. In both cases, the panel keeps showing the patient it
 showed before.
 
+### Listing today's medication times: `due`
+
+Lists the times at which medications are taken today, one line per dose, in the order they are due.
+
+Format: `due [INDEX]`
+
+* Without `INDEX`, `due` lists the doses of **all** patients in MediConnect, even if `find` is hiding some of them
+  from the patient list.
+* With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
+  the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
+  number (1, 2, 3, ...).
+* Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
+  with several times has one line for each time.
+* Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
+  patient at the same time are listed in the order of the patient's medications.
+* A time that is earlier than the current time of your computer (in its time zone) is followed by
+  ` (earlier today)`. A time in the current minute is not marked. Every time is a daily time, so the same times
+  are listed each day.
+* Medications without times are not listed.
+* The result is shown in the result box. The patient list and the details panel are not changed, and no data is
+  changed.
+
+Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
+`2. Amlodipine 5mg (08:00, 20:00)`, and the other patients have no times):
+
+* `due` returns<br>
+  `08:00 Alex Yeoh: Aspirin 100mg (earlier today)`<br>
+  `08:00 Alex Yeoh: Amlodipine 5mg (earlier today)`<br>
+  `20:00 Alex Yeoh: Amlodipine 5mg`
+* `due 1` returns the same three lines, because only Alex Yeoh has times.
+* `due 2` returns `No medications are due today for Bernice Yu.`
+
+Run before 08:00, the same `due` returns the three lines without ` (earlier today)`.
+
+If there is nothing to list, `due` returns `No medications are due today.` and `due INDEX` returns
+`No medications are due today for PATIENT_NAME.`
+
+Errors are reported as follows:
+
+* An `INDEX` outside the displayed list returns `The patient index provided is invalid.`
+* A zero, negative, non-numeric, or excessively large `INDEX`, or anything after `due` other than a single
+  number (e.g., `due 1 2`), returns `Invalid command format!`, followed by the command usage.
+
 ### Clearing all patients: `clear`
 
 Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
@@ -302,6 +345,7 @@ Action            | Format, Examples
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Exit**          | `exit`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
