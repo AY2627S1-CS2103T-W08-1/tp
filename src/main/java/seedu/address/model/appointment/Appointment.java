@@ -137,12 +137,7 @@ public class Appointment implements Comparable<Appointment> {
      */
     @Override
     public int compareTo(Appointment other) {
-        int dateComparison = date.compareTo(other.date);
-        if (dateComparison != 0) {
-            return dateComparison;
-        }
-
-        return time.compareTo(other.time);
+        return getDateTime().compareTo(other.getDateTime());
     }
 
     @Override
