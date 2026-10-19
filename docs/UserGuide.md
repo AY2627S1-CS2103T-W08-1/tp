@@ -150,7 +150,7 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
 * Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
   same command are still added.
-* A medication added with `med/` has no daily times yet.
+* A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
 
 Examples:
 
@@ -180,6 +180,66 @@ Other errors are reported as follows:
   `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
+
+### Editing a medication: `editmed`
+
+Changes the description and/or the daily times of one medication of a patient.
+
+Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
+
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* `MED_INDEX` is the number of the medication in the numbered medication list that `view` shows for the patient
+  (`1`, `2`, ...). It must be a positive integer.
+* `INDEX` and `MED_INDEX` must come first, in that order, before `med/` and `t/`. `med/` and `t/` can be in any order.
+* At least one of `med/` or `t/` must be given.
+* `med/DESCRIPTION` replaces the description. It is trimmed and cannot be blank. It can be given only once.
+  A description that is the same as another medication of the same patient, ignoring letter case, is rejected.
+  Changing only the letter case of the medication's own description is allowed.
+* `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), with two digits on each side of the colon,
+  e.g., `08:30`. Leading and trailing spaces are ignored.
+  * Giving `t/` **replaces all** the existing times of the medication, so the new times are the only ones left.
+    Repeat `t/` for more than one time, e.g., `t/08:00 t/20:00`.
+  * Times are shown in ascending order, and a time given more than once is kept once.
+  * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`.
+* Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
+* The patient's other details and other medications are not changed. If the patient is shown in the details panel,
+  the panel updates.
+* A word that looks like an unknown prefix, such as `x/12`, is not allowed in `med/`, just as in the `add` command.
+  This also applies to a prefix in the wrong letter case, such as `T/08:00`.
+
+Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
+`2. Amlodipine 5mg (08:00, 20:00)`):
+
+* `editmed 1 2 t/07:30 t/19:30` replaces both times of Amlodipine 5mg.<br>
+  Returns `Updated medication 2 of Alex Yeoh: Amlodipine 5mg (07:30, 19:30)`
+* `editmed 1 1 med/Aspirin 75mg` changes only the description and keeps the time.<br>
+  Returns `Updated medication 1 of Alex Yeoh: Aspirin 75mg (08:00)`
+* `editmed 1 1 med/Aspirin 75mg t/09:00` changes the description and replaces the time.<br>
+  Returns `Updated medication 1 of Alex Yeoh: Aspirin 75mg (09:00)`
+* `editmed 1 2 t/` removes all the times of Amlodipine 5mg.<br>
+  Returns `Updated medication 2 of Alex Yeoh: Amlodipine 5mg`
+* `editmed 1 1 t/20:00 t/08:00 t/20:00` sorts the times and keeps `20:00` once.<br>
+  Returns `Updated medication 1 of Alex Yeoh: Aspirin 100mg (08:00, 20:00)`
+
+A successful command returns `Updated medication MED_INDEX of PATIENT_NAME: MEDICATION`, where `MEDICATION` is the
+description followed by the times in brackets. The brackets are left out when there are no times.
+Running the same command again succeeds and changes nothing more.
+
+A command that fails changes nothing. Errors are reported as follows:
+
+* An `INDEX` outside the displayed list returns `The patient index provided is invalid.`
+* A `MED_INDEX` larger than the number of medications of the patient, or any `MED_INDEX` for a patient with no
+  medications, returns `The medication index provided is invalid.`
+* A missing, zero, negative, non-numeric, or excessively large `INDEX` or `MED_INDEX`, or a number of indices other
+  than two, returns `Invalid command format!`, followed by the command usage.
+* A command with neither `med/` nor `t/` returns `At least one of med/ or t/ must be provided.`
+* A blank `med/` returns `Medication description cannot be blank.`
+* A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, or a `t/` with nothing after it next to
+  another `t/`, returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
+* A description that already belongs to another medication of the patient returns
+  `Medication "amlodipine 5mg" was not updated: it already exists for this patient.`
+* More than one `med/` returns `Multiple values specified for a single-valued field: med/`
+* An unknown prefix returns `Unrecognized parameter: x/. Please check the command format.`
 
 ### Editing a care instruction: `editcare`
 
@@ -692,6 +752,7 @@ Action            | Format, Examples
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
+**Edit medication** | `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...` <br> e.g., `editmed 1 2 med/Metformin 850mg t/08:00 t/20:00`
 **Exit**          | `exit`
 **Export**        | `export INDEX` <br> e.g., `export 2`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
