@@ -134,7 +134,7 @@ DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to tod
 Phone   | `p/`   | 8 digits with no spaces, starting with 3, 6, 8 or 9, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
 Address | `a/`   | Cannot be blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
-Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
+Leading and trailing spaces in every field are ignored. In the `add` command, a word that starts with letters followed by a slash, such as `x/12`, `units/day`, or `mg/ml`, is treated as an unknown prefix and rejected in any of these fields with `Unrecognized parameter: x/. Please check the command format.` A slash inside a word, such as `Blk 12/34`, is fine, and so are the words `s/o`, `d/o`, and `c/o`. Care information in `addcare` and `editmed` follows different rules, which are described in those commands.
 
 ### Adding care information: `addcare`
 
@@ -187,9 +187,10 @@ Changes the description and/or the daily times of one medication of a patient.
 
 Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 
-* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* `INDEX` is the number of the patient in the currently displayed patient list, as for `delete`. It must be a
+  positive whole number (1, 2, 3, ...).
 * `MED_INDEX` is the number of the medication in the numbered medication list that `view` shows for the patient
-  (`1`, `2`, ...). It must be a positive integer.
+  (`1`, `2`, ...). It must be a positive whole number.
 * `INDEX` and `MED_INDEX` must come first, in that order, before `med/` and `t/`. `med/` and `t/` can be in any order.
 * At least one of `med/` or `t/` must be given.
 * `med/DESCRIPTION` replaces the description. It is trimmed and cannot be blank. It can be given only once.
@@ -204,8 +205,9 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
 * The patient's other details and other medications are not changed. If the patient is shown in the details panel,
   the panel updates.
-* A word that looks like an unknown prefix, such as `x/12`, is not allowed in `med/`, just as in the `add` command.
-  This also applies to a prefix in the wrong letter case, such as `T/08:00`.
+* Words that look like prefixes, such as `units/day` in `med/Insulin 10 units/day`, are kept as part of the
+  description, exactly as in `addcare`. Only `med/` and `t/` (in lowercase) are recognised, so `T/08:00` written
+  after `med/` becomes part of the description, and `T/08:00` on its own is not a time.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):
@@ -231,7 +233,8 @@ A command that fails changes nothing. Errors are reported as follows:
 * A `MED_INDEX` larger than the number of medications of the patient, or any `MED_INDEX` for a patient with no
   medications, returns `The medication index provided is invalid.`
 * A missing, zero, negative, non-numeric, or excessively large `INDEX` or `MED_INDEX`, or a number of indices other
-  than two, returns `Invalid command format!`, followed by the command usage.
+  than two, returns `Invalid command format!`, followed by the command usage. The same happens if there is other text
+  before the first `med/` or `t/`, such as `editmed 1 1 x/foo` or `editmed 1 1 al/Latex`.
 * A command with neither `med/` nor `t/` returns `At least one of med/ or t/ must be provided.`
 * A blank `med/` returns `Medication description cannot be blank.`
 * A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, or a `t/` with nothing after it next to
@@ -239,7 +242,6 @@ A command that fails changes nothing. Errors are reported as follows:
 * A description that already belongs to another medication of the patient returns
   `Medication "amlodipine 5mg" was not updated: it already exists for this patient.`
 * More than one `med/` returns `Multiple values specified for a single-valued field: med/`
-* An unknown prefix returns `Unrecognized parameter: x/. Please check the command format.`
 
 ### Editing a care instruction: `editcare`
 

@@ -10,7 +10,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.EditMedCommand;
@@ -35,7 +34,6 @@ public class EditMedCommandParser implements Parser<EditMedCommand> {
     @Override
     public EditMedCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), PREFIX_MEDICATION, PREFIX_TIME);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_MEDICATION, PREFIX_TIME);
 
         List<Index> indices = parseIndices(argMultimap.getPreamble());

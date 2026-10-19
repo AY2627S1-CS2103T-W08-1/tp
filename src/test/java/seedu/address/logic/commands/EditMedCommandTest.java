@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -212,6 +213,22 @@ public class EditMedCommandTest {
 
         assertCommandSuccess(command, filteredModel, String.format(MESSAGE_EDIT_MEDICATION_SUCCESS, 1,
                 patient.getName(), new Medication("Metformin 850mg", List.of(MORNING, EVENING))), expectedModel);
+    }
+
+    @Test
+    public void execute_prefixLikeWordsInDescription_acceptedLikeAddCare() throws Exception {
+        for (String description : List.of("Insulin 10 units/day", "Amoxicillin 250 mg/ml")) {
+            Model addCareModel = createModel(new PatientBuilder(ALICE).build());
+            Model editModel = createModel(patient);
+
+            new AddressBookParser().parseCommand("addcare 1 med/" + description).execute(addCareModel);
+            new AddressBookParser().parseCommand("editmed 1 1 med/" + description + " t/08:00").execute(editModel);
+
+            assertEquals(List.of(new Medication(description)),
+                    addCareModel.getFilteredPatientList().get(0).getMedications());
+            assertEquals(new Medication(description, List.of(MORNING)),
+                    editModel.getFilteredPatientList().get(0).getMedications().get(0));
+        }
     }
 
     @Test
