@@ -15,11 +15,14 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddContactCommand;
 import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteContactCommand;
 import seedu.address.logic.commands.DueCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.EditContactCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
@@ -129,5 +132,12 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_unknownCommand_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("unknownCommand"));
+    }
+
+    @Test
+    public void parseCommand_contactCommands_dispatched() throws Exception {
+        assertTrue(parser.parseCommand("addcontact 1 n/Clinic r/GP p/123") instanceof AddContactCommand);
+        assertTrue(parser.parseCommand("editcontact 1 1 nt/") instanceof EditContactCommand);
+        assertTrue(parser.parseCommand("deletecontact 1 1") instanceof DeleteContactCommand);
     }
 }

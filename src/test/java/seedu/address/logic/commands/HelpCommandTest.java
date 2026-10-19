@@ -38,6 +38,9 @@ public class HelpCommandTest {
 
     /** Valid sample values that replace the placeholders of a command format to give a valid input. */
     private static final Map<String, String> PLACEHOLDER_VALUES = Map.ofEntries(
+            Map.entry("CONTACT_INDEX", "1"),
+            Map.entry("ROLE", "GP"),
+            Map.entry("NOTE", "Call first"),
             Map.entry("NAME", "John Tan"),
             Map.entry("NRIC", "S1234567A"),
             Map.entry("DOB", "1950-04-12"),
@@ -56,6 +59,9 @@ public class HelpCommandTest {
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
+        commands.put(AddContactCommand.COMMAND_WORD, AddContactCommand.class);
+        commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
+        commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
@@ -160,9 +166,10 @@ public class HelpCommandTest {
     public void commandSummary_noAb3Leftovers() {
         String summary = COMMAND_SUMMARY.toLowerCase();
 
-        for (String leftover : List.of("person", "contact", "address book", "t/tag", "e/email", "edit")) {
+        for (String leftover : List.of("person", "address book", "t/tag", "e/email")) {
             assertFalse(summary.contains(leftover), "Summary should not mention: " + leftover);
         }
+        assertFalse(getLines().stream().anyMatch(line -> line.startsWith(EditCommand.COMMAND_WORD + " ")));
     }
 
     @Test
