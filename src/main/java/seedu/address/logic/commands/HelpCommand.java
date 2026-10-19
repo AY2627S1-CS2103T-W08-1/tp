@@ -69,6 +69,8 @@ public class HelpCommand extends Command {
             formatEntry(EditMedCommand.COMMAND_WORD + " INDEX MED_INDEX [" + PREFIX_MEDICATION + "DESCRIPTION] ["
                     + PREFIX_TIME + "TIME]...",
                     "Edits the description and/or daily times of the medication at MED_INDEX of the patient at INDEX."),
+            formatEntry(DeleteMedCommand.COMMAND_WORD + " INDEX MED_INDEX",
+                    "Deletes the medication at MED_INDEX of the patient at INDEX."),
             formatEntry(ViewCommand.COMMAND_WORD + " INDEX",
                     "Shows the full details of the patient at INDEX."),
             formatEntry(DueCommand.COMMAND_WORD + " [INDEX]",
