@@ -7,6 +7,7 @@ import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DueCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
@@ -44,6 +46,13 @@ public class AddressBookParserTest {
         AddCareCommand command = (AddCareCommand) parser.parseCommand("addcare 1 med/Metformin al/Penicillin");
         assertEquals(new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Metformin"), List.of("Penicillin"), List.of()),
                 command);
+    }
+
+    @Test
+    public void parseCommand_due() throws Exception {
+        assertEquals(new DueCommand(Clock.systemDefaultZone()), parser.parseCommand(DueCommand.COMMAND_WORD));
+        assertEquals(new DueCommand(INDEX_FIRST_PATIENT, Clock.systemDefaultZone()),
+                parser.parseCommand(DueCommand.COMMAND_WORD + " 1"));
     }
 
     @Test
