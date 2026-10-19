@@ -50,7 +50,7 @@ public class AddApptCommandParser implements Parser<AddApptCommand> {
         LocalDate date = ParserUtil.parseDate(argMultimap.getValue(PREFIX_DATE).get());
         LocalTime time = ParserUtil.parseTime(argMultimap.getValue(PREFIX_TIME).get());
         String provider = ParserUtil.parseProvider(argMultimap.getValue(PREFIX_WITH).get());
-        String note = argMultimap.getValue(PREFIX_NOTE).orElse("").trim();
+        String note = argMultimap.getValue(PREFIX_NOTE).orElse("");
 
         return new AddApptCommand(index, new Appointment(date, time, provider, note));
     }
