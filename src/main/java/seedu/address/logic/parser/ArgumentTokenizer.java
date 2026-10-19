@@ -23,7 +23,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class ArgumentTokenizer {
 
     private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
-    private static final Pattern TRAILING_PUNCTUATION_PATTERN = Pattern.compile("\\p{P}+$");
+    private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("\\p{P}");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -64,23 +64,39 @@ public class ArgumentTokenizer {
 
             String candidate = matcher.group(1);
 
-            // Allow recognised command prefixes.
+            // Allow recognized command prefixes.
             if (allowed.contains(candidate)) {
                 continue;
             }
 
             // Explain how to correct an allowed slash word with trailing punctuation.
             String token = matcher.group();
-            String unpunctuatedToken = TRAILING_PUNCTUATION_PATTERN.matcher(token).replaceFirst("");
+            String unpunctuatedToken = removeTrailingPunctuation(token);
 
             if (allowedSlashTokens.contains(unpunctuatedToken.toLowerCase(Locale.ROOT))) {
                 throw new ParseException(String.format(
                         Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken));
             }
 
-            // Report other unrecognised prefixes.
+            // Report other unrecognized prefixes.
             throw new ParseException(String.format(Messages.MESSAGE_UNKNOWN_PREFIX, candidate));
         }
+    }
+
+    /**
+     * Removes trailing punctuation in one backwards scan, including Unicode punctuation.
+     */
+    private static String removeTrailingPunctuation(String token) {
+        Matcher punctuationMatcher = PUNCTUATION_PATTERN.matcher(token);
+        int end = token.length();
+        while (end > 0) {
+            int start = end - Character.charCount(token.codePointBefore(end));
+            if (!punctuationMatcher.region(start, end).matches()) {
+                break;
+            }
+            end = start;
+        }
+        return token.substring(0, end);
     }
 
     /**
