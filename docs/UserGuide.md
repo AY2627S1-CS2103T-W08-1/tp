@@ -210,6 +210,37 @@ Other errors are reported as follows:
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
   command usage.
 
+### Editing an appointment: `editappt`
+
+Changes an appointment of the patient at the displayed index.
+
+Format: `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]`
+
+* `INDEX` and `APPT_INDEX` follow the same rules as `cancelappt`.
+* At least one of `d/`, `t/`, `w/` or `nt/` must be given. Only the fields given are changed.
+* `DATE`, `TIME`, `WITH` and `NOTE` follow the same rules as `addappt`. `nt/` with nothing after it clears the note.
+* The appointments are sorted again after the edit, so an appointment's number can change.
+
+Examples:
+
+* `view 1` followed by `editappt 1 2 t/10:00 nt/` moves the 2nd appointment of the 1st patient to 10:00 and clears
+  its note.
+* `editappt 1 1 d/2026-11-12 w/Dr Lim` changes the date and who the 1st appointment of the 1st patient is with.
+
+A successful command returns `Edited appointment for NAME: APPOINTMENT`, with the updated appointment shown as in the
+detail panel. For example, the first example returns
+`Edited appointment for Alex Yeoh: 2026-12-10 10:00 with Cardiology clinic`.
+
+* As with `addappt`, an appointment moved into the past or to the same date and time as another appointment of the
+  patient is still saved, and the message ends with the same note or warning.
+
+Other errors are reported as follows:
+
+* An edit that makes the appointment the same as another appointment of the patient returns
+  `This appointment already exists for this patient.` and changes nothing.
+* No `d/`, `t/`, `w/` or `nt/` returns `At least one of d/, t/, w/ or nt/ must be provided.`
+* Index errors and invalid fields are reported as for `cancelappt` and `addappt`.
+
 ### Cancelling an appointment: `cancelappt`
 
 Removes an appointment from the patient at the displayed index.
@@ -370,6 +401,7 @@ Action            | Format, Examples
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Edit appointment** | `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]` <br> e.g., `editappt 1 2 t/10:00 nt/`
 **Exit**          | `exit`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`

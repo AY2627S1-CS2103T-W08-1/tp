@@ -62,6 +62,7 @@ public class HelpCommandTest {
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
         commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
+        commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
         commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
@@ -147,7 +148,8 @@ public class HelpCommandTest {
     @Test
     public void commandSummary_indexCommands_takeIndex() {
         for (String commandWord : List.of(DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
-                AddCareCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, CancelApptCommand.COMMAND_WORD)) {
+                AddCareCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, EditApptCommand.COMMAND_WORD,
+                CancelApptCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }
@@ -165,7 +167,7 @@ public class HelpCommandTest {
     public void commandSummary_noAb3Leftovers() {
         String summary = COMMAND_SUMMARY.toLowerCase();
 
-        for (String leftover : List.of("person", "contact", "address book", "t/tag", "e/email", "edit")) {
+        for (String leftover : List.of("person", "contact", "address book", "t/tag", "e/email", "edit index")) {
             assertFalse(summary.contains(leftover), "Summary should not mention: " + leftover);
         }
     }
