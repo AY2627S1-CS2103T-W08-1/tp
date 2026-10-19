@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
+import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
@@ -26,6 +27,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PatientBuilder;
 
 public class AddCareCommandTest {
@@ -207,5 +209,15 @@ public class AddCareCommandTest {
                 + "{targetIndex=" + INDEX_FIRST_PATIENT
                 + ", medications=[Metformin], allergens=[Penicillin], careInstructions=[Check blood sugar]}";
         assertEquals(expected, command.toString());
+    }
+
+    @Test
+    public void execute_existingContacts_preserved() throws Exception {
+        var contact = GP;
+        Patient patient = new PatientBuilder().withContacts(contact).build();
+        Model modelWithContacts = new ModelManager(
+                new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Medication"), List.of(), List.of()).execute(modelWithContacts);
+        assertEquals(List.of(contact), modelWithContacts.getFilteredPatientList().get(0).getContacts());
     }
 }
