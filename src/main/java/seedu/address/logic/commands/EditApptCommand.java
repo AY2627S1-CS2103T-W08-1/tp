@@ -108,8 +108,9 @@ public class EditApptCommand extends Command {
             throw new CommandException(AddApptCommand.MESSAGE_DUPLICATE_APPOINTMENT);
         }
 
+        // Put it back in its place, so appointments at the same date and time keep their numbers.
         List<Appointment> updatedAppointments = new ArrayList<>(otherAppointments);
-        updatedAppointments.add(editedAppointment);
+        updatedAppointments.add(appointmentIndex.getZeroBased(), editedAppointment);
         model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
 
         String message = String.format(MESSAGE_SUCCESS, patientToEdit.getName(), editedAppointment)

@@ -99,6 +99,20 @@ public class EditApptCommandTest {
     }
 
     @Test
+    public void execute_appointmentWithClash_keepsItsNumber() {
+        Appointment clash = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Dr Lim", "");
+        Appointment editedCheckup = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Dr Tan", "");
+
+        EditApptCommand command = createCommand(Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.of(""));
+
+        assertCommandSuccess(command, createModelWithAppointments(CHECKUP, clash),
+                String.format(MESSAGE_SUCCESS, ALICE.getName(), editedCheckup)
+                + "\n" + String.format(MESSAGE_CLASH, ALICE.getName(), "Dr Lim"),
+                createModelWithAppointments(editedCheckup, clash));
+    }
+
+    @Test
     public void execute_sameAsOtherAppointment_throwsCommandException() {
         EditApptCommand command = new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
                 Optional.of(CHECKUP.getDate()), Optional.of(CHECKUP.getTime()),
