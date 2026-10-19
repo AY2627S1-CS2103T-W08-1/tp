@@ -89,6 +89,7 @@ public class ArgumentTokenizer {
     private static String removeTrailingPunctuation(String token) {
         Matcher punctuationMatcher = PUNCTUATION_PATTERN.matcher(token);
         int end = token.length();
+        // Scan from the end to avoid repeatedly searching the same punctuation run.
         while (end > 0) {
             int start = end - Character.charCount(token.codePointBefore(end));
             if (!punctuationMatcher.region(start, end).matches()) {
