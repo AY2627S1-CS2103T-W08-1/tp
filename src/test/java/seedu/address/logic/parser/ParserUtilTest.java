@@ -2,11 +2,14 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_NOT_TWO_INDEXES;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
+import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -51,6 +54,24 @@ public class ParserUtilTest {
 
         // Leading and trailing whitespaces
         assertEquals(INDEX_FIRST_PATIENT, ParserUtil.parseIndex("  1  "));
+    }
+
+    @Test
+    public void parseTwoIndexes_wrongNumberOfIndexes_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_NOT_TWO_INDEXES, () -> ParserUtil.parseTwoIndexes("1"));
+        assertThrows(ParseException.class, MESSAGE_NOT_TWO_INDEXES, ()
+            -> ParserUtil.parseTwoIndexes("1 2 3"));
+    }
+
+    @Test
+    public void parseTwoIndexes_invalidIndex_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, () -> ParserUtil.parseTwoIndexes("1 a"));
+    }
+
+    @Test
+    public void parseTwoIndexes_validInput_success() throws Exception {
+        assertEquals(List.of(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT),
+                ParserUtil.parseTwoIndexes(" 1   2 "));
     }
 
     @Test

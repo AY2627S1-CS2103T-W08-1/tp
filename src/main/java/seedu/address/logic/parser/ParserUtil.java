@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
@@ -21,6 +22,7 @@ import seedu.address.model.patient.Phone;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+    public static final String MESSAGE_NOT_TWO_INDEXES = "Exactly two indexes must be given.";
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
@@ -33,6 +35,22 @@ public class ParserUtil {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
         return Index.fromOneBased(Integer.parseInt(trimmedIndex));
+    }
+
+    /**
+     * Parses {@code oneBasedIndexes}, two indexes separated by whitespace, into a list of two
+     * {@code Index}es, e.g. a patient's index followed by the number of one of their appointments.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if there are not exactly two indexes, or either index is invalid.
+     */
+    public static List<Index> parseTwoIndexes(String oneBasedIndexes) throws ParseException {
+        requireNonNull(oneBasedIndexes);
+        String[] indexes = oneBasedIndexes.trim().split("\\s+");
+        if (indexes.length != 2) {
+            throw new ParseException(MESSAGE_NOT_TWO_INDEXES);
+        }
+        return List.of(parseIndex(indexes[0]), parseIndex(indexes[1]));
     }
 
     /**
