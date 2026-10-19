@@ -64,6 +64,7 @@ public class HelpCommandTest {
         commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
         commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
         commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
+        commands.put(ListApptCommand.COMMAND_WORD, ListApptCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
         commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);

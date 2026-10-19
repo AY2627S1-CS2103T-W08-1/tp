@@ -51,6 +51,8 @@ public class HelpCommand extends Command {
                     "Edits appointment APPT_INDEX of the patient at INDEX (at least one field)."),
             formatEntry(CancelApptCommand.COMMAND_WORD + " INDEX APPT_INDEX",
                     "Cancels appointment APPT_INDEX of the patient at INDEX."),
+            formatEntry(ListApptCommand.COMMAND_WORD + " [INDEX]",
+                    "Lists all upcoming appointments, or every appointment of the patient at INDEX."),
             formatEntry(ViewCommand.COMMAND_WORD + " INDEX",
                     "Shows the full details of the patient at INDEX."),
             formatEntry(FindCommand.COMMAND_WORD + " KEYWORD [MORE_KEYWORDS]...",

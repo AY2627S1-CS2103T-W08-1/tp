@@ -269,6 +269,34 @@ Errors are reported as follows:
 * A missing, zero, negative, or non-numeric index, or more than two indexes, returns `Invalid command format!`,
   followed by the command usage.
 
+### Listing appointments: `listappt`
+
+Lists the upcoming appointments of all patients, or every appointment of one patient.
+
+Format: `listappt [INDEX]`
+
+* Without `INDEX`, lists the appointments of all patients at or after the current date and time, soonest first.
+  An appointment earlier today is past and is not listed. All patients are included, even after `find`.
+* With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
+  appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`.
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* The patient list and the detail panel do not change.
+
+Examples:
+
+* `listappt` returns `Upcoming appointments:`, followed by one line per appointment with the patient's name, e.g.,
+  `Alex Yeoh: 2026-11-05 09:30 with Dr Tan`.
+* `listappt 2` returns `Appointments for Bernice Yu:`, then `Upcoming: none`, then `Past:` followed by
+  `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal)`.
+
+Other messages are as follows:
+
+* With no upcoming appointments, `listappt` returns `No upcoming appointments.`
+* For a patient with no appointments, `listappt INDEX` returns `NAME has no appointments.`
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* A zero, negative, or non-numeric index, or more than one index, returns `Invalid command format!`, followed by
+  the command usage.
+
 ### Listing all patients: `list`
 
 Shows a list of all patients in MediConnect.
@@ -406,4 +434,5 @@ Action            | Format, Examples
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
 **List**          | `list`
+**List appointments** | `listappt [INDEX]` <br> e.g., `listappt`, `listappt 2`
 **View**          | `view INDEX` <br> e.g., `view 2`
