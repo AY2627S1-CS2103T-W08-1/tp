@@ -22,6 +22,11 @@ public class Appointment implements Comparable<Appointment> {
             "Who the appointment is with should not be blank.";
 
     /*
+     * Four digits for the year, so that "+10000-01-01" and "-0001-01-01" are rejected.
+     */
+    public static final String DATE_VALIDATION_REGEX = "\\d{4}-\\d{2}-\\d{2}";
+
+    /*
      * Two digits for the hour and two for the minute, so that "9:30" and "14:30:15" are rejected.
      */
     public static final String TIME_VALIDATION_REGEX = "\\d{2}:\\d{2}";
@@ -47,6 +52,10 @@ public class Appointment implements Comparable<Appointment> {
      * Returns true if a given string is a real date in YYYY-MM-DD format.
      */
     public static boolean isValidDate(String test) {
+        if (!test.matches(DATE_VALIDATION_REGEX)) {
+            return false;
+        }
+
         try {
             LocalDate.parse(test);
             return true;

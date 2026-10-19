@@ -33,6 +33,8 @@ public class AppointmentTest {
         assertFalse(Appointment.isValidDate("2026-02-30")); // day does not exist
         assertFalse(Appointment.isValidDate("05-11-2026")); // wrong order
         assertFalse(Appointment.isValidDate("2026/11/05")); // wrong separator
+        assertFalse(Appointment.isValidDate("+10000-01-01")); // year with more than 4 digits
+        assertFalse(Appointment.isValidDate("-0001-01-01")); // negative year
 
         // valid dates
         assertTrue(Appointment.isValidDate("2026-11-05"));
