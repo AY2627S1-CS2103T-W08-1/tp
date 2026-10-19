@@ -264,7 +264,13 @@ MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, 
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, MediConnect starts with no patients at the next run. The invalid file remains on disk until you run a command (MediConnect saves after every command). Still, we recommend backing up the file before editing it.<br>
+If the data file cannot be loaded, MediConnect first saves an unchanged recovery copy beside it, named
+`mediconnect-unreadable-<unique ID>.json`, then starts with no patients. A warning shows the recovery copy's full
+path. Commands continue to save to `data/mediconnect.json`; the recovery copy is kept separately.
+If the recovery copy cannot be created, startup stops so the original file is not overwritten.
+To recover your data, close MediConnect, repair a copy of the recovery file and replace `data/mediconnect.json`
+with the repaired file before restarting. Keep the recovery copy until you have checked the recovered patients.
+We still recommend backing up the file before editing it.<br>
 Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 

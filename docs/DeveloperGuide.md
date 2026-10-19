@@ -161,7 +161,13 @@ The `Storage` component,
 
 The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
 
-Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address as strings, and the medications, allergens and care instructions as lists of strings. The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read, `JsonAdaptedPatient#toModelType()` checks every field with the same rules as the `add` command. If any patient is invalid, or two patients have the same NRIC, the whole file is rejected and MediConnect starts with no patients.
+Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address as strings, and the medications, allergens and care instructions as lists of strings. The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read, `JsonAdaptedPatient#toModelType()` checks every field with the same rules as the `add` command. If any patient is invalid, or two patients have the same NRIC, the whole file is rejected.
+
+On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
+`mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
+existing recovery file is never overwritten. The UI shows its absolute path in a startup warning, and later commands
+save normally to the original data path. If preservation fails, the exception stops initialization before commands
+can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
 ### Common classes
 
@@ -780,4 +786,11 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
 
    1. Launch the app.<br>
-      Expected: The app starts with no patients. The invalid file is kept until the first command, which overwrites it with an empty patient list.
+      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path.
+      The recovery copy contains the original invalid file unchanged.
+
+   1. Run `list`, then close and relaunch the app.<br>
+      Expected: The active data file contains an empty patient list, and the recovery copy is still unchanged.
+
+   1. Close the app. Repair a copy of the recovery file, replace `data/mediconnect.json` with it, and relaunch.<br>
+      Expected: The repaired patients load normally without a recovery warning.
