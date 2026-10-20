@@ -27,7 +27,7 @@ public class PatientTest {
 
     @Test
     public void constructor_careLists_defensivelyCopied() {
-        List<String> medications = new ArrayList<>(List.of("Metformin"));
+        List<Medication> medications = new ArrayList<>(List.of(new Medication("Metformin")));
         List<String> allergens = new ArrayList<>(List.of("Penicillin"));
         List<String> instructions = new ArrayList<>(List.of("Check blood sugar"));
         Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
@@ -35,10 +35,11 @@ public class PatientTest {
         medications.clear();
         allergens.clear();
         instructions.clear();
-        assertEquals(List.of("Metformin"), patient.getMedications());
+        assertEquals(List.of(new Medication("Metformin")), patient.getMedications());
         assertEquals(List.of("Penicillin"), patient.getAllergens());
         assertEquals(List.of("Check blood sugar"), patient.getCareInstructions());
-        assertThrows(UnsupportedOperationException.class, () -> patient.getMedications().add("Aspirin"));
+        Medication aspirin = new Medication("Aspirin");
+        assertThrows(UnsupportedOperationException.class, () -> patient.getMedications().add(aspirin));
         assertThrows(UnsupportedOperationException.class, () -> patient.getAllergens().clear());
         assertThrows(UnsupportedOperationException.class, () -> patient.getCareInstructions().remove(0));
     }
