@@ -52,7 +52,8 @@ public class HelpCommandTest {
             Map.entry("ALLERGEN", "Penicillin"),
             Map.entry("CARE_INSTRUCTION", "Check blood sugar"),
             Map.entry("KEYWORD", "alice"),
-            Map.entry("MORE_KEYWORDS", "bob"));
+            Map.entry("MORE_KEYWORDS", "bob"),
+            Map.entry("FILENAME", "mediconnect-20261020-083015.json"));
 
     private static Map<String, Class<? extends Command>> createExpectedCommands() {
         Map<String, Class<? extends Command>> commands = new LinkedHashMap<>();
@@ -69,6 +70,7 @@ public class HelpCommandTest {
         commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
         commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
+        commands.put(RestoreCommand.COMMAND_WORD, RestoreCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
         return Collections.unmodifiableMap(commands);
     }
