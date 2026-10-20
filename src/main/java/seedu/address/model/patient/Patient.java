@@ -112,6 +112,13 @@ public class Patient {
     }
 
     /**
+     * Returns a copy with replacement care instructions, preserving every other field.
+     */
+    public Patient withCareInstructions(List<String> careInstructions) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+    }
+
+    /**
      * Returns a copy with replacement contacts, preserving every other field.
      */
     public Patient withContacts(List<Contact> contacts) {
