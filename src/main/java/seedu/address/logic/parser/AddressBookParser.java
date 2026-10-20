@@ -14,6 +14,7 @@ import seedu.address.logic.commands.AddContactCommand;
 import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.DeleteAllergyCommand;
 import seedu.address.logic.commands.DeleteCareCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteContactCommand;
@@ -69,6 +70,7 @@ public class AddressBookParser {
             case AddCareCommand.COMMAND_WORD -> new AddCareCommandParser().parse(arguments);
             case EditCareCommand.COMMAND_WORD -> new EditCareCommandParser().parse(arguments);
             case DeleteCareCommand.COMMAND_WORD -> new DeleteCareCommandParser().parse(arguments);
+            case DeleteAllergyCommand.COMMAND_WORD -> new DeleteAllergyCommandParser().parse(arguments);
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
             case DueCommand.COMMAND_WORD -> new DueCommandParser().parse(arguments);
             case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);

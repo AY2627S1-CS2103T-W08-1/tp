@@ -43,6 +43,8 @@ public class HelpCommand extends Command {
                     "Edits a care instruction of the patient at INDEX."),
             formatEntry(DeleteCareCommand.COMMAND_FORMAT,
                     "Deletes a care instruction of the patient at INDEX."),
+            formatEntry(DeleteAllergyCommand.COMMAND_FORMAT,
+                    "Deletes an allergen of the patient at INDEX."),
             formatEntry(AddContactCommand.COMMAND_FORMAT,
                     "Adds a contact to the patient at INDEX."),
             formatEntry(EditContactCommand.COMMAND_FORMAT,
