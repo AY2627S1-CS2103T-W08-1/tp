@@ -72,10 +72,18 @@ public class AddCommandParserTest {
         assertParseFailure(parser, " x/123", expected);
         assertParseFailure(parser, VALID_ARGS + " med/Aspirin",
                 String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "med/"));
-        for (String token : List.of("A/B", "s/o,", "d/o,", "c/o,")) {
-            String prefix = token.substring(0, token.indexOf('/') + 1);
-            assertParseFailure(parser, VALID_ARGS + " " + token,
-                    String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix));
+        assertParseFailure(parser, VALID_ARGS + " A/B",
+                String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "A/"));
+    }
+
+    @Test
+    public void parse_punctuatedSlashToken_failure() {
+        for (String token : List.of("s/o,", "d/o,", "c/o,", "S/O.")) {
+            String unpunctuatedToken = token.substring(0, token.length() - 1);
+            String expected = String.format(
+                    Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken);
+            assertParseFailure(parser, VALID_ARGS.replace("John Tan", "Ben " + token + " Ng"), expected);
+            assertParseFailure(parser, VALID_ARGS + " " + token, expected);
         }
     }
 
