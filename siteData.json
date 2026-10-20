@@ -66,6 +66,7 @@
         "appendix-instructions-for-manual-testing": "Appendix: Instructions for manual testing",
         "launch-and-shutdown": "Launch and shutdown",
         "adding-a-patient-with-punctuation-after-a-slash-word": "Adding a patient with punctuation after a slash word",
+        "adding-a-patient-with-a-blank-address": "Adding a patient with a blank address",
         "managing-patient-contacts": "Managing patient contacts",
         "listing-patients": "Listing patients",
         "deleting-a-patient": "Deleting a patient",
