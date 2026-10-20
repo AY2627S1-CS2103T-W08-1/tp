@@ -95,6 +95,7 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   rejected. For example, `x/123` gives `Unrecognized parameter: x/. Please check the command format.`
 * Standalone `s/o`, `d/o`, and `c/o` are allowed anywhere in the `add` arguments, ignoring letter case.
   Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
+  For example, `s/o,` gives `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
   Addresses can include numeric slash text such as `21/3` and URLs.
 * `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
   It is not case-sensitive and is stored in uppercase.
