@@ -104,7 +104,7 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
   e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
-  Multiple spaces between words are reduced to one.
+  A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
 * `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
   It is stored without the `+65`.
 

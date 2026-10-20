@@ -76,6 +76,11 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseName_curlyApostrophe_returnsNameWithStraightApostrophe() throws Exception {
+        assertEquals(new Name("O'Brien"), ParserUtil.parseName("O’Brien"));
+    }
+
+    @Test
     public void parsePhone_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parsePhone((String) null));
     }
