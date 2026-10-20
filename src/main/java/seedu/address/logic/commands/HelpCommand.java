@@ -47,6 +47,8 @@ public class HelpCommand extends Command {
                     "Shows this list of commands."),
             formatEntry(ClearCommand.COMMAND_WORD,
                     "Deletes all patients."),
+            formatEntry(BackupCommand.COMMAND_WORD,
+                    "Saves a copy of all patient data to data/backups."),
             formatEntry(ExitCommand.COMMAND_WORD,
                     "Exits the app."));
 
