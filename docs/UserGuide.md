@@ -29,13 +29,13 @@ MediConnect is a **desktop application for managing patient records and care inf
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
 
-   * `list` : Lists all patients.
+   * `list` : Lists all active patients.
 
    * `add n/John Tan ic/S1234567A dob/1990-05-14 p/91234567 a/Blk 123 Clementi Ave 3` : Adds a patient named `John Tan` to MediConnect.
 
    * `view 1` : Shows the full details of the 1st patient in the current list.
 
-   * `find John` : Lists all patients whose name contains `John`.
+   * `find John` : Lists all active patients whose name contains `John`.
 
    * `delete 1` : Deletes the 1st patient shown in the current list. Right after `find John`, this deletes `John Tan`.
 
@@ -237,9 +237,9 @@ For all three contact commands, `INDEX` must refer to a patient in the displayed
 returns `The contact index provided is invalid.` Missing, zero, negative, nonnumeric or extra indices give the
 command's usage. Validation failures leave patient data unchanged.
 
-### Listing all patients: `list`
+### Listing all active patients: `list`
 
-Shows a list of all patients in MediConnect.
+Shows a list of all active patients in MediConnect. Archived patients are not shown.
 
 Format: `list`
 
@@ -249,7 +249,7 @@ Not implemented in the MVP. The command returns `Edit command is not implemented
 
 ### Locating patients by name: `find`
 
-Finds patients whose names contain any of the given keywords.
+Finds active patients whose names contain any of the given keywords. Archived patients are not included.
 
 Format: `find KEYWORD [MORE_KEYWORDS]`
 
@@ -314,8 +314,8 @@ Lists the times at which medications are taken today, one line per dose, in the 
 
 Format: `due [INDEX]`
 
-* Without `INDEX`, `due` lists the doses of **all** patients in MediConnect, even if `find` is hiding some of them
-  from the patient list.
+* Without `INDEX`, `due` lists the doses of **all active** patients in MediConnect, even if `find` is hiding some of
+  them from the patient list. Archived patients are not included.
 * With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
   the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
   number (1, 2, 3, ...).
@@ -394,7 +394,7 @@ Format: `restore FILENAME`
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
-* After a restore, the list shows all restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+* After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.

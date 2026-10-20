@@ -26,13 +26,14 @@ public class Patient {
     private final List<String> allergens;
     private final List<String> careInstructions;
     private final List<Contact> contacts;
+    private final boolean archived;
 
     /**
      * Every field must be present and not null.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions) {
-        this(name, nric, dob, phone, address, medications, allergens, careInstructions, List.of());
+        this(name, nric, dob, phone, address, medications, allergens, careInstructions, List.of(), false);
     }
 
     /**
@@ -40,7 +41,7 @@ public class Patient {
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions,
-            List<Contact> contacts) {
+            List<Contact> contacts, boolean archived) {
         requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
         this.name = name;
         this.nric = nric;
@@ -51,6 +52,7 @@ public class Patient {
         this.allergens = List.copyOf(allergens);
         this.careInstructions = List.copyOf(careInstructions);
         this.contacts = List.copyOf(contacts);
+        this.archived = archived;
         verifyNoDuplicateContacts(this.contacts);
     }
 
@@ -111,11 +113,24 @@ public class Patient {
         return contacts;
     }
 
+    public boolean isArchived() {
+        return archived;
+    }
+
     /**
      * Returns a copy with replacement contacts, preserving every other field.
      */
     public Patient withContacts(List<Contact> contacts) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
+                archived);
+    }
+
+    /**
+     * Returns a copy with the requested archived state, preserving every other field.
+     */
+    public Patient withArchived(boolean archived) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
+                archived);
     }
 
     /**
@@ -154,13 +169,15 @@ public class Patient {
                 && medications.equals(otherPatient.medications)
                 && allergens.equals(otherPatient.allergens)
                 && careInstructions.equals(otherPatient.careInstructions)
-                && contacts.equals(otherPatient.contacts);
+                && contacts.equals(otherPatient.contacts)
+                && archived == otherPatient.archived;
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
+                archived);
     }
 
     @Override
@@ -175,6 +192,7 @@ public class Patient {
                 .add("allergens", allergens)
                 .add("careInstructions", careInstructions)
                 .add("contacts", contacts)
+                .add("archived", archived)
                 .toString();
     }
 

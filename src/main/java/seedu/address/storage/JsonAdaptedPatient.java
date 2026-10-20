@@ -32,6 +32,7 @@ class JsonAdaptedPatient {
     private final List<String> allergens = new ArrayList<>();
     private final List<String> careInstructions = new ArrayList<>();
     private final List<JsonAdaptedContact> contacts = new ArrayList<>();
+    private final boolean archived;
 
     /**
      * Constructs a {@code JsonAdaptedPatient} with the given patient details.
@@ -43,7 +44,8 @@ class JsonAdaptedPatient {
             @JsonProperty("medications") List<JsonAdaptedMedication> medications,
             @JsonProperty("allergens") List<String> allergens,
             @JsonProperty("careInstructions") List<String> careInstructions,
-            @JsonProperty("contacts") List<JsonAdaptedContact> contacts) {
+            @JsonProperty("contacts") List<JsonAdaptedContact> contacts,
+            @JsonProperty("archived") Boolean archived) {
         this.name = name;
         this.nric = nric;
         this.dob = dob;
@@ -61,6 +63,7 @@ class JsonAdaptedPatient {
         if (careInstructions != null) {
             this.careInstructions.addAll(careInstructions);
         }
+        this.archived = archived != null && archived;
     }
 
     /**
@@ -76,6 +79,7 @@ class JsonAdaptedPatient {
         allergens.addAll(source.getAllergens());
         careInstructions.addAll(source.getCareInstructions());
         source.getContacts().stream().map(JsonAdaptedContact::new).forEach(contacts::add);
+        archived = source.isArchived();
     }
 
     /**
@@ -142,7 +146,7 @@ class JsonAdaptedPatient {
 
         try {
             return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
-                    modelMedications, allergens, careInstructions, modelContacts);
+                    modelMedications, allergens, careInstructions, modelContacts, archived);
         } catch (IllegalArgumentException e) {
             throw new IllegalValueException(e.getMessage());
         } catch (NullPointerException e) {

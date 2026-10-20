@@ -21,7 +21,7 @@ public class PatientTest {
     @Test
     public void withContacts_replacement_preservesOtherFields() {
         Patient original = new PatientBuilder(ALICE).withMedications("Medication").withAllergens("Allergen")
-                .withCareInstructions("Instruction").build();
+                .withCareInstructions("Instruction").withArchived(true).build();
         Contact contact = GP;
         Patient updated = original.withContacts(List.of(contact));
         assertTrue(original.getContacts().isEmpty());
@@ -44,6 +44,21 @@ public class PatientTest {
         assertTrue(patient.getMedications().isEmpty());
         assertTrue(patient.getAllergens().isEmpty());
         assertTrue(patient.getCareInstructions().isEmpty());
+        assertFalse(patient.isArchived());
+    }
+
+    @Test
+    public void withArchived_replacementPreservesOtherFields() {
+        Medication medication = new Medication("Metformin");
+        Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Penicillin")
+                .withCareInstructions("Check blood sugar").withContacts(GP).build();
+
+        Patient archived = original.withArchived(true);
+
+        assertEquals(new PatientBuilder(original).withArchived(true).build(), archived);
+        assertTrue(archived.isArchived());
+        assertFalse(original.isArchived());
+        assertEquals(original, archived.withArchived(false));
     }
 
     @Test
@@ -86,6 +101,7 @@ public class PatientTest {
         assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withName("Other Name").build()));
         assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withMedications("Metformin")
                 .withAllergens("Penicillin").withCareInstructions("Rest").build()));
+        assertTrue(ALICE.isSamePatient(new PatientBuilder(ALICE).withArchived(true).build()));
     }
 
     @Test
@@ -104,13 +120,14 @@ public class PatientTest {
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withMedications("Metformin").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withAllergens("Penicillin").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withCareInstructions("Rest").build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withArchived(true).build());
     }
 
     @Test
     public void toStringMethod() {
         String expected = Patient.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", nric=" + ALICE.getNric() + ", dob=" + ALICE.getDob() + ", address=" + ALICE.getAddress()
-                + ", medications=[], allergens=[], careInstructions=[], contacts=[]}";
+                + ", medications=[], allergens=[], careInstructions=[], contacts=[], archived=false}";
         assertEquals(expected, ALICE.toString());
     }
 }
