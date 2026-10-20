@@ -314,7 +314,7 @@ If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows
 <box type="warning" seamless>
 
 **Caution:**
-`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, do not run `backup` or any other command, not even `exit`, because the next command replaces that file. Instead, close MediConnect with the window's close button or **File** > **Exit**, then copy `data/mediconnect.json` somewhere safe by hand.
+`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, a backup made then has no patients. Your original data is in the recovery copy named in the startup warning. To recover it, see [Editing the data file](#editing-the-data-file).
 </box>
 
 <box type="tip" seamless>
@@ -331,6 +331,7 @@ Format: `restore FILENAME`
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
+* MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
 * After a restore, the list shows all restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
 
 Examples:
