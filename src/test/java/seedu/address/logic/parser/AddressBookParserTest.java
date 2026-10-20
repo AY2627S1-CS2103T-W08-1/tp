@@ -34,6 +34,7 @@ import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.EditPatientDescriptorBuilder;
 import seedu.address.testutil.PatientBuilder;
 import seedu.address.testutil.PatientUtil;
 
@@ -96,9 +97,10 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_edit_throwsNotImplemented() {
-        assertThrows(ParseException.class, EditCommand.MESSAGE_NOT_IMPLEMENTED, () ->
-                parser.parseCommand("edit 1 n/Amy Bee"));
+    public void parseCommand_edit() throws Exception {
+        EditCommand command = (EditCommand) parser.parseCommand("edit 1 n/Amy Bee");
+        assertEquals(new EditCommand(INDEX_FIRST_PATIENT,
+                new EditPatientDescriptorBuilder().withName("Amy Bee").build()), command);
     }
 
     @Test

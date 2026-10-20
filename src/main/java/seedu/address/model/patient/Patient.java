@@ -135,6 +135,14 @@ public class Patient {
     }
 
     /**
+     * Returns a copy with replacement core details, preserving every care-related field and state.
+     */
+    public Patient withDetails(Name name, Nric nric, Dob dob, Phone phone, Address address) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
+                archived);
+    }
+
+    /**
      * Returns a copy with replacement contacts, preserving every other field.
      */
     public Patient withContacts(List<Contact> contacts) {

@@ -59,6 +59,7 @@ public class HelpCommandTest {
     private static Map<String, Class<? extends Command>> createExpectedCommands() {
         Map<String, Class<? extends Command>> commands = new LinkedHashMap<>();
         commands.put(AddCommand.COMMAND_WORD, AddCommand.class);
+        commands.put(EditCommand.COMMAND_WORD, EditCommand.class);
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
@@ -152,7 +153,8 @@ public class HelpCommandTest {
 
     @Test
     public void commandSummary_indexCommands_takeIndex() {
-        for (String commandWord : List.of(DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
+        for (String commandWord : List.of(EditCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD,
+                ViewCommand.COMMAND_WORD,
                 AddCareCommand.COMMAND_WORD, DeleteAllergyCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
@@ -174,7 +176,6 @@ public class HelpCommandTest {
         for (String leftover : List.of("person", "address book", "t/tag", "e/email")) {
             assertFalse(summary.contains(leftover), "Summary should not mention: " + leftover);
         }
-        assertFalse(getLines().stream().anyMatch(line -> line.startsWith(EditCommand.COMMAND_WORD + " ")));
     }
 
     @Test
