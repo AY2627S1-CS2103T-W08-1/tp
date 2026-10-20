@@ -104,7 +104,10 @@ public class ExportCommandTest {
                 "1. Penicillin",
                 "",
                 "Care Instructions",
-                "1. Check blood sugar");
+                "1. Check blood sugar",
+                "",
+                "Contacts",
+                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning");
 
         assertCommandSuccess(createExportCommand(INDEX_DANIEL), model, getExpectedSuccessMessage(DANIEL, expectedFile),
                 createTypicalModel());
@@ -117,7 +120,7 @@ public class ExportCommandTest {
 
         List<String> lines = Files.readAllLines(temporaryFolder.resolve("S0000001A.txt"), StandardCharsets.UTF_8);
         assertEquals(getExpectedRecord(ALICE), lines);
-        assertEquals(3, Collections.frequency(lines, PatientFormatter.NONE_RECORDED));
+        assertEquals(4, Collections.frequency(lines, PatientFormatter.NONE_RECORDED));
     }
 
     @Test
