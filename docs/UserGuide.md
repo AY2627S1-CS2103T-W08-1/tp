@@ -175,6 +175,68 @@ Other errors are reported as follows:
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 
+### Adding a contact: `addcontact`
+
+Adds one contact to the patient at `INDEX` in the displayed patient list.
+
+Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
+
+* Name, role and phone are required. Each prefix can appear only once; fields can appear in any order.
+* Names are nonblank free text, so both people and organisations such as `Tan & Partners Clinic` are supported.
+  Leading/trailing whitespace is removed and repeated spaces in a name become one.
+* Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
+  other roles are allowed.
+* Contact phones can contain digits, spaces, `+` and `-`, with at least three digits. They use different rules
+  from patient phones so overseas and clinic numbers are supported. Formatting is preserved after trimming.
+* The note is optional. An omitted or empty `nt/` creates a contact without a note.
+  Surrounding spaces are removed from notes entered through commands.
+* A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
+  already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
+  country codes are not inferred. The same contact can belong to different patients.
+* Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
+  including standalone `s/o`, `d/o` and `c/o`, are rejected.
+  Text matching a recognised prefix after a space starts another field, even inside a note.
+* Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
+  the panel updates immediately. Existing care information is preserved.
+
+Example: `addcontact 1 n/Lim & Partners Clinic r/GP p/+65 6123-4567 nt/Call in the morning`
+
+For patient `Alex Yeoh`, this returns:
+`Added contact for Alex Yeoh: Lim & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`
+
+Blank names/roles return `Contact name cannot be blank.` or `Contact role cannot be blank.`
+An invalid phone returns `Contact phone must contain at least 3 digits and only digits, spaces, + and -.`
+A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure.
+
+### Editing a contact: `editcontact`
+
+Format: `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]`
+
+* `INDEX` is the patient's index in the displayed list; `CONTACT_INDEX` is its contact number in the detail panel.
+  Both indices must be positive integers.
+* Supply at least one field. Omitted fields keep their values; `nt/` with no value clears the note.
+* The same field and duplicate rules as `addcontact` apply. An edit that creates a duplicate is rejected.
+  Editing a contact to its existing values is allowed. Its list position stays the same.
+* With no fields, the error is `Specify at least one contact field to edit.`
+
+Example: `editcontact 1 1 nt/Call after lunch`
+
+Success begins with `Updated contact for NAME:` followed by the updated contact's name, role, phone and any note.
+
+### Deleting a contact: `deletecontact`
+
+Format: `deletecontact INDEX CONTACT_INDEX`
+
+Removes that contact and reports `Deleted contact for NAME:` followed by the removed contact's details.
+Remaining contacts are renumbered. Other patient details are unchanged.
+
+Example: `deletecontact 1 2`
+
+For all three contact commands, `INDEX` must refer to a patient in the displayed list; otherwise the error is
+`The patient index provided is invalid.` A contact number past the end, including when there are no contacts,
+returns `The contact index provided is invalid.` Missing, zero, negative, nonnumeric or extra indices give the
+command's usage. Validation failures leave patient data unchanged.
+
 ### Listing all patients: `list`
 
 Shows a list of all patients in MediConnect.
@@ -225,7 +287,7 @@ Format: `view INDEX`
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, and care instructions. Each list is numbered (`1.`, `2.`, ...), one entry per line.
+  medications, allergens, care instructions and contacts. Each list is numbered (`1.`, `2.`, ...), one entry per line.
   A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
@@ -410,6 +472,9 @@ Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Add contact** | `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]` <br> e.g., `addcontact 1 n/Dr Tan r/GP p/+65 6123-4567`
+**Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
+**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
 **Backup**        | `backup`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`

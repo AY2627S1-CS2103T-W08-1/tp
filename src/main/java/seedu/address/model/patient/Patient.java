@@ -1,5 +1,6 @@
 package seedu.address.model.patient;
 
+import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.List;
@@ -24,13 +25,23 @@ public class Patient {
     private final List<Medication> medications;
     private final List<String> allergens;
     private final List<String> careInstructions;
+    private final List<Contact> contacts;
 
     /**
      * Every field must be present and not null.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions) {
-        requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions);
+        this(name, nric, dob, phone, address, medications, allergens, careInstructions, List.of());
+    }
+
+    /**
+     * Creates a patient with contacts in the order added. Duplicate contact identities are rejected.
+     */
+    public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
+            List<Medication> medications, List<String> allergens, List<String> careInstructions,
+            List<Contact> contacts) {
+        requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
         this.name = name;
         this.nric = nric;
         this.dob = dob;
@@ -39,6 +50,8 @@ public class Patient {
         this.medications = List.copyOf(medications);
         this.allergens = List.copyOf(allergens);
         this.careInstructions = List.copyOf(careInstructions);
+        this.contacts = List.copyOf(contacts);
+        verifyNoDuplicateContacts(this.contacts);
     }
 
     /**
@@ -46,6 +59,17 @@ public class Patient {
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address) {
         this(name, nric, dob, phone, address, List.of(), List.of(), List.of());
+    }
+
+    /**
+     * Rejects contacts with duplicate name-and-phone identities.
+     */
+    private static void verifyNoDuplicateContacts(List<Contact> contacts) {
+        for (int i = 0; i < contacts.size(); i++) {
+            Contact contact = contacts.get(i);
+            checkArgument(contacts.subList(0, i).stream().noneMatch(contact::isSameContact),
+                    Contact.MESSAGE_DUPLICATE);
+        }
     }
 
     public Name getName() {
@@ -78,6 +102,20 @@ public class Patient {
 
     public List<String> getCareInstructions() {
         return careInstructions;
+    }
+
+    /**
+     * Returns the immutable contacts in insertion order.
+     */
+    public List<Contact> getContacts() {
+        return contacts;
+    }
+
+    /**
+     * Returns a copy with replacement contacts, preserving every other field.
+     */
+    public Patient withContacts(List<Contact> contacts) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
     }
 
     /**
@@ -115,13 +153,14 @@ public class Patient {
                 && address.equals(otherPatient.address)
                 && medications.equals(otherPatient.medications)
                 && allergens.equals(otherPatient.allergens)
-                && careInstructions.equals(otherPatient.careInstructions);
+                && careInstructions.equals(otherPatient.careInstructions)
+                && contacts.equals(otherPatient.contacts);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions);
+        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
     }
 
     @Override
@@ -135,6 +174,7 @@ public class Patient {
                 .add("medications", medications)
                 .add("allergens", allergens)
                 .add("careInstructions", careInstructions)
+                .add("contacts", contacts)
                 .toString();
     }
 

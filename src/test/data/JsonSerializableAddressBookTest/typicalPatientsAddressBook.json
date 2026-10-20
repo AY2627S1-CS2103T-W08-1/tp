@@ -29,7 +29,13 @@
       "times" : [ "08:00", "20:00" ]
     } ],
     "allergens" : [ "Penicillin" ],
-    "careInstructions" : [ "Check blood sugar" ]
+    "careInstructions" : [ "Check blood sugar" ],
+    "contacts" : [ {
+      "name" : "Tan & Partners Clinic",
+      "role" : "GP",
+      "phone" : "+65 6123-4567",
+      "note" : "Call in the morning"
+    } ]
   }, {
     "name" : "Elle Meyer",
     "phone" : "94822240",
