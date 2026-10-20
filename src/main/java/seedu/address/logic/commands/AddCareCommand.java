@@ -128,7 +128,7 @@ public class AddCareCommand extends Command {
             }
             seenInCommand.add(trimmedEntry);
             existingEntries.add(trimmedEntry);
-            addedEntries.add(trimmedEntry);
+            addedEntries.add(entryType + ": " + trimmedEntry);
         }
     }
 

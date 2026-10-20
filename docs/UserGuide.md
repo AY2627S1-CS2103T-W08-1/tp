@@ -149,7 +149,8 @@ Examples:
 * `addcare 2 al/Penicillin al/Shellfish`
 * `addcare 1 ci/Check blood sugar before breakfast`
 
-A successful command returns `Updated care info for NAME. Added: ITEMS.`
+A successful command returns `Updated care info for NAME. Added: ITEMS.` Each item is labeled by category while
+keeping the category and input order, e.g., `Medication: Aspirin, Allergen: Aspirin, Care instruction: Aspirin`.
 
 Each skipped duplicate is named in the feedback. For example:
 
