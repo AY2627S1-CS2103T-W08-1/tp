@@ -20,6 +20,7 @@ import seedu.address.model.patient.Patient;
 class JsonSerializableAddressBook {
 
     public static final String MESSAGE_DUPLICATE_PATIENT = "Patients list contains duplicate patient(s).";
+    public static final String MESSAGE_NULL_PATIENT = "Patients list contains an empty patient entry.";
 
     @JsonProperty("persons")
     private final List<JsonAdaptedPatient> patients = new ArrayList<>();
@@ -49,6 +50,9 @@ class JsonSerializableAddressBook {
     public AddressBook toModelType() throws IllegalValueException {
         AddressBook addressBook = new AddressBook();
         for (JsonAdaptedPatient jsonAdaptedPatient : patients) {
+            if (jsonAdaptedPatient == null) {
+                throw new IllegalValueException(MESSAGE_NULL_PATIENT);
+            }
             Patient patient = jsonAdaptedPatient.toModelType();
             if (addressBook.hasPatient(patient)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PATIENT);
