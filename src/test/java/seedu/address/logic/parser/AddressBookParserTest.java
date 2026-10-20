@@ -24,6 +24,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RestoreCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
@@ -66,6 +67,13 @@ public class AddressBookParserTest {
     public void parseCommand_backup() throws Exception {
         assertTrue(parser.parseCommand(BackupCommand.COMMAND_WORD) instanceof BackupCommand);
         assertTrue(parser.parseCommand(BackupCommand.COMMAND_WORD + " 3") instanceof BackupCommand);
+    }
+
+    @Test
+    public void parseCommand_restore() throws Exception {
+        RestoreCommand command = (RestoreCommand) parser.parseCommand(
+                RestoreCommand.COMMAND_WORD + " mediconnect-20261020-083015.json");
+        assertEquals(new RestoreCommand("mediconnect-20261020-083015.json"), command);
     }
 
     @Test

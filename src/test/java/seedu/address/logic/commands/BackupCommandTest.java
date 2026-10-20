@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.io.IOException;
@@ -136,7 +136,7 @@ public class BackupCommandTest {
 
     @Test
     public void execute_relativeBackupFolder_showsFullPath() {
-        Path relativeBackupDir = relativeToWorkingDir(temporaryFolder);
+        Path relativeBackupDir = toPathRelativeToWorkingDir(temporaryFolder);
 
         assertCommandSucceedsAndCreates(new BackupCommand(FIXED_CLOCK, relativeBackupDir),
                 temporaryFolder.resolve(EXPECTED_FILE_NAME));
@@ -145,7 +145,7 @@ public class BackupCommandTest {
     @Test
     public void execute_relativeBackupFolderCannotBeCreated_showsFullPathInError() throws Exception {
         Path backupDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("backups");
-        BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, relativeToWorkingDir(backupDir));
+        BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, toPathRelativeToWorkingDir(backupDir));
 
         String message = Assertions.assertThrows(CommandException.class, () -> backupCommand.execute(model))
                 .getMessage();
@@ -226,6 +226,28 @@ public class BackupCommandTest {
         } finally {
             backupDir.toFile().setWritable(true);
         }
+    }
+
+    @Test
+    public void saveBackup_nullAddressBook_throwsNullPointerException() {
+        BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, temporaryFolder);
+
+        assertThrows(NullPointerException.class, () -> backupCommand.saveBackup(null));
+    }
+
+    @Test
+    public void saveBackup_addressBook_savesFileAndReturnsItsPath() throws Exception {
+        Path backupFile = new BackupCommand(FIXED_CLOCK, temporaryFolder).saveBackup(getTypicalAddressBook());
+
+        assertEquals(temporaryFolder.resolve(EXPECTED_FILE_NAME), backupFile);
+        assertEquals(getTypicalAddressBook(), readBackup(backupFile));
+    }
+
+    @Test
+    public void saveBackup_folderCannotBeCreated_throwsIoException() throws Exception {
+        Path backupDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("backups");
+
+        assertThrows(IOException.class, () -> new BackupCommand(FIXED_CLOCK, backupDir).saveBackup(new AddressBook()));
     }
 
     @Test
@@ -332,18 +354,6 @@ public class BackupCommandTest {
 
         assertCommandSuccess(backupCommand, model, expectedMessage, expectedModel);
         assertTrue(Files.exists(expectedFile));
-    }
-
-    /**
-     * Returns {@code path} relative to the working directory, and skips the test if there is no such path.
-     */
-    private static Path relativeToWorkingDir(Path path) {
-        Path workingDir = Paths.get("").toAbsolutePath();
-        // on Windows the temporary folder can be on another drive, where no relative path exists
-        assumeTrue(workingDir.getRoot().equals(path.getRoot()));
-        Path relativePath = workingDir.relativize(path);
-        assertFalse(relativePath.isAbsolute());
-        return relativePath;
     }
 
     /**
