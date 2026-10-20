@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BOB;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,25 @@ import org.junit.jupiter.api.Test;
 import seedu.address.testutil.PatientBuilder;
 
 public class PatientTest {
+
+    @Test
+    public void withAllergens_replacement_preservesOtherFields() {
+        Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
+        Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
+                .withCareInstructions("Instruction").withContacts(GP).build();
+        List<String> allergens = new ArrayList<>(List.of("Latex", "Shellfish"));
+
+        Patient updated = original.withAllergens(allergens);
+
+        assertEquals(new PatientBuilder(original).withAllergens("Latex", "Shellfish").build(), updated);
+        assertFalse(original.equals(updated));
+        assertEquals(List.of(medication), updated.getMedications());
+        assertEquals(List.of(GP), updated.getContacts());
+        assertThrows(UnsupportedOperationException.class, () -> updated.getAllergens().clear());
+        assertThrows(NullPointerException.class, () -> original.withAllergens(null));
+        allergens.clear();
+        assertEquals(List.of("Latex", "Shellfish"), updated.getAllergens());
+    }
 
     @Test
     public void withContacts_replacement_preservesOtherFields() {

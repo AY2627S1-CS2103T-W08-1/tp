@@ -16,6 +16,7 @@ public class Messages {
             "Unrecognized parameter: %1$s. Please check the command format.";
     public static final String MESSAGE_PUNCTUATED_SLASH_TOKEN =
             "Unrecognized word: '%1$s'. Write %2$s as a separate word without punctuation.";
+    public static final String MESSAGE_INVALID_ALLERGEN_INDEX = "The allergen index provided is invalid.";
     public static final String MESSAGE_INVALID_CONTACT_INDEX = "The contact index provided is invalid.";
     public static final String MESSAGE_UNKNOWN_COMMAND = "Unknown command.";
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format!\n%1$s";

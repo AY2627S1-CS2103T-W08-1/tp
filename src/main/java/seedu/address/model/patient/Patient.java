@@ -100,6 +100,13 @@ public class Patient {
         return allergens;
     }
 
+    /**
+     * Returns a copy with replacement allergens, preserving every other field.
+     */
+    public Patient withAllergens(List<String> allergens) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+    }
+
     public List<String> getCareInstructions() {
         return careInstructions;
     }
