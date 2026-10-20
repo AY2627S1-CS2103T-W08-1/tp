@@ -6,6 +6,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
+import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
 import java.time.Clock;
 import java.util.List;
@@ -18,6 +19,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddContactCommand;
 import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.DeleteAllergyCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteContactCommand;
 import seedu.address.logic.commands.DueCommand;
@@ -84,6 +86,13 @@ public class AddressBookParserTest {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " " + INDEX_FIRST_PATIENT.getOneBased());
         assertEquals(new DeleteCommand(INDEX_FIRST_PATIENT), command);
+    }
+
+    @Test
+    public void parseCommand_deleteAllergy() throws Exception {
+        DeleteAllergyCommand command = (DeleteAllergyCommand) parser.parseCommand(
+                DeleteAllergyCommand.COMMAND_WORD + " 1 2");
+        assertEquals(new DeleteAllergyCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), command);
     }
 
     @Test

@@ -51,6 +51,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 **Notes about the command format:**<br>
 
+* Pressing Enter when the command box is empty or contains only whitespace does nothing.
+  The text in the command box and the previous result remain unchanged.
+
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
 
@@ -127,7 +130,7 @@ Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
-Address | `a/`   | Any value, but not blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Address | `a/`   | Cannot be blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
@@ -153,7 +156,8 @@ Examples:
 * `addcare 2 al/Penicillin al/Shellfish`
 * `addcare 1 ci/Check blood sugar before breakfast`
 
-A successful command returns `Updated care info for NAME. Added: ITEMS.`
+A successful command returns `Updated care info for NAME. Added: ITEMS.` Each item is labeled by category while
+keeping the category and input order, e.g., `Medication: Aspirin, Allergen: Aspirin, Care instruction: Aspirin`.
 
 Each skipped duplicate is named in the feedback. For example:
 
@@ -174,6 +178,27 @@ Other errors are reported as follows:
   `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
+
+### Deleting an allergen: `deleteallergy`
+
+Removes one allergen from the patient at `INDEX` in the displayed patient list.
+
+Format: `deleteallergy INDEX ALLERGY_INDEX`
+
+* `ALLERGY_INDEX` is the allergen number shown in that patient's detail panel. Both indices must be positive
+  integers.
+* The removed allergen is reported in the success message. Remaining allergens are renumbered immediately in the
+  detail panel. All other patient details are unchanged.
+
+Example: `deleteallergy 1 2`
+
+For patient `Alex Yeoh`, if allergen 2 is `Shellfish`, this returns
+`Deleted allergen for Alex Yeoh: Shellfish`.
+
+An `INDEX` outside the displayed patient list returns `The patient index provided is invalid.` An
+`ALLERGY_INDEX` past the end of the patient's allergens, including when none are recorded, returns
+`The allergen index provided is invalid.` Missing, zero, negative, nonnumeric or extra indices return
+`Invalid command format!` followed by the command usage. Validation failures leave patient data unchanged.
 
 ### Adding a contact: `addcontact`
 
@@ -453,6 +478,7 @@ Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
 **Add contact** | `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]` <br> e.g., `addcontact 1 n/Dr Tan r/GP p/+65 6123-4567`
 **Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
 **Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
