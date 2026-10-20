@@ -122,6 +122,7 @@
         "adding-a-patient-add": "Adding a patient: add",
         "field-formats": "Field formats",
         "adding-care-information-addcare": "Adding care information: addcare",
+        "deleting-an-allergen-deleteallergy": "Deleting an allergen: deleteallergy",
         "adding-a-contact-addcontact": "Adding a contact: addcontact",
         "editing-a-contact-editcontact": "Editing a contact: editcontact",
         "deleting-a-contact-deletecontact": "Deleting a contact: deletecontact",
