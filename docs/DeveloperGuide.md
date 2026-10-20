@@ -681,6 +681,12 @@ testers are expected to do more *exploratory* testing.
    1. Test case: Close the window using the window's close button.<br>
       Expected: The app window closes. The window size and location are retained on the next launch.
 
+### Adding a patient with punctuation after a slash word
+
+1. Test case: `add n/Ben s/o, Ng ic/S1111111B dob/1950-01-01 p/91111111 a/Blk 1`<br>
+   Expected: No patient is added. The status message shows
+   `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
+
 ### Listing patients
 
 1. Listing patients when there is data
