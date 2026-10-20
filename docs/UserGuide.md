@@ -98,7 +98,7 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   Addresses can include numeric slash text such as `21/3` and URLs.
 * `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
   It is not case-sensitive and is stored in uppercase.
-* `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, and cannot be in the future.
+* `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, from `1900-01-01` to today.
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
@@ -124,7 +124,7 @@ Field   | Prefix | Format | Example
 --------|--------|--------|--------
 Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
-DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, not in the future. | `1950-04-12`
+DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
 Address | `a/`   | Any value, but not blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
@@ -142,6 +142,7 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
 * Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
   same command are still added.
+* A medication added with `med/` has no daily times yet.
 
 Examples:
 
@@ -221,7 +222,9 @@ Format: `view INDEX`
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, and care instructions, one entry per line. An empty list shows `None recorded`.
+  medications, allergens, and care instructions. Each list is numbered (`1.`, `2.`, ...), one entry per line.
+  A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+  An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back

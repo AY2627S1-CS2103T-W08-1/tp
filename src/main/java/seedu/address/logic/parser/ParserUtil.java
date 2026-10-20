@@ -2,11 +2,14 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.LocalTime;
+
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Phone;
@@ -75,6 +78,22 @@ public class ParserUtil {
             throw new ParseException(Dob.MESSAGE_CONSTRAINTS);
         }
         return new Dob(trimmedDob);
+    }
+
+    /**
+     * Parses a {@code String time} in 24-hour HH:MM format into a {@code LocalTime}.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code time} is not exactly two digits, a colon and two digits,
+     *     or is not a valid time of day.
+     */
+    public static LocalTime parseTime(String time) throws ParseException {
+        requireNonNull(time);
+        String trimmedTime = time.trim();
+        if (!Medication.isValidTime(trimmedTime)) {
+            throw new ParseException(Medication.MESSAGE_TIME_CONSTRAINTS);
+        }
+        return Medication.toTime(trimmedTime);
     }
 
     /**
