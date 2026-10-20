@@ -5,6 +5,8 @@ import static seedu.address.storage.JsonAdaptedPatient.MISSING_FIELD_MESSAGE_FOR
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 
+import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Phone;
@@ -130,5 +133,34 @@ public class JsonAdaptedPatientTest {
         JsonAdaptedPatient missingLists = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, null, null, null);
         assertEquals(BENSON, missingLists.toModelType());
+    }
+
+    @Test
+    public void toModelType_medicationWithTimes_roundTrips() throws Exception {
+        Medication medication = new Medication("Metformin 500mg", List.of(LocalTime.of(20, 0), LocalTime.of(8, 0)));
+        var patient = new PatientBuilder(BENSON).withMedications(medication).build();
+        assertEquals(patient, new JsonAdaptedPatient(patient).toModelType());
+    }
+
+    @Test
+    public void toModelType_medicationWithMissingTimes_loadsWithNoTimes() throws Exception {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(new JsonAdaptedMedication("Metformin", null)), null, null);
+        assertEquals(new PatientBuilder(BENSON).withMedications("Metformin").build(), patient.toModelType());
+    }
+
+    @Test
+    public void toModelType_nullMedicationEntry_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, Arrays.asList((JsonAdaptedMedication) null), List.of(), List.of());
+        assertThrows(IllegalValueException.class, "Medication entries must not be null.", patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_invalidMedication_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(new JsonAdaptedMedication(" ", List.of())), List.of(), List.of());
+        assertThrows(IllegalValueException.class, Medication.MESSAGE_DESCRIPTION_CONSTRAINTS,
+                patient::toModelType);
     }
 }
