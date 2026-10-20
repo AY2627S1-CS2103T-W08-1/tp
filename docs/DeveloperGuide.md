@@ -297,9 +297,9 @@ Both commands have a second constructor that takes a `java.time.Clock` and the b
 
 * **Alternative 1 (current choice):** Save the patient data currently loaded in MediConnect, through `JsonAddressBookStorage`.
   * Pros: Needs no changes to `LogicManager` or `Storage`, and every backup holds valid data in the current format.
-  * Cons: If `data/mediconnect.json` could not be loaded at startup, a backup holds the empty data MediConnect started with, not the unreadable file.
+  * Cons: If `data/mediconnect.json` could not be loaded at startup, a backup holds the empty data MediConnect started with, not the unreadable file. `MainApp` already keeps that file as a recovery copy at startup.
 * **Alternative 2:** Copy `data/mediconnect.json` byte for byte.
-  * Pros: An unreadable data file is kept, for repair by hand.
+  * Pros: An unreadable data file is kept, for repair by hand, although the startup recovery copy already does this.
   * Cons: The path of the data file would have to be passed from `Storage` through `LogicManager` to the command, and a backup could hold data that `restore` then rejects.
 
 ### \[Proposed\] Undo/redo feature
