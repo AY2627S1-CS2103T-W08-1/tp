@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -81,7 +82,7 @@ public class PatientFormatter {
         lines.addAll(formatDetails(patient));
 
         for (Map.Entry<String, List<String>> careList : List.of(
-                Map.entry(HEADING_MEDICATIONS, patient.getMedications()),
+                Map.entry(HEADING_MEDICATIONS, patient.getMedications().stream().map(Medication::toString).toList()),
                 Map.entry(HEADING_ALLERGENS, patient.getAllergens()),
                 Map.entry(HEADING_CARE_INSTRUCTIONS, patient.getCareInstructions()))) {
             lines.add("");
