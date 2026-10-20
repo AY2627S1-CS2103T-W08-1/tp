@@ -8,6 +8,7 @@ import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
 import java.awt.GraphicsEnvironment;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
 
@@ -111,7 +113,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatient_careEntries_showsOneWrappingRowPerEntryInOrder() {
+    public void viewedPatient_careEntries_showsOneNumberedWrappingRowPerEntryInOrder() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder()
                 .withMedications("Metformin 500mg", "Amlodipine 5mg")
@@ -123,8 +125,32 @@ public class PatientDetailPanelTest {
         assertEquals(List.of("Penicillin"), getEntryTexts(content, "#allergens"));
         assertEquals(List.of("Check blood sugar before breakfast"), getEntryTexts(content, "#careInstructions"));
 
+        assertEquals(List.of("1.", "2."), getNumberTexts(content, "#medications"));
+        assertEquals(List.of("1."), getNumberTexts(content, "#allergens"));
+        assertEquals(List.of("1."), getNumberTexts(content, "#careInstructions"));
+
         HBox row = (HBox) ((VBox) lookup(content, "#medications")).getChildren().get(0);
         assertTrue(((Label) row.getChildren().get(1)).isWrapText());
+    }
+
+    @Test
+    public void viewedPatient_medicationsWithTimes_showsTimesBesideDescription() {
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder()
+                .withMedications(new Medication("Metformin 500mg", List.of(LocalTime.of(20, 0), LocalTime.of(8, 0))),
+                        new Medication("Aspirin"))
+                .build());
+
+        assertEquals(List.of("Metformin 500mg (08:00, 20:00)", "Aspirin"), getEntryTexts(content, "#medications"));
+    }
+
+    @Test
+    public void viewedPatient_manyEntries_numbersContinueInOrder() {
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+                .build());
+
+        assertEquals("10.", getNumberTexts(content, "#allergens").get(9));
     }
 
     @Test
@@ -161,7 +187,16 @@ public class PatientDetailPanelTest {
     }
 
     /**
-     * Returns the entry texts shown in the care list with the given {@code selector}, without their bullets.
+     * Returns the numbers shown beside the entries of the care list with the given {@code selector}.
+     */
+    private static List<String> getNumberTexts(VBox content, String selector) {
+        return ((VBox) lookup(content, selector)).getChildren().stream()
+                .map(row -> ((Label) ((HBox) row).getChildren().get(0)).getText())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the entry texts shown in the care list with the given {@code selector}, without their numbers.
      */
     private static List<String> getEntryTexts(VBox content, String selector) {
         return ((VBox) lookup(content, selector)).getChildren().stream()

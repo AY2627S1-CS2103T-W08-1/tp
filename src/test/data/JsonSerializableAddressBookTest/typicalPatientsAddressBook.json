@@ -24,7 +24,10 @@
     "nric" : "S0000004A",
     "address" : "10th street",
     "dob" : "1950-01-01",
-    "medications" : [ "Metformin" ],
+    "medications" : [ {
+      "description" : "Metformin",
+      "times" : [ "08:00", "20:00" ]
+    } ],
     "allergens" : [ "Penicillin" ],
     "careInstructions" : [ "Check blood sugar" ]
   }, {

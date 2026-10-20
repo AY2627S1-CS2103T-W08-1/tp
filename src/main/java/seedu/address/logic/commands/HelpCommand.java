@@ -41,12 +41,16 @@ public class HelpCommand extends Command {
                     "Adds care information (at least one entry) to the patient at INDEX."),
             formatEntry(ViewCommand.COMMAND_WORD + " INDEX",
                     "Shows the full details of the patient at INDEX."),
+            formatEntry(DueCommand.COMMAND_WORD + " [INDEX]",
+                    "Lists today's medication times of all patients, or of the patient at INDEX."),
             formatEntry(FindCommand.COMMAND_WORD + " KEYWORD [MORE_KEYWORDS]...",
                     "Finds patients whose names contain any of the keywords (case-insensitive)."),
             formatEntry(COMMAND_WORD,
                     "Shows this list of commands."),
             formatEntry(ClearCommand.COMMAND_WORD,
                     "Deletes all patients."),
+            formatEntry(BackupCommand.COMMAND_WORD,
+                    "Saves a copy of all patient data to data/backups."),
             formatEntry(ExitCommand.COMMAND_WORD,
                     "Exits the app."));
 

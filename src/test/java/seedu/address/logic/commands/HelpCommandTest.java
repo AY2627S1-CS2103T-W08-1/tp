@@ -58,9 +58,11 @@ public class HelpCommandTest {
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
+        commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
         commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
+        commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
         return Collections.unmodifiableMap(commands);
     }
