@@ -10,14 +10,21 @@ import java.util.regex.Pattern;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddContactCommand;
+import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.DeleteAllergyCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteContactCommand;
+import seedu.address.logic.commands.DueCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.EditContactCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RestoreCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -54,11 +61,18 @@ public class AddressBookParser {
         logger.fine("Command word: " + commandWord + "; Arguments: " + arguments);
 
         return switch (commandWord) {
+            case AddContactCommand.COMMAND_WORD -> new AddContactCommandParser().parse(arguments);
+            case EditContactCommand.COMMAND_WORD -> new EditContactCommandParser().parse(arguments);
+            case DeleteContactCommand.COMMAND_WORD -> new DeleteContactCommandParser().parse(arguments);
             case AddCommand.COMMAND_WORD -> new AddCommandParser().parse(arguments);
             case AddCareCommand.COMMAND_WORD -> new AddCareCommandParser().parse(arguments);
+            case DeleteAllergyCommand.COMMAND_WORD -> new DeleteAllergyCommandParser().parse(arguments);
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
+            case DueCommand.COMMAND_WORD -> new DueCommandParser().parse(arguments);
             case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
             case ClearCommand.COMMAND_WORD -> new ClearCommand();
+            case BackupCommand.COMMAND_WORD -> new BackupCommand();
+            case RestoreCommand.COMMAND_WORD -> new RestoreCommandParser().parse(arguments);
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
             case ListCommand.COMMAND_WORD -> new ListCommand();
             case ViewCommand.COMMAND_WORD -> new ViewCommandParser().parse(arguments);

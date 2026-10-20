@@ -138,10 +138,11 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus three
-`List<String>` care lists: medications, allergens and care instructions. The care lists default to empty and are
-defensively copied with `List.copyOf`, so callers cannot modify them through the getters. Updating a patient creates
-a replacement `Patient`, which the model stores using `setPatient`.
+**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus a
+`List<Medication>` medication list, `List<String>` allergen and care instruction lists, and a `List<Contact>`
+contact list.
+These lists default to empty and are defensively copied with `List.copyOf`, so callers cannot modify them through
+the getters. Updating a patient creates a replacement `Patient`, which the model stores using `setPatient`.
 
 **Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
 is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
@@ -161,7 +162,19 @@ The `Storage` component,
 
 The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
 
-Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address as strings, and the medications, allergens and care instructions as lists of strings. The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read, `JsonAdaptedPatient#toModelType()` checks every field with the same rules as the `add` command. If any patient is invalid, or two patients have the same NRIC, the whole file is rejected and MediConnect starts with no patients.
+Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address
+as strings, medications as a list of `JsonAdaptedMedication` objects, allergens and care instructions as lists of
+strings, and contacts as a list of `JsonAdaptedContact` objects. Each contact stores its name, role, phone and note.
+The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
+`JsonAdaptedPatient#toModelType()` validates patient
+fields and converts contacts using their model constraints. If any patient or contact is invalid, two patients share
+an NRIC, or a patient has duplicate contacts, the whole file is rejected.
+
+On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
+`mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
+existing recovery file is never overwritten. The UI shows its absolute path in a startup warning, and later commands
+save normally to the original data path. If preservation fails, the exception stops initialization before commands
+can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
 ### Common classes
 
@@ -255,6 +268,32 @@ is a duplicate, the command fails without changing the patient.
 * **Alternative 2:** Reject the entire command when any duplicate is found.
   * Pros: The operation has simpler all-or-nothing behavior.
   * Cons: One duplicate prevents all valid new entries in the same command from being added.
+
+### Contact management
+
+`Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
+Names are nonblank free text because contacts can be people or organisations, such as `Tan & Partners Clinic`.
+They deliberately do not use patient `Name` constraints. Contact phones likewise have their own rules so clinic
+and international numbers work without weakening patient-phone validation.
+
+`Patient` keeps an immutable contact list in insertion order. `withContacts` replaces only that list; `addcare`
+copies it when rebuilding a patient. Contact identity compares names ignoring case and collapsed spaces, and
+phones ignoring spaces and hyphens, while retaining `+`. The model rejects duplicate identities within a patient.
+
+The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit reject unknown and repeated
+prefixes without slash-word exceptions. Notes from commands use `trim()`; stored notes are
+preserved when loading. Edit uses `Optional<String>` to distinguish
+an omitted note (preserve) from a present empty note (clear). Commands use displayed patient indices and
+contact indices from the detail panel. They validate indices and duplicates before calling `Model#setPatient`.
+The existing viewed-patient listener refreshes that panel automatically.
+
+`JsonAdaptedContact` saves the four contact fields. Missing contact lists load as empty, and missing notes load as
+empty strings. Null entries, invalid fields and duplicate identities reject the data file with a reason.
+`PatientDetailPanel` numbers contacts in insertion order and shows `None recorded` for an empty list.
+
+The diagram focuses on parsing and updating the patient; `LogicManager` performs its usual save after execution.
+
+<puml src="diagrams/AddContactSequenceDiagram.puml" alt="Adding a contact to a patient" />
 
 ### \[Proposed\] Undo/redo feature
 
@@ -683,6 +722,34 @@ testers are expected to do more *exploratory* testing.
 1. Test case: Type three spaces in the command box and press Enter.<br>
    Expected: No command executes and no error appears. The spaces and previous result remain unchanged.
 
+### Adding a patient with punctuation after a slash word
+
+1. Test case: `add n/Ben s/o, Ng ic/S1111111B dob/1950-01-01 p/91111111 a/Blk 1`<br>
+   Expected: No patient is added. The status message shows
+   `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
+
+### Managing patient contacts
+
+1. Prerequisites: The sample data is loaded. Run `view 1` and note the existing contacts and care information.
+
+1. Test case: `addcontact 1 n/Mary Tan r/Guardian p/+44 20 7946 0958 nt/Call first`<br>
+   Expected: A numbered contact appears in the panel, with its role, phone and note. Care information is unchanged.
+
+1. Test case: Repeat the add with `n/MARY   TAN` and `p/+442079460958`.<br>
+   Expected: `This contact (identified by name and phone) already exists.` Nothing is added.
+
+1. Test case: `editcontact 1 2 nt/` (use the new contact's displayed number if it differs).<br>
+   Expected: The note is cleared while the contact's other fields and number stay the same.
+
+1. Test case: Exit and relaunch, then run `view 1`.<br>
+   Expected: Contacts and their order are preserved, including the cleared note.
+
+1. Test case: `deletecontact 1 2` (use the number of the added contact).<br>
+   Expected: The removed contact is echoed, disappears from the panel, and remaining contacts are renumbered.
+
+1. Test case: `editcontact 1 99 nt/note`, then `deletecontact 1 99`.<br>
+   Expected: Both report `The contact index provided is invalid.` and change nothing.
+
 ### Listing patients
 
 1. Listing patients when there is data
@@ -788,4 +855,11 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
 
    1. Launch the app.<br>
-      Expected: The app starts with no patients. The invalid file is kept until the first command, which overwrites it with an empty patient list.
+      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path.
+      The recovery copy contains the original invalid file unchanged.
+
+   1. Run `list`, then close and relaunch the app.<br>
+      Expected: The active data file contains an empty patient list, and the recovery copy is still unchanged.
+
+   1. Close the app. Repair a copy of the recovery file, replace `data/mediconnect.json` with it, and relaunch.<br>
+      Expected: The repaired patients load normally without a recovery warning.

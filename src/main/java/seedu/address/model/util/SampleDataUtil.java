@@ -1,11 +1,14 @@
 package seedu.address.model.util;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Dob;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Patient;
@@ -19,9 +22,11 @@ public class SampleDataUtil {
         return new Patient[] {
             new Patient(new Name("Alex Yeoh"), new Nric("S0000001A"), new Dob("1948-03-15"),
                 new Phone("87438807"), new Address("Blk 30 Geylang Street 29, #06-40"),
-                List.of("Aspirin 100mg once daily", "Amlodipine 5mg once daily"),
+                List.of(new Medication("Aspirin 100mg", List.of(LocalTime.of(8, 0))),
+                    new Medication("Amlodipine 5mg", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0)))),
                 List.of("Penicillin"),
-                List.of("Monitor blood pressure every morning")),
+                List.of("Monitor blood pressure every morning"),
+                List.of(new Contact("Tan & Partners Clinic", "GP", "+65 6123-4567", "Call in the morning"))),
             new Patient(new Name("Bernice Yu"), new Nric("S0000002A"), new Dob("1952-07-22"),
                 new Phone("99272758"), new Address("Blk 30 Lorong 3 Serangoon Gardens, #07-18"),
                 List.of(),
