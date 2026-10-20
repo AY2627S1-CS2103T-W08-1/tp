@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Contact;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PatientBuilder;
@@ -34,7 +36,8 @@ public class EditContactCommandTest {
 
     @Test
     public void execute_noteChangedAndCleared_otherFieldsPreserved() throws Exception {
-        Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN).withAllergens("Allergen").build();
+        Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN).withAllergens("Allergen")
+                .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0)))).build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
         model.setViewedPatient(patient);
         edit(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of("Call first")).execute(model);
@@ -45,6 +48,7 @@ public class EditContactCommandTest {
         Patient expected = patient.withContacts(List.of(updated, GUARDIAN));
         assertEquals(expected, model.getFilteredPatientList().get(0));
         assertEquals(expected, model.getViewedPatient().getValue());
+        assertEquals(patient.getMedications(), model.getViewedPatient().getValue().getMedications());
     }
 
     @Test

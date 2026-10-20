@@ -39,7 +39,8 @@ public class Patient {
      * Creates a patient with contacts in the order added. Duplicate contact identities are rejected.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
-            List<Medication> medications, List<String> allergens, List<String> careInstructions, List<Contact> contacts) {
+            List<Medication> medications, List<String> allergens, List<String> careInstructions,
+            List<Contact> contacts) {
         requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
         this.name = name;
         this.nric = nric;

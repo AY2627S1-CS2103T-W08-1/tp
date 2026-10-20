@@ -214,10 +214,13 @@ public class AddCareCommandTest {
     @Test
     public void execute_existingContacts_preserved() throws Exception {
         var contact = GP;
-        Patient patient = new PatientBuilder().withContacts(contact).build();
+        Medication medication = new Medication("Metformin", List.of(LocalTime.of(8, 0)));
+        Patient patient = new PatientBuilder().withContacts(contact).withMedications(medication).build();
         Model modelWithContacts = new ModelManager(
                 new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
         new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Medication"), List.of(), List.of()).execute(modelWithContacts);
         assertEquals(List.of(contact), modelWithContacts.getFilteredPatientList().get(0).getContacts());
+        assertEquals(List.of(medication, new Medication("Medication")),
+                modelWithContacts.getFilteredPatientList().get(0).getMedications());
     }
 }

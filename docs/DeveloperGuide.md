@@ -139,10 +139,10 @@ The `Model` component,
 <box type="info" seamless>
 
 **Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus a
-`List<Medication>` medication list, `List<String>` allergen and care instruction lists, and a `List<Contact>` contact list.
+`List<Medication>` medication list, `List<String>` allergen and care instruction lists, and a `List<Contact>`
+contact list.
 These lists default to empty and are defensively copied with `List.copyOf`, so callers cannot modify them through
-the getters. Updating a patient creates
-a replacement `Patient`, which the model stores using `setPatient`.
+the getters. Updating a patient creates a replacement `Patient`, which the model stores using `setPatient`.
 
 **Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
 is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
@@ -164,8 +164,9 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address
 as strings, medications as a list of `JsonAdaptedMedication` objects, allergens and care instructions as lists of
-strings, and contacts as a list of `JsonAdaptedContact` objects. Each contact stores its name, role, phone and note. The list of patients is saved under
-the JSON key `persons`, kept from AB3. When the file is read, `JsonAdaptedPatient#toModelType()` validates patient
+strings, and contacts as a list of `JsonAdaptedContact` objects. Each contact stores its name, role, phone and note.
+The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
+`JsonAdaptedPatient#toModelType()` validates patient
 fields and converts contacts using their model constraints. If any patient or contact is invalid, two patients share
 an NRIC, or a patient has duplicate contacts, the whole file is rejected.
 

@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Contact;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PatientBuilder;
@@ -27,12 +29,15 @@ public class AddContactCommandTest {
 
     @Test
     public void execute_validContact_addedAndViewedPatientUpdated() throws Exception {
-        Patient patient = new PatientBuilder().withMedications("Medication").withContacts(GUARDIAN).build();
+        Patient patient = new PatientBuilder()
+                .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0))))
+                .withContacts(GUARDIAN).build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
         model.setViewedPatient(patient);
         CommandResult result = new AddContactCommand(INDEX_FIRST_PATIENT, GP).execute(model);
         Patient updated = model.getFilteredPatientList().get(0);
         assertEquals(patient.withContacts(List.of(GUARDIAN, GP)), updated);
+        assertEquals(patient.getMedications(), updated.getMedications());
         assertEquals(updated, model.getViewedPatient().getValue());
         assertEquals(String.format(AddContactCommand.MESSAGE_SUCCESS, patient.getName(), GP),
                 result.getFeedbackToUser());

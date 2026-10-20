@@ -170,7 +170,8 @@ public class JsonAdaptedPatientTest {
     @Test
     public void toModelType_contacts_preservedOrRejected() throws Exception {
         var contact = GP;
-        var patient = new PatientBuilder(BENSON).withContacts(contact).build();
+        var patient = new PatientBuilder(BENSON).withContacts(contact)
+                .withMedications(new Medication("Metformin", List.of(LocalTime.of(8, 0)))).build();
         assertEquals(patient, new JsonAdaptedPatient(patient).toModelType());
         JsonAdaptedPatient nullEntry = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(), Arrays.asList((JsonAdaptedContact) null));

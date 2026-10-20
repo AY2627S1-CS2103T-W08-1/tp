@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PatientBuilder;
@@ -27,7 +29,8 @@ public class DeleteContactCommandTest {
 
     @Test
     public void execute_validIndex_removesAndRenumbersContacts() throws Exception {
-        Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN).build();
+        Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN)
+                .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0)))).build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
         model.setViewedPatient(patient);
         CommandResult result = new DeleteContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT).execute(model);
@@ -36,6 +39,7 @@ public class DeleteContactCommandTest {
         assertEquals(patient.withContacts(List.of(GUARDIAN)), model.getViewedPatient().getValue());
         new DeleteContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT).execute(model);
         assertTrue(model.getFilteredPatientList().get(0).getContacts().isEmpty());
+        assertEquals(patient.getMedications(), model.getFilteredPatientList().get(0).getMedications());
     }
 
     @Test
