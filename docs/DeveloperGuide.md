@@ -720,6 +720,11 @@ testers are expected to do more *exploratory* testing.
    Expected: No patient is added. The status message shows
    `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
 
+### Adding a patient with a blank address
+
+1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
+   Expected: No patient is added. The status message shows `Addresses cannot be blank.`
+
 ### Managing patient contacts
 
 1. Prerequisites: The sample data is loaded. Run `view 1` and note the existing contacts and care information.
