@@ -175,6 +175,27 @@ Other errors are reported as follows:
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 
+### Deleting an allergen: `deleteallergy`
+
+Removes one allergen from the patient at `INDEX` in the displayed patient list.
+
+Format: `deleteallergy INDEX ALLERGY_INDEX`
+
+* `ALLERGY_INDEX` is the allergen number shown in that patient's detail panel. Both indices must be positive
+  integers.
+* The removed allergen is reported in the success message. Remaining allergens are renumbered immediately in the
+  detail panel. All other patient details are unchanged.
+
+Example: `deleteallergy 1 2`
+
+For patient `Alex Yeoh`, if allergen 2 is `Shellfish`, this returns
+`Deleted allergen for Alex Yeoh: Shellfish`.
+
+An `INDEX` outside the displayed patient list returns `The patient index provided is invalid.` An
+`ALLERGY_INDEX` past the end of the patient's allergens, including when none are recorded, returns
+`The allergen index provided is invalid.` Missing, zero, negative, nonnumeric or extra indices return
+`Invalid command format!` followed by the command usage. Validation failures leave patient data unchanged.
+
 ### Adding a contact: `addcontact`
 
 Adds one contact to the patient at `INDEX` in the displayed patient list.
@@ -453,6 +474,7 @@ Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
 **Add contact** | `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]` <br> e.g., `addcontact 1 n/Dr Tan r/GP p/+65 6123-4567`
 **Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
 **Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
