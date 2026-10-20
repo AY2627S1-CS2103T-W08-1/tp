@@ -13,7 +13,8 @@ import java.time.format.DateTimeParseException;
 public class Dob {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Date of birth should be a valid date in YYYY-MM-DD format, and cannot be in the future.";
+            "Date of birth should be a valid date in YYYY-MM-DD format, from 1900-01-01 to today.";
+    public static final LocalDate EARLIEST_DOB = LocalDate.of(1900, 1, 1);
     public final LocalDate value;
 
     /**
@@ -33,7 +34,7 @@ public class Dob {
     public static boolean isValidDob(String test) {
         try {
             LocalDate date = LocalDate.parse(test);
-            return !date.isAfter(LocalDate.now());
+            return !date.isBefore(EARLIEST_DOB) && !date.isAfter(LocalDate.now());
         } catch (DateTimeParseException e) {
             return false;
         }

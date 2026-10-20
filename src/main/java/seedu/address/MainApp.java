@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import javafx.application.Application;
@@ -34,15 +35,20 @@ import seedu.address.ui.UiManager;
 public class MainApp extends Application {
 
     public static final String VERSION = "V1.3.0";
+    public static final String MESSAGE_DATA_RECOVERY =
+            "The data file could not be loaded. Starting with no patients.\nRecovery copy: %s";
 
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
     private static final Path ADDRESS_BOOK_FILE_PATH = Paths.get("data", "mediconnect.json");
+    private static final String RECOVERY_FILE_PREFIX = "mediconnect-unreadable-";
 
     protected Ui ui;
     protected Logic logic;
     protected Storage storage;
     protected Model model;
+
+    private String dataLoadWarning = "";
 
     @Override
     public void init() throws Exception {
@@ -65,23 +71,31 @@ public class MainApp extends Application {
      * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
      * The data from the sample address book will be used instead, and saved to a new data file,
      * if {@code storage}'s address book is not found,
-     * or an empty address book will be used instead if errors occur when reading {@code storage}'s address book.
+     * or an empty address book will be used after preserving an unreadable data file.
+     *
+     * @throws IOException If an unreadable data file cannot be preserved.
      */
-    protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
-        logger.info("Using data file : " + storage.getAddressBookFilePath());
+    protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) throws IOException {
+        Path dataFilePath = storage.getAddressBookFilePath();
+        logger.info("Using data file : " + dataFilePath);
 
         Optional<ReadOnlyAddressBook> addressBookOptional;
         ReadOnlyAddressBook initialData;
         try {
             addressBookOptional = storage.readAddressBook();
             if (addressBookOptional.isEmpty()) {
-                logger.info("Creating a new data file " + storage.getAddressBookFilePath()
+                logger.info("Creating a new data file " + dataFilePath
                         + " populated with sample data.");
             }
             initialData = addressBookOptional.orElseGet(SampleDataUtil::getSampleAddressBook);
         } catch (DataLoadingException e) {
-            logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
-                    + " Will be starting with no patients.");
+            if (!Files.isRegularFile(dataFilePath)) {
+                throw new IOException("Cannot preserve data file: " + dataFilePath, e);
+            }
+            Path recoveryFile = dataFilePath.resolveSibling(RECOVERY_FILE_PREFIX + UUID.randomUUID() + ".json");
+            Files.copy(dataFilePath, recoveryFile);
+            dataLoadWarning = String.format(MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath());
+            logger.warning(dataLoadWarning);
             initialData = new AddressBook();
         }
 
@@ -140,6 +154,9 @@ public class MainApp extends Application {
     public void start(Stage primaryStage) {
         logger.info("Starting MediConnect " + MainApp.VERSION);
         ui.start(primaryStage);
+        if (!dataLoadWarning.isEmpty()) {
+            ui.showWarning(dataLoadWarning);
+        }
     }
 
     @Override
