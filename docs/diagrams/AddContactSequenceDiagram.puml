@@ -65,7 +65,7 @@ AddContactCommand -> Model : setPatient(patient, editedPatient)
 activate Model
 
 opt patient is currently viewed
-Model --> PatientDetailPanel : viewedPatient listener fires
+Model -> PatientDetailPanel : viewedPatient listener fires
 activate PatientDetailPanel
 
 PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)

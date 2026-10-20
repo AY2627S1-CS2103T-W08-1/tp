@@ -6,7 +6,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Objects;
 
 /**
- * An immutable person or organisation to contact about a patient.
+ * An immutable person or organization to contact about a patient.
  */
 public class Contact {
 
@@ -26,7 +26,7 @@ public class Contact {
 
     /**
      * Creates a contact. An empty note means no note.
-     * Names allow organisations such as "Tan & Partners Clinic", so patient Name rules do not apply.
+     * Names allow organizations such as "Tan & Partners Clinic", so patient Name rules do not apply.
      */
     public Contact(String name, String role, String phone, String note) {
         requireAllNonNull(name, role, phone, note);
