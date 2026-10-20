@@ -86,7 +86,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_showsPatientFields() {
+    public void viewedPatient_patientSet_showsPatientFields() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
 
@@ -101,7 +101,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_emptyCareLists_showsNoneRecorded() {
+    public void viewedPatient_emptyCareLists_showsNoneRecorded() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
 
@@ -113,7 +113,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_careEntries_showsOneNumberedWrappingRowPerEntryInOrder() {
+    public void viewedPatient_careEntries_showsOneNumberedWrappingRowPerEntryInOrder() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder()
                 .withMedications("Metformin 500mg", "Amlodipine 5mg")
@@ -134,7 +134,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_medicationsWithTimes_showsTimesBesideDescription() {
+    public void viewedPatient_medicationsWithTimes_showsTimesBesideDescription() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder()
                 .withMedications(new Medication("Metformin 500mg", List.of(LocalTime.of(20, 0), LocalTime.of(8, 0))),
@@ -145,7 +145,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_manyEntries_numbersContinueInOrder() {
+    public void viewedPatient_manyEntries_numbersContinueInOrder() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().withAllergens("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
                 .build());
@@ -154,7 +154,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientChanged_showsNewPatientWithoutOldEntries() {
+    public void viewedPatient_patientChanged_showsNewPatientWithoutOldEntries() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().withMedications("Metformin 500mg", "Amlodipine 5mg").build());
         viewedPatient.set(new PatientBuilder().withName("Bob Choo").withMedications("Aspirin").build());
@@ -164,7 +164,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientCleared_showsPlaceholder() {
+    public void viewedPatient_patientCleared_showsPlaceholder() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
         viewedPatient.set(null);
