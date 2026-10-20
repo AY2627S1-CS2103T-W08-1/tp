@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static seedu.address.testutil.TypicalContacts.GP;
+import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
@@ -171,6 +173,30 @@ public class PatientDetailPanelTest {
 
         assertTrue(lookup(content, "#placeholder").isVisible());
         assertFalse(lookup(content, "#details").isVisible());
+    }
+
+    @Test
+    public void viewedPatient_contacts_numberedInOrderAndRenumbered() {
+        VBox content = createPanelContent();
+        Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN)
+                .withMedications(new Medication("Metformin", List.of(LocalTime.of(8, 0)))).build();
+        viewedPatient.set(patient);
+        assertEquals(List.of(GP.toString(), GUARDIAN.toString()), getEntryTexts(content, "#contacts"));
+        assertEquals(List.of("Metformin (08:00)"), getEntryTexts(content, "#medications"));
+        assertEquals(List.of("1."), getNumberTexts(content, "#medications"));
+        VBox entries = (VBox) lookup(content, "#contacts");
+        for (int i = 0; i < entries.getChildren().size(); i++) {
+            HBox row = (HBox) entries.getChildren().get(i);
+            assertEquals((i + 1) + ".", ((Label) row.getChildren().get(0)).getText());
+        }
+        viewedPatient.set(patient.withContacts(List.of(GUARDIAN)));
+        assertEquals(List.of(GUARDIAN.toString()), getEntryTexts(content, "#contacts"));
+        assertEquals(List.of("Metformin (08:00)"), getEntryTexts(content, "#medications"));
+        HBox remainingRow = (HBox) entries.getChildren().get(0);
+        assertEquals("1.", ((Label) remainingRow.getChildren().get(0)).getText());
+        viewedPatient.set(new PatientBuilder().build());
+        assertEquals(1, entries.getChildren().size());
+        assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
     }
 
     /**
