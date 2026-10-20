@@ -33,9 +33,12 @@ public class DobTest {
         assertFalse(Dob.isValidDob("12-04-1950")); // wrong order
         assertFalse(Dob.isValidDob("1950/04/12")); // wrong separator
         assertFalse(Dob.isValidDob(LocalDate.now().plusDays(1).toString())); // future date
+        assertFalse(Dob.isValidDob("0001-01-01")); // before 1900
+        assertFalse(Dob.isValidDob("1899-12-31")); // day before the earliest date
 
         // valid dobs
         assertTrue(Dob.isValidDob("1950-04-12"));
+        assertTrue(Dob.isValidDob("1900-01-01")); // earliest date
         assertTrue(Dob.isValidDob("2024-02-29")); // leap year
         assertTrue(Dob.isValidDob(LocalDate.now().toString())); // today
     }

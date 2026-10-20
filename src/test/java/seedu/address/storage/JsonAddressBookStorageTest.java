@@ -9,8 +9,10 @@ import static seedu.address.testutil.TypicalPatients.IDA;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.patient.Medication;
 
 public class JsonAddressBookStorageTest {
     private static final Path TEST_DATA_FOLDER = Paths.get("src", "test", "data", "JsonAddressBookStorageTest");
@@ -58,6 +61,41 @@ public class JsonAddressBookStorageTest {
     @Test
     public void readAddressBook_invalidAndValidPatientAddressBook_throwDataLoadingException() {
         assertThrows(DataLoadingException.class, () -> readAddressBook("invalidAndValidPatientAddressBook.json"));
+    }
+
+    @Test
+    public void readAddressBook_invalidMedicationsInFile_throwDataLoadingException() throws Exception {
+        String[] invalidMedications = {
+            "[ \"Metformin\" ]",
+            "[ { \"times\" : [ \"08:00\" ] } ]",
+            "[ { \"description\" : \" \" } ]",
+            "[ { \"description\" : \"Metformin\", \"times\" : [ \"8:00\" ] } ]",
+            "[ { \"description\" : \"Metformin\", \"times\" : [ \"24:00\" ] } ]",
+            "[ { \"description\" : \"Metformin\", \"times\" : [ null ] } ]",
+            "[ { \"description\" : \"Metformin\", \"times\" : \"08:00\" } ]",
+            "[ null ]",
+            "\"Metformin\"",
+        };
+        for (String medications : invalidMedications) {
+            Path filePath = writePatientWithMedications(medications);
+            assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(filePath)
+                    .readAddressBook(filePath));
+        }
+    }
+
+    @Test
+    public void readAddressBook_medicationWithoutTimesInFile_loadsWithNoTimes() throws Exception {
+        Path filePath = writePatientWithMedications("[ { \"description\" : \"Metformin\" } ]");
+        ReadOnlyAddressBook readBack = new JsonAddressBookStorage(filePath).readAddressBook(filePath).get();
+        assertEquals(List.of(new Medication("Metformin")), readBack.getPatientList().get(0).getMedications());
+    }
+
+    private Path writePatientWithMedications(String medicationsJson) throws IOException {
+        Path filePath = Files.createTempFile(testFolder, "medications", ".json");
+        Files.writeString(filePath, "{ \"persons\" : [ { \"name\" : \"Amy Bee\", \"phone\" : \"85355255\", "
+                + "\"nric\" : \"S9999999A\", \"dob\" : \"1950-01-01\", \"address\" : \"123 Jurong West\", "
+                + "\"medications\" : " + medicationsJson + " } ] }");
+        return filePath;
     }
 
     @Test
