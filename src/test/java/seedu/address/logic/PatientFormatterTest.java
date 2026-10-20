@@ -74,7 +74,7 @@ public class PatientFormatterTest {
     }
 
     @Test
-    public void formatRecord_patientWithCareInfo_listsEachCareListUnderItsHeading() {
+    public void formatRecord_patientWithCareInfo_listsEachListUnderItsHeading() {
         List<String> expectedLines = List.of(
                 "Daniel Meier",
                 "NRIC: S0000004A",
@@ -89,7 +89,10 @@ public class PatientFormatterTest {
                 "1. Penicillin",
                 "",
                 "Care Instructions",
-                "1. Check blood sugar");
+                "1. Check blood sugar",
+                "",
+                "Contacts",
+                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning");
 
         assertEquals(expectedLines, PatientFormatter.formatRecord(DANIEL));
     }
@@ -110,6 +113,9 @@ public class PatientFormatterTest {
                 "None recorded",
                 "",
                 "Care Instructions",
+                "None recorded",
+                "",
+                "Contacts",
                 "None recorded");
 
         assertEquals(expectedLines, PatientFormatter.formatRecord(ALICE));

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
@@ -30,6 +31,7 @@ class JsonAdaptedPatient {
     private final List<JsonAdaptedMedication> medications = new ArrayList<>();
     private final List<String> allergens = new ArrayList<>();
     private final List<String> careInstructions = new ArrayList<>();
+    private final List<JsonAdaptedContact> contacts = new ArrayList<>();
 
     /**
      * Constructs a {@code JsonAdaptedPatient} with the given patient details.
@@ -40,12 +42,16 @@ class JsonAdaptedPatient {
             @JsonProperty("address") String address,
             @JsonProperty("medications") List<JsonAdaptedMedication> medications,
             @JsonProperty("allergens") List<String> allergens,
-            @JsonProperty("careInstructions") List<String> careInstructions) {
+            @JsonProperty("careInstructions") List<String> careInstructions,
+            @JsonProperty("contacts") List<JsonAdaptedContact> contacts) {
         this.name = name;
         this.nric = nric;
         this.dob = dob;
         this.phone = phone;
         this.address = address;
+        if (contacts != null) {
+            this.contacts.addAll(contacts);
+        }
         if (medications != null) {
             this.medications.addAll(medications);
         }
@@ -69,6 +75,7 @@ class JsonAdaptedPatient {
         source.getMedications().stream().map(JsonAdaptedMedication::new).forEach(medications::add);
         allergens.addAll(source.getAllergens());
         careInstructions.addAll(source.getCareInstructions());
+        source.getContacts().stream().map(JsonAdaptedContact::new).forEach(contacts::add);
     }
 
     /**
@@ -125,9 +132,19 @@ class JsonAdaptedPatient {
             modelMedications.add(medication.toModelType());
         }
 
+        List<Contact> modelContacts = new ArrayList<>();
+        for (JsonAdaptedContact contact : contacts) {
+            if (contact == null) {
+                throw new IllegalValueException("Contact entry must not be null.");
+            }
+            modelContacts.add(contact.toModelType());
+        }
+
         try {
             return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
-                    modelMedications, allergens, careInstructions);
+                    modelMedications, allergens, careInstructions, modelContacts);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalValueException(e.getMessage());
         } catch (NullPointerException e) {
             throw new IllegalValueException("Care entries must not be null.");
         }

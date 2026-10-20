@@ -104,7 +104,10 @@ public class ExportCommandTest {
                 "1. Penicillin",
                 "",
                 "Care Instructions",
-                "1. Check blood sugar");
+                "1. Check blood sugar",
+                "",
+                "Contacts",
+                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning");
 
         assertCommandSuccess(createExportCommand(INDEX_DANIEL), model, getExpectedSuccessMessage(DANIEL, expectedFile),
                 createTypicalModel());
@@ -117,7 +120,7 @@ public class ExportCommandTest {
 
         List<String> lines = Files.readAllLines(temporaryFolder.resolve("S0000001A.txt"), StandardCharsets.UTF_8);
         assertEquals(getExpectedRecord(ALICE), lines);
-        assertEquals(3, Collections.frequency(lines, PatientFormatter.NONE_RECORDED));
+        assertEquals(4, Collections.frequency(lines, PatientFormatter.NONE_RECORDED));
     }
 
     @Test
@@ -133,6 +136,31 @@ public class ExportCommandTest {
 
         // the new record is shorter than the old file, so no old lines may be left at the end
         assertEquals(getExpectedRecord(ALICE), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_writeFails_keepsEarlierExport() throws Exception {
+        Path exportFile = temporaryFolder.resolve("S0000001A.txt");
+        Files.write(exportFile, List.of("earlier export"));
+        // a folder where the temporary file goes makes the write fail before the earlier export is touched
+        Path temporaryFile = Files.createDirectory(temporaryFolder.resolve("S0000001A.txt.tmp"));
+        ExportCommand exportCommand = createExportCommand(INDEX_FIRST_PATIENT);
+
+        String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
+                .getMessage();
+
+        assertTrue(message.startsWith("Could not export Alice Pauline's record to " + exportFile + ": "), message);
+        assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+        assertTrue(Files.isDirectory(temporaryFile));
+    }
+
+    @Test
+    public void execute_success_leavesNoTemporaryFile() throws Exception {
+        createExportCommand(INDEX_FIRST_PATIENT).execute(model);
+
+        try (Stream<Path> files = Files.list(temporaryFolder)) {
+            assertEquals(List.of(temporaryFolder.resolve("S0000001A.txt")), files.toList());
+        }
     }
 
     @Test

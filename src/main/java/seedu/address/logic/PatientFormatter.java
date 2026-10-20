@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
@@ -26,6 +27,9 @@ public class PatientFormatter {
 
     /** Heading of the list of care instructions. */
     public static final String HEADING_CARE_INSTRUCTIONS = "Care Instructions";
+
+    /** Heading of the list of contacts. */
+    public static final String HEADING_CONTACTS = "Contacts";
 
     /** A line break inside an entry, with any spaces around it. */
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\s*\\R\\s*");
@@ -69,8 +73,8 @@ public class PatientFormatter {
     }
 
     /**
-     * Returns the full record of {@code patient}: the name and basic details, then each care list under its
-     * heading, with a blank line before each heading.
+     * Returns the full record of {@code patient}: the name and basic details, then each care list and the contacts
+     * under their headings, with a blank line before each heading.
      *
      * @param patient Patient whose record is formatted.
      * @return the lines of the record, without line separators.
@@ -84,7 +88,8 @@ public class PatientFormatter {
         for (Map.Entry<String, List<String>> careList : List.of(
                 Map.entry(HEADING_MEDICATIONS, patient.getMedications().stream().map(Medication::toString).toList()),
                 Map.entry(HEADING_ALLERGENS, patient.getAllergens()),
-                Map.entry(HEADING_CARE_INSTRUCTIONS, patient.getCareInstructions()))) {
+                Map.entry(HEADING_CARE_INSTRUCTIONS, patient.getCareInstructions()),
+                Map.entry(HEADING_CONTACTS, patient.getContacts().stream().map(Contact::toString).toList()))) {
             lines.add("");
             lines.add(careList.getKey());
             lines.addAll(formatEntries(careList.getValue()));
