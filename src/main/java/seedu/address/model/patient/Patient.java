@@ -33,11 +33,20 @@ public class Patient {
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions) {
-        this(name, nric, dob, phone, address, medications, allergens, careInstructions, List.of(), false);
+        this(name, nric, dob, phone, address, medications, allergens, careInstructions, List.of());
     }
 
     /**
      * Creates a patient with contacts in the order added. Duplicate contact identities are rejected.
+     */
+    public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
+            List<Medication> medications, List<String> allergens, List<String> careInstructions,
+            List<Contact> contacts) {
+        this(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts, false);
+    }
+
+    /**
+     * Creates a patient with contacts and the requested archived state.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions,
@@ -106,7 +115,8 @@ public class Patient {
      * Returns a copy with replacement allergens, preserving every other field.
      */
     public Patient withAllergens(List<String> allergens) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
+                archived);
     }
 
     public List<String> getCareInstructions() {

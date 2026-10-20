@@ -23,7 +23,7 @@ public class PatientTest {
     public void withAllergens_replacement_preservesOtherFields() {
         Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
         Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
-                .withCareInstructions("Instruction").withContacts(GP).build();
+                .withCareInstructions("Instruction").withContacts(GP).withArchived(true).build();
         List<String> allergens = new ArrayList<>(List.of("Latex", "Shellfish"));
 
         Patient updated = original.withAllergens(allergens);

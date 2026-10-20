@@ -26,7 +26,7 @@ public class SampleDataUtil {
                     new Medication("Amlodipine 5mg", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0)))),
                 List.of("Penicillin"),
                 List.of("Monitor blood pressure every morning"),
-                List.of(new Contact("Tan & Partners Clinic", "GP", "+65 6123-4567", "Call in the morning")), false),
+                List.of(new Contact("Tan & Partners Clinic", "GP", "+65 6123-4567", "Call in the morning"))),
             new Patient(new Name("Bernice Yu"), new Nric("S0000002A"), new Dob("1952-07-22"),
                 new Phone("99272758"), new Address("Blk 30 Lorong 3 Serangoon Gardens, #07-18"),
                 List.of(),
