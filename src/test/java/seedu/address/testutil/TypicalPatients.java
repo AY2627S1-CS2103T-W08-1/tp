@@ -7,11 +7,13 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import seedu.address.model.AddressBook;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -33,7 +35,8 @@ public class TypicalPatients {
     public static final Patient DANIEL = new PatientBuilder().withNric("S0000004A").withName("Daniel Meier")
             .withPhone("87652533")
             .withAddress("10th street")
-            .withMedications("Metformin").withAllergens("Penicillin")
+            .withMedications(new Medication("Metformin", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0))))
+            .withAllergens("Penicillin")
             .withCareInstructions("Check blood sugar").build();
     public static final Patient ELLE = new PatientBuilder().withNric("S0000005A").withName("Elle Meyer")
             .withPhone("94822240")
