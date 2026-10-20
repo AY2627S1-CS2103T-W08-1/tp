@@ -349,7 +349,7 @@ Format: `export INDEX`
 * The index refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file.
-* The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications, allergens and care instructions. An empty list shows `None recorded`.
+* The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens and care instructions. An empty list shows `None recorded`.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
 
 Examples:
