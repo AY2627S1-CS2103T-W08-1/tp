@@ -125,6 +125,7 @@
         "locating-patients-by-name-find": "Locating patients by name: find",
         "deleting-a-patient-delete": "Deleting a patient: delete",
         "viewing-a-patient-s-full-details-view": "Viewing a patient's full details: view",
+        "listing-today-s-medication-times-due": "Listing today's medication times: due",
         "clearing-all-patients-clear": "Clearing all patients: clear",
         "backing-up-data-backup": "Backing up data: backup",
         "exiting-the-program-exit": "Exiting the program: exit",
