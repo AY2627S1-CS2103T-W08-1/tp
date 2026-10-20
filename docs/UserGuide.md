@@ -141,6 +141,8 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
 * Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
+* A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
+  `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
 * Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
   same command are still added.
 * A medication added with `med/` has no daily times yet.
