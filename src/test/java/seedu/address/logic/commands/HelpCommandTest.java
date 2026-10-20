@@ -17,6 +17,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class HelpCommandTest {
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
         commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
-        return commands;
+        return Collections.unmodifiableMap(commands);
     }
 
     @Test
@@ -98,7 +99,7 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_listsEveryCommandOnceInOrder() {
+    public void commandSummary_everyCommand_listedOnceInOrder() {
         List<String> commandWords = getLines().stream()
                 .map(line -> line.split(" ", 2)[0])
                 .collect(Collectors.toList());
@@ -107,7 +108,7 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_eachLineHasFormatAndDescription() {
+    public void commandSummary_eachLine_hasFormatAndDescription() {
         for (String line : getLines()) {
             String[] parts = line.split(Pattern.quote(FORMAT_DESCRIPTION_SEPARATOR), -1);
 
@@ -120,7 +121,7 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_noBlankOrPaddedLines() {
+    public void commandSummary_eachLine_notBlankOrPadded() {
         for (String line : getLines()) {
             assertFalse(line.isBlank());
             assertEquals(line.strip(), line);
@@ -163,7 +164,7 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_noAb3Leftovers() {
+    public void commandSummary_ab3Terms_notMentioned() {
         String summary = COMMAND_SUMMARY.toLowerCase();
 
         for (String leftover : List.of("person", "address book", "t/tag", "e/email")) {
