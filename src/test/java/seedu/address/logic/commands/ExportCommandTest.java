@@ -98,7 +98,7 @@ public class ExportCommandTest {
                 "Address: 10th street",
                 "",
                 "Medications",
-                "1. Metformin",
+                "1. Metformin (08:00, 20:00)",
                 "",
                 "Allergens",
                 "1. Penicillin",

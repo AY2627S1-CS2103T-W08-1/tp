@@ -95,15 +95,17 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   rejected. For example, `x/123` gives `Unrecognized parameter: x/. Please check the command format.`
 * Standalone `s/o`, `d/o`, and `c/o` are allowed anywhere in the `add` arguments, ignoring letter case.
   Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
+  For example, `s/o,` gives `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
   Addresses can include numeric slash text such as `21/3` and URLs.
 * `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
   It is not case-sensitive and is stored in uppercase.
-* `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, and cannot be in the future.
+* `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, from `1900-01-01` to today.
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
   e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
-  Multiple spaces between words are reduced to one.
+  Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
+  A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
 * `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
   It is stored without the `+65`.
 
@@ -121,9 +123,9 @@ If a required field is missing, the command is rejected with `Invalid command fo
 
 Field   | Prefix | Format | Example
 --------|--------|--------|--------
-Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
+Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
-DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, not in the future. | `1950-04-12`
+DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
 Address | `a/`   | Any value, but not blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
@@ -139,8 +141,11 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
 * Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
+* A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
+  `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
 * Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
   same command are still added.
+* A medication added with `med/` has no daily times yet.
 
 Examples:
 
@@ -220,7 +225,9 @@ Format: `view INDEX`
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, and care instructions, one entry per line. An empty list shows `None recorded`.
+  medications, allergens, and care instructions. Each list is numbered (`1.`, `2.`, ...), one entry per line.
+  A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+  An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
@@ -238,6 +245,49 @@ If `INDEX` is larger than the number of patients in the displayed list, the comm
 is too large to be a valid number (e.g., `99999999999`), or is followed by extra words, the command is rejected with
 `Invalid command format!` followed by the usage and example. In both cases, the panel keeps showing the patient it
 showed before.
+
+### Listing today's medication times: `due`
+
+Lists the times at which medications are taken today, one line per dose, in the order they are due.
+
+Format: `due [INDEX]`
+
+* Without `INDEX`, `due` lists the doses of **all** patients in MediConnect, even if `find` is hiding some of them
+  from the patient list.
+* With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
+  the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
+  number (1, 2, 3, ...).
+* Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
+  with several times has one line for each time.
+* Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
+  patient at the same time are listed in the order of the patient's medications.
+* A time that is earlier than the current time of your computer (in its time zone) is followed by
+  ` (earlier today)`. A time in the current minute is not marked. Every time is a daily time, so the same times
+  are listed each day.
+* Medications without times are not listed.
+* The result is shown in the result box. The patient list and the details panel are not changed, and no data is
+  changed.
+
+Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
+`2. Amlodipine 5mg (08:00, 20:00)`, and the other patients have no times):
+
+* `due` returns<br>
+  `08:00 Alex Yeoh: Aspirin 100mg (earlier today)`<br>
+  `08:00 Alex Yeoh: Amlodipine 5mg (earlier today)`<br>
+  `20:00 Alex Yeoh: Amlodipine 5mg`
+* `due 1` returns the same three lines, because only Alex Yeoh has times.
+* `due 2` returns `No medications are due today for Bernice Yu.`
+
+Run before 08:00, the same `due` returns the three lines without ` (earlier today)`.
+
+If there is nothing to list, `due` returns `No medications are due today.` and `due INDEX` returns
+`No medications are due today for PATIENT_NAME.`
+
+Errors are reported as follows:
+
+* An `INDEX` outside the displayed list returns `The patient index provided is invalid.`
+* A zero, negative, non-numeric, or excessively large `INDEX`, or anything after `due` other than a single
+  number (e.g., `due 1 2`), returns `Invalid command format!`, followed by the command usage.
 
 ### Clearing all patients: `clear`
 
@@ -264,7 +314,7 @@ If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows
 <box type="warning" seamless>
 
 **Caution:**
-`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, do not run `backup` or any other command, not even `exit`, because the next command replaces that file. Instead, close MediConnect with the window's close button or **File** > **Exit**, then copy `data/mediconnect.json` somewhere safe by hand.
+`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, a backup made then has no patients. Your original data is in the recovery copy named in the startup warning. To recover it, see [Editing the data file](#editing-the-data-file).
 </box>
 
 <box type="tip" seamless>
@@ -281,6 +331,7 @@ Format: `restore FILENAME`
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
+* MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
 * After a restore, the list shows all restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
 
 Examples:
@@ -298,7 +349,7 @@ Format: `export INDEX`
 * The index refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file.
-* The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications, allergens and care instructions. An empty list shows `None recorded`.
+* The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens and care instructions. An empty list shows `None recorded`.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
 
 Examples:
@@ -324,7 +375,13 @@ MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, 
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, MediConnect starts with no patients at the next run. The invalid file remains on disk until you run a command (MediConnect saves after every command). Still, we recommend backing up the file before editing it.<br>
+If the data file cannot be loaded, MediConnect first saves an unchanged recovery copy beside it, named
+`mediconnect-unreadable-<unique ID>.json`, then starts with no patients. A warning shows the recovery copy's full
+path. Commands continue to save to `data/mediconnect.json`; the recovery copy is kept separately.
+If the recovery copy cannot be created, startup stops so the original file is not overwritten.
+To recover your data, close MediConnect, repair a copy of the recovery file and replace `data/mediconnect.json`
+with the repaired file before restarting. Keep the recovery copy until you have checked the recovered patients.
+We still recommend backing up the file before editing it.<br>
 Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
@@ -356,6 +413,7 @@ Action            | Format, Examples
 **Backup**        | `backup`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Exit**          | `exit`
 **Export**        | `export INDEX` <br> e.g., `export 2`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`

@@ -21,7 +21,7 @@ public class Patient {
 
     // Data fields
     private final Address address;
-    private final List<String> medications;
+    private final List<Medication> medications;
     private final List<String> allergens;
     private final List<String> careInstructions;
 
@@ -29,7 +29,7 @@ public class Patient {
      * Every field must be present and not null.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
-            List<String> medications, List<String> allergens, List<String> careInstructions) {
+            List<Medication> medications, List<String> allergens, List<String> careInstructions) {
         requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions);
         this.name = name;
         this.nric = nric;
@@ -68,7 +68,7 @@ public class Patient {
         return address;
     }
 
-    public List<String> getMedications() {
+    public List<Medication> getMedications() {
         return medications;
     }
 
