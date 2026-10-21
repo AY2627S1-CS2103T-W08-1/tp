@@ -36,6 +36,12 @@ public class HelpCommand extends Command {
                     "Edits the patient at INDEX (at least one field)."),
             formatEntry(ListCommand.COMMAND_WORD,
                     "Lists all active patients."),
+            formatEntry(ListArchivedCommand.COMMAND_WORD,
+                    "Lists all archived patients and their indices for unarchive."),
+            formatEntry(ArchiveCommand.COMMAND_FORMAT,
+                    "Archives the patient at INDEX."),
+            formatEntry(UnarchiveCommand.COMMAND_FORMAT,
+                    "Restores the archived patient at INDEX to the active list."),
             formatEntry(DeleteCommand.COMMAND_WORD + " INDEX",
                     "Deletes the patient at INDEX."),
             formatEntry(AddCareCommand.COMMAND_WORD + " INDEX [" + PREFIX_MEDICATION + "MEDICATION]... ["
