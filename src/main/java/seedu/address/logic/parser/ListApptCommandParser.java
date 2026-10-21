@@ -18,7 +18,7 @@ public class ListApptCommandParser implements Parser<ListApptCommand> {
      * and returns a ListApptCommand object for execution.
      * No arguments lists the upcoming appointments of all patients.
      *
-     * @throws ParseException if the user input does not conform to the expected format
+     * @throws ParseException if the user input does not conform to the expected format.
      */
     @Override
     public ListApptCommand parse(String args) throws ParseException {
