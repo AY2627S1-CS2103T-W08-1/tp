@@ -33,10 +33,14 @@ public class PhoneTest {
         assertFalse(Phone.isValidPhone("9011p041")); // alphabets within digits
         assertFalse(Phone.isValidPhone("9312 1534")); // spaces within digits
         assertFalse(Phone.isValidPhone("+6493121534")); // other country code
+        assertFalse(Phone.isValidPhone("00000000")); // starts with 0
+        assertFalse(Phone.isValidPhone("71234567")); // starts with 7
 
         // valid phone numbers
         assertTrue(Phone.isValidPhone("93121534")); // exactly 8 numbers
         assertTrue(Phone.isValidPhone("+6593121534")); // with country code
+        assertTrue(Phone.isValidPhone("61234567")); // landline, starts with 6
+        assertTrue(Phone.isValidPhone("31234567")); // starts with 3
     }
 
     @Test
