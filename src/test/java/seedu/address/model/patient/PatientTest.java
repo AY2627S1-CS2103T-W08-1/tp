@@ -23,7 +23,7 @@ public class PatientTest {
     public void withCareInstructions_replacement_preservesOtherFields() {
         Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
         Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
-                .withCareInstructions("Old instruction").withContacts(GP).build();
+                .withCareInstructions("Old instruction").withContacts(GP).withArchived(true).build();
         List<String> instructions = new ArrayList<>(List.of("New instruction"));
 
         Patient updated = original.withCareInstructions(instructions);
@@ -32,6 +32,7 @@ public class PatientTest {
         assertEquals(new PatientBuilder(original).withCareInstructions("New instruction").build(), updated);
         assertEquals(medication.getTimes(), updated.getMedications().get(0).getTimes());
         assertEquals(original.getContacts(), updated.getContacts());
+        assertTrue(updated.isArchived());
         assertThrows(UnsupportedOperationException.class, () -> updated.getCareInstructions().clear());
         assertThrows(NullPointerException.class, () -> original.withCareInstructions(null));
     }
