@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
 import java.time.Clock;
 import java.time.LocalTime;
@@ -21,7 +22,7 @@ import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
- * Lists the medication times of today, for all patients or for the patient at a displayed index.
+ * Lists the medication times of today, for all active patients or for the patient at a displayed index.
  * Each dose is listed on its own line, sorted by time and then by patient name.
  */
 public class DueCommand extends Command {
@@ -29,7 +30,7 @@ public class DueCommand extends Command {
     public static final String COMMAND_WORD = "due";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists today's medication times, sorted by time, "
-            + "for all patients, or only for the patient identified by the index number used in the displayed "
+            + "for all active patients, or only for the patient identified by the index number used in the displayed "
             + "patient list. Medications without times are not listed. A time earlier than the current time is "
             + "marked" + Messages.MESSAGE_DUE_EARLIER_TODAY_SUFFIX + ".\n"
             + "Parameters: [INDEX] (must be a positive integer)\n"
@@ -105,7 +106,7 @@ public class DueCommand extends Command {
      * Patients that should not be listed are left out here.
      */
     private static Stream<Patient> keepActive(Stream<Patient> patients) {
-        return patients;
+        return patients.filter(PREDICATE_SHOW_ACTIVE_PATIENTS);
     }
 
     private static Stream<Dose> toDoses(Patient patient) {

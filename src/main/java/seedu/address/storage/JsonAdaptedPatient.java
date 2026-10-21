@@ -35,6 +35,7 @@ class JsonAdaptedPatient {
     private final List<String> careInstructions = new ArrayList<>();
     private final List<JsonAdaptedContact> contacts = new ArrayList<>();
     private final List<JsonAdaptedAppointment> appointments = new ArrayList<>();
+    private final boolean archived;
 
     /**
      * Constructs a {@code JsonAdaptedPatient} with the given patient details.
@@ -47,7 +48,8 @@ class JsonAdaptedPatient {
             @JsonProperty("allergens") List<String> allergens,
             @JsonProperty("careInstructions") List<String> careInstructions,
             @JsonProperty("contacts") List<JsonAdaptedContact> contacts,
-            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments) {
+            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments,
+            @JsonProperty("archived") Boolean archived) {
         this.name = name;
         this.nric = nric;
         this.dob = dob;
@@ -68,6 +70,7 @@ class JsonAdaptedPatient {
         if (appointments != null) {
             this.appointments.addAll(appointments);
         }
+        this.archived = archived != null && archived;
     }
 
     /**
@@ -84,6 +87,7 @@ class JsonAdaptedPatient {
         careInstructions.addAll(source.getCareInstructions());
         source.getContacts().stream().map(JsonAdaptedContact::new).forEach(contacts::add);
         source.getAppointments().stream().map(JsonAdaptedAppointment::new).forEach(appointments::add);
+        archived = source.isArchived();
     }
 
     /**
@@ -158,7 +162,7 @@ class JsonAdaptedPatient {
 
         try {
             return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
-                    modelMedications, allergens, careInstructions, modelContacts, modelAppointments);
+                    modelMedications, allergens, careInstructions, modelContacts, modelAppointments, archived);
         } catch (IllegalArgumentException e) {
             throw new IllegalValueException(e.getMessage());
         } catch (NullPointerException e) {

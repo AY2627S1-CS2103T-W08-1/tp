@@ -37,7 +37,7 @@ public class ModelManager implements Model {
 
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
-        filteredPatients = new FilteredList<>(this.addressBook.getPatientList());
+        filteredPatients = new FilteredList<>(this.addressBook.getPatientList(), PREDICATE_SHOW_ACTIVE_PATIENTS);
     }
 
     public ModelManager() {
@@ -96,7 +96,7 @@ public class ModelManager implements Model {
     @Override
     public void addPatient(Patient patient) {
         addressBook.addPatient(patient);
-        updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+        updateFilteredPatientList(PREDICATE_SHOW_ACTIVE_PATIENTS);
     }
 
     @Override
