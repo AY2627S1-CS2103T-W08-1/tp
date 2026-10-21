@@ -45,6 +45,10 @@ public class HelpCommand extends Command {
             formatEntry(AddCareCommand.COMMAND_WORD + " INDEX [" + PREFIX_MEDICATION + "MEDICATION]... ["
                     + PREFIX_ALLERGEN + "ALLERGEN]... [" + PREFIX_CARE_INSTRUCTION + "CARE_INSTRUCTION]...",
                     "Adds care information (at least one entry) to the patient at INDEX."),
+            formatEntry(EditCareCommand.COMMAND_FORMAT,
+                    "Edits a care instruction of the patient at INDEX."),
+            formatEntry(DeleteCareCommand.COMMAND_FORMAT,
+                    "Deletes a care instruction of the patient at INDEX."),
             formatEntry(DeleteAllergyCommand.COMMAND_FORMAT,
                     "Deletes an allergen of the patient at INDEX."),
             formatEntry(AddContactCommand.COMMAND_FORMAT,
