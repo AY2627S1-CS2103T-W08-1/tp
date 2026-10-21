@@ -155,7 +155,7 @@ public class PatientBuilder {
      * Builds an immutable patient.
      */
     public Patient build() {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
-                appointments);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 }

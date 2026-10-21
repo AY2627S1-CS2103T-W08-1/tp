@@ -121,8 +121,8 @@ public class Patient {
      * Returns a copy with replacement allergens, preserving every other field.
      */
     public Patient withAllergens(List<String> allergens) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
-                appointments);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     public List<String> getCareInstructions() {
@@ -149,8 +149,10 @@ public class Patient {
      */
     public List<Appointment> getAppointmentsUpcomingFirst(LocalDateTime now) {
         Objects.requireNonNull(now);
-        Stream<Appointment> upcoming = appointments.stream().filter(appointment -> !appointment.isBefore(now));
-        Stream<Appointment> past = appointments.stream().filter(appointment -> appointment.isBefore(now));
+        Stream<Appointment> upcoming = appointments.stream()
+                .filter(appointment -> !appointment.isBefore(now));
+        Stream<Appointment> past = appointments.stream()
+                .filter(appointment -> appointment.isBefore(now));
         return Stream.concat(upcoming, past).toList();
     }
 
@@ -158,16 +160,16 @@ public class Patient {
      * Returns a copy with replacement care instructions, preserving every other field.
      */
     public Patient withCareInstructions(List<String> careInstructions) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
-                appointments);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     /**
      * Returns a copy with replacement contacts, preserving every other field.
      */
     public Patient withContacts(List<Contact> contacts) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
-                appointments);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     /**
@@ -213,8 +215,8 @@ public class Patient {
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
-                appointments);
+        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     @Override

@@ -108,7 +108,8 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
-     * Returns true if the appointment is before {@code dateTime}, i.e. in the past if {@code dateTime} is now.
+     * Returns true if the appointment is before {@code dateTime}, i.e. in the past if
+     * {@code dateTime} is now.
      */
     public boolean isBefore(LocalDateTime dateTime) {
         return LocalDateTime.of(date, time).isBefore(dateTime);
