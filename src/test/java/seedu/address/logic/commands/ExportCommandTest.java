@@ -12,6 +12,7 @@ import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.ARCHIVED_ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.DANIEL;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
@@ -244,6 +245,24 @@ public class ExportCommandTest {
         assertCommandSuccess(createExportCommand(INDEX_FIRST_PATIENT), model,
                 getExpectedSuccessMessage(BENSON, expectedFile), expectedModel);
         assertEquals(getExpectedRecord(BENSON), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_archivedPatientInDisplayedList_exportsRecord() throws Exception {
+        Patient archivedPatient = new PatientBuilder(ARCHIVED_ALICE).withNric("S1111111A").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPatient(ALICE);
+        addressBook.addPatient(archivedPatient);
+        // shows archived patients only, as listarchived will
+        Model archivedListModel = new ModelManager(addressBook, new UserPrefs());
+        archivedListModel.updateFilteredPatientList(Patient::isArchived);
+        Model expectedModel = new ModelManager(addressBook, new UserPrefs());
+        expectedModel.updateFilteredPatientList(Patient::isArchived);
+        Path expectedFile = temporaryFolder.resolve("S1111111A.txt");
+
+        assertCommandSuccess(createExportCommand(INDEX_FIRST_PATIENT), archivedListModel,
+                getExpectedSuccessMessage(archivedPatient, expectedFile), expectedModel);
+        assertEquals(getExpectedRecord(archivedPatient), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
     }
 
     @Test

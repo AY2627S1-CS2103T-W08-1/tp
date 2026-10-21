@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.ARCHIVED_ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 
 import java.util.List;
@@ -41,6 +42,38 @@ public class ModelManagerTest {
         UserPrefs oldUserPrefs = new UserPrefs(userPrefs);
         userPrefs.setGuiSettings(new GuiSettings(5, 6, 7, 8));
         assertEquals(oldUserPrefs, modelManager.getUserPrefs());
+    }
+
+    @Test
+    public void constructor_addressBookWithArchivedPatient_filtersArchivedPatient() {
+        AddressBook addressBook = new AddressBookBuilder().withPatient(ALICE)
+                .withPatient(new PatientBuilder(ARCHIVED_ALICE).withNric("S1111111A").build())
+                .build();
+
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+
+        assertEquals(List.of(ALICE), modelManager.getFilteredPatientList());
+        assertEquals(2, modelManager.getAddressBook().getPatientList().size());
+    }
+
+    @Test
+    public void addPatient_archivedPatient_remainsStoredButFiltered() {
+        modelManager.addPatient(ARCHIVED_ALICE);
+
+        assertTrue(modelManager.hasPatient(ARCHIVED_ALICE));
+        assertTrue(modelManager.getFilteredPatientList().isEmpty());
+    }
+
+    @Test
+    public void updateFilteredPatientList_showAllPredicate_includesArchivedPatients() {
+        AddressBook addressBook = new AddressBookBuilder().withPatient(ALICE)
+                .withPatient(new PatientBuilder(ARCHIVED_ALICE).withNric("S1111111A").build())
+                .build();
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+
+        modelManager.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+
+        assertEquals(2, modelManager.getFilteredPatientList().size());
     }
 
     @Test

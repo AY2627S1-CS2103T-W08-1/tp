@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -8,14 +9,14 @@ import seedu.address.model.Model;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 
 /**
- * Finds and lists all patients in the address book whose name contains any of the argument keywords.
+ * Finds and lists active patients in the address book whose name contains any of the argument keywords.
  * Keyword matching is case insensitive.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all patients whose names contain any of "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds active patients whose names contain any of "
             + "the specified keywords (case-insensitive) and displays them as a list with index numbers.\n"
             + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
             + "Example: " + COMMAND_WORD + " alice bob charlie";
@@ -31,7 +32,7 @@ public class FindCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPatientList(predicate);
+        model.updateFilteredPatientList(predicate.and(PREDICATE_SHOW_ACTIVE_PATIENTS));
 
         if (model.getFilteredPatientList().isEmpty()) {
             return new CommandResult(MESSAGE_NO_PATIENTS_FOUND);

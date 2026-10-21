@@ -37,6 +37,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.testutil.PatientBuilder;
 
 public class RestoreCommandTest {
 
@@ -112,6 +113,18 @@ public class RestoreCommandTest {
 
         assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients"),
                 new ModelManager(getTypicalAddressBook(), new UserPrefs()));
+    }
+
+    @Test
+    public void execute_backupWithArchivedPatient_showsOnlyActiveRestoredPatients() throws Exception {
+        Patient archivedHoon = new PatientBuilder(HOON).withArchived(true).build();
+        AddressBook backupData = createAddressBook(ALICE, archivedHoon);
+        writeBackup(backupData);
+
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"),
+                new ModelManager(backupData, new UserPrefs()));
+        assertEquals(List.of(ALICE), model.getFilteredPatientList());
+        assertEquals(2, model.getAddressBook().getPatientList().size());
     }
 
     @Test
