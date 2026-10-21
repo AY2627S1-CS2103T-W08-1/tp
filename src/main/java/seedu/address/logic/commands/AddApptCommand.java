@@ -89,6 +89,7 @@ public class AddApptCommand extends Command {
                 patientToEdit.getCareInstructions(), patientToEdit.getContacts(), updatedAppointments,
                 patientToEdit.isArchived());
         model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
         return new CommandResult(buildSuccessMessage(patientToEdit));
     }

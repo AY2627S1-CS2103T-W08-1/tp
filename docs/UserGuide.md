@@ -313,6 +313,7 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
 * Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones.
+  After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
 
 Examples:
 
