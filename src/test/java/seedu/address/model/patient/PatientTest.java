@@ -145,9 +145,11 @@ public class PatientTest {
         Appointment later = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(8, 0), "Dr Tan", "");
         Patient patient = new PatientBuilder(ALICE).withAppointments(later, past, now).build();
 
-        // appointments at the current time count as upcoming
+        // appointments in the current minute count as upcoming
         assertEquals(List.of(now, later, past),
                 patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 0)));
+        assertEquals(List.of(now, later, past),
+                patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 0, 30)));
         assertEquals(List.of(later, past, now),
                 patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 1)));
     }

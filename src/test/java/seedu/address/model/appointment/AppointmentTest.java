@@ -38,6 +38,7 @@ public class AppointmentTest {
         Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "");
         assertTrue(appointment.isBefore(LocalDateTime.of(DATE, TIME.plusMinutes(1))));
         assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME))); // same time
+        assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME).plusSeconds(30))); // same minute
         assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME.minusMinutes(1))));
     }
 

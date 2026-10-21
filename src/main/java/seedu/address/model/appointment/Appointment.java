@@ -108,11 +108,12 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
-     * Returns true if the appointment is before {@code dateTime}, i.e. in the past if
-     * {@code dateTime} is now.
+     * Returns true if the appointment is before the minute of {@code dateTime}, i.e. in the past if
+     * {@code dateTime} is now. Seconds are ignored, since appointments are in whole minutes, so an
+     * appointment at 12:00 is not before 12:00:30.
      */
     public boolean isBefore(LocalDateTime dateTime) {
-        return LocalDateTime.of(date, time).isBefore(dateTime);
+        return LocalDateTime.of(date, time).isBefore(dateTime.truncatedTo(ChronoUnit.MINUTES));
     }
 
     /**
