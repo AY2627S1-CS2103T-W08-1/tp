@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditApptCommand;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Medication;
 
 public class EditApptCommandParserTest {
 
@@ -64,7 +65,7 @@ public class EditApptCommandParserTest {
     @Test
     public void parse_invalidValue_throwsParseException() {
         assertParseFailure(parser, "1 2 d/2026-02-30", Appointment.MESSAGE_DATE_CONSTRAINTS);
-        assertParseFailure(parser, "1 2 t/9:30", Appointment.MESSAGE_TIME_CONSTRAINTS);
+        assertParseFailure(parser, "1 2 t/9:30", Medication.MESSAGE_TIME_CONSTRAINTS);
         assertParseFailure(parser, "1 2 w/ ", Appointment.MESSAGE_PROVIDER_CONSTRAINTS);
     }
 

@@ -33,8 +33,8 @@ public class CommandTestUtil {
 
     public static final String VALID_NAME_AMY = "Amy Bee";
     public static final String VALID_NAME_BOB = "Bob Choo";
-    public static final String VALID_PHONE_AMY = "11111111";
-    public static final String VALID_PHONE_BOB = "22222222";
+    public static final String VALID_PHONE_AMY = "81111111";
+    public static final String VALID_PHONE_BOB = "92222222";
     public static final String VALID_NRIC_AMY = "S1234567A";
     public static final String VALID_NRIC_BOB = "T7654321B";
     public static final String VALID_ADDRESS_AMY = "Block 312, Amy Street 1";
@@ -60,9 +60,9 @@ public class CommandTestUtil {
     public static final String PREAMBLE_WHITESPACE = "\t  \r  \n";
     public static final String PREAMBLE_NON_EMPTY = "NonEmptyPreamble";
 
-    /** Fixes the current date and time at 2026-10-18 12:00. */
+    /** Fixes the current date and time at 2026-10-18 12:00:30, half a minute into the 12:00 minute. */
     public static final Clock FIXED_CLOCK =
-            Clock.fixed(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
+            Clock.fixed(Instant.parse("2026-10-18T12:00:30Z"), ZoneOffset.UTC);
 
     /**
      * Executes the given {@code command}, confirms that <br>

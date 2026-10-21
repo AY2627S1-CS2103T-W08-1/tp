@@ -7,12 +7,15 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
+import static seedu.address.testutil.TypicalContacts.GP;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import seedu.address.model.AddressBook;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -34,8 +37,9 @@ public class TypicalPatients {
     public static final Patient DANIEL = new PatientBuilder().withNric("S0000004A").withName("Daniel Meier")
             .withPhone("87652533")
             .withAddress("10th street")
-            .withMedications("Metformin").withAllergens("Penicillin")
-            .withCareInstructions("Check blood sugar")
+            .withMedications(new Medication("Metformin", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0))))
+            .withAllergens("Penicillin")
+            .withCareInstructions("Check blood sugar").withContacts(GP)
             .withAppointments(CHECKUP)
             .build();
     public static final Patient ELLE = new PatientBuilder().withNric("S0000005A").withName("Elle Meyer")
@@ -62,6 +66,7 @@ public class TypicalPatients {
     public static final Patient BOB = new PatientBuilder().withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
             .withNric("T7654321B").withDob("1945-11-02").withAddress(VALID_ADDRESS_BOB)
             .build();
+    public static final Patient ARCHIVED_ALICE = new PatientBuilder(ALICE).withArchived(true).build();
 
     public static final String KEYWORD_MATCHING_MEIER = "Meier"; // A keyword that matches MEIER
 

@@ -23,6 +23,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class ArgumentTokenizer {
 
     private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
+    private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("\\p{P}");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -41,6 +42,7 @@ public class ArgumentTokenizer {
      * Rejects unrecognized alphabetic slash prefixes at token boundaries.
      * A prefix candidate consists of one or more letters followed immediately by a slash.
      * Standalone tokens in {@code allowedSlashTokens} are treated as ordinary text, ignoring case.
+     * Allowed tokens with trailing punctuation are rejected with a correction.
      *
      * @param argsString Original command arguments to check.
      * @param allowedSlashTokens Lowercase tokens allowed as ordinary text by the command.
@@ -62,10 +64,40 @@ public class ArgumentTokenizer {
 
             String candidate = matcher.group(1);
 
-            if (!allowed.contains(candidate)) {
-                throw new ParseException(String.format(Messages.MESSAGE_UNKNOWN_PREFIX, candidate));
+            // Allow recognized command prefixes.
+            if (allowed.contains(candidate)) {
+                continue;
             }
+
+            // Explain how to correct an allowed slash word with trailing punctuation.
+            String token = matcher.group();
+            String unpunctuatedToken = removeTrailingPunctuation(token);
+
+            if (allowedSlashTokens.contains(unpunctuatedToken.toLowerCase(Locale.ROOT))) {
+                throw new ParseException(String.format(
+                        Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken));
+            }
+
+            // Report other unrecognized prefixes.
+            throw new ParseException(String.format(Messages.MESSAGE_UNKNOWN_PREFIX, candidate));
         }
+    }
+
+    /**
+     * Removes trailing punctuation in one backwards scan, including Unicode punctuation.
+     */
+    private static String removeTrailingPunctuation(String token) {
+        Matcher punctuationMatcher = PUNCTUATION_PATTERN.matcher(token);
+        int end = token.length();
+        // Scan from the end to avoid repeatedly searching the same punctuation run.
+        while (end > 0) {
+            int start = end - Character.charCount(token.codePointBefore(end));
+            if (!punctuationMatcher.region(start, end).matches()) {
+                break;
+            }
+            end = start;
+        }
+        return token.substring(0, end);
     }
 
     /**

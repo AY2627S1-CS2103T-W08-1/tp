@@ -133,7 +133,7 @@ public class ListApptCommand extends Command {
      * Returns true if {@code appointment} is at or after {@code now}.
      */
     private static boolean isUpcoming(Appointment appointment, LocalDateTime now) {
-        return !appointment.getDateTime().isBefore(now);
+        return !appointment.isBefore(now);
     }
 
     /**

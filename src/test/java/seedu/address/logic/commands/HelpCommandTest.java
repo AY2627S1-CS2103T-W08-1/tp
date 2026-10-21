@@ -17,6 +17,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,11 @@ public class HelpCommandTest {
 
     /** Valid sample values that replace the placeholders of a command format to give a valid input. */
     private static final Map<String, String> PLACEHOLDER_VALUES = Map.ofEntries(
+            Map.entry("ALLERGY_INDEX", "1"),
+            Map.entry("CONTACT_INDEX", "1"),
+            Map.entry("CI_INDEX", "1"),
+            Map.entry("ROLE", "GP"),
+            Map.entry("NOTE", "Call first"),
             Map.entry("NAME", "John Tan"),
             Map.entry("NRIC", "S1234567A"),
             Map.entry("DOB", "1950-04-12"),
@@ -51,9 +57,9 @@ public class HelpCommandTest {
             Map.entry("DATE", "2026-11-05"),
             Map.entry("TIME", "09:30"),
             Map.entry("WITH", "Dr Tan"),
-            Map.entry("NOTE", "Fasting"),
             Map.entry("KEYWORD", "alice"),
-            Map.entry("MORE_KEYWORDS", "bob"));
+            Map.entry("MORE_KEYWORDS", "bob"),
+            Map.entry("FILENAME", "mediconnect-20261020-083015.json"));
 
     private static Map<String, Class<? extends Command>> createExpectedCommands() {
         Map<String, Class<? extends Command>> commands = new LinkedHashMap<>();
@@ -61,16 +67,25 @@ public class HelpCommandTest {
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
+        commands.put(EditCareCommand.COMMAND_WORD, EditCareCommand.class);
+        commands.put(DeleteCareCommand.COMMAND_WORD, DeleteCareCommand.class);
+        commands.put(DeleteAllergyCommand.COMMAND_WORD, DeleteAllergyCommand.class);
+        commands.put(AddContactCommand.COMMAND_WORD, AddContactCommand.class);
+        commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
+        commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
         commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
         commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
         commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
         commands.put(ListApptCommand.COMMAND_WORD, ListApptCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
+        commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
         commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
+        commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
+        commands.put(RestoreCommand.COMMAND_WORD, RestoreCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
-        return commands;
+        return Collections.unmodifiableMap(commands);
     }
 
     @Test
@@ -99,7 +114,7 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_listsEveryCommandOnceInOrder() {
+    public void commandSummary_everyCommand_listedOnceInOrder() {
         List<String> commandWords = getLines().stream()
                 .map(line -> line.split(" ", 2)[0])
                 .collect(Collectors.toList());
@@ -108,7 +123,7 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_eachLineHasFormatAndDescription() {
+    public void commandSummary_eachLine_hasFormatAndDescription() {
         for (String line : getLines()) {
             String[] parts = line.split(Pattern.quote(FORMAT_DESCRIPTION_SEPARATOR), -1);
 
@@ -121,7 +136,7 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_noBlankOrPaddedLines() {
+    public void commandSummary_eachLine_notBlankOrPadded() {
         for (String line : getLines()) {
             assertFalse(line.isBlank());
             assertEquals(line.strip(), line);
@@ -149,7 +164,8 @@ public class HelpCommandTest {
     @Test
     public void commandSummary_indexCommands_takeIndex() {
         for (String commandWord : List.of(DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
-                AddCareCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, EditApptCommand.COMMAND_WORD,
+                AddCareCommand.COMMAND_WORD, EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
+                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, EditApptCommand.COMMAND_WORD,
                 CancelApptCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
@@ -165,12 +181,13 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void commandSummary_noAb3Leftovers() {
+    public void commandSummary_ab3Terms_notMentioned() {
         String summary = COMMAND_SUMMARY.toLowerCase();
 
-        for (String leftover : List.of("person", "contact", "address book", "t/tag", "e/email", "edit index")) {
+        for (String leftover : List.of("person", "address book", "t/tag", "e/email")) {
             assertFalse(summary.contains(leftover), "Summary should not mention: " + leftover);
         }
+        assertFalse(getLines().stream().anyMatch(line -> line.startsWith(EditCommand.COMMAND_WORD + " ")));
     }
 
     @Test
@@ -220,8 +237,11 @@ public class HelpCommandTest {
      */
     private static String toSampleInput(String format) {
         String input = format.replace("[", "").replace("]", "").replace("...", "");
-        for (Map.Entry<String, String> placeholder : PLACEHOLDER_VALUES.entrySet()) {
-            input = input.replaceAll("\\b" + placeholder.getKey() + "\\b", placeholder.getValue());
+        List<String> placeholdersByLength = PLACEHOLDER_VALUES.keySet().stream()
+                .sorted((first, second) -> Integer.compare(second.length(), first.length()))
+                .toList();
+        for (String placeholder : placeholdersByLength) {
+            input = input.replaceAll("\\b" + placeholder + "\\b", PLACEHOLDER_VALUES.get(placeholder));
         }
         return input;
     }

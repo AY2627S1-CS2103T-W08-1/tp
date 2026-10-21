@@ -35,6 +35,9 @@ public class NameTest {
         assertFalse(Name.isValidName("-Alex")); // does not start with a letter
         assertFalse(Name.isValidName("/Alex")); // starts with a forward slash
         assertFalse(Name.isValidName(".Alex")); // starts with a period
+        assertFalse(Name.isValidName("Ben -- // ..")); // symbols not next to letters
+        assertFalse(Name.isValidName("Mary -Jane")); // hyphen after a space
+        assertFalse(Name.isValidName("Tan .")); // period not after a letter
 
         // valid name
         assertTrue(Name.isValidName("peter jack")); // alphabets only
@@ -44,6 +47,8 @@ public class NameTest {
         assertTrue(Name.isValidName("Tan Ah Kow Jr.")); // ends with a period
         assertTrue(Name.isValidName("O'Brien")); // with apostrophe
         assertTrue(Name.isValidName("Mary-Jane")); // with hyphen
+        assertTrue(Name.isValidName("A.B. Tan")); // initials
+        assertTrue(Name.isValidName("D'Angelo-Smith")); // apostrophe and hyphen
         assertTrue(Name.isValidName("David Roger Jackson Ray Jr")); // long names
     }
 
