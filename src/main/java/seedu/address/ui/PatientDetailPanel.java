@@ -1,5 +1,6 @@
 package seedu.address.ui;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javafx.beans.value.ObservableValue;
@@ -9,6 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
@@ -49,6 +51,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private VBox careInstructions;
     @FXML
     private VBox contacts;
+    @FXML
+    private VBox appointments;
 
     /**
      * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
@@ -74,7 +78,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
-     * Fills the detail labels with the fields and care lists of {@code patient}.
+     * Fills the detail labels with the fields, care lists, contacts and appointments of {@code patient}.
+     * Upcoming appointments are listed first, so that their numbers are the ones commands use.
      */
     private void fillDetails(Patient patient) {
         name.setText(patient.getName().fullName);
@@ -86,6 +91,8 @@ public class PatientDetailPanel extends UiPart<Region> {
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
         fillEntries(contacts, patient.getContacts().stream().map(Contact::toString).toList());
+        fillEntries(appointments, patient.getAppointmentsUpcomingFirst(LocalDateTime.now()).stream()
+                .map(Appointment::toString).toList());
     }
 
     /**

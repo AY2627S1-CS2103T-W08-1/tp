@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
 import java.awt.GraphicsEnvironment;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -26,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
@@ -107,11 +110,22 @@ public class PatientDetailPanelTest {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
 
-        for (String id : List.of("#medications", "#allergens", "#careInstructions")) {
+        for (String id : List.of("#medications", "#allergens", "#careInstructions", "#appointments")) {
             VBox entries = (VBox) lookup(content, id);
             assertEquals(1, entries.getChildren().size());
             assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
         }
+    }
+
+    @Test
+    public void viewedPatient_appointments_numberedUpcomingFirst() {
+        VBox content = createPanelContent();
+        Appointment past = new Appointment(LocalDate.of(2000, 1, 1), LocalTime.of(9, 0), "Dr Lee", "");
+        Appointment upcoming = new Appointment(LocalDate.of(2999, 1, 1), LocalTime.of(9, 0), "Dr Tan", "");
+        viewedPatient.set(new PatientBuilder().withAppointments(past, upcoming).build());
+
+        assertEquals(List.of(upcoming.toString(), past.toString()), getEntryTexts(content, "#appointments"));
+        assertEquals(List.of("1.", "2."), getNumberTexts(content, "#appointments"));
     }
 
     @Test
@@ -121,11 +135,13 @@ public class PatientDetailPanelTest {
                 .withMedications("Metformin 500mg", "Amlodipine 5mg")
                 .withAllergens("Penicillin")
                 .withCareInstructions("Check blood sugar before breakfast")
+                .withAppointments(CHECKUP)
                 .build());
 
         assertEquals(List.of("Metformin 500mg", "Amlodipine 5mg"), getEntryTexts(content, "#medications"));
         assertEquals(List.of("Penicillin"), getEntryTexts(content, "#allergens"));
         assertEquals(List.of("Check blood sugar before breakfast"), getEntryTexts(content, "#careInstructions"));
+        assertEquals(List.of(CHECKUP.toString()), getEntryTexts(content, "#appointments"));
 
         assertEquals(List.of("1.", "2."), getNumberTexts(content, "#medications"));
         assertEquals(List.of("1."), getNumberTexts(content, "#allergens"));

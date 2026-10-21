@@ -35,6 +35,12 @@
       "role" : "GP",
       "phone" : "+65 6123-4567",
       "note" : "Call in the morning"
+    } ],
+    "appointments" : [ {
+      "date" : "2026-11-05",
+      "time" : "09:30",
+      "provider" : "Dr Tan",
+      "note" : "Fasting"
     } ]
   }, {
     "name" : "Elle Meyer",
