@@ -23,18 +23,25 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.CARL;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.AdjustableClock;
 import seedu.address.testutil.PatientBuilder;
 
 public class ListApptCommandTest {
@@ -88,7 +95,8 @@ public class ListApptCommandTest {
                 + "\n" + HEADING_UPCOMING + "\n1. " + CHECKUP
                 + "\n" + HEADING_PAST + "\n2. " + ONE_MINUTE_AGO;
         ListApptCommand command = new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT), FIXED_CLOCK);
-        assertCommandSuccess(command, createModel(), expectedMessage, createModel());
+        assertCommandSuccess(command, createModel(), expectedMessage,
+                showPatient(createModel(), INDEX_FIRST_PATIENT));
     }
 
     @Test
@@ -97,14 +105,33 @@ public class ListApptCommandTest {
                 + "\n" + HEADING_UPCOMING + "\n1. " + NOW + "\n2. " + CARDIOLOGY
                 + "\n" + HEADING_PAST + NO_ENTRIES;
         ListApptCommand command = new ListApptCommand(Optional.of(INDEX_SECOND_PATIENT), FIXED_CLOCK);
-        assertCommandSuccess(command, createModel(), expectedMessage, createModel());
+        assertCommandSuccess(command, createModel(), expectedMessage,
+                showPatient(createModel(), INDEX_SECOND_PATIENT));
     }
 
     @Test
     public void execute_indexOfPatientWithNoAppointments_showsNoAppointmentsMessage() {
         ListApptCommand command = new ListApptCommand(Optional.of(INDEX_THIRD_PATIENT), FIXED_CLOCK);
         assertCommandSuccess(command, createModel(),
-                String.format(MESSAGE_NO_PATIENT_APPOINTMENTS, CARL.getName()), createModel());
+                String.format(MESSAGE_NO_PATIENT_APPOINTMENTS, CARL.getName()),
+                showPatient(createModel(), INDEX_THIRD_PATIENT));
+    }
+
+    @Test
+    public void execute_indexThenAppointmentPasses_laterCommandsUseListedNumbers() throws Exception {
+        AdjustableClock clock = new AdjustableClock(Instant.parse("2026-10-18T12:00:30Z"), ZoneOffset.UTC);
+        Appointment soon = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 1), "Dr Tan", "");
+        Model model = new ModelManager(new AddressBook(), new UserPrefs(), clock);
+        model.addPatient(new PatientBuilder(ALICE).withAppointments(ONE_MINUTE_AGO, soon, CHECKUP).build());
+        String listed = new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT), clock).execute(model)
+                .getFeedbackToUser();
+        assertTrue(listed.contains("1. " + soon));
+        clock.advance(Duration.ofMinutes(2));
+
+        // number 1 is still the appointment listed as 1, although it has now passed
+        new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT).execute(model);
+        assertEquals(List.of(ONE_MINUTE_AGO, CHECKUP),
+                model.getFilteredPatientList().get(0).getAppointments());
     }
 
     @Test
@@ -156,10 +183,18 @@ public class ListApptCommandTest {
      * Returns a model with the given {@code patients}, in that order.
      */
     private static Model createModelWith(Patient... patients) {
-        Model model = new ModelManager();
+        Model model = new ModelManager(new AddressBook(), new UserPrefs(), FIXED_CLOCK);
         for (Patient patient : patients) {
             model.addPatient(patient);
         }
+        return model;
+    }
+
+    /**
+     * Returns {@code model} with the patient at {@code index} of its displayed list shown in the panel.
+     */
+    private static Model showPatient(Model model, Index index) {
+        model.setViewedPatient(model.getFilteredPatientList().get(index.getZeroBased()));
         return model;
     }
 }

@@ -27,8 +27,8 @@ public class ListApptCommand extends Command {
     public static final String COMMAND_WORD = "listappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists the upcoming appointments of all "
-            + "active patients, soonest first. With an INDEX, lists every appointment of the patient identified by "
-            + "the index number used in the displayed patient list.\n"
+            + "active patients, soonest first. With an INDEX, lists every appointment of the patient "
+            + "identified by the index number used in the displayed patient list, and shows them in the panel.\n"
             + "Parameters: [INDEX] (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
 
@@ -77,7 +77,9 @@ public class ListApptCommand extends Command {
             throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
         }
         Patient patient = lastShownList.get(targetIndex.get().getZeroBased());
-        return new CommandResult(listAppointmentsOf(patient, now));
+        // Shows the patient, so that the numbers listed stay the ones that later commands use.
+        model.setViewedPatient(patient);
+        return new CommandResult(listAppointmentsOf(patient, model.getAppointmentsAsShown(patient), now));
     }
 
     /**
@@ -107,11 +109,11 @@ public class ListApptCommand extends Command {
     }
 
     /**
-     * Returns every appointment of {@code patient}, upcoming ones first, then past ones, each numbered as in
-     * the patient's detail panel.
+     * Returns the {@code appointments} of {@code patient}, in the order and with the numbers of the patient's
+     * detail panel, under an upcoming and a past heading.
      */
-    private static String listAppointmentsOf(Patient patient, LocalDateTime now) {
-        List<Appointment> appointments = patient.getAppointmentsUpcomingFirst(now);
+    private static String listAppointmentsOf(Patient patient, List<Appointment> appointments,
+            LocalDateTime now) {
         if (appointments.isEmpty()) {
             return String.format(MESSAGE_NO_PATIENT_APPOINTMENTS, patient.getName());
         }

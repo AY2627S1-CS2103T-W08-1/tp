@@ -414,9 +414,10 @@ Format: `listappt [INDEX]`
   first. An appointment earlier today is past and is not listed. Archived patients are skipped, and every active
   patient is included, even after `find`.
 * With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
-  appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`.
+  appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`. The detail panel then
+  shows the patient, with the same numbers.
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
-* The patient list and the detail panel do not change.
+* The patient list does not change.
 
 Examples:
 
