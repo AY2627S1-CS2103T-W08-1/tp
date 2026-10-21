@@ -85,7 +85,7 @@ public class ListApptCommand extends Command {
         List<Map.Entry<Appointment, Patient>> upcomingAppointments = new ArrayList<>();
         for (Patient patient : patients) {
             for (Appointment appointment : patient.getAppointments()) {
-                if (isUpcoming(appointment, now)) {
+                if (!appointment.isBefore(now)) {
                     upcomingAppointments.add(Map.entry(appointment, patient));
                 }
             }
@@ -108,7 +108,7 @@ public class ListApptCommand extends Command {
      * the patient's detail panel.
      */
     private static String listAppointmentsOf(Patient patient, LocalDateTime now) {
-        List<Appointment> appointments = patient.getAppointments();
+        List<Appointment> appointments = patient.getAppointmentsUpcomingFirst(now);
         if (appointments.isEmpty()) {
             return String.format(MESSAGE_NO_PATIENT_APPOINTMENTS, patient.getName());
         }
@@ -118,22 +118,15 @@ public class ListApptCommand extends Command {
         for (int i = 0; i < appointments.size(); i++) {
             Appointment appointment = appointments.get(i);
             String line = Index.fromZeroBased(i).getOneBased() + ". " + appointment;
-            if (isUpcoming(appointment, now)) {
-                upcomingLines.add(line);
-            } else {
+            if (appointment.isBefore(now)) {
                 pastLines.add(line);
+            } else {
+                upcomingLines.add(line);
             }
         }
         return String.format(MESSAGE_PATIENT_APPOINTMENTS, patient.getName())
                 + formatGroup(HEADING_UPCOMING, upcomingLines)
                 + formatGroup(HEADING_PAST, pastLines);
-    }
-
-    /**
-     * Returns true if {@code appointment} is at or after {@code now}.
-     */
-    private static boolean isUpcoming(Appointment appointment, LocalDateTime now) {
-        return !appointment.isBefore(now);
     }
 
     /**

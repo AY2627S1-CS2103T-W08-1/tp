@@ -74,8 +74,8 @@ public class ListApptCommandTest {
     @Test
     public void execute_index_listsUpcomingThenPastWithPanelNumbers() {
         String expectedMessage = String.format(MESSAGE_PATIENT_APPOINTMENTS, ALICE.getName())
-                + "\n" + HEADING_UPCOMING + "\n2. " + CHECKUP
-                + "\n" + HEADING_PAST + "\n1. " + ONE_MINUTE_AGO;
+                + "\n" + HEADING_UPCOMING + "\n1. " + CHECKUP
+                + "\n" + HEADING_PAST + "\n2. " + ONE_MINUTE_AGO;
         ListApptCommand command = new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT), FIXED_CLOCK);
         assertCommandSuccess(command, createModel(), expectedMessage, createModel());
     }
