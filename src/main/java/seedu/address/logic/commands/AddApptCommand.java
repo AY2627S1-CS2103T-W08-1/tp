@@ -98,7 +98,7 @@ public class AddApptCommand extends Command {
      */
     private String buildSuccessMessage(Patient patient) {
         String message = String.format(MESSAGE_SUCCESS, patient.getName(), toAdd);
-        boolean isInPast = toAdd.getDateTime().isBefore(LocalDateTime.now(clock));
+        boolean isInPast = toAdd.isBefore(LocalDateTime.now(clock));
         if (isInPast) {
             message += "\n" + MESSAGE_PAST_APPOINTMENT;
         }

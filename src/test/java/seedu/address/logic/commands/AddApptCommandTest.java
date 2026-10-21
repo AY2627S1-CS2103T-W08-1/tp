@@ -32,9 +32,9 @@ import seedu.address.testutil.PatientBuilder;
 
 public class AddApptCommandTest {
 
-    /** Fixes the current date and time at 2026-10-18 12:00. */
+    /** Fixes the current date and time at 2026-10-18 12:00:30, half a minute into the 12:00 minute. */
     private static final Clock FIXED_CLOCK =
-            Clock.fixed(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
+            Clock.fixed(Instant.parse("2026-10-18T12:00:30Z"), ZoneOffset.UTC);
 
     @Test
     public void constructor_nullArguments_throwsNullPointerException() {
@@ -58,7 +58,7 @@ public class AddApptCommandTest {
     }
 
     @Test
-    public void execute_appointmentAtCurrentTime_addsWithoutPastNote() {
+    public void execute_appointmentInCurrentMinute_addsWithoutPastNote() {
         Appointment now = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 0), "Dr Tan", "");
         assertAddSuccess(ALICE, now, new PatientBuilder(ALICE).withAppointments(now).build(),
                 String.format(MESSAGE_SUCCESS, ALICE.getName(), now));

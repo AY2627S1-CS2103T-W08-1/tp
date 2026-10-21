@@ -140,7 +140,7 @@ public class Appointment implements Comparable<Appointment> {
      * appointment at 12:00 is not before 12:00:30.
      */
     public boolean isBefore(LocalDateTime dateTime) {
-        return LocalDateTime.of(date, time).isBefore(dateTime.truncatedTo(ChronoUnit.MINUTES));
+        return getDateTime().isBefore(dateTime.truncatedTo(ChronoUnit.MINUTES));
     }
 
     /**
