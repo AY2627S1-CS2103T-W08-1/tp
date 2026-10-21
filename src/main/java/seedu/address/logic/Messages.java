@@ -1,10 +1,14 @@
 package seedu.address.logic;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.logic.parser.Prefix;
+import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -25,6 +29,11 @@ public class Messages {
     public static final String MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX = "The patient index provided is invalid.";
     public static final String MESSAGE_INVALID_APPOINTMENT_DISPLAYED_INDEX =
             "The appointment index provided is invalid.";
+    public static final String MESSAGE_DUPLICATE_APPOINTMENT =
+            "This appointment already exists for this patient.";
+    public static final String MESSAGE_PAST_APPOINTMENT = "Note: this appointment is in the past.";
+    public static final String MESSAGE_CLASH =
+            "Warning: %1$s already has an appointment at this date and time (with %2$s).";
     public static final String MESSAGE_NOTHING_DUE_TODAY = "No medications are due today.";
     public static final String MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT = "No medications are due today for %1$s.";
     public static final String MESSAGE_DUE_ENTRY = "%1$s %2$s: %3$s";
@@ -43,6 +52,25 @@ public class Messages {
                 Stream.of(duplicatePrefixes).map(Prefix::toString).collect(Collectors.toSet());
 
         return MESSAGE_DUPLICATE_FIELDS + String.join(" ", duplicateFields);
+    }
+
+    /**
+     * Returns a note if {@code appointment} is before {@code now}, and a warning for each of the patient's
+     * {@code otherAppointments} at the same date and time, each on a new line.
+     * Returns an empty string if there is nothing to warn about.
+     */
+    public static String formatAppointmentWarnings(Name patientName, Appointment appointment,
+            List<Appointment> otherAppointments, LocalDateTime now) {
+        String warnings = "";
+        if (appointment.isBefore(now)) {
+            warnings += "\n" + MESSAGE_PAST_APPOINTMENT;
+        }
+        for (Appointment otherAppointment : otherAppointments) {
+            if (appointment.isAtSameTimeAs(otherAppointment)) {
+                warnings += "\n" + String.format(MESSAGE_CLASH, patientName, otherAppointment.getProvider());
+            }
+        }
+        return warnings;
     }
 
     /**

@@ -107,7 +107,7 @@ public class EditApptCommand extends Command {
         Appointment appointmentToEdit = otherAppointments.remove(appointmentIndex.getZeroBased());
         Appointment editedAppointment = createEditedAppointment(appointmentToEdit);
         if (otherAppointments.stream().anyMatch(editedAppointment::isSameAppointment)) {
-            throw new CommandException(AddApptCommand.MESSAGE_DUPLICATE_APPOINTMENT);
+            throw new CommandException(Messages.MESSAGE_DUPLICATE_APPOINTMENT);
         }
 
         // Put it back in its place, so appointments at the same date and time keep their numbers.
@@ -116,8 +116,8 @@ public class EditApptCommand extends Command {
         model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
 
         String message = String.format(MESSAGE_SUCCESS, patientToEdit.getName(), editedAppointment)
-                + AddApptCommand.buildWarnings(patientToEdit.getName(), editedAppointment, otherAppointments,
-                        clock);
+                + Messages.formatAppointmentWarnings(patientToEdit.getName(), editedAppointment,
+                        otherAppointments, LocalDateTime.now(clock));
         return new CommandResult(message);
     }
 
