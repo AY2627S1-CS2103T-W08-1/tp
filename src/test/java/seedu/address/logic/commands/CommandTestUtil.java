@@ -129,4 +129,13 @@ public class CommandTestUtil {
         return model;
     }
 
+    /**
+     * Returns a model like {@code createModelWithAppointments}, with Alice shown in the detail panel.
+     */
+    public static Model createViewedModelWithAppointments(Appointment... appointments) {
+        Model model = createModelWithAppointments(appointments);
+        model.setViewedPatient(model.getFilteredPatientList().get(0));
+        return model;
+    }
+
 }

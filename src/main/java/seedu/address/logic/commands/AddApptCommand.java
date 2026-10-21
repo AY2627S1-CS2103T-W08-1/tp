@@ -17,7 +17,6 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.appointment.Appointment;
-import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -38,11 +37,6 @@ public class AddApptCommand extends Command {
             + PREFIX_WITH + "Dr Tan " + PREFIX_NOTE + "Bring blood test results";
 
     public static final String MESSAGE_SUCCESS = "New appointment for %1$s: %2$s";
-    public static final String MESSAGE_DUPLICATE_APPOINTMENT =
-            "This appointment already exists for this patient.";
-    public static final String MESSAGE_PAST_APPOINTMENT = "Note: this appointment is in the past.";
-    public static final String MESSAGE_CLASH =
-            "Warning: %1$s already has an appointment at this date and time (with %2$s).";
 
     private final Index targetIndex;
     private final Appointment toAdd;
@@ -79,36 +73,19 @@ public class AddApptCommand extends Command {
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
         if (patientToEdit.getAppointments().stream().anyMatch(toAdd::isSameAppointment)) {
-            throw new CommandException(MESSAGE_DUPLICATE_APPOINTMENT);
+            throw new CommandException(Messages.MESSAGE_DUPLICATE_APPOINTMENT);
         }
 
         List<Appointment> updatedAppointments = new ArrayList<>(patientToEdit.getAppointments());
         updatedAppointments.add(toAdd);
-        model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
+        Patient editedPatient = patientToEdit.withAppointments(updatedAppointments);
+        model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
         String message = String.format(MESSAGE_SUCCESS, patientToEdit.getName(), toAdd)
-                + buildWarnings(patientToEdit.getName(), toAdd, patientToEdit.getAppointments(), clock);
+                + Messages.formatAppointmentWarnings(patientToEdit.getName(), toAdd,
+                        patientToEdit.getAppointments(), LocalDateTime.now(clock));
         return new CommandResult(message);
-    }
-
-    /**
-     * Returns a note if {@code appointment} is in the past according to {@code clock}, and a warning for
-     * each of the patient's {@code otherAppointments} at the same date and time, each on a new line.
-     * Returns an empty string if there is nothing to warn about.
-     */
-    static String buildWarnings(Name patientName, Appointment appointment,
-            List<Appointment> otherAppointments, Clock clock) {
-        String warnings = "";
-        boolean isInPast = appointment.isBefore(LocalDateTime.now(clock));
-        if (isInPast) {
-            warnings += "\n" + MESSAGE_PAST_APPOINTMENT;
-        }
-        for (Appointment otherAppointment : otherAppointments) {
-            if (appointment.isAtSameTimeAs(otherAppointment)) {
-                warnings += "\n" + String.format(MESSAGE_CLASH, patientName, otherAppointment.getProvider());
-            }
-        }
-        return warnings;
     }
 
     @Override

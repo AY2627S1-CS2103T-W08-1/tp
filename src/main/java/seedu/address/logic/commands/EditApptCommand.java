@@ -41,7 +41,7 @@ public class EditApptCommand extends Command {
             + "[" + PREFIX_NOTE + "NOTE]\n"
             + "Example: " + COMMAND_WORD + " 1 2 " + PREFIX_TIME + "10:00 " + PREFIX_NOTE;
 
-    public static final String MESSAGE_SUCCESS = "Edited appointment for %1$s: %2$s";
+    public static final String MESSAGE_SUCCESS = "Edited appointment %1$d of %2$s: %3$s";
     public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_DATE + ", " + PREFIX_TIME
             + ", " + PREFIX_WITH + " or " + PREFIX_NOTE + " must be provided.";
 
@@ -98,8 +98,9 @@ public class EditApptCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
+        LocalDateTime now = LocalDateTime.now(clock);
         List<Appointment> otherAppointments =
-                new ArrayList<>(patientToEdit.getAppointmentsUpcomingFirst(LocalDateTime.now(clock)));
+                new ArrayList<>(patientToEdit.getAppointmentsUpcomingFirst(now));
         if (appointmentIndex.getZeroBased() >= otherAppointments.size()) {
             throw new CommandException(Messages.MESSAGE_INVALID_APPOINTMENT_DISPLAYED_INDEX);
         }
@@ -107,17 +108,22 @@ public class EditApptCommand extends Command {
         Appointment appointmentToEdit = otherAppointments.remove(appointmentIndex.getZeroBased());
         Appointment editedAppointment = createEditedAppointment(appointmentToEdit);
         if (otherAppointments.stream().anyMatch(editedAppointment::isSameAppointment)) {
-            throw new CommandException(AddApptCommand.MESSAGE_DUPLICATE_APPOINTMENT);
+            throw new CommandException(Messages.MESSAGE_DUPLICATE_APPOINTMENT);
         }
 
         // Put it back in its place, so appointments at the same date and time keep their numbers.
         List<Appointment> updatedAppointments = new ArrayList<>(otherAppointments);
         updatedAppointments.add(appointmentIndex.getZeroBased(), editedAppointment);
-        model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
+        Patient editedPatient = patientToEdit.withAppointments(updatedAppointments);
+        model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
-        String message = String.format(MESSAGE_SUCCESS, patientToEdit.getName(), editedAppointment)
-                + AddApptCommand.buildWarnings(patientToEdit.getName(), editedAppointment, otherAppointments,
-                        clock);
+        // The appointments are sorted again, so the message gives the appointment's number after the edit.
+        int newPosition = editedPatient.getAppointmentsUpcomingFirst(now).indexOf(editedAppointment);
+        String message = String.format(MESSAGE_SUCCESS, Index.fromZeroBased(newPosition).getOneBased(),
+                patientToEdit.getName(), editedAppointment)
+                + Messages.formatAppointmentWarnings(patientToEdit.getName(), editedAppointment,
+                        otherAppointments, now);
         return new CommandResult(message);
     }
 

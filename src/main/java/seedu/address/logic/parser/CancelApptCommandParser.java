@@ -17,7 +17,7 @@ public class CancelApptCommandParser implements Parser<CancelApptCommand> {
      * Parses the given {@code String} of arguments in the context of the CancelApptCommand
      * and returns a CancelApptCommand object for execution.
      *
-     * @throws ParseException if the user input does not conform to the expected format
+     * @throws ParseException if the user input does not conform to the expected format.
      */
     @Override
     public CancelApptCommand parse(String args) throws ParseException {

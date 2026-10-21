@@ -3,9 +3,9 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.commands.AddApptCommand.MESSAGE_CLASH;
-import static seedu.address.logic.commands.AddApptCommand.MESSAGE_DUPLICATE_APPOINTMENT;
-import static seedu.address.logic.commands.AddApptCommand.MESSAGE_PAST_APPOINTMENT;
+import static seedu.address.logic.Messages.MESSAGE_CLASH;
+import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_APPOINTMENT;
+import static seedu.address.logic.Messages.MESSAGE_PAST_APPOINTMENT;
 import static seedu.address.logic.commands.AddApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
@@ -132,7 +132,7 @@ public class AddApptCommandTest {
 
     /**
      * Asserts that adding {@code toAdd} to {@code patient}, the only patient in the model,
-     * changes it to {@code expectedPatient} and shows {@code expectedMessage}.
+     * changes it to {@code expectedPatient}, shows it in the detail panel and shows {@code expectedMessage}.
      */
     private static void assertAddSuccess(Patient patient, Appointment toAdd, Patient expectedPatient,
             String expectedMessage) {
@@ -140,6 +140,7 @@ public class AddApptCommandTest {
         model.addPatient(patient);
         Model expectedModel = new ModelManager();
         expectedModel.addPatient(expectedPatient);
+        expectedModel.setViewedPatient(expectedPatient);
         assertCommandSuccess(new AddApptCommand(INDEX_FIRST_PATIENT, toAdd, FIXED_CLOCK), model,
                 expectedMessage, expectedModel);
     }
