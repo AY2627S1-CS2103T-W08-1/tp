@@ -26,7 +26,7 @@ public class EditApptCommandParser implements Parser<EditApptCommand> {
      * Parses the given {@code String} of arguments in the context of the EditApptCommand
      * and returns an EditApptCommand object for execution.
      *
-     * @throws ParseException if the user input does not conform to the expected format
+     * @throws ParseException if the user input does not conform to the expected format.
      */
     @Override
     public EditApptCommand parse(String args) throws ParseException {
