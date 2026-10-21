@@ -10,6 +10,7 @@ import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.createModelWithAppointments;
+import static seedu.address.logic.commands.CommandTestUtil.createViewedModelWithAppointments;
 import static seedu.address.logic.commands.EditApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CARDIOLOGY;
@@ -91,7 +92,7 @@ public class EditApptCommandTest {
 
         assertCommandSuccess(command, createModelWithAppointments(past, CHECKUP),
                 String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedCheckup),
-                createModelWithAppointments(past, editedCheckup));
+                createViewedModelWithAppointments(past, editedCheckup));
     }
 
     @Test
@@ -103,7 +104,7 @@ public class EditApptCommandTest {
 
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP, CARDIOLOGY),
                 String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), movedCardiology),
-                createModelWithAppointments(CHECKUP, movedCardiology));
+                createViewedModelWithAppointments(CHECKUP, movedCardiology));
     }
 
     @Test
@@ -117,7 +118,7 @@ public class EditApptCommandTest {
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP, CARDIOLOGY),
                 String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), editedAppointment)
                 + "\n" + String.format(MESSAGE_CLASH, ALICE.getName(), "Dr Tan"),
-                createModelWithAppointments(CHECKUP, editedAppointment));
+                createViewedModelWithAppointments(CHECKUP, editedAppointment));
     }
 
     @Test
@@ -131,7 +132,7 @@ public class EditApptCommandTest {
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP, clash),
                 String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedCheckup)
                 + "\n" + String.format(MESSAGE_CLASH, ALICE.getName(), "Dr Lim"),
-                createModelWithAppointments(editedCheckup, clash));
+                createViewedModelWithAppointments(editedCheckup, clash));
     }
 
     @Test
@@ -221,6 +222,6 @@ public class EditApptCommandTest {
             String expectedWarnings) {
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP),
                 String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedAppointment) + expectedWarnings,
-                createModelWithAppointments(editedAppointment));
+                createViewedModelWithAppointments(editedAppointment));
     }
 }

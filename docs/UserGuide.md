@@ -349,7 +349,8 @@ Format: `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]`
 * `INDEX` and `APPT_INDEX` follow the same rules as `cancelappt`.
 * At least one of `d/`, `t/`, `w/` or `nt/` must be given. Only the fields given are changed.
 * `DATE`, `TIME`, `WITH` and `NOTE` follow the same rules as `addappt`. `nt/` with nothing after it clears the note.
-* The appointments are sorted again after the edit, so an appointment's number can change.
+* The appointments are sorted again after the edit, so an appointment's number can change. The detail panel then
+  shows the patient.
 
 Examples:
 

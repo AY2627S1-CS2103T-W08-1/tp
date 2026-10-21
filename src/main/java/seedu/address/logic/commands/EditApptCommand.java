@@ -116,6 +116,7 @@ public class EditApptCommand extends Command {
         updatedAppointments.add(appointmentIndex.getZeroBased(), editedAppointment);
         Patient editedPatient = patientToEdit.withAppointments(updatedAppointments);
         model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
         // The appointments are sorted again, so the message gives the appointment's number after the edit.
         int newPosition = editedPatient.getAppointmentsUpcomingFirst(now).indexOf(editedAppointment);
