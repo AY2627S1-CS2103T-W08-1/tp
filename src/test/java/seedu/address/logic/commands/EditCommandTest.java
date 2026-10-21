@@ -124,6 +124,26 @@ public class EditCommandTest {
     }
 
     @Test
+    public void editPatientDescriptorEquals() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder(BENSON).build();
+
+        assertTrue(descriptor.equals(descriptor));
+        assertTrue(descriptor.equals(new EditPatientDescriptorBuilder(BENSON).build()));
+        assertFalse(descriptor.equals(null));
+        assertFalse(descriptor.equals(new Object()));
+        assertFalse(descriptor.equals(new EditPatientDescriptorBuilder(BENSON)
+                .withName(ALICE.getName().fullName).build()));
+        assertFalse(descriptor.equals(new EditPatientDescriptorBuilder(BENSON)
+                .withNric(ALICE.getNric().value).build()));
+        assertFalse(descriptor.equals(new EditPatientDescriptorBuilder(BENSON)
+                .withDob(VALID_DOB_BOB).build()));
+        assertFalse(descriptor.equals(new EditPatientDescriptorBuilder(BENSON)
+                .withPhone(ALICE.getPhone().value).build()));
+        assertFalse(descriptor.equals(new EditPatientDescriptorBuilder(BENSON)
+                .withAddress(ALICE.getAddress().value).build()));
+    }
+
+    @Test
     public void toStringMethod() {
         Index index = Index.fromOneBased(1);
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withName(VALID_NAME_BOB).build();
