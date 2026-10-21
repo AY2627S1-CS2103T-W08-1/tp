@@ -9,6 +9,7 @@ import static seedu.address.logic.commands.AddApptCommand.MESSAGE_PAST_APPOINTME
 import static seedu.address.logic.commands.AddApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
@@ -20,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +73,19 @@ public class AddApptCommandTest {
         assertAddSuccess(patient, clash, new PatientBuilder(ALICE).withAppointments(CHECKUP, clash).build(),
                 String.format(MESSAGE_SUCCESS, ALICE.getName(), clash)
                 + "\n" + String.format(MESSAGE_CLASH, ALICE.getName(), "Dr Tan"));
+    }
+
+    @Test
+    public void execute_archivedPatientForcedIntoDisplayedList_preservesArchivedState() throws Exception {
+        Model model = new ModelManager();
+        model.addPatient(new PatientBuilder(ALICE).withArchived(true).build());
+        model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+
+        new AddApptCommand(INDEX_FIRST_PATIENT, CHECKUP, FIXED_CLOCK).execute(model);
+
+        Patient updatedPatient = model.getAddressBook().getPatientList().get(0);
+        assertTrue(updatedPatient.isArchived());
+        assertEquals(List.of(CHECKUP), updatedPatient.getAppointments());
     }
 
     @Test

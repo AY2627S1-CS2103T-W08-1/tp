@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Path;
@@ -28,6 +29,7 @@ public class JsonSerializableAddressBookTest {
         AddressBook addressBookFromFile = dataFromFile.toModelType();
         AddressBook typicalPatientsAddressBook = TypicalPatients.getTypicalAddressBook();
         assertEquals(addressBookFromFile, typicalPatientsAddressBook);
+        assertTrue(addressBookFromFile.getPatientList().stream().noneMatch(patient -> patient.isArchived()));
     }
 
     @Test

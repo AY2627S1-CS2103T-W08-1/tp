@@ -35,6 +35,7 @@ public class PatientBuilder {
     private List<String> careInstructions = List.of();
     private List<Contact> contacts = List.of();
     private List<Appointment> appointments = List.of();
+    private boolean archived;
 
     /**
      * Creates a builder with default patient details and empty care lists.
@@ -61,6 +62,7 @@ public class PatientBuilder {
         careInstructions = patientToCopy.getCareInstructions();
         contacts = patientToCopy.getContacts();
         appointments = patientToCopy.getAppointments();
+        archived = patientToCopy.isArchived();
     }
 
     /**
@@ -144,6 +146,14 @@ public class PatientBuilder {
     }
 
     /**
+     * Sets the patient's archived state.
+     */
+    public PatientBuilder withArchived(boolean archived) {
+        this.archived = archived;
+        return this;
+    }
+
+    /**
      * Sets the patient's appointments.
      */
     public PatientBuilder withAppointments(Appointment... appointments) {
@@ -156,6 +166,6 @@ public class PatientBuilder {
      */
     public Patient build() {
         return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
-                contacts, appointments);
+                contacts, appointments, archived);
     }
 }

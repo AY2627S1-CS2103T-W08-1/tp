@@ -11,9 +11,9 @@ public class Phone {
 
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Phone numbers should be 8 digits with no spaces, with an optional +65 in front, "
-            + "e.g., 91234567 or +6591234567.";
-    public static final String VALIDATION_REGEX = "(\\+65)?\\d{8}";
+            "Phone numbers should be 8 digits with no spaces, starting with 3, 6, 8 or 9, "
+            + "with an optional +65 in front, e.g., 91234567 or +6591234567.";
+    public static final String VALIDATION_REGEX = "(\\+65)?[3689]\\d{7}";
     public static final String COUNTRY_CODE = "+65";
     public final String value;
 

@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
+import static seedu.address.testutil.TypicalPatients.ARCHIVED_ALICE;
 import static seedu.address.testutil.TypicalPatients.CARL;
 import static seedu.address.testutil.TypicalPatients.ELLE;
 import static seedu.address.testutil.TypicalPatients.FIONA;
@@ -18,6 +20,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
+import seedu.address.testutil.AddressBookBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -111,6 +114,19 @@ public class FindCommandTest {
         expectedModel.updateFilteredPatientList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
         assertEquals(List.of(), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void execute_keywordMatchesArchivedPatient_noPatientFound() {
+        var addressBook = new AddressBookBuilder().withPatient(ARCHIVED_ALICE).build();
+        Model modelWithArchivedPatient = new ModelManager(addressBook, new UserPrefs());
+        Model expectedModel = new ModelManager(addressBook, new UserPrefs());
+        NameContainsKeywordsPredicate predicate = preparePredicate("Alice");
+        expectedModel.updateFilteredPatientList(predicate.and(PREDICATE_SHOW_ACTIVE_PATIENTS));
+
+        assertCommandSuccess(new FindCommand(predicate), modelWithArchivedPatient,
+                FindCommand.MESSAGE_NO_PATIENTS_FOUND, expectedModel);
+        assertEquals(List.of(), modelWithArchivedPatient.getFilteredPatientList());
     }
 
     @Test

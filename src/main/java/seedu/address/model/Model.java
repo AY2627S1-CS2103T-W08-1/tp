@@ -14,6 +14,9 @@ public interface Model {
     /** {@code Predicate} that always evaluates to true */
     Predicate<Patient> PREDICATE_SHOW_ALL_PATIENTS = unused -> true;
 
+    /** {@code Predicate} that evaluates to true for active patients */
+    Predicate<Patient> PREDICATE_SHOW_ACTIVE_PATIENTS = patient -> !patient.isArchived();
+
     /**
      * Returns the user prefs.
      */
