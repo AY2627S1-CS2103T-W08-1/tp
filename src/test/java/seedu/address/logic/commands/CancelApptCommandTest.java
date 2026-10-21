@@ -8,6 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.createModelWithAppointments;
+import static seedu.address.logic.commands.CommandTestUtil.createViewedModelWithAppointments;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CARDIOLOGY;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
@@ -38,10 +39,10 @@ public class CancelApptCommandTest {
     @Test
     public void execute_validIndexes_removesAppointment() {
         Model model = createModelWithAppointments(CHECKUP, CARDIOLOGY);
-        Model expectedModel = createModelWithAppointments(CHECKUP);
+        Model expectedModel = createViewedModelWithAppointments(CHECKUP);
 
         assertCommandSuccess(createCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), model,
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), CARDIOLOGY), expectedModel);
+                String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), CARDIOLOGY), expectedModel);
     }
 
     @Test
@@ -50,7 +51,8 @@ public class CancelApptCommandTest {
 
         assertCommandSuccess(createCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT),
                 createModelWithAppointments(past, CHECKUP),
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), CHECKUP), createModelWithAppointments(past));
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), CHECKUP),
+                createViewedModelWithAppointments(past));
     }
 
     @Test

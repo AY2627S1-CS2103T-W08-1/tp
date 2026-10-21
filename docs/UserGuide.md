@@ -313,15 +313,16 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
 * Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones.
+  After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
 
 Examples:
 
-* `addappt 3 d/2026-11-05 t/09:30 w/Dr Tan`
-* `addappt 2 d/2026-12-10 t/14:00 w/Cardiology clinic nt/Bring BP log`
+* `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
+* `addappt 2 d/2027-12-10 t/14:00 w/Cardiology clinic nt/Bring BP log`
 
 A successful command returns `New appointment for NAME: DATE TIME with WITH`, followed by ` (NOTE)` if there is a
 note. For example, the second example returns
-`New appointment for Bernice Yu: 2026-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+`New appointment for Bernice Yu: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`.
 
 * An appointment in the past is still added, so past visits can be recorded. The message then ends with
   `Note: this appointment is in the past.`
@@ -380,23 +381,25 @@ Format: `cancelappt INDEX APPT_INDEX`
 * `APPT_INDEX` is the appointment's number in the Appointments section of the patient's detail panel, where
   upcoming appointments come first, then past ones. An appointment's number can change once it is in the past.
 * Both indexes **must be positive integers** 1, 2, 3, ...
-* The appointment is removed, not kept as cancelled.
+* The appointment is removed, not kept as cancelled. The detail panel then shows the patient.
+* Use `cancelappt` also to remove a past appointment that was entered by mistake.
 
 Examples:
 
 * `view 1` followed by `cancelappt 1 2` cancels the 2nd appointment of the 1st patient.
 
-A successful command returns `Cancelled appointment for NAME: APPOINTMENT`, with the appointment shown as in the
-detail panel. For example, the example above returns
-`Cancelled appointment for Alex Yeoh: 2026-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+A successful command returns `Cancelled appointment APPT_INDEX of NAME: APPOINTMENT`, with the appointment shown as
+in the detail panel. For example, the example above returns
+`Cancelled appointment 2 of Alex Yeoh: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`.
 
 Errors are reported as follows:
 
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * An `APPT_INDEX` larger than the number of the patient's appointments returns
-  `The appointment index provided is invalid.`
-* A missing, zero, negative, or non-numeric index, or more than two indexes, returns `Invalid command format!`,
-  followed by the command usage.
+  `The appointment index provided is invalid.` So does any `APPT_INDEX` for a patient with no appointments.
+* A missing, zero, negative, non-numeric or excessively large index (e.g., `99999999999`), or a number of values
+  other than two (e.g., `cancelappt 1` or `cancelappt 1 2 x`), returns `Invalid command format!`, followed by the
+  command usage.
 
 ### Listing all active patients: `list`
 
@@ -614,7 +617,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
-**Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2026-11-05 t/09:30 w/Dr Tan`
+**Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`

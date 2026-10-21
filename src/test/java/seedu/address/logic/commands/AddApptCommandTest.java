@@ -132,7 +132,7 @@ public class AddApptCommandTest {
 
     /**
      * Asserts that adding {@code toAdd} to {@code patient}, the only patient in the model,
-     * changes it to {@code expectedPatient} and shows {@code expectedMessage}.
+     * changes it to {@code expectedPatient}, shows it in the detail panel and shows {@code expectedMessage}.
      */
     private static void assertAddSuccess(Patient patient, Appointment toAdd, Patient expectedPatient,
             String expectedMessage) {
@@ -140,6 +140,7 @@ public class AddApptCommandTest {
         model.addPatient(patient);
         Model expectedModel = new ModelManager();
         expectedModel.addPatient(expectedPatient);
+        expectedModel.setViewedPatient(expectedPatient);
         assertCommandSuccess(new AddApptCommand(INDEX_FIRST_PATIENT, toAdd, FIXED_CLOCK), model,
                 expectedMessage, expectedModel);
     }
