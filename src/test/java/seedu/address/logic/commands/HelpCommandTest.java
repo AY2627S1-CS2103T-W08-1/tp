@@ -39,7 +39,9 @@ public class HelpCommandTest {
 
     /** Valid sample values that replace the placeholders of a command format to give a valid input. */
     private static final Map<String, String> PLACEHOLDER_VALUES = Map.ofEntries(
+            Map.entry("ALLERGY_INDEX", "1"),
             Map.entry("CONTACT_INDEX", "1"),
+            Map.entry("CI_INDEX", "1"),
             Map.entry("ROLE", "GP"),
             Map.entry("NOTE", "Call first"),
             Map.entry("NAME", "John Tan"),
@@ -61,6 +63,9 @@ public class HelpCommandTest {
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
+        commands.put(EditCareCommand.COMMAND_WORD, EditCareCommand.class);
+        commands.put(DeleteCareCommand.COMMAND_WORD, DeleteCareCommand.class);
+        commands.put(DeleteAllergyCommand.COMMAND_WORD, DeleteAllergyCommand.class);
         commands.put(AddContactCommand.COMMAND_WORD, AddContactCommand.class);
         commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
         commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
@@ -152,7 +157,8 @@ public class HelpCommandTest {
     @Test
     public void commandSummary_indexCommands_takeIndex() {
         for (String commandWord : List.of(DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
-                AddCareCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD)) {
+                AddCareCommand.COMMAND_WORD, EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
+                DeleteAllergyCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }
@@ -223,8 +229,11 @@ public class HelpCommandTest {
      */
     private static String toSampleInput(String format) {
         String input = format.replace("[", "").replace("]", "").replace("...", "");
-        for (Map.Entry<String, String> placeholder : PLACEHOLDER_VALUES.entrySet()) {
-            input = input.replaceAll("\\b" + placeholder.getKey() + "\\b", placeholder.getValue());
+        List<String> placeholdersByLength = PLACEHOLDER_VALUES.keySet().stream()
+                .sorted((first, second) -> Integer.compare(second.length(), first.length()))
+                .toList();
+        for (String placeholder : placeholdersByLength) {
+            input = input.replaceAll("\\b" + placeholder + "\\b", PLACEHOLDER_VALUES.get(placeholder));
         }
         return input;
     }

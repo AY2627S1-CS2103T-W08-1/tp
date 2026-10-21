@@ -749,11 +749,24 @@ testers are expected to do more *exploratory* testing.
    1. Test case: Close the window using the window's close button.<br>
       Expected: The app window closes. The window size and location are retained on the next launch.
 
+### Entering a blank command
+
+1. Test case: Leave the command box empty and press Enter.<br>
+   Expected: Nothing happens.
+
+1. Test case: Type three spaces in the command box and press Enter.<br>
+   Expected: No command executes and no error appears. The spaces and previous result remain unchanged.
+
 ### Adding a patient with punctuation after a slash word
 
 1. Test case: `add n/Ben s/o, Ng ic/S1111111B dob/1950-01-01 p/91111111 a/Blk 1`<br>
    Expected: No patient is added. The status message shows
    `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
+
+### Adding a patient with a blank address
+
+1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
+   Expected: No patient is added. The status message shows `Addresses cannot be blank.`
 
 ### Managing patient contacts
 

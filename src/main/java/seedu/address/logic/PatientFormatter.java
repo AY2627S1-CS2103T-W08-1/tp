@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
@@ -31,8 +32,8 @@ public class PatientFormatter {
     /** Heading of the list of contacts. */
     public static final String HEADING_CONTACTS = "Contacts";
 
-    /** A line break inside an entry, with any spaces around it. */
-    private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\s*\\R\\s*");
+    /** A line break inside an entry. */
+    private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     private PatientFormatter() {} // prevents instantiation
 
@@ -66,7 +67,8 @@ public class PatientFormatter {
 
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < entries.size(); i++) {
-            String entry = LINE_BREAK_PATTERN.matcher(entries.get(i)).replaceAll(" ").strip();
+            String entry = LINE_BREAK_PATTERN.splitAsStream(entries.get(i)).map(String::strip)
+                    .filter(line -> !line.isEmpty()).collect(Collectors.joining(" "));
             lines.add((i + 1) + ". " + entry);
         }
         return lines;

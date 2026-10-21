@@ -100,6 +100,13 @@ public class Patient {
         return allergens;
     }
 
+    /**
+     * Returns a copy with replacement allergens, preserving every other field.
+     */
+    public Patient withAllergens(List<String> allergens) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+    }
+
     public List<String> getCareInstructions() {
         return careInstructions;
     }
@@ -109,6 +116,13 @@ public class Patient {
      */
     public List<Contact> getContacts() {
         return contacts;
+    }
+
+    /**
+     * Returns a copy with replacement care instructions, preserving every other field.
+     */
+    public Patient withCareInstructions(List<String> careInstructions) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
     }
 
     /**

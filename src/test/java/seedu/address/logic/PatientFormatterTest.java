@@ -1,10 +1,12 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.DANIEL;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +55,15 @@ public class PatientFormatterTest {
 
         assertEquals(List.of("1. Check sugar before meals", "2. Turn every 2 hours", "3. Line one Line two"),
                 PatientFormatter.formatEntries(entries));
+    }
+
+    @Test
+    public void formatEntries_longRunOfSpacesWithoutLineBreak_spacesKept() {
+        String entry = "Take" + " ".repeat(60_000) + "daily";
+
+        List<String> lines = assertTimeout(Duration.ofSeconds(1), () -> PatientFormatter.formatEntries(List.of(entry)));
+
+        assertEquals(List.of("1. " + entry), lines);
     }
 
     @Test
