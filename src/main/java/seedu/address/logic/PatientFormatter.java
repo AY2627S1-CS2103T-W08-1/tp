@@ -1,13 +1,16 @@
 package seedu.address.logic;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
@@ -31,6 +34,9 @@ public class PatientFormatter {
 
     /** Heading of the list of contacts. */
     public static final String HEADING_CONTACTS = "Contacts";
+
+    /** Heading of the list of appointments. */
+    public static final String HEADING_APPOINTMENTS = "Appointments";
 
     /** A line break inside an entry. */
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
@@ -75,14 +81,17 @@ public class PatientFormatter {
     }
 
     /**
-     * Returns the full record of {@code patient}: the name and basic details, then each care list and the contacts
-     * under their headings, with a blank line before each heading.
+     * Returns the full record of {@code patient}: the name and basic details, then each care list, the contacts
+     * and the appointments under their headings, with a blank line before each heading.
+     * Appointments are numbered as in the detail panel: upcoming ones (at or after {@code now}) first,
+     * then past ones.
      *
      * @param patient Patient whose record is formatted.
+     * @param now Date and time that decides which appointments are upcoming.
      * @return the lines of the record, without line separators.
      */
-    public static List<String> formatRecord(Patient patient) {
-        requireNonNull(patient);
+    public static List<String> formatRecord(Patient patient, LocalDateTime now) {
+        requireAllNonNull(patient, now);
         List<String> lines = new ArrayList<>();
         lines.add(patient.getName().fullName);
         lines.addAll(formatDetails(patient));
@@ -91,7 +100,9 @@ public class PatientFormatter {
                 Map.entry(HEADING_MEDICATIONS, patient.getMedications().stream().map(Medication::toString).toList()),
                 Map.entry(HEADING_ALLERGENS, patient.getAllergens()),
                 Map.entry(HEADING_CARE_INSTRUCTIONS, patient.getCareInstructions()),
-                Map.entry(HEADING_CONTACTS, patient.getContacts().stream().map(Contact::toString).toList()))) {
+                Map.entry(HEADING_CONTACTS, patient.getContacts().stream().map(Contact::toString).toList()),
+                Map.entry(HEADING_APPOINTMENTS, patient.getAppointmentsUpcomingFirst(now).stream()
+                        .map(Appointment::toString).toList()))) {
             lines.add("");
             lines.add(careList.getKey());
             lines.addAll(formatEntries(careList.getValue()));

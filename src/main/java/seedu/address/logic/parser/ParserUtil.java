@@ -2,11 +2,13 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Medication;
@@ -78,6 +80,21 @@ public class ParserUtil {
             throw new ParseException(Dob.MESSAGE_CONSTRAINTS);
         }
         return new Dob(trimmedDob);
+    }
+
+    /**
+     * Parses a {@code String date} into a {@code LocalDate}.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code date} is not a real date in YYYY-MM-DD format.
+     */
+    public static LocalDate parseDate(String date) throws ParseException {
+        requireNonNull(date);
+        String trimmedDate = date.trim();
+        if (!Appointment.isValidDate(trimmedDate)) {
+            throw new ParseException(Appointment.MESSAGE_DATE_CONSTRAINTS);
+        }
+        return LocalDate.parse(trimmedDate);
     }
 
     /**
