@@ -956,7 +956,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `export 1`<br>
-      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions and contacts, with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
+      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, numbered as in the detail panel), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
 
    1. Test case: `addcare 1 med/Paracetamol 500mg`, then `export 1` again<br>
       Expected: The same file is replaced, and now lists `Paracetamol 500mg` under Medications.
