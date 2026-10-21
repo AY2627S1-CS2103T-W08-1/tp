@@ -179,6 +179,42 @@ Other errors are reported as follows:
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 
+### Editing a care instruction: `editcare`
+
+Replaces one care instruction while leaving its position and all other patient data unchanged.
+
+Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
+
+* `INDEX` is the patient's index in the displayed list. `CI_INDEX` is the care instruction's number in the detail
+  panel. Both must be positive integers.
+* `NEW_TEXT` is trimmed free text and cannot be blank.
+* An edit that would duplicate another care instruction, ignoring letter case and surrounding spaces, is rejected.
+  Editing an instruction to its current text is allowed.
+* `ci/` must appear exactly once. Unrecognized prefixes are rejected.
+
+Example: `editcare 1 2 ci/Check blood sugar after lunch`
+
+For patient `Alex Yeoh`, this returns:
+`Updated care instruction for Alex Yeoh: Check blood sugar after lunch`
+
+### Deleting a care instruction: `deletecare`
+
+Removes one numbered care instruction and reports the removed text.
+
+Format: `deletecare INDEX CI_INDEX`
+
+Example: `deletecare 1 2`
+
+For patient `Alex Yeoh`, deleting `Walk after lunch` returns:
+`Deleted care instruction for Alex Yeoh: Walk after lunch`
+
+After either command, the detail panel updates immediately and the remaining instructions are numbered from `1`
+again. `The patient index provided is invalid.` means `INDEX` is outside the displayed list.
+`The care instruction index provided is invalid.` means `CI_INDEX` is past the end of that patient's instruction
+list, including when the list is empty. Missing, zero, negative, nonnumeric or extra indices give the command's usage.
+Blank replacement text returns `Care instructions cannot be blank.` A duplicate edit returns
+`This care instruction already exists for this patient.` Validation failures leave patient data unchanged.
+
 ### Deleting an allergen: `deleteallergy`
 
 Removes one allergen from the patient at `INDEX` in the displayed patient list.
@@ -498,6 +534,8 @@ Action            | Format, Examples
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
 **Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
+**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
 **Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
 **Add contact** | `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]` <br> e.g., `addcontact 1 n/Dr Tan r/GP p/+65 6123-4567`
 **Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`

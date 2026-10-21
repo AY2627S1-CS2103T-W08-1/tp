@@ -20,9 +20,11 @@ import seedu.address.logic.commands.AddContactCommand;
 import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteAllergyCommand;
+import seedu.address.logic.commands.DeleteCareCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteContactCommand;
 import seedu.address.logic.commands.DueCommand;
+import seedu.address.logic.commands.EditCareCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditContactCommand;
 import seedu.address.logic.commands.ExitCommand;
@@ -54,6 +56,12 @@ public class AddressBookParserTest {
         AddCareCommand command = (AddCareCommand) parser.parseCommand("addcare 1 med/Metformin al/Penicillin");
         assertEquals(new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Metformin"), List.of("Penicillin"), List.of()),
                 command);
+    }
+
+    @Test
+    public void parseCommand_careInstructionCommands_dispatched() throws Exception {
+        assertTrue(parser.parseCommand("editcare 1 1 ci/Updated") instanceof EditCareCommand);
+        assertTrue(parser.parseCommand("deletecare 1 1") instanceof DeleteCareCommand);
     }
 
     @Test
