@@ -160,14 +160,15 @@ public class ExportCommand extends Command {
 
     /**
      * Returns the lines of the exported record of {@code patient}: a title, the date and time of the export,
-     * then the patient's full record.
+     * then the patient's full record, with appointments ordered as upcoming or past at that date and time.
      */
     private List<String> createRecord(Patient patient) {
+        LocalDateTime now = LocalDateTime.now(clock);
         List<String> lines = new ArrayList<>();
         lines.add(RECORD_TITLE);
-        lines.add(EXPORTED_ON_PREFIX + LocalDateTime.now(clock).format(EXPORT_TIME_FORMAT));
+        lines.add(EXPORTED_ON_PREFIX + now.format(EXPORT_TIME_FORMAT));
         lines.add("");
-        lines.addAll(PatientFormatter.formatRecord(patient));
+        lines.addAll(PatientFormatter.formatRecord(patient, now));
         return lines;
     }
 

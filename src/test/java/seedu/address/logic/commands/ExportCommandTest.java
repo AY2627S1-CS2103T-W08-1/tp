@@ -22,6 +22,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -43,6 +46,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
 
@@ -107,7 +111,10 @@ public class ExportCommandTest {
                 "1. Check blood sugar",
                 "",
                 "Contacts",
-                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning");
+                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning",
+                "",
+                "Appointments",
+                "1. 2026-11-05 09:30 with Dr Tan (Fasting)");
 
         assertCommandSuccess(createExportCommand(INDEX_DANIEL), model, getExpectedSuccessMessage(DANIEL, expectedFile),
                 createTypicalModel());
@@ -120,7 +127,7 @@ public class ExportCommandTest {
 
         List<String> lines = Files.readAllLines(temporaryFolder.resolve("S0000001A.txt"), StandardCharsets.UTF_8);
         assertEquals(getExpectedRecord(ALICE), lines);
-        assertEquals(4, Collections.frequency(lines, PatientFormatter.NONE_RECORDED));
+        assertEquals(5, Collections.frequency(lines, PatientFormatter.NONE_RECORDED));
     }
 
     @Test
@@ -188,6 +195,23 @@ public class ExportCommandTest {
         assertCommandSuccess(createExportCommand(INDEX_FIRST_PATIENT), singlePatientModel,
                 getExpectedSuccessMessage(patient, expectedFile), new ModelManager(addressBook, new UserPrefs()));
         assertEquals(getExpectedRecord(patient), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void execute_appointmentPassedAtExportTime_listedAfterUpcoming() throws Exception {
+        // 20:00 on 2026-10-20 is after the export clock's 14:30, but before the system clock's date and time
+        Appointment laterToday = new Appointment(LocalDate.of(2026, 10, 20), LocalTime.of(20, 0), "Dr Tan", "");
+        Appointment nextWeek = new Appointment(LocalDate.of(2026, 10, 27), LocalTime.of(9, 0), "Dr Lim", "");
+        Patient patient = new PatientBuilder().withAppointments(nextWeek, laterToday).build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPatient(patient);
+
+        createExportCommand(INDEX_FIRST_PATIENT).execute(new ModelManager(addressBook, new UserPrefs()));
+
+        List<String> lines = Files.readAllLines(temporaryFolder.resolve(patient.getNric() + ".txt"),
+                StandardCharsets.UTF_8);
+        assertEquals(List.of("Appointments", "1. 2026-10-20 20:00 with Dr Tan", "2. 2026-10-27 09:00 with Dr Lim"),
+                lines.subList(lines.size() - 3, lines.size()));
     }
 
     @Test
@@ -365,7 +389,7 @@ public class ExportCommandTest {
     private static List<String> getExpectedRecord(Patient patient) {
         List<String> lines = new ArrayList<>(List.of(ExportCommand.RECORD_TITLE,
                 ExportCommand.EXPORTED_ON_PREFIX + "2026-10-20 14:30", ""));
-        lines.addAll(PatientFormatter.formatRecord(patient));
+        lines.addAll(PatientFormatter.formatRecord(patient, LocalDateTime.now(FIXED_CLOCK)));
         return lines;
     }
 
