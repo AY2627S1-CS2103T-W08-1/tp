@@ -316,12 +316,12 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 
 Examples:
 
-* `addappt 3 d/2026-11-05 t/09:30 w/Dr Tan`
-* `addappt 2 d/2026-12-10 t/14:00 w/Cardiology clinic nt/Bring BP log`
+* `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
+* `addappt 2 d/2027-12-10 t/14:00 w/Cardiology clinic nt/Bring BP log`
 
 A successful command returns `New appointment for NAME: DATE TIME with WITH`, followed by ` (NOTE)` if there is a
 note. For example, the second example returns
-`New appointment for Bernice Yu: 2026-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+`New appointment for Bernice Yu: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`.
 
 * An appointment in the past is still added, so past visits can be recorded. The message then ends with
   `Note: this appointment is in the past.`
@@ -555,7 +555,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
-**Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2026-11-05 t/09:30 w/Dr Tan`
+**Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
 **Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
 **Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
