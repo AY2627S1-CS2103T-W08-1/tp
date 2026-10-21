@@ -25,7 +25,7 @@ public class AddApptCommandParser implements Parser<AddApptCommand> {
      * Parses the given {@code String} of arguments in the context of the AddApptCommand
      * and returns an AddApptCommand object for execution.
      *
-     * @throws ParseException if the user input does not conform to the expected format
+     * @throws ParseException if the user input does not conform to the expected format.
      */
     @Override
     public AddApptCommand parse(String args) throws ParseException {
