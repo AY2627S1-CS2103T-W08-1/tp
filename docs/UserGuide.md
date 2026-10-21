@@ -314,7 +314,8 @@ Format: `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]`
 * `INDEX` refers to the patient in the currently displayed list, including a filtered `find` result.
 * Supply at least one field. Omitted fields keep their existing values.
 * Each supplied value follows the same validation and normalization rules as `add`.
-* Medications and their times, allergens, care instructions, contacts, and archived state are preserved.
+* Medications and their times, allergens, care instructions, contacts, appointments, and archived state are
+  preserved.
 * An edit that gives a patient an NRIC already used by another patient is rejected.
 * If the patient is shown in the detail panel, the panel updates immediately.
 
