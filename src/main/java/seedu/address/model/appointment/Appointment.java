@@ -6,6 +6,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 /**
@@ -38,9 +39,11 @@ public class Appointment implements Comparable<Appointment> {
 
     /**
      * Every field must be present and not null. An empty {@code note} means the appointment has no note.
+     * The time must be a whole minute, so that it is saved and loaded in HH:MM format.
      */
     public Appointment(LocalDate date, LocalTime time, String provider, String note) {
         requireAllNonNull(date, time, provider, note);
+        checkArgument(time.equals(time.truncatedTo(ChronoUnit.MINUTES)), MESSAGE_TIME_CONSTRAINTS);
         checkArgument(isValidProvider(provider), MESSAGE_PROVIDER_CONSTRAINTS);
         this.date = date;
         this.time = time;

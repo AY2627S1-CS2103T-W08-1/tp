@@ -27,6 +27,12 @@ public class AppointmentTest {
     }
 
     @Test
+    public void constructor_timeWithSeconds_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, Appointment.MESSAGE_TIME_CONSTRAINTS, ()
+            -> new Appointment(DATE, LocalTime.of(9, 30, 15), "Dr Tan", ""));
+    }
+
+    @Test
     public void isValidDate() {
         // invalid dates
         assertFalse(Appointment.isValidDate("")); // empty string
