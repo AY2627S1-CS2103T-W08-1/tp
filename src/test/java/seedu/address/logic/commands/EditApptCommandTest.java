@@ -19,14 +19,19 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
+import seedu.address.model.Model;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.testutil.AdjustableClock;
 
 public class EditApptCommandTest {
 
@@ -93,6 +98,22 @@ public class EditApptCommandTest {
         assertCommandSuccess(command, createModelWithAppointments(past, CHECKUP),
                 String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedCheckup),
                 createViewedModelWithAppointments(past, editedCheckup));
+    }
+
+    @Test
+    public void execute_appointmentPassesWhileShown_editsAppointmentWithShownNumber() {
+        AdjustableClock clock = new AdjustableClock(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
+        Appointment soon = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 1), "Dr Tan", "");
+        Model model = createModelWithAppointments(clock, soon, CARDIOLOGY);
+        model.setViewedPatient(model.getFilteredPatientList().get(0));
+        clock.advance(Duration.ofMinutes(2));
+        EditApptCommand command = new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("Seen"), clock);
+        Appointment editedSoon = new Appointment(soon.getDate(), soon.getTime(), "Dr Tan", "Seen");
+
+        // number 1 is still the appointment at 12:01 shown in the panel, which is now past and numbered 2
+        assertCommandSuccess(command, model, String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), editedSoon)
+                + "\n" + MESSAGE_PAST_APPOINTMENT, createViewedModelWithAppointments(editedSoon, CARDIOLOGY));
     }
 
     @Test

@@ -98,9 +98,7 @@ public class EditApptCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
-        LocalDateTime now = LocalDateTime.now(clock);
-        List<Appointment> otherAppointments =
-                new ArrayList<>(patientToEdit.getAppointmentsUpcomingFirst(now));
+        List<Appointment> otherAppointments = new ArrayList<>(model.getAppointmentsAsShown(patientToEdit));
         if (appointmentIndex.getZeroBased() >= otherAppointments.size()) {
             throw new CommandException(Messages.MESSAGE_INVALID_APPOINTMENT_DISPLAYED_INDEX);
         }
@@ -119,11 +117,11 @@ public class EditApptCommand extends Command {
         model.setViewedPatient(editedPatient);
 
         // The appointments are sorted again, so the message gives the appointment's number after the edit.
-        int newPosition = editedPatient.getAppointmentsUpcomingFirst(now).indexOf(editedAppointment);
+        int newPosition = model.getAppointmentsAsShown(editedPatient).indexOf(editedAppointment);
         String message = String.format(MESSAGE_SUCCESS, Index.fromZeroBased(newPosition).getOneBased(),
                 patientToEdit.getName(), editedAppointment)
                 + Messages.formatAppointmentWarnings(patientToEdit.getName(), editedAppointment,
-                        otherAppointments, now);
+                        otherAppointments, LocalDateTime.now(clock));
         return new CommandResult(message);
     }
 
