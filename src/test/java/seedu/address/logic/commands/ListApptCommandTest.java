@@ -8,11 +8,13 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.ListApptCommand.HEADING_PAST;
 import static seedu.address.logic.commands.ListApptCommand.HEADING_UPCOMING;
+import static seedu.address.logic.commands.ListApptCommand.MESSAGE_ARCHIVED_PATIENT;
 import static seedu.address.logic.commands.ListApptCommand.MESSAGE_NO_PATIENT_APPOINTMENTS;
 import static seedu.address.logic.commands.ListApptCommand.MESSAGE_NO_UPCOMING;
 import static seedu.address.logic.commands.ListApptCommand.MESSAGE_PATIENT_APPOINTMENTS;
 import static seedu.address.logic.commands.ListApptCommand.MESSAGE_UPCOMING;
 import static seedu.address.logic.commands.ListApptCommand.NO_ENTRIES;
+import static seedu.address.model.Model.PREDICATE_SHOW_ARCHIVED_PATIENTS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CARDIOLOGY;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
@@ -115,6 +117,15 @@ public class ListApptCommandTest {
         assertCommandSuccess(command, createModel(),
                 String.format(MESSAGE_NO_PATIENT_APPOINTMENTS, CARL.getName()),
                 showPatient(createModel(), INDEX_THIRD_PATIENT));
+    }
+
+    @Test
+    public void execute_indexOfArchivedPatient_throwsCommandException() {
+        Model model = createModelWith(new PatientBuilder(ALICE).withArchived(true).build());
+        model.updateFilteredPatientList(PREDICATE_SHOW_ARCHIVED_PATIENTS);
+
+        assertCommandFailure(new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT), FIXED_CLOCK), model,
+                MESSAGE_ARCHIVED_PATIENT);
     }
 
     @Test

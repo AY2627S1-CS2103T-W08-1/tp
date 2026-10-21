@@ -416,7 +416,8 @@ Format: `listappt [INDEX]`
 * With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
   appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`. The detail panel then
   shows the patient, with the same numbers.
-* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. An archived patient
+  is not listed: run `unarchive` first to see their appointments.
 * The patient list does not change.
 
 Examples:
@@ -430,6 +431,8 @@ Other messages are as follows:
 
 * With no upcoming appointments, `listappt` returns `No upcoming appointments.`
 * For a patient with no appointments, `listappt INDEX` returns `NAME has no appointments.`
+* For an archived patient, e.g., after `listarchived`, `listappt INDEX` returns
+  `This patient is archived. Unarchive them to list their appointments.`
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * A zero, negative, or non-numeric index, or more than one index, returns `Invalid command format!`, followed by
   the command usage.
