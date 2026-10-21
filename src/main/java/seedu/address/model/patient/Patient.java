@@ -3,10 +3,13 @@ package seedu.address.model.patient;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.model.appointment.Appointment;
 
 /**
  * Represents a Patient in the address book.
@@ -26,6 +29,7 @@ public class Patient {
     private final List<String> allergens;
     private final List<String> careInstructions;
     private final List<Contact> contacts;
+    private final List<Appointment> appointments;
 
     /**
      * Every field must be present and not null.
@@ -36,12 +40,23 @@ public class Patient {
     }
 
     /**
-     * Creates a patient with contacts in the order added. Duplicate contact identities are rejected.
+     * Creates a patient with contacts in the order added and no appointments.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions,
             List<Contact> contacts) {
-        requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        this(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts, List.of());
+    }
+
+    /**
+     * Creates a patient with contacts in the order added and appointments sorted by date, then time.
+     * Duplicate contact identities and null appointments are rejected.
+     */
+    public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
+            List<Medication> medications, List<String> allergens, List<String> careInstructions,
+            List<Contact> contacts, List<Appointment> appointments) {
+        requireAllNonNull(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
+                appointments);
         this.name = name;
         this.nric = nric;
         this.dob = dob;
@@ -52,6 +67,8 @@ public class Patient {
         this.careInstructions = List.copyOf(careInstructions);
         this.contacts = List.copyOf(contacts);
         verifyNoDuplicateContacts(this.contacts);
+        // List.copyOf rejects null appointments before they are sorted.
+        this.appointments = List.copyOf(appointments).stream().sorted().toList();
     }
 
     /**
@@ -104,7 +121,8 @@ public class Patient {
      * Returns a copy with replacement allergens, preserving every other field.
      */
     public Patient withAllergens(List<String> allergens) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     public List<String> getCareInstructions() {
@@ -119,17 +137,39 @@ public class Patient {
     }
 
     /**
+     * Returns the immutable appointments, sorted by date, then time.
+     */
+    public List<Appointment> getAppointments() {
+        return appointments;
+    }
+
+    /**
+     * Returns the appointments in the order the detail panel numbers them: upcoming ones (at or after
+     * {@code now}) first, then past ones, each sorted by date, then time.
+     */
+    public List<Appointment> getAppointmentsUpcomingFirst(LocalDateTime now) {
+        Objects.requireNonNull(now);
+        Stream<Appointment> upcoming = appointments.stream()
+                .filter(appointment -> !appointment.isBefore(now));
+        Stream<Appointment> past = appointments.stream()
+                .filter(appointment -> appointment.isBefore(now));
+        return Stream.concat(upcoming, past).toList();
+    }
+
+    /**
      * Returns a copy with replacement care instructions, preserving every other field.
      */
     public Patient withCareInstructions(List<String> careInstructions) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     /**
      * Returns a copy with replacement contacts, preserving every other field.
      */
     public Patient withContacts(List<Contact> contacts) {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     /**
@@ -168,13 +208,15 @@ public class Patient {
                 && medications.equals(otherPatient.medications)
                 && allergens.equals(otherPatient.allergens)
                 && careInstructions.equals(otherPatient.careInstructions)
-                && contacts.equals(otherPatient.contacts);
+                && contacts.equals(otherPatient.contacts)
+                && appointments.equals(otherPatient.appointments);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts);
+        return Objects.hash(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments);
     }
 
     @Override
@@ -189,6 +231,7 @@ public class Patient {
                 .add("allergens", allergens)
                 .add("careInstructions", careInstructions)
                 .add("contacts", contacts)
+                .add("appointments", appointments)
                 .toString();
     }
 

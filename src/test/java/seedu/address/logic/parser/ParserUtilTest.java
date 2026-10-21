@@ -5,11 +5,13 @@ import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
@@ -19,10 +21,12 @@ public class ParserUtilTest {
     private static final String INVALID_NAME = "R@chel";
     private static final String INVALID_PHONE = "+651234";
     private static final String INVALID_ADDRESS = " ";
+    private static final String INVALID_DATE = "2026-02-30";
 
     private static final String VALID_NAME = "Rachel Walker";
     private static final String VALID_PHONE = "91234567";
     private static final String VALID_ADDRESS = "123 Main Street #0505";
+    private static final String VALID_DATE = "2026-10-25";
 
     private static final String WHITESPACE = " \t\r\n";
 
@@ -124,6 +128,24 @@ public class ParserUtilTest {
         String addressWithWhitespace = WHITESPACE + VALID_ADDRESS + WHITESPACE;
         Address expectedAddress = new Address(VALID_ADDRESS);
         assertEquals(expectedAddress, ParserUtil.parseAddress(addressWithWhitespace));
+    }
+
+    @Test
+    public void parseDate_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseDate((String) null));
+    }
+
+    @Test
+    public void parseDate_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, Appointment.MESSAGE_DATE_CONSTRAINTS, ()
+            -> ParserUtil.parseDate(INVALID_DATE));
+        assertThrows(ParseException.class, Appointment.MESSAGE_DATE_CONSTRAINTS, ()
+            -> ParserUtil.parseDate("25/10/2026"));
+    }
+
+    @Test
+    public void parseDate_validValueWithWhitespace_returnsTrimmedDate() throws Exception {
+        assertEquals(LocalDate.of(2026, 10, 25), ParserUtil.parseDate(WHITESPACE + VALID_DATE + WHITESPACE));
     }
 
 
