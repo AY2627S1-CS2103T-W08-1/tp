@@ -350,7 +350,7 @@ Format: `cancelappt INDEX APPT_INDEX`
 * `APPT_INDEX` is the appointment's number in the Appointments section of the patient's detail panel, where
   upcoming appointments come first, then past ones. An appointment's number can change once it is in the past.
 * Both indexes **must be positive integers** 1, 2, 3, ...
-* The appointment is removed, not kept as cancelled.
+* The appointment is removed, not kept as cancelled. The detail panel then shows the patient.
 
 Examples:
 

@@ -72,7 +72,9 @@ public class CancelApptCommand extends Command {
         }
 
         Appointment cancelledAppointment = updatedAppointments.remove(appointmentIndex.getZeroBased());
-        model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
+        Patient editedPatient = patientToEdit.withAppointments(updatedAppointments);
+        model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
         String message = String.format(MESSAGE_SUCCESS, appointmentIndex.getOneBased(), patientToEdit.getName(),
                 cancelledAppointment);
         return new CommandResult(message);

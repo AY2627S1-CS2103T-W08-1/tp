@@ -47,7 +47,7 @@ public class CancelApptCommandTest {
     @Test
     public void execute_validIndexes_removesAppointment() {
         Model model = createModelWithAppointments(CHECKUP, LATER_APPOINTMENT);
-        Model expectedModel = createModelWithAppointments(CHECKUP);
+        Model expectedModel = createViewedModelWithAppointments(CHECKUP);
 
         assertCommandSuccess(createCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), model,
                 String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), LATER_APPOINTMENT), expectedModel);
@@ -59,7 +59,8 @@ public class CancelApptCommandTest {
 
         assertCommandSuccess(createCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT),
                 createModelWithAppointments(past, CHECKUP),
-                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), CHECKUP), createModelWithAppointments(past));
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), CHECKUP),
+                createViewedModelWithAppointments(past));
     }
 
     @Test
@@ -119,6 +120,15 @@ public class CancelApptCommandTest {
     private static Model createModelWithAppointments(Appointment... appointments) {
         Model model = new ModelManager();
         model.addPatient(new PatientBuilder(ALICE).withAppointments(appointments).build());
+        return model;
+    }
+
+    /**
+     * Returns a model like {@code createModelWithAppointments}, with Alice shown in the detail panel.
+     */
+    private static Model createViewedModelWithAppointments(Appointment... appointments) {
+        Model model = createModelWithAppointments(appointments);
+        model.setViewedPatient(model.getFilteredPatientList().get(0));
         return model;
     }
 }
