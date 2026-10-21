@@ -295,6 +295,42 @@ The diagram focuses on parsing and updating the patient; `LogicManager` performs
 
 <puml src="diagrams/AddContactSequenceDiagram.puml" alt="Adding a contact to a patient" />
 
+### Add appointment feature
+
+The `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` command adds an appointment to a patient in the displayed list.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `addappt 1 d/2027-11-05 t/09:30 w/Dr Tan`. Error paths
+are omitted for clarity.
+
+<puml src="diagrams/AddApptSequenceDiagram.puml" alt="Interactions for the `addappt` Command" />
+
+1. `AddApptCommandParser` requires `d/`, `t/` and `w/` once each and rejects unknown prefixes. It parses the index,
+   the date, the time (with `ParserUtil#parseTime`, as for medication times) and who the appointment is with, and
+   creates the `Appointment` `toAdd`, with an empty note if `nt/` is not given.
+1. `AddApptCommand#execute()` resolves the index against the filtered patient list. It rejects `toAdd` if the patient
+   already has an appointment at the same date and time with the same person, ignoring case and extra spaces.
+1. The command creates a replacement immutable `Patient` with `toAdd` added, which keeps its appointments sorted by
+   date, then time. `Model#setPatient()` stores it, and `Model#setViewedPatient()` shows it in the detail panel, so
+   the new appointment and its number can be checked.
+1. The command adds a note to the result if `toAdd` is in the past, and a warning for each of the patient's other
+   appointments at the same date and time. The current time comes from a `java.time.Clock` given to the command:
+   the system clock by default, and a fixed one in tests, so that the tests do not depend on when they run.
+   `Appointment#isBefore` ignores seconds, so an appointment in the current minute is not in the past.
+
+#### Design considerations
+
+**Aspect: Appointments in the past or at the same time as another**
+
+* **Alternative 1 (current choice):** Add the appointment, with a note or a warning in the result.
+  * Pros: A caregiver can record a visit that already happened, or two appointments at the same time, e.g., with a
+    doctor and a nurse together.
+  * Cons: A mistyped date is only flagged, not prevented, so the user has to read the result.
+* **Alternative 2:** Reject such appointments.
+  * Pros: A mistyped date or time cannot be saved.
+  * Cons: Past visits could not be recorded, and genuine overlapping appointments would need a workaround.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
