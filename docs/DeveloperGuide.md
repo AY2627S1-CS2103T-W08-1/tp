@@ -953,9 +953,9 @@ testers are expected to do more *exploratory* testing.
 
 ### Exporting a patient's record
 
-1. Exporting a patient while all patients are being shown
+1. Exporting a patient while all active patients are being shown
 
-   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
+   1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `export 1`<br>
       Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, numbered as in the detail panel), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
