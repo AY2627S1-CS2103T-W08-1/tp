@@ -13,6 +13,7 @@ import static seedu.address.testutil.TypicalPatients.BOB;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -131,6 +132,9 @@ public class PatientTest {
                 ALICE.getPhone(), ALICE.getAddress(), null, List.of(), List.of(), List.of()));
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
                 ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(), null));
+        assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
+                ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(),
+                Collections.singletonList(null)));
     }
 
     @Test

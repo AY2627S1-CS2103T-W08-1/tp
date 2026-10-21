@@ -48,7 +48,7 @@ public class Patient {
 
     /**
      * Creates a patient with contacts in the order added and appointments sorted by date, then time.
-     * Duplicate contact identities are rejected.
+     * Duplicate contact identities and null appointments are rejected.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions,
@@ -65,7 +65,8 @@ public class Patient {
         this.careInstructions = List.copyOf(careInstructions);
         this.contacts = List.copyOf(contacts);
         verifyNoDuplicateContacts(this.contacts);
-        this.appointments = appointments.stream().sorted().toList();
+        // List.copyOf rejects null appointments before they are sorted.
+        this.appointments = List.copyOf(appointments).stream().sorted().toList();
     }
 
     /**
