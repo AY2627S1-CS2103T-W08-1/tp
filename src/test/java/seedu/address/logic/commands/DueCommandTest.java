@@ -9,6 +9,7 @@ import static seedu.address.logic.Messages.MESSAGE_NOTHING_DUE_TODAY;
 import static seedu.address.logic.Messages.MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
+import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_THIRD_PATIENT;
@@ -198,6 +199,24 @@ public class DueCommandTest {
     public void execute_allDosesEarlierToday_stillListedNotTreatedAsNothingDue() throws Exception {
         assertDue(new DueCommand(clockAt(23, 0, 0)), createModel(bernice),
                 "13:30 Bernice Yu: Amlodipine 5mg" + EARLIER);
+    }
+
+    @Test
+    public void execute_archivedPatientWithDueMedication_notListed() throws Exception {
+        Patient archivedAlex = new PatientBuilder(alex).withArchived(true).build();
+
+        assertDue(new DueCommand(clockAt(7, 0, 0)), createModel(archivedAlex, bernice),
+                "13:30 Bernice Yu: Amlodipine 5mg");
+    }
+
+    @Test
+    public void execute_archivedPatientAtDisplayedIndex_notListed() throws Exception {
+        Patient archivedAlex = new PatientBuilder(alex).withArchived(true).build();
+        Model model = createModel(archivedAlex);
+        model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+
+        assertDue(new DueCommand(INDEX_FIRST_PATIENT, clockAt(7, 0, 0)), model,
+                String.format(MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT, archivedAlex.getName()));
     }
 
     @Test

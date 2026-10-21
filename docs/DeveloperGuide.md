@@ -755,17 +755,19 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `editcontact 1 99 nt/note`, then `deletecontact 1 99`.<br>
    Expected: Both report `The contact index provided is invalid.` and change nothing.
 
-### Listing patients
+### Listing active patients
 
 1. Listing patients when there is data
 
    1. Prerequisites: The app has at least one patient, e.g. the sample data on first launch.
 
    1. Test case: `list`<br>
-      Expected: All patients are shown in the patient list. The status message shows `Listed all patients.`
+      Expected: All active patients are shown in the patient list. The status message shows
+      `Listed all active patients.`
 
    1. Test case: `find John` followed by `list`<br>
-      Expected: The filter is cleared and all patients are shown again. The status message shows `Listed all patients.`
+      Expected: The filter is cleared and all active patients are shown again. The status message shows
+      `Listed all active patients.`
 
 1. Listing patients when there is no data
 
@@ -773,13 +775,13 @@ testers are expected to do more *exploratory* testing.
       Expected: The status message shows `All patients have been cleared.`
 
    1. Test case: `list`<br>
-      Expected: The patient list is empty. The status message shows `No patients found. Use the 'add' command to add a patient.`
+      Expected: The patient list is empty. The status message shows `No active patients found.`
 
 ### Deleting a patient
 
-1. Deleting a patient while all patients are being shown
+1. Deleting a patient while all active patients are being shown
 
-   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
+   1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `delete 1`<br>
       Expected: The first patient is deleted from the list. The status message shows `Deleted patient: NAME; NRIC: NRIC` with the deleted patient's name and NRIC, e.g. `Deleted patient: Alex Yeoh; NRIC: S0000001A` for the sample data.
@@ -826,9 +828,9 @@ testers are expected to do more *exploratory* testing.
 
 ### Viewing a patient
 
-1. Viewing a patient while all patients are being shown
+1. Viewing a patient while all active patients are being shown
 
-   1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
+   1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `view 1`<br>
       Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
