@@ -7,12 +7,14 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICATION;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -71,13 +73,16 @@ public class AddCareCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
-        List<String> updatedMedications = new ArrayList<>(patientToEdit.getMedications());
+        List<String> updatedMedicationDescriptions = patientToEdit.getMedications().stream()
+                .map(Medication::getDescription)
+                .collect(Collectors.toCollection(ArrayList::new));
         List<String> updatedAllergens = new ArrayList<>(patientToEdit.getAllergens());
         List<String> updatedCareInstructions = new ArrayList<>(patientToEdit.getCareInstructions());
         List<String> addedEntries = new ArrayList<>();
         List<String> duplicateMessages = new ArrayList<>();
 
-        appendNewEntries(updatedMedications, medications, "Medication", addedEntries, duplicateMessages);
+        int existingMedicationCount = updatedMedicationDescriptions.size();
+        appendNewEntries(updatedMedicationDescriptions, medications, "Medication", addedEntries, duplicateMessages);
         appendNewEntries(updatedAllergens, allergens, "Allergen", addedEntries, duplicateMessages);
         appendNewEntries(updatedCareInstructions, careInstructions, "Care instruction", addedEntries,
                 duplicateMessages);
@@ -89,9 +94,14 @@ public class AddCareCommand extends Command {
             throw new CommandException(message);
         }
 
+        // A medication added through addcare has a description only, i.e. no daily times.
+        List<Medication> updatedMedications = new ArrayList<>(patientToEdit.getMedications());
+        updatedMedicationDescriptions.subList(existingMedicationCount, updatedMedicationDescriptions.size())
+                .forEach(description -> updatedMedications.add(new Medication(description)));
+
         Patient editedPatient = new Patient(patientToEdit.getName(), patientToEdit.getNric(), patientToEdit.getDob(),
                 patientToEdit.getPhone(), patientToEdit.getAddress(), updatedMedications, updatedAllergens,
-                updatedCareInstructions, patientToEdit.getAppointments());
+                updatedCareInstructions, patientToEdit.getContacts(), patientToEdit.getAppointments());
         model.setPatient(patientToEdit, editedPatient);
 
         String successMessage = String.format(MESSAGE_SUCCESS, patientToEdit.getName(),
@@ -118,7 +128,7 @@ public class AddCareCommand extends Command {
             }
             seenInCommand.add(trimmedEntry);
             existingEntries.add(trimmedEntry);
-            addedEntries.add(trimmedEntry);
+            addedEntries.add(entryType + ": " + trimmedEntry);
         }
     }
 

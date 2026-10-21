@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -52,6 +54,12 @@ public class UiManager implements Ui {
             logger.severe(StringUtil.getDetails(e));
             showFatalErrorDialogAndShutdown("Fatal error during initializing", e);
         }
+    }
+
+    @Override
+    public void showWarning(String message) {
+        requireNonNull(message);
+        showAlertDialogAndWait(AlertType.WARNING, "MediConnect warning", null, message);
     }
 
     private Image getImage(String imagePath) {

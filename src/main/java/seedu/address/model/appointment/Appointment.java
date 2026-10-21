@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 /**
@@ -39,9 +40,11 @@ public class Appointment implements Comparable<Appointment> {
 
     /**
      * Every field must be present and not null. An empty {@code note} means the appointment has no note.
+     * The time must be a whole minute, so that it is saved and loaded in HH:MM format.
      */
     public Appointment(LocalDate date, LocalTime time, String provider, String note) {
         requireAllNonNull(date, time, provider, note);
+        checkArgument(time.equals(time.truncatedTo(ChronoUnit.MINUTES)), MESSAGE_TIME_CONSTRAINTS);
         checkArgument(isValidProvider(provider), MESSAGE_PROVIDER_CONSTRAINTS);
         this.date = date;
         this.time = time;
@@ -129,6 +132,15 @@ public class Appointment implements Comparable<Appointment> {
         return isAtSameTimeAs(otherAppointment)
                 && provider.replaceAll("\\s+", " ")
                         .equalsIgnoreCase(otherAppointment.provider.replaceAll("\\s+", " "));
+    }
+
+    /**
+     * Returns true if the appointment is before the minute of {@code dateTime}, i.e. in the past if
+     * {@code dateTime} is now. Seconds are ignored, since appointments are in whole minutes, so an
+     * appointment at 12:00 is not before 12:00:30.
+     */
+    public boolean isBefore(LocalDateTime dateTime) {
+        return LocalDateTime.of(date, time).isBefore(dateTime.truncatedTo(ChronoUnit.MINUTES));
     }
 
     /**

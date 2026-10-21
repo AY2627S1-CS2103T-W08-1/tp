@@ -10,7 +10,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 public class Nric {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "NRIC should be in the format: 1 letter, 7 digits, 1 letter (e.g., S1234567A).";
+            "NRIC should be 1 letter (S, T, F, G or M), 7 digits and 1 letter, e.g., S1234567A.";
     public static final String VALIDATION_REGEX = "[STFGMstfgm]\\d{7}[A-Za-z]";
     public final String value;
 

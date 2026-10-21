@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Phone;
 
@@ -21,14 +22,12 @@ public class ParserUtilTest {
     private static final String INVALID_PHONE = "+651234";
     private static final String INVALID_ADDRESS = " ";
     private static final String INVALID_DATE = "2026-02-30";
-    private static final String INVALID_TIME = "9:30";
     private static final String INVALID_PROVIDER = " ";
 
     private static final String VALID_NAME = "Rachel Walker";
     private static final String VALID_PHONE = "91234567";
     private static final String VALID_ADDRESS = "123 Main Street #0505";
     private static final String VALID_DATE = "2026-10-25";
-    private static final String VALID_TIME = "09:30";
     private static final String VALID_PROVIDER = "Dr Tan";
 
     private static final String WHITESPACE = " \t\r\n";
@@ -80,6 +79,11 @@ public class ParserUtilTest {
     public void parseName_multipleSpacesBetweenWords_returnsCollapsedName() throws Exception {
         Name expectedName = new Name("Rachel Walker");
         assertEquals(expectedName, ParserUtil.parseName("Rachel   Walker"));
+    }
+
+    @Test
+    public void parseName_curlyApostrophe_returnsNameWithStraightApostrophe() throws Exception {
+        assertEquals(new Name("O'Brien"), ParserUtil.parseName("O’Brien"));
     }
 
     @Test
@@ -147,24 +151,6 @@ public class ParserUtilTest {
     }
 
     @Test
-    public void parseTime_null_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> ParserUtil.parseTime((String) null));
-    }
-
-    @Test
-    public void parseTime_invalidValue_throwsParseException() {
-        assertThrows(ParseException.class, Appointment.MESSAGE_TIME_CONSTRAINTS, ()
-            -> ParserUtil.parseTime(INVALID_TIME));
-        assertThrows(ParseException.class, Appointment.MESSAGE_TIME_CONSTRAINTS, ()
-            -> ParserUtil.parseTime("24:00"));
-    }
-
-    @Test
-    public void parseTime_validValueWithWhitespace_returnsTrimmedTime() throws Exception {
-        assertEquals(LocalTime.of(9, 30), ParserUtil.parseTime(WHITESPACE + VALID_TIME + WHITESPACE));
-    }
-
-    @Test
     public void parseProvider_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseProvider((String) null));
     }
@@ -181,4 +167,31 @@ public class ParserUtilTest {
     }
 
 
+
+    @Test
+    public void parseTime_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseTime(null));
+    }
+
+    @Test
+    public void parseTime_invalidInput_throwsParseException() {
+        String message = Medication.MESSAGE_TIME_CONSTRAINTS;
+        for (String invalidTime : new String[] {"", WHITESPACE, "24:00", "08:60", "8:30", "08:5", "0830", "08.30",
+            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30",
+            "\uff10\uff18:\uff13\uff10", "0\u0663:30"}) {
+            assertThrows(ParseException.class, message, () -> ParserUtil.parseTime(invalidTime));
+        }
+    }
+
+    @Test
+    public void parseTime_validInput_returnsLocalTime() throws Exception {
+        assertEquals(LocalTime.MIDNIGHT, ParserUtil.parseTime("00:00"));
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("08:30"));
+        assertEquals(LocalTime.of(23, 59), ParserUtil.parseTime("23:59"));
+    }
+
+    @Test
+    public void parseTime_inputWithWhitespace_returnsTrimmedLocalTime() throws Exception {
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime(WHITESPACE + "08:30" + WHITESPACE));
+    }
 }
