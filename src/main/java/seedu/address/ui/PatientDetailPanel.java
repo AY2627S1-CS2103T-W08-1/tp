@@ -1,5 +1,6 @@
 package seedu.address.ui;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javafx.beans.value.ObservableValue;
@@ -10,6 +11,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Contact;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -22,8 +25,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     public static final String MESSAGE_NONE_RECORDED = "None recorded";
 
     private static final String FXML = "PatientDetailPanel.fxml";
-    private static final String ENTRY_BULLET = "\u2022";
-    private static final double ENTRY_BULLET_GAP = 6;
+    private static final String ENTRY_NUMBER_SUFFIX = ".";
+    private static final double ENTRY_NUMBER_GAP = 6;
     private static final String ENTRY_STYLE_CLASS = "label-bright";
 
     @FXML
@@ -46,6 +49,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private VBox allergens;
     @FXML
     private VBox careInstructions;
+    @FXML
+    private VBox contacts;
     @FXML
     private VBox appointments;
 
@@ -73,7 +78,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
-     * Fills the detail labels with the fields, care lists and appointments of {@code patient}.
+     * Fills the detail labels with the fields, care lists, contacts and appointments of {@code patient}.
+     * Upcoming appointments are listed first, so that their numbers are the ones commands use.
      */
     private void fillDetails(Patient patient) {
         name.setText(patient.getName().fullName);
@@ -81,16 +87,18 @@ public class PatientDetailPanel extends UiPart<Region> {
         dob.setText("DOB: " + patient.getDob());
         phone.setText("Phone: " + patient.getPhone());
         address.setText("Address: " + patient.getAddress());
-        fillEntries(medications, patient.getMedications());
+        fillEntries(medications, patient.getMedications().stream().map(Medication::toString).toList());
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
-        fillEntries(appointments, patient.getAppointments().stream().map(Appointment::toString).toList());
+        fillEntries(contacts, patient.getContacts().stream().map(Contact::toString).toList());
+        fillEntries(appointments, patient.getAppointmentsUpcomingFirst(LocalDateTime.now()).stream()
+                .map(Appointment::toString).toList());
     }
 
     /**
-     * Replaces the contents of {@code container} with one bulleted row per entry in {@code entries},
-     * or a single {@code MESSAGE_NONE_RECORDED} label if {@code entries} is empty.
-     * Each entry is a separate row so that a long entry wraps under its own bullet.
+     * Replaces the contents of {@code container} with one numbered row ("1.", "2.", ...) per entry in
+     * {@code entries}, or a single {@code MESSAGE_NONE_RECORDED} label if {@code entries} is empty.
+     * Each entry is a separate row so that a long entry wraps beside its own number.
      */
     private static void fillEntries(VBox container, List<String> entries) {
         container.getChildren().clear();
@@ -100,11 +108,13 @@ public class PatientDetailPanel extends UiPart<Region> {
             return;
         }
 
-        for (String entry : entries) {
-            Label entryLabel = createLabel(entry);
+        for (int i = 0; i < entries.size(); i++) {
+            Label numberLabel = createLabel((i + 1) + ENTRY_NUMBER_SUFFIX);
+            numberLabel.setMinWidth(Region.USE_PREF_SIZE);
+            Label entryLabel = createLabel(entries.get(i));
             entryLabel.setMinWidth(0);
             HBox.setHgrow(entryLabel, Priority.ALWAYS);
-            container.getChildren().add(new HBox(ENTRY_BULLET_GAP, createLabel(ENTRY_BULLET), entryLabel));
+            container.getChildren().add(new HBox(ENTRY_NUMBER_GAP, numberLabel, entryLabel));
         }
     }
 

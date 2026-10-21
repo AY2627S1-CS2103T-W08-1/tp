@@ -28,6 +28,21 @@ public class AppointmentTest {
     }
 
     @Test
+    public void constructor_timeWithSeconds_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, Appointment.MESSAGE_TIME_CONSTRAINTS, ()
+            -> new Appointment(DATE, LocalTime.of(9, 30, 15), "Dr Tan", ""));
+    }
+
+    @Test
+    public void isBefore() {
+        Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "");
+        assertTrue(appointment.isBefore(LocalDateTime.of(DATE, TIME.plusMinutes(1))));
+        assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME))); // same time
+        assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME).plusSeconds(30))); // same minute
+        assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME.minusMinutes(1))));
+    }
+
+    @Test
     public void isValidDate() {
         // invalid dates
         assertFalse(Appointment.isValidDate("")); // empty string

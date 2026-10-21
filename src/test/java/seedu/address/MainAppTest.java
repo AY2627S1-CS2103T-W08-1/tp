@@ -4,9 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalPatients.ALICE;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.util.FileUtil;
+import seedu.address.logic.LogicManager;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -23,9 +28,12 @@ import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
+import seedu.address.testutil.PatientUtil;
 import seedu.address.ui.Ui;
 
 public class MainAppTest {
+
+    private static final String INVALID_DATA = "invalid data";
 
     @TempDir
     public Path temporaryFolder;
@@ -43,16 +51,81 @@ public class MainAppTest {
     }
 
     @Test
-    public void initModelManager_invalidDataFile_fileNotOverwritten() throws Exception {
+    public void initModelManager_invalidDataFile_preservedAfterCommands() throws Exception {
         Path dataFile = temporaryFolder.resolve("mediconnect.json");
-        FileUtil.writeToFile(dataFile, "invalid data");
-        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(dataFile);
-        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        FileUtil.writeToFile(dataFile, INVALID_DATA);
+        StorageManager storage = createStorage(dataFile);
+        MainApp mainApp = new MainApp();
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        Path recoveryFile = getRecoveryFiles().get(0);
+
+        assertEquals(new AddressBook(), model.getAddressBook());
+        assertEquals(INVALID_DATA, FileUtil.readFromFile(dataFile));
+        assertEquals(INVALID_DATA, FileUtil.readFromFile(recoveryFile));
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+        mainApp.start(null);
+        assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath()),
+                uiStub.warningMessage);
+
+        LogicManager logic = new LogicManager(model, storage);
+        logic.execute("list");
+        assertEquals(new AddressBook(), storage.readAddressBook().get());
+        logic.execute(PatientUtil.getAddCommand(ALICE));
+        assertEquals(List.of(ALICE), storage.readAddressBook().get().getPatientList());
+        assertEquals(INVALID_DATA, FileUtil.readFromFile(recoveryFile));
+    }
+
+    @Test
+    public void initModelManager_invalidPatient_preservedAfterCommand() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Path invalidPatientFile = Path.of("src", "test", "data", "JsonSerializableAddressBookTest",
+                "invalidPatientAddressBook.json");
+        Files.copy(invalidPatientFile, dataFile);
+        StorageManager storage = createStorage(dataFile);
+        Model model = new MainApp().initModelManager(storage, new UserPrefs());
+
+        new LogicManager(model, storage).execute("list");
+
+        assertEquals(Files.readString(invalidPatientFile), Files.readString(getRecoveryFiles().get(0)));
+    }
+
+    @Test
+    public void initModelManager_repeatedFailedLoads_keepsSeparateRecoveryCopies() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        FileUtil.writeToFile(dataFile, INVALID_DATA);
+        StorageManager storage = createStorage(dataFile);
 
         new MainApp().initModelManager(storage, new UserPrefs());
+        new MainApp().initModelManager(storage, new UserPrefs());
 
-        assertEquals("invalid data", FileUtil.readFromFile(dataFile));
+        List<Path> recoveryFiles = getRecoveryFiles();
+        assertEquals(2, recoveryFiles.size());
+        for (Path recoveryFile : recoveryFiles) {
+            assertEquals(INVALID_DATA, FileUtil.readFromFile(recoveryFile));
+        }
+    }
+
+    @Test
+    public void initModelManager_validDataFile_noRecoveryCopy() throws Exception {
+        StorageManager storage = createStorage(temporaryFolder.resolve("mediconnect.json"));
+        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+
+        Model model = new MainApp().initModelManager(storage, new UserPrefs());
+
+        assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+        assertTrue(getRecoveryFiles().isEmpty());
+    }
+
+    @Test
+    public void initModelManager_dataPathIsDirectory_stopsInitialization() throws Exception {
+        Path dataFile = Files.createDirectory(temporaryFolder.resolve("mediconnect.json"));
+        StorageManager storage = createStorage(dataFile);
+
+        assertThrows(IOException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+
+        assertTrue(Files.isDirectory(dataFile));
+        assertTrue(getRecoveryFiles().isEmpty());
     }
 
     @Test
@@ -102,6 +175,18 @@ public class MainAppTest {
         assertTrue(uiStub.isStarted);
         assertNull(uiStub.startedStage);
         assertSame(uiStub, mainApp.ui);
+        assertNull(uiStub.warningMessage);
+    }
+
+    private StorageManager createStorage(Path dataFile) {
+        return new StorageManager(new JsonAddressBookStorage(dataFile),
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
+    }
+
+    private List<Path> getRecoveryFiles() throws IOException {
+        try (var files = Files.list(temporaryFolder)) {
+            return files.filter(path -> path.getFileName().toString().startsWith("mediconnect-unreadable-")).toList();
+        }
     }
 
     /**
@@ -110,11 +195,17 @@ public class MainAppTest {
     private static class UiStub implements Ui {
         private boolean isStarted = false;
         private Stage startedStage = null;
+        private String warningMessage;
 
         @Override
         public void start(Stage primaryStage) {
             isStarted = true;
             startedStage = primaryStage;
+        }
+
+        @Override
+        public void showWarning(String message) {
+            warningMessage = message;
         }
     }
 }

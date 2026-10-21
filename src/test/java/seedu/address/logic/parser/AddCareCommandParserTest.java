@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
@@ -31,6 +32,21 @@ public class AddCareCommandParserTest {
         assertParseSuccess(parser, "1 med/Metformin med/Aspirin al/Penicillin al/Shellfish",
                 new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Metformin", "Aspirin"),
                         List.of("Penicillin", "Shellfish"), List.of()));
+    }
+
+    @Test
+    public void parse_slashTextThatIsNotPrefix_success() {
+        assertParseSuccess(parser, "1 med/Take 500mg/5ml ci/See https://clinic.example/guide",
+                new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Take 500mg/5ml"), List.of(),
+                        List.of("See https://clinic.example/guide")));
+    }
+
+    @Test
+    public void parse_unknownPrefix_throwsParseException() {
+        for (String prefix : List.of("p/", "dob/", "xyz/")) {
+            assertParseFailure(parser, "1 med/Aspirin " + prefix + "value",
+                    String.format(MESSAGE_UNKNOWN_PREFIX, prefix));
+        }
     }
 
     @Test

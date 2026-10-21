@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddApptCommand;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Medication;
 
 public class AddApptCommandParserTest {
 
@@ -52,7 +53,7 @@ public class AddApptCommandParserTest {
     @Test
     public void parse_invalidValue_throwsParseException() {
         assertParseFailure(parser, "1 d/2026-02-30 t/09:30 w/Dr Tan", Appointment.MESSAGE_DATE_CONSTRAINTS);
-        assertParseFailure(parser, "1 d/2026-11-05 t/9:30 w/Dr Tan", Appointment.MESSAGE_TIME_CONSTRAINTS);
+        assertParseFailure(parser, "1 d/2026-11-05 t/9:30 w/Dr Tan", Medication.MESSAGE_TIME_CONSTRAINTS);
         assertParseFailure(parser, "1 d/2026-11-05 t/09:30 w/ ", Appointment.MESSAGE_PROVIDER_CONSTRAINTS);
     }
 

@@ -1,0 +1,90 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":AddContactCommandParser" as AddContactCommandParser LOGIC_COLOR
+participant "a:AddContactCommand" as AddContactCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+box UI UI_COLOR_T1
+participant "p:PatientDetailPanel" as PatientDetailPanel UI_COLOR
+end box
+
+[-> LogicManager : execute("addcontact 1 n/Clinic r/GP p/123")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand("addcontact 1 n/Clinic r/GP p/123")
+activate AddressBookParser
+
+create AddContactCommandParser
+AddressBookParser -> AddContactCommandParser
+activate AddContactCommandParser
+
+AddContactCommandParser --> AddressBookParser
+deactivate AddContactCommandParser
+
+AddressBookParser -> AddContactCommandParser : parse("1 n/Clinic r/GP p/123")
+activate AddContactCommandParser
+
+create AddContactCommand
+AddContactCommandParser -> AddContactCommand
+activate AddContactCommand
+
+AddContactCommand --> AddContactCommandParser
+deactivate AddContactCommand
+
+AddContactCommandParser --> AddressBookParser : a
+deactivate AddContactCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+AddContactCommandParser -[hidden]-> AddressBookParser
+destroy AddContactCommandParser
+
+AddressBookParser --> LogicManager : a
+deactivate AddressBookParser
+
+LogicManager -> AddContactCommand : execute(m)
+activate AddContactCommand
+
+AddContactCommand -> Model : getFilteredPatientList()
+activate Model
+
+Model --> AddContactCommand : patients
+deactivate Model
+
+AddContactCommand -> AddContactCommand : check duplicate and append contact
+
+AddContactCommand -> Model : setPatient(patient, editedPatient)
+activate Model
+
+opt patient is currently viewed
+Model -> PatientDetailPanel : viewedPatient listener fires
+activate PatientDetailPanel
+
+PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
+deactivate PatientDetailPanel
+end
+
+Model --> AddContactCommand
+deactivate Model
+
+create CommandResult
+AddContactCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> AddContactCommand : r
+deactivate CommandResult
+
+AddContactCommand --> LogicManager : r
+deactivate AddContactCommand
+
+[<-- LogicManager
+deactivate LogicManager
+@enduml

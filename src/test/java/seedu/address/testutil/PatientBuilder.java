@@ -1,10 +1,14 @@
 package seedu.address.testutil;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Dob;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Patient;
@@ -26,9 +30,10 @@ public class PatientBuilder {
     private Dob dob;
     private Phone phone;
     private Address address;
-    private List<String> medications = List.of();
+    private List<Medication> medications = List.of();
     private List<String> allergens = List.of();
     private List<String> careInstructions = List.of();
+    private List<Contact> contacts = List.of();
     private List<Appointment> appointments = List.of();
 
     /**
@@ -54,6 +59,7 @@ public class PatientBuilder {
         medications = patientToCopy.getMedications();
         allergens = patientToCopy.getAllergens();
         careInstructions = patientToCopy.getCareInstructions();
+        contacts = patientToCopy.getContacts();
         appointments = patientToCopy.getAppointments();
     }
 
@@ -98,10 +104,18 @@ public class PatientBuilder {
     }
 
     /**
+     * Sets the patient's medications to ones with the given descriptions and no times.
+     */
+    public PatientBuilder withMedications(String... descriptions) {
+        this.medications = Arrays.stream(descriptions).map(Medication::new).collect(Collectors.toList());
+        return this;
+    }
+
+    /**
      * Sets the patient's medications.
      */
-    public PatientBuilder withMedications(String... entries) {
-        this.medications = List.of(entries);
+    public PatientBuilder withMedications(Medication... medications) {
+        this.medications = List.of(medications);
         return this;
     }
 
@@ -122,6 +136,14 @@ public class PatientBuilder {
     }
 
     /**
+     * Sets the patient's contacts in insertion order.
+     */
+    public PatientBuilder withContacts(Contact... contacts) {
+        this.contacts = List.of(contacts);
+        return this;
+    }
+
+    /**
      * Sets the patient's appointments.
      */
     public PatientBuilder withAppointments(Appointment... appointments) {
@@ -134,6 +156,6 @@ public class PatientBuilder {
      */
     public Patient build() {
         return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
-                appointments);
+                contacts, appointments);
     }
 }

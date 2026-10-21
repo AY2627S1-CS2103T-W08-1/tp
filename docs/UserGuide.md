@@ -51,6 +51,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 **Notes about the command format:**<br>
 
+* Pressing Enter when the command box is empty or contains only whitespace does nothing.
+  The text in the command box and the previous result remain unchanged.
+
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
 
@@ -61,7 +64,7 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, `clear` and `backup`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -95,15 +98,17 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   rejected. For example, `x/123` gives `Unrecognized parameter: x/. Please check the command format.`
 * Standalone `s/o`, `d/o`, and `c/o` are allowed anywhere in the `add` arguments, ignoring letter case.
   Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
+  For example, `s/o,` gives `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
   Addresses can include numeric slash text such as `21/3` and URLs.
 * `NRIC` must be 1 letter (S, T, F, G, or M), 7 digits, and 1 letter, e.g., `S1234567A`.
   It is not case-sensitive and is stored in uppercase.
-* `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, and cannot be in the future.
+* `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, from `1900-01-01` to today.
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
   e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
-  Multiple spaces between words are reduced to one.
+  Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
+  A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
 * `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
   It is stored without the `+65`.
 
@@ -121,11 +126,11 @@ If a required field is missing, the command is rejected with `Invalid command fo
 
 Field   | Prefix | Format | Example
 --------|--------|--------|--------
-Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
+Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
-DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, not in the future. | `1950-04-12`
+DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
-Address | `a/`   | Any value, but not blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Address | `a/`   | Cannot be blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
@@ -139,8 +144,11 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
 * Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
+* A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
+  `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
 * Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
   same command are still added.
+* A medication added with `med/` has no daily times yet.
 
 Examples:
 
@@ -148,7 +156,8 @@ Examples:
 * `addcare 2 al/Penicillin al/Shellfish`
 * `addcare 1 ci/Check blood sugar before breakfast`
 
-A successful command returns `Updated care info for NAME. Added: ITEMS.`
+A successful command returns `Updated care info for NAME. Added: ITEMS.` Each item is labeled by category while
+keeping the category and input order, e.g., `Medication: Aspirin, Allergen: Aspirin, Care instruction: Aspirin`.
 
 Each skipped duplicate is named in the feedback. For example:
 
@@ -170,6 +179,125 @@ Other errors are reported as follows:
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 
+### Editing a care instruction: `editcare`
+
+Replaces one care instruction while leaving its position and all other patient data unchanged.
+
+Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
+
+* `INDEX` is the patient's index in the displayed list. `CI_INDEX` is the care instruction's number in the detail
+  panel. Both must be positive integers.
+* `NEW_TEXT` is trimmed free text and cannot be blank.
+* An edit that would duplicate another care instruction, ignoring letter case and surrounding spaces, is rejected.
+  Editing an instruction to its current text is allowed.
+* `ci/` must appear exactly once. Unrecognized prefixes are rejected.
+
+Example: `editcare 1 2 ci/Check blood sugar after lunch`
+
+For patient `Alex Yeoh`, this returns:
+`Updated care instruction for Alex Yeoh: Check blood sugar after lunch`
+
+### Deleting a care instruction: `deletecare`
+
+Removes one numbered care instruction and reports the removed text.
+
+Format: `deletecare INDEX CI_INDEX`
+
+Example: `deletecare 1 2`
+
+For patient `Alex Yeoh`, deleting `Walk after lunch` returns:
+`Deleted care instruction for Alex Yeoh: Walk after lunch`
+
+After either command, the detail panel updates immediately and the remaining instructions are numbered from `1`
+again. `The patient index provided is invalid.` means `INDEX` is outside the displayed list.
+`The care instruction index provided is invalid.` means `CI_INDEX` is past the end of that patient's instruction
+list, including when the list is empty. Missing, zero, negative, nonnumeric or extra indices give the command's usage.
+Blank replacement text returns `Care instructions cannot be blank.` A duplicate edit returns
+`This care instruction already exists for this patient.` Validation failures leave patient data unchanged.
+
+### Deleting an allergen: `deleteallergy`
+
+Removes one allergen from the patient at `INDEX` in the displayed patient list.
+
+Format: `deleteallergy INDEX ALLERGY_INDEX`
+
+* `ALLERGY_INDEX` is the allergen number shown in that patient's detail panel. Both indices must be positive
+  integers.
+* The removed allergen is reported in the success message. Remaining allergens are renumbered immediately in the
+  detail panel. All other patient details are unchanged.
+
+Example: `deleteallergy 1 2`
+
+For patient `Alex Yeoh`, if allergen 2 is `Shellfish`, this returns
+`Deleted allergen for Alex Yeoh: Shellfish`.
+
+An `INDEX` outside the displayed patient list returns `The patient index provided is invalid.` An
+`ALLERGY_INDEX` past the end of the patient's allergens, including when none are recorded, returns
+`The allergen index provided is invalid.` Missing, zero, negative, nonnumeric or extra indices return
+`Invalid command format!` followed by the command usage. Validation failures leave patient data unchanged.
+
+### Adding a contact: `addcontact`
+
+Adds one contact to the patient at `INDEX` in the displayed patient list.
+
+Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
+
+* Name, role and phone are required. Each prefix can appear only once; fields can appear in any order.
+* Names are nonblank free text, so both people and organisations such as `Tan & Partners Clinic` are supported.
+  Leading/trailing whitespace is removed and repeated spaces in a name become one.
+* Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
+  other roles are allowed.
+* Contact phones can contain digits, spaces, `+` and `-`, with at least three digits. They use different rules
+  from patient phones so overseas and clinic numbers are supported. Formatting is preserved after trimming.
+* The note is optional. An omitted or empty `nt/` creates a contact without a note.
+  Surrounding spaces are removed from notes entered through commands.
+* A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
+  already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
+  country codes are not inferred. The same contact can belong to different patients.
+* Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
+  including standalone `s/o`, `d/o` and `c/o`, are rejected.
+  Text matching a recognised prefix after a space starts another field, even inside a note.
+* Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
+  the panel updates immediately. Existing care information is preserved.
+
+Example: `addcontact 1 n/Lim & Partners Clinic r/GP p/+65 6123-4567 nt/Call in the morning`
+
+For patient `Alex Yeoh`, this returns:
+`Added contact for Alex Yeoh: Lim & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`
+
+Blank names/roles return `Contact name cannot be blank.` or `Contact role cannot be blank.`
+An invalid phone returns `Contact phone must contain at least 3 digits and only digits, spaces, + and -.`
+A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure.
+
+### Editing a contact: `editcontact`
+
+Format: `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]`
+
+* `INDEX` is the patient's index in the displayed list; `CONTACT_INDEX` is its contact number in the detail panel.
+  Both indices must be positive integers.
+* Supply at least one field. Omitted fields keep their values; `nt/` with no value clears the note.
+* The same field and duplicate rules as `addcontact` apply. An edit that creates a duplicate is rejected.
+  Editing a contact to its existing values is allowed. Its list position stays the same.
+* With no fields, the error is `Specify at least one contact field to edit.`
+
+Example: `editcontact 1 1 nt/Call after lunch`
+
+Success begins with `Updated contact for NAME:` followed by the updated contact's name, role, phone and any note.
+
+### Deleting a contact: `deletecontact`
+
+Format: `deletecontact INDEX CONTACT_INDEX`
+
+Removes that contact and reports `Deleted contact for NAME:` followed by the removed contact's details.
+Remaining contacts are renumbered. Other patient details are unchanged.
+
+Example: `deletecontact 1 2`
+
+For all three contact commands, `INDEX` must refer to a patient in the displayed list; otherwise the error is
+`The patient index provided is invalid.` A contact number past the end, including when there are no contacts,
+returns `The contact index provided is invalid.` Missing, zero, negative, nonnumeric or extra indices give the
+command's usage. Validation failures leave patient data unchanged.
+
 ### Adding an appointment: `addappt`
 
 Adds an appointment to the patient at the displayed index.
@@ -183,7 +311,7 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
 * Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`.
-* The patient's appointments are shown in the detail panel of `view`, sorted by date, then time.
+* The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones.
 
 Examples:
 
@@ -205,7 +333,7 @@ Other errors are reported as follows:
   spaces, returns `This appointment already exists for this patient.` and is not added.
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * An invalid date returns `Appointment date should be a real date in YYYY-MM-DD format, e.g. 2026-10-25.`
-* An invalid time returns `Appointment time should be in HH:MM 24-hour format, e.g. 14:30.`
+* An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
 * A blank `WITH` returns `Who the appointment is with should not be blank.`
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
   command usage.
@@ -288,7 +416,9 @@ Format: `view INDEX`
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, care instructions, and appointments (sorted by date, then time), one entry per line.
+  medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...), one
+  entry per line. A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+  Upcoming appointments are listed first, then past ones, each sorted by date, then time.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
@@ -308,6 +438,49 @@ is too large to be a valid number (e.g., `99999999999`), or is followed by extra
 `Invalid command format!` followed by the usage and example. In both cases, the panel keeps showing the patient it
 showed before.
 
+### Listing today's medication times: `due`
+
+Lists the times at which medications are taken today, one line per dose, in the order they are due.
+
+Format: `due [INDEX]`
+
+* Without `INDEX`, `due` lists the doses of **all** patients in MediConnect, even if `find` is hiding some of them
+  from the patient list.
+* With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
+  the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
+  number (1, 2, 3, ...).
+* Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
+  with several times has one line for each time.
+* Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
+  patient at the same time are listed in the order of the patient's medications.
+* A time that is earlier than the current time of your computer (in its time zone) is followed by
+  ` (earlier today)`. A time in the current minute is not marked. Every time is a daily time, so the same times
+  are listed each day.
+* Medications without times are not listed.
+* The result is shown in the result box. The patient list and the details panel are not changed, and no data is
+  changed.
+
+Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
+`2. Amlodipine 5mg (08:00, 20:00)`, and the other patients have no times):
+
+* `due` returns<br>
+  `08:00 Alex Yeoh: Aspirin 100mg (earlier today)`<br>
+  `08:00 Alex Yeoh: Amlodipine 5mg (earlier today)`<br>
+  `20:00 Alex Yeoh: Amlodipine 5mg`
+* `due 1` returns the same three lines, because only Alex Yeoh has times.
+* `due 2` returns `No medications are due today for Bernice Yu.`
+
+Run before 08:00, the same `due` returns the three lines without ` (earlier today)`.
+
+If there is nothing to list, `due` returns `No medications are due today.` and `due INDEX` returns
+`No medications are due today for PATIENT_NAME.`
+
+Errors are reported as follows:
+
+* An `INDEX` outside the displayed list returns `The patient index provided is invalid.`
+* A zero, negative, non-numeric, or excessively large `INDEX`, or anything after `due` other than a single
+  number (e.g., `due 1 2`), returns `Invalid command format!`, followed by the command usage.
+
 ### Clearing all patients: `clear`
 
 Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
@@ -315,6 +488,48 @@ Clears all patients and their care information from MediConnect, and clears any 
 Format: `clear`
 
 Returns `All patients have been cleared.`, including when there are no patients to clear.
+
+### Backing up data: `backup`
+
+Saves a copy of all patient data to the `data/backups` folder, inside the folder you launch MediConnect from. MediConnect creates the folder if it does not exist yet.
+
+Format: `backup`
+
+* The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
+* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten.
+* Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
+
+Returns `Backup saved to: ` followed by the full path of the backup file.
+
+If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows `Could not save the backup to ` followed by the folder and the reason, and your data is not changed.
+
+<box type="warning" seamless>
+
+**Caution:**
+`backup` saves the patient data currently loaded in MediConnect. If MediConnect started with no patients because `data/mediconnect.json` could not be loaded, a backup made then has no patients. Your original data is in the recovery copy named in the startup warning. To recover it, see [Editing the data file](#editing-the-data-file).
+</box>
+
+<box type="tip" seamless>
+
+**Tip:** Run `backup` before editing the data file by hand or before making many changes at once. To go back to a backup later, use `restore`.
+</box>
+
+### Restoring data from a backup: `restore`
+
+Replaces all patient data with the data in a backup file from the `data/backups` folder.
+
+Format: `restore FILENAME`
+
+* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
+* MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
+* Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
+* MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
+* After a restore, the list shows all restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+
+Examples:
+* `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
+
+Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup.
 
 ### Exiting the program: `exit`
 
@@ -333,13 +548,15 @@ MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, 
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, MediConnect starts with no patients at the next run. The invalid file remains on disk until you run a command (MediConnect saves after every command). Still, we recommend backing up the file before editing it.<br>
+If the data file cannot be loaded, MediConnect first saves an unchanged recovery copy beside it, named
+`mediconnect-unreadable-<unique ID>.json`, then starts with no patients. A warning shows the recovery copy's full
+path. Commands continue to save to `data/mediconnect.json`; the recovery copy is kept separately.
+If the recovery copy cannot be created, startup stops so the original file is not overwritten.
+To recover your data, close MediConnect, repair a copy of the recovery file and replace `data/mediconnect.json`
+with the repaired file before restarting. Keep the recovery copy until you have checked the recovered patients.
+We still recommend backing up the file before editing it.<br>
 Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
-
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -368,10 +585,19 @@ Action            | Format, Examples
 **Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2026-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
+**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
+**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
+**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
+**Add contact** | `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]` <br> e.g., `addcontact 1 n/Dr Tan r/GP p/+65 6123-4567`
+**Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
+**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
+**Backup**        | `backup`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Exit**          | `exit`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
 **List**          | `list`
+**Restore**       | `restore FILENAME` <br> e.g., `restore mediconnect-20261020-083015.json`
 **View**          | `view INDEX` <br> e.g., `view 2`

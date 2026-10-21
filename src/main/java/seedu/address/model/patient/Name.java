@@ -10,14 +10,17 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 public class Name {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Names should start with a letter, only contain alphabetic characters, spaces, apostrophes ('), "
-            + "hyphens (-), forward slashes (/) and periods (.), and should not be blank.";
+            "Names should be words of letters separated by single spaces. An apostrophe ('), hyphen (-) or "
+            + "slash (/) can join two letters, e.g., O'Brien, Mary-Jane or s/o, and a period (.) can follow "
+            + "a letter, e.g., Jr.";
 
     /*
-     * The first character of the name must be a letter,
-     * otherwise " " (a blank string) becomes a valid input.
+     * A name is one or more words separated by single spaces. Each word is made of letters,
+     * where an apostrophe, hyphen, slash or period may join two groups of letters,
+     * and may end with a period, e.g. "O'Brien", "Mary-Jane", "s/o" and "Jr.".
      */
-    public static final String VALIDATION_REGEX = "\\p{Alpha}[\\p{Alpha} /.'-]*";
+    private static final String WORD_REGEX = "\\p{Alpha}+(['/.-]\\p{Alpha}+)*\\.?";
+    public static final String VALIDATION_REGEX = WORD_REGEX + "( " + WORD_REGEX + ")*";
 
     public final String fullName;
 

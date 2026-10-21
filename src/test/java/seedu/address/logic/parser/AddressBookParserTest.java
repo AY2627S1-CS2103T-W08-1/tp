@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,14 +18,23 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.AddApptCommand;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddContactCommand;
+import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.CancelApptCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.DeleteAllergyCommand;
+import seedu.address.logic.commands.DeleteCareCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteContactCommand;
+import seedu.address.logic.commands.DueCommand;
+import seedu.address.logic.commands.EditCareCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.EditContactCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RestoreCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
@@ -64,9 +74,35 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_careInstructionCommands_dispatched() throws Exception {
+        assertTrue(parser.parseCommand("editcare 1 1 ci/Updated") instanceof EditCareCommand);
+        assertTrue(parser.parseCommand("deletecare 1 1") instanceof DeleteCareCommand);
+    }
+
+    @Test
+    public void parseCommand_due() throws Exception {
+        assertEquals(new DueCommand(Clock.systemDefaultZone()), parser.parseCommand(DueCommand.COMMAND_WORD));
+        assertEquals(new DueCommand(INDEX_FIRST_PATIENT, Clock.systemDefaultZone()),
+                parser.parseCommand(DueCommand.COMMAND_WORD + " 1"));
+    }
+
+    @Test
     public void parseCommand_clear() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
+    }
+
+    @Test
+    public void parseCommand_backup() throws Exception {
+        assertTrue(parser.parseCommand(BackupCommand.COMMAND_WORD) instanceof BackupCommand);
+        assertTrue(parser.parseCommand(BackupCommand.COMMAND_WORD + " 3") instanceof BackupCommand);
+    }
+
+    @Test
+    public void parseCommand_restore() throws Exception {
+        RestoreCommand command = (RestoreCommand) parser.parseCommand(
+                RestoreCommand.COMMAND_WORD + " mediconnect-20261020-083015.json");
+        assertEquals(new RestoreCommand("mediconnect-20261020-083015.json"), command);
     }
 
     @Test
@@ -74,6 +110,13 @@ public class AddressBookParserTest {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " " + INDEX_FIRST_PATIENT.getOneBased());
         assertEquals(new DeleteCommand(INDEX_FIRST_PATIENT), command);
+    }
+
+    @Test
+    public void parseCommand_deleteAllergy() throws Exception {
+        DeleteAllergyCommand command = (DeleteAllergyCommand) parser.parseCommand(
+                DeleteAllergyCommand.COMMAND_WORD + " 1 2");
+        assertEquals(new DeleteAllergyCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), command);
     }
 
     @Test
@@ -130,5 +173,12 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_unknownCommand_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("unknownCommand"));
+    }
+
+    @Test
+    public void parseCommand_contactCommands_dispatched() throws Exception {
+        assertTrue(parser.parseCommand("addcontact 1 n/Clinic r/GP p/123") instanceof AddContactCommand);
+        assertTrue(parser.parseCommand("editcontact 1 1 nt/") instanceof EditContactCommand);
+        assertTrue(parser.parseCommand("deletecontact 1 1") instanceof DeleteContactCommand);
     }
 }
