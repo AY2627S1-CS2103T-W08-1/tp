@@ -5,10 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
+import static seedu.address.testutil.TypicalContacts.GP;
+import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
 import java.awt.GraphicsEnvironment;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +28,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
 
@@ -85,7 +91,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_showsPatientFields() {
+    public void viewedPatient_patientSet_showsPatientFields() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
 
@@ -100,7 +106,7 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_emptyCareLists_showsNoneRecorded() {
+    public void viewedPatient_emptyCareLists_showsNoneRecorded() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
 
@@ -112,7 +118,18 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientSet_careEntries_showsOneWrappingRowPerEntryInOrder() {
+    public void viewedPatient_appointments_numberedUpcomingFirst() {
+        VBox content = createPanelContent();
+        Appointment past = new Appointment(LocalDate.of(2000, 1, 1), LocalTime.of(9, 0), "Dr Lee", "");
+        Appointment upcoming = new Appointment(LocalDate.of(2999, 1, 1), LocalTime.of(9, 0), "Dr Tan", "");
+        viewedPatient.set(new PatientBuilder().withAppointments(past, upcoming).build());
+
+        assertEquals(List.of(upcoming.toString(), past.toString()), getEntryTexts(content, "#appointments"));
+        assertEquals(List.of("1.", "2."), getNumberTexts(content, "#appointments"));
+    }
+
+    @Test
+    public void viewedPatient_careEntries_showsOneNumberedWrappingRowPerEntryInOrder() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder()
                 .withMedications("Metformin 500mg", "Amlodipine 5mg")
@@ -126,12 +143,36 @@ public class PatientDetailPanelTest {
         assertEquals(List.of("Check blood sugar before breakfast"), getEntryTexts(content, "#careInstructions"));
         assertEquals(List.of(CHECKUP.toString()), getEntryTexts(content, "#appointments"));
 
+        assertEquals(List.of("1.", "2."), getNumberTexts(content, "#medications"));
+        assertEquals(List.of("1."), getNumberTexts(content, "#allergens"));
+        assertEquals(List.of("1."), getNumberTexts(content, "#careInstructions"));
+
         HBox row = (HBox) ((VBox) lookup(content, "#medications")).getChildren().get(0);
         assertTrue(((Label) row.getChildren().get(1)).isWrapText());
     }
 
     @Test
-    public void viewedPatientChanged_showsNewPatientWithoutOldEntries() {
+    public void viewedPatient_medicationsWithTimes_showsTimesBesideDescription() {
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder()
+                .withMedications(new Medication("Metformin 500mg", List.of(LocalTime.of(20, 0), LocalTime.of(8, 0))),
+                        new Medication("Aspirin"))
+                .build());
+
+        assertEquals(List.of("Metformin 500mg (08:00, 20:00)", "Aspirin"), getEntryTexts(content, "#medications"));
+    }
+
+    @Test
+    public void viewedPatient_manyEntries_numbersContinueInOrder() {
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+                .build());
+
+        assertEquals("10.", getNumberTexts(content, "#allergens").get(9));
+    }
+
+    @Test
+    public void viewedPatient_patientChanged_showsNewPatientWithoutOldEntries() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().withMedications("Metformin 500mg", "Amlodipine 5mg").build());
         viewedPatient.set(new PatientBuilder().withName("Bob Choo").withMedications("Aspirin").build());
@@ -141,13 +182,37 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatientCleared_showsPlaceholder() {
+    public void viewedPatient_patientCleared_showsPlaceholder() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());
         viewedPatient.set(null);
 
         assertTrue(lookup(content, "#placeholder").isVisible());
         assertFalse(lookup(content, "#details").isVisible());
+    }
+
+    @Test
+    public void viewedPatient_contacts_numberedInOrderAndRenumbered() {
+        VBox content = createPanelContent();
+        Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN)
+                .withMedications(new Medication("Metformin", List.of(LocalTime.of(8, 0)))).build();
+        viewedPatient.set(patient);
+        assertEquals(List.of(GP.toString(), GUARDIAN.toString()), getEntryTexts(content, "#contacts"));
+        assertEquals(List.of("Metformin (08:00)"), getEntryTexts(content, "#medications"));
+        assertEquals(List.of("1."), getNumberTexts(content, "#medications"));
+        VBox entries = (VBox) lookup(content, "#contacts");
+        for (int i = 0; i < entries.getChildren().size(); i++) {
+            HBox row = (HBox) entries.getChildren().get(i);
+            assertEquals((i + 1) + ".", ((Label) row.getChildren().get(0)).getText());
+        }
+        viewedPatient.set(patient.withContacts(List.of(GUARDIAN)));
+        assertEquals(List.of(GUARDIAN.toString()), getEntryTexts(content, "#contacts"));
+        assertEquals(List.of("Metformin (08:00)"), getEntryTexts(content, "#medications"));
+        HBox remainingRow = (HBox) entries.getChildren().get(0);
+        assertEquals("1.", ((Label) remainingRow.getChildren().get(0)).getText());
+        viewedPatient.set(new PatientBuilder().build());
+        assertEquals(1, entries.getChildren().size());
+        assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
     }
 
     /**
@@ -164,7 +229,16 @@ public class PatientDetailPanelTest {
     }
 
     /**
-     * Returns the entry texts shown in the care list with the given {@code selector}, without their bullets.
+     * Returns the numbers shown beside the entries of the care list with the given {@code selector}.
+     */
+    private static List<String> getNumberTexts(VBox content, String selector) {
+        return ((VBox) lookup(content, selector)).getChildren().stream()
+                .map(row -> ((Label) ((HBox) row).getChildren().get(0)).getText())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the entry texts shown in the care list with the given {@code selector}, without their numbers.
      */
     private static List<String> getEntryTexts(VBox content, String selector) {
         return ((VBox) lookup(content, selector)).getChildren().stream()

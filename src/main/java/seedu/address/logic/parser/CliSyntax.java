@@ -14,6 +14,7 @@ public class CliSyntax {
     public static final Prefix PREFIX_MEDICATION = new Prefix("med/");
     public static final Prefix PREFIX_ALLERGEN = new Prefix("al/");
     public static final Prefix PREFIX_CARE_INSTRUCTION = new Prefix("ci/");
+    public static final Prefix PREFIX_ROLE = new Prefix("r/");
     public static final Prefix PREFIX_DATE = new Prefix("d/");
     public static final Prefix PREFIX_TIME = new Prefix("t/");
     public static final Prefix PREFIX_WITH = new Prefix("w/");

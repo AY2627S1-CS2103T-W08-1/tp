@@ -67,8 +67,8 @@ public class NameContainsKeywordsPredicateTest {
         assertFalse(predicate.test(new PatientBuilder().withName("Alice Bob").build()));
 
         // Keywords match phone, NRIC and address, but do not match name
-        predicate = new NameContainsKeywordsPredicate(List.of("12345678", "S1234567A", "Main", "Street"));
-        assertFalse(predicate.test(new PatientBuilder().withName("Alice").withPhone("12345678")
+        predicate = new NameContainsKeywordsPredicate(List.of("91234567", "S1234567A", "Main", "Street"));
+        assertFalse(predicate.test(new PatientBuilder().withName("Alice").withPhone("91234567")
                 .withNric("S1234567A").withAddress("Main Street").build()));
     }
 

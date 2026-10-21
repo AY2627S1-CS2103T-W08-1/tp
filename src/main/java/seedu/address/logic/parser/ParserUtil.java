@@ -12,6 +12,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Phone;
@@ -56,12 +57,13 @@ public class ParserUtil {
     /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed, and multiple spaces between words reduced to one.
+     * Curly apostrophes (’) are replaced with straight ones (').
      *
      * @throws ParseException if the given {@code name} is invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        String trimmedName = name.trim().replaceAll("\\s+", " ");
+        String trimmedName = name.trim().replaceAll("\\s+", " ").replace('’', '\'');
         if (!Name.isValidName(trimmedName)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
@@ -114,18 +116,19 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String time} into a {@code LocalTime}.
+     * Parses a {@code String time} in 24-hour HH:MM format into a {@code LocalTime}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code time} is not a real time in HH:MM 24-hour format.
+     * @throws ParseException if the given {@code time} is not exactly two digits, a colon and two digits,
+     *     or is not a valid time of day.
      */
     public static LocalTime parseTime(String time) throws ParseException {
         requireNonNull(time);
         String trimmedTime = time.trim();
-        if (!Appointment.isValidTime(trimmedTime)) {
-            throw new ParseException(Appointment.MESSAGE_TIME_CONSTRAINTS);
+        if (!Medication.isValidTime(trimmedTime)) {
+            throw new ParseException(Medication.MESSAGE_TIME_CONSTRAINTS);
         }
-        return LocalTime.parse(trimmedTime);
+        return Medication.toTime(trimmedTime);
     }
 
     /**

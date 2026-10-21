@@ -99,7 +99,7 @@ public class AddApptCommand extends Command {
     static String buildWarnings(Name patientName, Appointment appointment,
             List<Appointment> otherAppointments, Clock clock) {
         String warnings = "";
-        boolean isInPast = appointment.getDateTime().isBefore(LocalDateTime.now(clock));
+        boolean isInPast = appointment.isBefore(LocalDateTime.now(clock));
         if (isInPast) {
             warnings += "\n" + MESSAGE_PAST_APPOINTMENT;
         }

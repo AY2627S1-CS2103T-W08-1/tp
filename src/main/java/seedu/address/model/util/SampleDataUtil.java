@@ -8,7 +8,9 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Dob;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Nric;
 import seedu.address.model.patient.Patient;
@@ -22,9 +24,11 @@ public class SampleDataUtil {
         return new Patient[] {
             new Patient(new Name("Alex Yeoh"), new Nric("S0000001A"), new Dob("1948-03-15"),
                 new Phone("87438807"), new Address("Blk 30 Geylang Street 29, #06-40"),
-                List.of("Aspirin 100mg once daily", "Amlodipine 5mg once daily"),
+                List.of(new Medication("Aspirin 100mg", List.of(LocalTime.of(8, 0))),
+                    new Medication("Amlodipine 5mg", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0)))),
                 List.of("Penicillin"),
                 List.of("Monitor blood pressure every morning"),
+                List.of(new Contact("Tan & Partners Clinic", "GP", "+65 6123-4567", "Call in the morning")),
                 List.of(new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(9, 30), "Dr Tan", ""),
                     new Appointment(LocalDate.of(2026, 12, 10), LocalTime.of(14, 0), "Cardiology clinic",
                         "Bring BP log"))),
@@ -33,6 +37,7 @@ public class SampleDataUtil {
                 List.of(),
                 List.of("Latex"),
                 List.of("Walk for 15 minutes after dinner"),
+                List.of(),
                 List.of(new Appointment(LocalDate.of(2026, 10, 2), LocalTime.of(10, 0), "Polyclinic nurse",
                     "Blood pressure normal"))),
             new Patient(new Name("Charlotte Oliveiro"), new Nric("S0000003A"), new Dob("1945-11-02"),

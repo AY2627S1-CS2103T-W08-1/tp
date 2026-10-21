@@ -6,6 +6,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_CARE_INSTRUCTION;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICATION;
 
 import java.util.List;
+import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddCareCommand;
@@ -18,6 +19,8 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
 
     @Override
     public AddCareCommand parse(String args) throws ParseException {
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), PREFIX_MEDICATION, PREFIX_ALLERGEN,
+                PREFIX_CARE_INSTRUCTION);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_MEDICATION, PREFIX_ALLERGEN,
                 PREFIX_CARE_INSTRUCTION);
         List<String> medications = argMultimap.getAllValues(PREFIX_MEDICATION);
