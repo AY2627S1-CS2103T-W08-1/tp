@@ -31,6 +31,8 @@ public class CancelApptCommandTest {
     public void constructor_nullArguments_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new CancelApptCommand(null, INDEX_FIRST_PATIENT));
         assertThrows(NullPointerException.class, () -> new CancelApptCommand(INDEX_FIRST_PATIENT, null));
+        assertThrows(NullPointerException.class, ()
+            -> new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, null));
     }
 
     @Test
