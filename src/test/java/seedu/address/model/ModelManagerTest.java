@@ -10,14 +10,22 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.ARCHIVED_ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.AdjustableClock;
 import seedu.address.testutil.PatientBuilder;
 
 public class ModelManagerTest {
@@ -135,6 +143,44 @@ public class ModelManagerTest {
         // viewing another patient replaces the viewed patient
         modelManager.setViewedPatient(BENSON);
         assertEquals(BENSON, modelManager.getViewedPatient().getValue());
+    }
+
+    @Test
+    public void setViewedPatient_samePatientAgain_notifiesListeners() {
+        modelManager.addPatient(ALICE);
+        modelManager.setViewedPatient(ALICE);
+        List<Patient> shownPatients = new ArrayList<>();
+        modelManager.getViewedPatient().addListener((observable, oldPatient, newPatient) ->
+                shownPatients.add(newPatient));
+
+        modelManager.setViewedPatient(ALICE);
+        assertEquals(ALICE, shownPatients.get(shownPatients.size() - 1));
+    }
+
+    @Test
+    public void getAppointmentsAsShown_appointmentPassesWhileViewed_keepsOrderUntilShownAgain() {
+        AdjustableClock clock = new AdjustableClock(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
+        Appointment soon = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 1), "Dr Tan", "");
+        Appointment later = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(14, 0), "Dr Lim", "");
+        Patient alice = new PatientBuilder(ALICE).withAppointments(soon, later).build();
+        Patient benson = new PatientBuilder(BENSON).withAppointments(soon, later).build();
+        AddressBook addressBook = new AddressBookBuilder().withPatient(alice).withPatient(benson).build();
+        ModelManager model = new ModelManager(addressBook, new UserPrefs(), clock);
+        model.setViewedPatient(alice);
+        clock.advance(Duration.ofMinutes(2));
+
+        // the viewed patient keeps the order shown, while other patients are ordered at the current time
+        assertEquals(List.of(soon, later), model.getAppointmentsAsShown(alice));
+        assertEquals(List.of(later, soon), model.getAppointmentsAsShown(benson));
+
+        // editing the viewed patient keeps the order shown
+        Patient editedAlice = new PatientBuilder(alice).withAllergens("Latex").build();
+        model.setPatient(alice, editedAlice);
+        assertEquals(List.of(soon, later), model.getAppointmentsAsShown(editedAlice));
+
+        // showing the patient again orders the appointments at the current time
+        model.setViewedPatient(editedAlice);
+        assertEquals(List.of(later, soon), model.getAppointmentsAsShown(editedAlice));
     }
 
     @Test

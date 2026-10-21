@@ -12,6 +12,7 @@ import seedu.address.logic.commands.AddApptCommand;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddContactCommand;
+import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.CancelApptCommand;
 import seedu.address.logic.commands.ClearCommand;
@@ -28,8 +29,10 @@ import seedu.address.logic.commands.EditContactCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ListArchivedCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RestoreCommand;
+import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -74,6 +77,7 @@ public class AddressBookParser {
             case AddApptCommand.COMMAND_WORD -> new AddApptCommandParser().parse(arguments);
             case EditApptCommand.COMMAND_WORD -> new EditApptCommandParser().parse(arguments);
             case CancelApptCommand.COMMAND_WORD -> new CancelApptCommandParser().parse(arguments);
+            case ArchiveCommand.COMMAND_WORD -> new ArchiveCommandParser().parse(arguments);
             case EditCareCommand.COMMAND_WORD -> new EditCareCommandParser().parse(arguments);
             case DeleteCareCommand.COMMAND_WORD -> new DeleteCareCommandParser().parse(arguments);
             case DeleteAllergyCommand.COMMAND_WORD -> new DeleteAllergyCommandParser().parse(arguments);
@@ -85,6 +89,8 @@ public class AddressBookParser {
             case RestoreCommand.COMMAND_WORD -> new RestoreCommandParser().parse(arguments);
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
             case ListCommand.COMMAND_WORD -> new ListCommand();
+            case ListArchivedCommand.COMMAND_WORD -> new ListArchivedCommand();
+            case UnarchiveCommand.COMMAND_WORD -> new UnarchiveCommandParser().parse(arguments);
             case ViewCommand.COMMAND_WORD -> new ViewCommandParser().parse(arguments);
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommand();

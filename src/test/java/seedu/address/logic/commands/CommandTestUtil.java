@@ -21,6 +21,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
@@ -121,10 +122,17 @@ public class CommandTestUtil {
     }
 
     /**
-     * Returns a model whose only patient is Alice with the given {@code appointments}.
+     * Returns a model using {@code FIXED_CLOCK}, whose only patient is Alice with the given {@code appointments}.
      */
     public static Model createModelWithAppointments(Appointment... appointments) {
-        Model model = new ModelManager();
+        return createModelWithAppointments(FIXED_CLOCK, appointments);
+    }
+
+    /**
+     * Returns a model using {@code clock}, whose only patient is Alice with the given {@code appointments}.
+     */
+    public static Model createModelWithAppointments(Clock clock, Appointment... appointments) {
+        Model model = new ModelManager(new AddressBook(), new UserPrefs(), clock);
         model.addPatient(new PatientBuilder(ALICE).withAppointments(appointments).build());
         return model;
     }

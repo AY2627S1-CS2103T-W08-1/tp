@@ -1,7 +1,7 @@
 package seedu.address.ui;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Function;
 
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -54,11 +54,16 @@ public class PatientDetailPanel extends UiPart<Region> {
     @FXML
     private VBox appointments;
 
+    private final Function<Patient, List<Appointment>> appointmentsAsShown;
+
     /**
      * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
+     * Appointments are numbered in the order given by {@code appointmentsAsShown}, which commands also use.
      */
-    public PatientDetailPanel(ObservableValue<Patient> viewedPatient) {
+    public PatientDetailPanel(ObservableValue<Patient> viewedPatient,
+            Function<Patient, List<Appointment>> appointmentsAsShown) {
         super(FXML);
+        this.appointmentsAsShown = appointmentsAsShown;
         placeholder.setText(MESSAGE_NO_PATIENT);
         viewedPatient.addListener((observable, oldPatient, newPatient) -> showPatient(newPatient));
         showPatient(viewedPatient.getValue());
@@ -79,7 +84,6 @@ public class PatientDetailPanel extends UiPart<Region> {
 
     /**
      * Fills the detail labels with the fields, care lists, contacts and appointments of {@code patient}.
-     * Upcoming appointments are listed first, so that their numbers are the ones commands use.
      */
     private void fillDetails(Patient patient) {
         name.setText(patient.getName().fullName);
@@ -91,7 +95,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
         fillEntries(contacts, patient.getContacts().stream().map(Contact::toString).toList());
-        fillEntries(appointments, patient.getAppointmentsUpcomingFirst(LocalDateTime.now()).stream()
+        fillEntries(appointments, appointmentsAsShown.apply(patient).stream()
                 .map(Appointment::toString).toList());
     }
 

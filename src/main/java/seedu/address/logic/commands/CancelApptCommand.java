@@ -2,8 +2,6 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,27 +30,16 @@ public class CancelApptCommand extends Command {
 
     private final Index targetIndex;
     private final Index appointmentIndex;
-    private final Clock clock;
 
     /**
      * Creates a {@code CancelApptCommand} that removes the appointment at {@code appointmentIndex}
-     * from the patient at {@code targetIndex}, numbering appointments as the detail panel does
-     * at the current time of the system clock.
+     * from the patient at {@code targetIndex}, numbering appointments as the detail panel does.
      */
     public CancelApptCommand(Index targetIndex, Index appointmentIndex) {
-        this(targetIndex, appointmentIndex, Clock.systemDefaultZone());
-    }
-
-    /**
-     * Creates a {@code CancelApptCommand} that uses {@code clock} for the current date and time.
-     */
-    public CancelApptCommand(Index targetIndex, Index appointmentIndex, Clock clock) {
         requireNonNull(targetIndex);
         requireNonNull(appointmentIndex);
-        requireNonNull(clock);
         this.targetIndex = targetIndex;
         this.appointmentIndex = appointmentIndex;
-        this.clock = clock;
     }
 
     @Override
@@ -65,8 +52,7 @@ public class CancelApptCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
-        List<Appointment> updatedAppointments =
-                new ArrayList<>(patientToEdit.getAppointmentsUpcomingFirst(LocalDateTime.now(clock)));
+        List<Appointment> updatedAppointments = new ArrayList<>(model.getAppointmentsAsShown(patientToEdit));
         if (appointmentIndex.getZeroBased() >= updatedAppointments.size()) {
             throw new CommandException(Messages.MESSAGE_INVALID_APPOINTMENT_DISPLAYED_INDEX);
         }
@@ -91,8 +77,7 @@ public class CancelApptCommand extends Command {
         }
 
         return targetIndex.equals(otherCancelApptCommand.targetIndex)
-                && appointmentIndex.equals(otherCancelApptCommand.appointmentIndex)
-                && clock.equals(otherCancelApptCommand.clock);
+                && appointmentIndex.equals(otherCancelApptCommand.appointmentIndex);
     }
 
     @Override
