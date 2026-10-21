@@ -404,8 +404,9 @@ Lists the upcoming appointments of all patients, or every appointment of one pat
 
 Format: `listappt [INDEX]`
 
-* Without `INDEX`, lists the appointments of all patients at or after the current date and time, soonest first.
-  An appointment earlier today is past and is not listed. All patients are included, even after `find`.
+* Without `INDEX`, lists the appointments of all active patients at or after the current date and time, soonest
+  first. An appointment earlier today is past and is not listed. Archived patients are skipped, and every active
+  patient is included, even after `find`.
 * With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
   appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`.
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.

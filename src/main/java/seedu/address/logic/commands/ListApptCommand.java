@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -18,15 +19,15 @@ import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
- * Lists the upcoming appointments of all patients, or every appointment of a patient identified by their
- * displayed index.
+ * Lists the upcoming appointments of all active (not archived) patients, or every appointment of a
+ * patient identified by their displayed index.
  */
 public class ListApptCommand extends Command {
 
     public static final String COMMAND_WORD = "listappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists the upcoming appointments of all "
-            + "patients, soonest first. With an INDEX, lists every appointment of the patient identified by "
+            + "active patients, soonest first. With an INDEX, lists every appointment of the patient identified by "
             + "the index number used in the displayed patient list.\n"
             + "Parameters: [INDEX] (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
@@ -66,7 +67,9 @@ public class ListApptCommand extends Command {
         requireNonNull(model);
         LocalDateTime now = LocalDateTime.now(clock);
         if (targetIndex.isEmpty()) {
-            return new CommandResult(listUpcomingAppointments(model.getAddressBook().getPatientList(), now));
+            List<Patient> activePatients = model.getAddressBook().getPatientList().stream()
+                    .filter(PREDICATE_SHOW_ACTIVE_PATIENTS).toList();
+            return new CommandResult(listUpcomingAppointments(activePatients, now));
         }
 
         List<Patient> lastShownList = model.getFilteredPatientList();

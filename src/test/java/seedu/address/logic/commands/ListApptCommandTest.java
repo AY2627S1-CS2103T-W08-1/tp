@@ -63,6 +63,17 @@ public class ListApptCommandTest {
     }
 
     @Test
+    public void execute_noIndex_skipsArchivedPatients() {
+        Patient alice = new PatientBuilder(ALICE).withAppointments(ONE_MINUTE_AGO, CHECKUP).build();
+        Patient archivedBenson = new PatientBuilder(BENSON).withAppointments(NOW, CARDIOLOGY).withArchived(true)
+                .build();
+        String expectedMessage = MESSAGE_UPCOMING + "\n" + ALICE.getName() + ": " + CHECKUP;
+
+        assertCommandSuccess(new ListApptCommand(Optional.empty(), FIXED_CLOCK),
+                createModelWith(alice, archivedBenson), expectedMessage, createModelWith(alice, archivedBenson));
+    }
+
+    @Test
     public void execute_noUpcomingAppointments_showsNoUpcomingMessage() {
         Patient patientWithPastAppointment =
                 new PatientBuilder(ALICE).withAppointments(ONE_MINUTE_AGO).build();
