@@ -419,7 +419,7 @@ Format: `listappt [INDEX]`
 Examples:
 
 * `listappt` returns `Upcoming appointments:`, followed by one line per appointment with the patient's name, e.g.,
-  `Alex Yeoh: 2026-11-05 09:30 with Dr Tan`.
+  `Alex Yeoh: 2027-11-05 09:30 with Dr Tan`.
 * `listappt 2` returns `Appointments for Bernice Yu:`, then `Upcoming: none`, then `Past:` followed by
   `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal)`.
 
