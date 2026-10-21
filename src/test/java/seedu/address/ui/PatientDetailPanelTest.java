@@ -11,6 +11,7 @@ import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
 import java.awt.GraphicsEnvironment;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -27,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
@@ -113,6 +115,17 @@ public class PatientDetailPanelTest {
             assertEquals(1, entries.getChildren().size());
             assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
         }
+    }
+
+    @Test
+    public void viewedPatient_appointments_numberedUpcomingFirst() {
+        VBox content = createPanelContent();
+        Appointment past = new Appointment(LocalDate.of(2000, 1, 1), LocalTime.of(9, 0), "Dr Lee", "");
+        Appointment upcoming = new Appointment(LocalDate.of(2999, 1, 1), LocalTime.of(9, 0), "Dr Tan", "");
+        viewedPatient.set(new PatientBuilder().withAppointments(past, upcoming).build());
+
+        assertEquals(List.of(upcoming.toString(), past.toString()), getEntryTexts(content, "#appointments"));
+        assertEquals(List.of("1.", "2."), getNumberTexts(content, "#appointments"));
     }
 
     @Test

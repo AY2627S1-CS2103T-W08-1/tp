@@ -350,6 +350,7 @@ Format: `view INDEX`
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
   medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...), one
   entry per line. A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+  Upcoming appointments are listed first, then past ones, each sorted by date, then time.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the

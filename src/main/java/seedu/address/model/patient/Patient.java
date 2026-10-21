@@ -3,8 +3,10 @@ package seedu.address.model.patient;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.appointment.Appointment;
@@ -139,6 +141,17 @@ public class Patient {
      */
     public List<Appointment> getAppointments() {
         return appointments;
+    }
+
+    /**
+     * Returns the appointments in the order the detail panel numbers them: upcoming ones (at or after
+     * {@code now}) first, then past ones, each sorted by date, then time.
+     */
+    public List<Appointment> getAppointmentsUpcomingFirst(LocalDateTime now) {
+        Objects.requireNonNull(now);
+        Stream<Appointment> upcoming = appointments.stream().filter(appointment -> !appointment.isBefore(now));
+        Stream<Appointment> past = appointments.stream().filter(appointment -> appointment.isBefore(now));
+        return Stream.concat(upcoming, past).toList();
     }
 
     /**

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,14 @@ public class AppointmentTest {
     public void constructor_timeWithSeconds_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, Appointment.MESSAGE_TIME_CONSTRAINTS, ()
             -> new Appointment(DATE, LocalTime.of(9, 30, 15), "Dr Tan", ""));
+    }
+
+    @Test
+    public void isBefore() {
+        Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "");
+        assertTrue(appointment.isBefore(LocalDateTime.of(DATE, TIME.plusMinutes(1))));
+        assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME))); // same time
+        assertFalse(appointment.isBefore(LocalDateTime.of(DATE, TIME.minusMinutes(1))));
     }
 
     @Test

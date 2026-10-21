@@ -11,6 +11,7 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BOB;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -135,6 +136,20 @@ public class PatientTest {
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
                 ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(),
                 Collections.singletonList(null)));
+    }
+
+    @Test
+    public void getAppointmentsUpcomingFirst() {
+        Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Dr Lee", "");
+        Appointment now = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 0), "Dr Lim", "");
+        Appointment later = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(8, 0), "Dr Tan", "");
+        Patient patient = new PatientBuilder(ALICE).withAppointments(later, past, now).build();
+
+        // appointments at the current time count as upcoming
+        assertEquals(List.of(now, later, past),
+                patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 0)));
+        assertEquals(List.of(later, past, now),
+                patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 1)));
     }
 
     @Test

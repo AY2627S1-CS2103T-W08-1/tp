@@ -4,6 +4,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -104,6 +105,13 @@ public class Appointment implements Comparable<Appointment> {
 
     public String getNote() {
         return note;
+    }
+
+    /**
+     * Returns true if the appointment is before {@code dateTime}, i.e. in the past if {@code dateTime} is now.
+     */
+    public boolean isBefore(LocalDateTime dateTime) {
+        return LocalDateTime.of(date, time).isBefore(dateTime);
     }
 
     /**

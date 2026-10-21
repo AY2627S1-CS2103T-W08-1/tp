@@ -1,5 +1,6 @@
 package seedu.address.ui;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javafx.beans.value.ObservableValue;
@@ -78,6 +79,7 @@ public class PatientDetailPanel extends UiPart<Region> {
 
     /**
      * Fills the detail labels with the fields, care lists, contacts and appointments of {@code patient}.
+     * Upcoming appointments are listed first, so that their numbers are the ones commands use.
      */
     private void fillDetails(Patient patient) {
         name.setText(patient.getName().fullName);
@@ -89,7 +91,8 @@ public class PatientDetailPanel extends UiPart<Region> {
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
         fillEntries(contacts, patient.getContacts().stream().map(Contact::toString).toList());
-        fillEntries(appointments, patient.getAppointments().stream().map(Appointment::toString).toList());
+        fillEntries(appointments, patient.getAppointmentsUpcomingFirst(LocalDateTime.now()).stream()
+                .map(Appointment::toString).toList());
     }
 
     /**
