@@ -16,7 +16,7 @@ import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
- * Formats a patient's details and care lists as lines of text, worded the same as the patient detail panel.
+ * Formats a patient's details and numbered lists as lines of text, worded the same as the patient detail panel.
  */
 public class PatientFormatter {
 
@@ -62,8 +62,8 @@ public class PatientFormatter {
      * A line break inside an entry, which only a hand-edited data file can hold, becomes a single space,
      * so that each entry stays on one numbered line.
      *
-     * @param entries Entries of one care list, in the order they were added.
-     * @return the lines to show for the care list.
+     * @param entries Entries of one list, in the order to number them.
+     * @return the lines to show for the list.
      */
     public static List<String> formatEntries(List<String> entries) {
         requireNonNull(entries);
