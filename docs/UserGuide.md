@@ -351,6 +351,7 @@ Format: `cancelappt INDEX APPT_INDEX`
   upcoming appointments come first, then past ones. An appointment's number can change once it is in the past.
 * Both indexes **must be positive integers** 1, 2, 3, ...
 * The appointment is removed, not kept as cancelled. The detail panel then shows the patient.
+* Use `cancelappt` also to remove a past appointment that was entered by mistake.
 
 Examples:
 
@@ -364,9 +365,10 @@ Errors are reported as follows:
 
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * An `APPT_INDEX` larger than the number of the patient's appointments returns
-  `The appointment index provided is invalid.`
-* A missing, zero, negative, or non-numeric index, or more than two indexes, returns `Invalid command format!`,
-  followed by the command usage.
+  `The appointment index provided is invalid.` So does any `APPT_INDEX` for a patient with no appointments.
+* A missing, zero, negative, non-numeric or excessively large index (e.g., `99999999999`), or a number of values
+  other than two (e.g., `cancelappt 1` or `cancelappt 1 2 x`), returns `Invalid command format!`, followed by the
+  command usage.
 
 ### Listing all active patients: `list`
 
