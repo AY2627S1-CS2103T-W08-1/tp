@@ -151,14 +151,11 @@ public class ExportCommand extends Command {
     }
 
     /**
-     * Deletes {@code temporaryFile} if a failed export left it behind. Anything else at that path, such as a folder,
-     * is left alone.
+     * Deletes {@code temporaryFile}, which a failed export created and left behind, if it is still there.
      */
     private static void deleteTemporaryFile(Path temporaryFile) {
         try {
-            if (Files.isRegularFile(temporaryFile, LinkOption.NOFOLLOW_LINKS)) {
-                Files.delete(temporaryFile);
-            }
+            Files.deleteIfExists(temporaryFile);
         } catch (IOException ioe) {
             logger.warning("Could not delete the temporary file " + temporaryFile + ": " + ioe);
         }
