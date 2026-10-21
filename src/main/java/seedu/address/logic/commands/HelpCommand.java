@@ -36,6 +36,8 @@ public class HelpCommand extends Command {
             formatEntry(AddCommand.COMMAND_WORD + " " + PREFIX_NAME + "NAME " + PREFIX_NRIC + "NRIC "
                     + PREFIX_DOB + "DOB " + PREFIX_PHONE + "PHONE " + PREFIX_ADDRESS + "ADDRESS",
                     "Adds a patient."),
+            formatEntry(EditCommand.COMMAND_FORMAT,
+                    "Edits the patient at INDEX (at least one field)."),
             formatEntry(ListCommand.COMMAND_WORD,
                     "Lists all active patients."),
             formatEntry(ListArchivedCommand.COMMAND_WORD,
