@@ -6,45 +6,92 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
+import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.nio.file.Path;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
+import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PatientBuilder;
 
 public class AddCareCommandTest {
 
+    private static final int LONG_TEXT_LENGTH = 5000;
+
+    @TempDir
+    public Path testFolder;
+
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test
-    public void execute_newEntries_updatesPatient() {
+    public void execute_sameTextAcrossCategories_updatesPatientAndLabelsFeedback() {
         Patient patientToEdit = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
-                List.of("Metformin 500mg twice daily"), List.of("Penicillin"),
-                List.of("Check blood sugar before breakfast"));
+                List.of("Aspirin"), List.of("Aspirin"), List.of("Aspirin"));
 
         Patient editedPatient = new PatientBuilder(patientToEdit)
-                .withMedications("Metformin 500mg twice daily")
-                .withAllergens("Penicillin")
-                .withCareInstructions("Check blood sugar before breakfast")
+                .withMedications("Aspirin")
+                .withAllergens("Aspirin")
+                .withCareInstructions("Aspirin")
                 .build();
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patientToEdit, editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patientToEdit.getName(),
-                "Metformin 500mg twice daily, Penicillin, Check blood sugar before breakfast");
+                "Medication: Aspirin, Allergen: Aspirin, Care instruction: Aspirin");
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_newMedication_keepsExistingTimesAndAddsNewWithNoTimes() {
+        Medication scheduled = new Medication("Metformin", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0)));
+        Patient patient = new PatientBuilder(ALICE).withMedications(scheduled).build();
+        Model actualModel = new ModelManager();
+        actualModel.addPatient(patient);
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Aspirin"), List.of(), List.of());
+
+        Patient editedPatient = new PatientBuilder(patient)
+                .withMedications(scheduled, new Medication("Aspirin"))
+                .build();
+        Model expectedModel = new ModelManager(actualModel.getAddressBook(), new UserPrefs());
+        expectedModel.setPatient(patient, editedPatient);
+
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(),
+                "Medication: Aspirin");
+        assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_specialCharactersAndLongText_addedAndSurvivesStorageRoundTrip() throws Exception {
+        String special = "<b>\"';DROP TABLE--&\u00e9\u4e2d\u6587/x";
+        String longText = "x".repeat(LONG_TEXT_LENGTH);
+        Patient patient = new PatientBuilder(ALICE).build();
+        Model actualModel = new ModelManager();
+        actualModel.addPatient(patient);
+        new AddCareCommand(INDEX_FIRST_PATIENT, List.of(special, longText), List.of(), List.of())
+                .execute(actualModel);
+
+        Patient edited = actualModel.getFilteredPatientList().get(0);
+        assertEquals(List.of(new Medication(special), new Medication(longText)), edited.getMedications());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("addressbook.json"));
+        storage.saveAddressBook(actualModel.getAddressBook());
+        assertEquals(List.of(edited), storage.readAddressBook().get().getPatientList());
     }
 
     @Test
@@ -61,7 +108,8 @@ public class AddCareCommandTest {
         Model expectedModel = new ModelManager(actualModel.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);
 
-        String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(), "Atorvastatin")
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(),
+                "Medication: Atorvastatin")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING, "Medication", "metformin")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING, "Medication", "METFORMIN")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_IN_COMMAND, "Medication", "ATORVASTATIN");
@@ -80,7 +128,8 @@ public class AddCareCommandTest {
         expectedModel.setPatient(patientToEdit, editedPatient);
         showPatientAtIndex(expectedModel, INDEX_SECOND_PATIENT);
 
-        String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patientToEdit.getName(), "Shellfish");
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patientToEdit.getName(),
+                "Allergen: Shellfish");
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
@@ -162,5 +211,18 @@ public class AddCareCommandTest {
                 + "{targetIndex=" + INDEX_FIRST_PATIENT
                 + ", medications=[Metformin], allergens=[Penicillin], careInstructions=[Check blood sugar]}";
         assertEquals(expected, command.toString());
+    }
+
+    @Test
+    public void execute_existingContacts_preserved() throws Exception {
+        var contact = GP;
+        Medication medication = new Medication("Metformin", List.of(LocalTime.of(8, 0)));
+        Patient patient = new PatientBuilder().withContacts(contact).withMedications(medication).build();
+        Model modelWithContacts = new ModelManager(
+                new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Medication"), List.of(), List.of()).execute(modelWithContacts);
+        assertEquals(List.of(contact), modelWithContacts.getFilteredPatientList().get(0).getContacts());
+        assertEquals(List.of(medication, new Medication("Medication")),
+                modelWithContacts.getFilteredPatientList().get(0).getMedications());
     }
 }

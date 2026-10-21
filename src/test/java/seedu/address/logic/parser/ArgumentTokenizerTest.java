@@ -3,9 +3,11 @@ package seedu.address.logic.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
@@ -39,6 +41,42 @@ public class ArgumentTokenizerTest {
                     ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of(), pSlash));
             assertThrows(ParseException.class, expected, () ->
                     ArgumentTokenizer.verifyNoInvalidPrefixes(" p/value\t" + token, Set.of(), pSlash));
+        }
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_punctuatedAllowedToken_throwsParseException() {
+        for (String token : List.of("custom/token,", "CUSTOM/TOKEN.", "custom/token…", "custom/token𐄀")) {
+            String unpunctuatedToken = token.substring(0, token.offsetByCodePoints(token.length(), -1));
+            String expected = String.format(
+                    Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken);
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of("custom/token"), pSlash));
+        }
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_longPunctuationRun_throwsPromptly() {
+        String punctuation = ",".repeat(60_000);
+        assertTimeout(Duration.ofSeconds(2), () -> {
+            for (String token : List.of("x/" + punctuation + "a", "x/" + punctuation + "a,")) {
+                String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/");
+                assertThrows(ParseException.class, expected, () ->
+                        ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of("s/o"), pSlash));
+            }
+            String token = "s/o" + punctuation;
+            String expected = String.format(Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, "s/o");
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of("s/o"), pSlash));
+        });
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_allowedTokenSubstring_throwsParseException() {
+        for (String token : List.of("custom/tokenized", "custom/token/extra", "custom/token🙂,")) {
+            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "custom/");
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(token, Set.of("custom/token"), pSlash));
         }
     }
 
