@@ -50,7 +50,7 @@ public class CancelApptCommandTest {
         Model expectedModel = createModelWithAppointments(CHECKUP);
 
         assertCommandSuccess(createCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), model,
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), LATER_APPOINTMENT), expectedModel);
+                String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), LATER_APPOINTMENT), expectedModel);
     }
 
     @Test
@@ -59,7 +59,7 @@ public class CancelApptCommandTest {
 
         assertCommandSuccess(createCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT),
                 createModelWithAppointments(past, CHECKUP),
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), CHECKUP), createModelWithAppointments(past));
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), CHECKUP), createModelWithAppointments(past));
     }
 
     @Test

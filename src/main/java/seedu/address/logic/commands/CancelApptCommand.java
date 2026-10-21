@@ -28,7 +28,7 @@ public class CancelApptCommand extends Command {
             + "APPT_INDEX (the appointment's number in the detail panel, a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1 2";
 
-    public static final String MESSAGE_SUCCESS = "Cancelled appointment for %1$s: %2$s";
+    public static final String MESSAGE_SUCCESS = "Cancelled appointment %1$d of %2$s: %3$s";
 
     private final Index targetIndex;
     private final Index appointmentIndex;
@@ -73,7 +73,8 @@ public class CancelApptCommand extends Command {
 
         Appointment cancelledAppointment = updatedAppointments.remove(appointmentIndex.getZeroBased());
         model.setPatient(patientToEdit, patientToEdit.withAppointments(updatedAppointments));
-        String message = String.format(MESSAGE_SUCCESS, patientToEdit.getName(), cancelledAppointment);
+        String message = String.format(MESSAGE_SUCCESS, appointmentIndex.getOneBased(), patientToEdit.getName(),
+                cancelledAppointment);
         return new CommandResult(message);
     }
 

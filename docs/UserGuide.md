@@ -356,9 +356,9 @@ Examples:
 
 * `view 1` followed by `cancelappt 1 2` cancels the 2nd appointment of the 1st patient.
 
-A successful command returns `Cancelled appointment for NAME: APPOINTMENT`, with the appointment shown as in the
-detail panel. For example, the example above returns
-`Cancelled appointment for Alex Yeoh: 2026-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+A successful command returns `Cancelled appointment APPT_INDEX of NAME: APPOINTMENT`, with the appointment shown as
+in the detail panel. For example, the example above returns
+`Cancelled appointment 2 of Alex Yeoh: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`.
 
 Errors are reported as follows:
 
