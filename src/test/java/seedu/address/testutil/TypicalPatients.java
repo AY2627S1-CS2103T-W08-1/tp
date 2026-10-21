@@ -66,6 +66,7 @@ public class TypicalPatients {
     public static final Patient BOB = new PatientBuilder().withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
             .withNric("T7654321B").withDob("1945-11-02").withAddress(VALID_ADDRESS_BOB)
             .build();
+    public static final Patient ARCHIVED_ALICE = new PatientBuilder(ALICE).withArchived(true).build();
 
     public static final String KEYWORD_MATCHING_MEIER = "Meier"; // A keyword that matches MEIER
 

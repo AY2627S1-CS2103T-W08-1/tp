@@ -1,7 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -98,7 +98,7 @@ public class RestoreCommand extends Command {
         Path automaticBackupFile = backUpCurrentData(model);
 
         model.setAddressBook(restoredData);
-        model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+        model.updateFilteredPatientList(PREDICATE_SHOW_ACTIVE_PATIENTS);
 
         logger.info("Restored the backup " + backupDir.resolve(fileName));
         return createSuccessResult(restoredData, automaticBackupFile);

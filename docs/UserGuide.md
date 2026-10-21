@@ -29,13 +29,13 @@ MediConnect is a **desktop application for managing patient records and care inf
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
 
-   * `list` : Lists all patients.
+   * `list` : Lists all active patients.
 
    * `add n/John Tan ic/S1234567A dob/1990-05-14 p/91234567 a/Blk 123 Clementi Ave 3` : Adds a patient named `John Tan` to MediConnect.
 
    * `view 1` : Shows the full details of the 1st patient in the current list.
 
-   * `find John` : Lists all patients whose name contains `John`.
+   * `find John` : Lists all active patients whose name contains `John`.
 
    * `delete 1` : Deletes the 1st patient shown in the current list. Right after `find John`, this deletes `John Tan`.
 
@@ -109,7 +109,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
   A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
-* `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
+* `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
+  e.g., `91234567` or `+6591234567`.
   It is stored without the `+65`.
 
 Examples:
@@ -129,7 +130,7 @@ Field   | Prefix | Format | Example
 Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
-Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
+Phone   | `p/`   | 8 digits with no spaces, starting with 3, 6, 8 or 9, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
 Address | `a/`   | Cannot be blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
@@ -338,9 +339,9 @@ Other errors are reported as follows:
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
   command usage.
 
-### Listing all patients: `list`
+### Listing all active patients: `list`
 
-Shows a list of all patients in MediConnect.
+Shows a list of all active patients in MediConnect. Archived patients are not shown.
 
 Format: `list`
 
@@ -350,7 +351,7 @@ Not implemented in the MVP. The command returns `Edit command is not implemented
 
 ### Locating patients by name: `find`
 
-Finds patients whose names contain any of the given keywords.
+Finds active patients whose names contain any of the given keywords. Archived patients are not included.
 
 Format: `find KEYWORD [MORE_KEYWORDS]`
 
@@ -416,8 +417,8 @@ Lists the times at which medications are taken today, one line per dose, in the 
 
 Format: `due [INDEX]`
 
-* Without `INDEX`, `due` lists the doses of **all** patients in MediConnect, even if `find` is hiding some of them
-  from the patient list.
+* Without `INDEX`, `due` lists the doses of **all active** patients in MediConnect, even if `find` is hiding some of
+  them from the patient list. Archived patients are not included.
 * With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
   the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
   number (1, 2, 3, ...).
@@ -496,7 +497,7 @@ Format: `restore FILENAME`
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
-* After a restore, the list shows all restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+* After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.

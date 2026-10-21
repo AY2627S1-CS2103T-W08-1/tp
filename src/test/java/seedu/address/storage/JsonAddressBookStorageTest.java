@@ -3,6 +3,7 @@ package seedu.address.storage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
 import static seedu.address.testutil.TypicalPatients.IDA;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,8 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.patient.Medication;
+import seedu.address.model.patient.Patient;
+import seedu.address.testutil.PatientBuilder;
 
 public class JsonAddressBookStorageTest {
     private static final Path TEST_DATA_FOLDER = Paths.get("src", "test", "data", "JsonAddressBookStorageTest");
@@ -122,6 +126,21 @@ public class JsonAddressBookStorageTest {
         readBack = jsonAddressBookStorage.readAddressBook().get(); // file path not specified
         assertEquals(original, new AddressBook(readBack));
 
+    }
+
+    @Test
+    public void readAndSaveAddressBook_archivedPatient_preservesAllFields() throws Exception {
+        Medication medication = new Medication("Metformin 500mg", List.of(LocalTime.of(8, 0)));
+        Patient archivedPatient = new PatientBuilder(ALICE).withMedications(medication).withContacts(GP)
+                .withArchived(true).build();
+        AddressBook original = new AddressBook();
+        original.addPatient(archivedPatient);
+        Path filePath = testFolder.resolve("ArchivedPatient.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+
+        storage.saveAddressBook(original);
+
+        assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
     }
 
     @Test

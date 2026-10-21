@@ -26,8 +26,8 @@ public class CommandTestUtil {
 
     public static final String VALID_NAME_AMY = "Amy Bee";
     public static final String VALID_NAME_BOB = "Bob Choo";
-    public static final String VALID_PHONE_AMY = "11111111";
-    public static final String VALID_PHONE_BOB = "22222222";
+    public static final String VALID_PHONE_AMY = "81111111";
+    public static final String VALID_PHONE_BOB = "92222222";
     public static final String VALID_NRIC_AMY = "S1234567A";
     public static final String VALID_NRIC_BOB = "T7654321B";
     public static final String VALID_ADDRESS_AMY = "Block 312, Amy Street 1";

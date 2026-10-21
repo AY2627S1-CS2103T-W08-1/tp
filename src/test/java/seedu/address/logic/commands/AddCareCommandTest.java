@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
+import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
@@ -76,6 +77,21 @@ public class AddCareCommandTest {
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(),
                 "Medication: Aspirin");
         assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_archivedPatientForcedIntoDisplayedList_preservesArchivedState() throws Exception {
+        Patient archivedPatient = new PatientBuilder(ALICE).withAppointments(CHECKUP).withArchived(true).build();
+        Model actualModel = new ModelManager(
+                new AddressBookBuilder().withPatient(archivedPatient).build(), new UserPrefs());
+        actualModel.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+
+        new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of("Latex"), List.of()).execute(actualModel);
+
+        Patient updatedPatient = actualModel.getAddressBook().getPatientList().get(0);
+        assertTrue(updatedPatient.isArchived());
+        assertEquals(List.of("Latex"), updatedPatient.getAllergens());
+        assertEquals(List.of(CHECKUP), updatedPatient.getAppointments());
     }
 
     @Test
