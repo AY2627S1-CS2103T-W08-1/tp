@@ -17,6 +17,7 @@ end box
 
 box Storage STORAGE_COLOR_T1
 participant ":JsonAddressBookStorage" as JsonAddressBookStorage STORAGE_COLOR
+participant ":JsonAddressBookStorage" as BackupStorage STORAGE_COLOR
 end box
 
 [-> LogicManager : execute("restore old.json")
@@ -59,6 +60,19 @@ deactivate Model
 
 RestoreCommand -> BackupCommand : saveBackup(currentData)
 activate BackupCommand
+
+create BackupStorage
+BackupCommand -> BackupStorage
+activate BackupStorage
+
+BackupStorage --> BackupCommand
+deactivate BackupStorage
+
+BackupCommand -> BackupStorage : saveAddressBook(currentData)
+activate BackupStorage
+
+BackupStorage --> BackupCommand
+deactivate BackupStorage
 
 BackupCommand --> RestoreCommand : automaticBackupFile
 deactivate BackupCommand
