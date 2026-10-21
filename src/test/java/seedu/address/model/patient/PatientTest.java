@@ -20,6 +20,23 @@ import seedu.address.testutil.PatientBuilder;
 public class PatientTest {
 
     @Test
+    public void withCareInstructions_replacement_preservesOtherFields() {
+        Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
+        Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
+                .withCareInstructions("Old instruction").withContacts(GP).build();
+        List<String> instructions = new ArrayList<>(List.of("New instruction"));
+
+        Patient updated = original.withCareInstructions(instructions);
+        instructions.clear();
+
+        assertEquals(new PatientBuilder(original).withCareInstructions("New instruction").build(), updated);
+        assertEquals(medication.getTimes(), updated.getMedications().get(0).getTimes());
+        assertEquals(original.getContacts(), updated.getContacts());
+        assertThrows(UnsupportedOperationException.class, () -> updated.getCareInstructions().clear());
+        assertThrows(NullPointerException.class, () -> original.withCareInstructions(null));
+    }
+
+    @Test
     public void withAllergens_replacement_preservesOtherFields() {
         Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
         Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
