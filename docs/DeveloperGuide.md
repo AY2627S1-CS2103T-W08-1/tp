@@ -238,8 +238,8 @@ clarity.
    rejects repeated or unknown prefixes, and uses the same field parsers as `add`.
 1. `EditCommand#execute()` resolves the index against the filtered patient list and creates an immutable replacement
    using the supplied values and the existing values for omitted fields.
-1. The replacement preserves medications and their times, allergens, care instructions, contacts, and archived
-   state. A changed NRIC is rejected if another patient already has it.
+1. The replacement preserves medications and their times, allergens, care instructions, contacts, appointments,
+   and archived state. A changed NRIC is rejected if another patient already has it.
 1. The command calls `Model#setPatient(patient, editedPatient)`. If the patient is currently being viewed,
    `ModelManager#setPatient()` updates `viewedPatient`, and the `PatientDetailPanel` listener redraws the panel.
 

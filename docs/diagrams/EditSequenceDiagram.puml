@@ -60,15 +60,25 @@ Model --> EditCommand : patients
 deactivate Model
 
 EditCommand -> EditCommand : createEditedPatient(patient, descriptor)
+activate EditCommand
+
+EditCommand --> EditCommand : editedPatient
+deactivate EditCommand
 
 EditCommand -> Model : setPatient(patient, editedPatient)
 activate Model
 
 opt patient is currently viewed
-Model --> PatientDetailPanel : viewedPatient listener fires
+Model -> PatientDetailPanel : viewedPatient listener fires
 activate PatientDetailPanel
 
 PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
+activate PatientDetailPanel
+
+PatientDetailPanel --> PatientDetailPanel
+deactivate PatientDetailPanel
+
+PatientDetailPanel --> Model
 deactivate PatientDetailPanel
 end
 
