@@ -83,6 +83,18 @@ public class EditApptCommandTest {
     }
 
     @Test
+    public void execute_pastAndUpcomingAppointments_numbersUpcomingFirst() {
+        Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Dr Lee", "");
+        Appointment editedCheckup = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Dr Tan", "Moved");
+        EditApptCommand command = createCommand(Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.of("Moved"));
+
+        assertCommandSuccess(command, createModelWithAppointments(past, CHECKUP),
+                String.format(MESSAGE_SUCCESS, ALICE.getName(), editedCheckup),
+                createModelWithAppointments(past, editedCheckup));
+    }
+
+    @Test
     public void execute_sameTimeAsOtherAppointment_editsWithClashWarning() {
         EditApptCommand command = new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
                 Optional.of(CHECKUP.getDate()), Optional.of(CHECKUP.getTime()), Optional.empty(),

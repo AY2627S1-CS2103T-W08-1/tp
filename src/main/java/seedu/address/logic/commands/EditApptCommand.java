@@ -8,6 +8,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_WITH;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,7 +98,8 @@ public class EditApptCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
-        List<Appointment> otherAppointments = new ArrayList<>(patientToEdit.getAppointments());
+        List<Appointment> otherAppointments =
+                new ArrayList<>(patientToEdit.getAppointmentsUpcomingFirst(LocalDateTime.now(clock)));
         if (appointmentIndex.getZeroBased() >= otherAppointments.size()) {
             throw new CommandException(Messages.MESSAGE_INVALID_APPOINTMENT_DISPLAYED_INDEX);
         }
