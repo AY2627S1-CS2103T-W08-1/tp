@@ -17,6 +17,9 @@ public interface Model {
     /** {@code Predicate} that evaluates to true for active patients */
     Predicate<Patient> PREDICATE_SHOW_ACTIVE_PATIENTS = patient -> !patient.isArchived();
 
+    /** {@code Predicate} that evaluates to true for archived patients */
+    Predicate<Patient> PREDICATE_SHOW_ARCHIVED_PATIENTS = Patient::isArchived;
+
     /**
      * Returns the user prefs.
      */

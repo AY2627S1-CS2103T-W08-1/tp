@@ -62,6 +62,9 @@ public class HelpCommandTest {
         commands.put(AddCommand.COMMAND_WORD, AddCommand.class);
         commands.put(EditCommand.COMMAND_WORD, EditCommand.class);
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
+        commands.put(ListArchivedCommand.COMMAND_WORD, ListArchivedCommand.class);
+        commands.put(ArchiveCommand.COMMAND_WORD, ArchiveCommand.class);
+        commands.put(UnarchiveCommand.COMMAND_WORD, UnarchiveCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
         commands.put(EditCareCommand.COMMAND_WORD, EditCareCommand.class);
@@ -156,8 +159,9 @@ public class HelpCommandTest {
 
     @Test
     public void commandSummary_indexCommands_takeIndex() {
-        for (String commandWord : List.of(EditCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD,
-                ViewCommand.COMMAND_WORD, AddCareCommand.COMMAND_WORD,
+        for (String commandWord : List.of(EditCommand.COMMAND_WORD, ArchiveCommand.COMMAND_WORD,
+                UnarchiveCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
+                AddCareCommand.COMMAND_WORD,
                 EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
                 DeleteAllergyCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
@@ -167,8 +171,8 @@ public class HelpCommandTest {
 
     @Test
     public void commandSummary_commandsWithoutParameters_showOnlyCommandWord() {
-        for (String commandWord : List.of(ListCommand.COMMAND_WORD, HelpCommand.COMMAND_WORD,
-                ClearCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD)) {
+        for (String commandWord : List.of(ListCommand.COMMAND_WORD, ListArchivedCommand.COMMAND_WORD,
+                HelpCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD)) {
             assertEquals(commandWord, getFormat(commandWord));
         }
     }
