@@ -355,11 +355,11 @@ Examples:
 
 * `view 1` followed by `editappt 1 2 t/10:00 nt/` moves the 2nd appointment of the 1st patient to 10:00 and clears
   its note.
-* `editappt 1 1 d/2026-11-12 w/Dr Lim` changes the date and who the 1st appointment of the 1st patient is with.
+* `editappt 1 1 d/2027-11-12 w/Dr Lim` changes the date and who the 1st appointment of the 1st patient is with.
 
-A successful command returns `Edited appointment for NAME: APPOINTMENT`, with the updated appointment shown as in the
-detail panel. For example, the first example returns
-`Edited appointment for Alex Yeoh: 2026-12-10 10:00 with Cardiology clinic`.
+A successful command returns `Edited appointment APPT_INDEX of NAME: APPOINTMENT`, with the updated appointment shown
+as in the detail panel. `APPT_INDEX` is the appointment's number after the edit, which can differ from the one typed.
+For example, the first example returns `Edited appointment 2 of Alex Yeoh: 2027-12-10 10:00 with Cardiology clinic`.
 
 * As with `addappt`, an appointment moved into the past or to the same date and time as another appointment of the
   patient is still saved, and the message ends with the same note or warning.

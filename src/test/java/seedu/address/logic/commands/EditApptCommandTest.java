@@ -90,8 +90,20 @@ public class EditApptCommandTest {
                 Optional.of("Moved"));
 
         assertCommandSuccess(command, createModelWithAppointments(past, CHECKUP),
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), editedCheckup),
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedCheckup),
                 createModelWithAppointments(past, editedCheckup));
+    }
+
+    @Test
+    public void execute_newDateMovesAppointment_showsNewNumber() {
+        LocalDate beforeCheckup = LocalDate.of(2026, 11, 1);
+        EditApptCommand command = new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
+                Optional.of(beforeCheckup), Optional.empty(), Optional.empty(), Optional.empty(), FIXED_CLOCK);
+        Appointment movedCardiology = new Appointment(beforeCheckup, CARDIOLOGY.getTime(), "Cardiology clinic", "");
+
+        assertCommandSuccess(command, createModelWithAppointments(CHECKUP, CARDIOLOGY),
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), movedCardiology),
+                createModelWithAppointments(CHECKUP, movedCardiology));
     }
 
     @Test
@@ -103,7 +115,7 @@ public class EditApptCommandTest {
                 new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Cardiology clinic", "");
 
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP, CARDIOLOGY),
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), editedAppointment)
+                String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), editedAppointment)
                 + "\n" + String.format(MESSAGE_CLASH, ALICE.getName(), "Dr Tan"),
                 createModelWithAppointments(CHECKUP, editedAppointment));
     }
@@ -117,7 +129,7 @@ public class EditApptCommandTest {
                 Optional.of(""));
 
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP, clash),
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), editedCheckup)
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedCheckup)
                 + "\n" + String.format(MESSAGE_CLASH, ALICE.getName(), "Dr Lim"),
                 createModelWithAppointments(editedCheckup, clash));
     }
@@ -208,7 +220,7 @@ public class EditApptCommandTest {
     private static void assertEditSuccess(EditApptCommand command, Appointment editedAppointment,
             String expectedWarnings) {
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP),
-                String.format(MESSAGE_SUCCESS, ALICE.getName(), editedAppointment) + expectedWarnings,
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedAppointment) + expectedWarnings,
                 createModelWithAppointments(editedAppointment));
     }
 }
