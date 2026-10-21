@@ -6,12 +6,14 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Phone;
 
@@ -75,6 +77,11 @@ public class ParserUtilTest {
     public void parseName_multipleSpacesBetweenWords_returnsCollapsedName() throws Exception {
         Name expectedName = new Name("Rachel Walker");
         assertEquals(expectedName, ParserUtil.parseName("Rachel   Walker"));
+    }
+
+    @Test
+    public void parseName_curlyApostrophe_returnsNameWithStraightApostrophe() throws Exception {
+        assertEquals(new Name("O'Brien"), ParserUtil.parseName("O’Brien"));
     }
 
     @Test
@@ -142,4 +149,31 @@ public class ParserUtilTest {
     }
 
 
+
+    @Test
+    public void parseTime_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseTime(null));
+    }
+
+    @Test
+    public void parseTime_invalidInput_throwsParseException() {
+        String message = Medication.MESSAGE_TIME_CONSTRAINTS;
+        for (String invalidTime : new String[] {"", WHITESPACE, "24:00", "08:60", "8:30", "08:5", "0830", "08.30",
+            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30",
+            "\uff10\uff18:\uff13\uff10", "0\u0663:30"}) {
+            assertThrows(ParseException.class, message, () -> ParserUtil.parseTime(invalidTime));
+        }
+    }
+
+    @Test
+    public void parseTime_validInput_returnsLocalTime() throws Exception {
+        assertEquals(LocalTime.MIDNIGHT, ParserUtil.parseTime("00:00"));
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("08:30"));
+        assertEquals(LocalTime.of(23, 59), ParserUtil.parseTime("23:59"));
+    }
+
+    @Test
+    public void parseTime_inputWithWhitespace_returnsTrimmedLocalTime() throws Exception {
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime(WHITESPACE + "08:30" + WHITESPACE));
+    }
 }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
+import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BOB;
 
@@ -22,6 +23,64 @@ import seedu.address.testutil.PatientBuilder;
 public class PatientTest {
 
     @Test
+    public void withCareInstructions_replacement_preservesOtherFields() {
+        Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
+        Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
+                .withCareInstructions("Old instruction").withContacts(GP)
+                .withAppointments(CHECKUP).build();
+        List<String> instructions = new ArrayList<>(List.of("New instruction"));
+
+        Patient updated = original.withCareInstructions(instructions);
+        instructions.clear();
+
+        assertEquals(new PatientBuilder(original).withCareInstructions("New instruction").build(), updated);
+        assertEquals(medication.getTimes(), updated.getMedications().get(0).getTimes());
+        assertEquals(original.getContacts(), updated.getContacts());
+        assertThrows(UnsupportedOperationException.class, () -> updated.getCareInstructions().clear());
+        assertThrows(NullPointerException.class, () -> original.withCareInstructions(null));
+    }
+
+    @Test
+    public void withAllergens_replacement_preservesOtherFields() {
+        Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
+        Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
+                .withCareInstructions("Instruction").withContacts(GP)
+                .withAppointments(CHECKUP).build();
+        List<String> allergens = new ArrayList<>(List.of("Latex", "Shellfish"));
+
+        Patient updated = original.withAllergens(allergens);
+
+        assertEquals(new PatientBuilder(original).withAllergens("Latex", "Shellfish").build(), updated);
+        assertFalse(original.equals(updated));
+        assertEquals(List.of(medication), updated.getMedications());
+        assertEquals(List.of(GP), updated.getContacts());
+        assertThrows(UnsupportedOperationException.class, () -> updated.getAllergens().clear());
+        assertThrows(NullPointerException.class, () -> original.withAllergens(null));
+        allergens.clear();
+        assertEquals(List.of("Latex", "Shellfish"), updated.getAllergens());
+    }
+
+    @Test
+    public void withContacts_replacement_preservesOtherFields() {
+        Patient original = new PatientBuilder(ALICE).withMedications("Medication").withAllergens("Allergen")
+                .withCareInstructions("Instruction").withAppointments(CHECKUP).build();
+        Contact contact = GP;
+        Patient updated = original.withContacts(List.of(contact));
+        assertTrue(original.getContacts().isEmpty());
+        assertEquals(new PatientBuilder(original).withContacts(contact).build(), updated);
+        assertFalse(original.equals(updated));
+        assertThrows(UnsupportedOperationException.class, () -> updated.getContacts().clear());
+        assertThrows(NullPointerException.class, () -> original.withContacts(null));
+        assertThrows(IllegalArgumentException.class, Contact.MESSAGE_DUPLICATE, () ->
+                original.withContacts(List.of(contact, contact)));
+        List<Contact> entries = new ArrayList<>(List.of(contact));
+        Patient copied = original.withContacts(entries);
+        entries.clear();
+        assertEquals(List.of(contact), copied.getContacts());
+    }
+
+
+    @Test
     public void constructor_emptyCareLists() {
         Patient patient = new PatientBuilder().build();
         assertTrue(patient.getMedications().isEmpty());
@@ -31,7 +90,7 @@ public class PatientTest {
 
     @Test
     public void constructor_careLists_defensivelyCopied() {
-        List<String> medications = new ArrayList<>(List.of("Metformin"));
+        List<Medication> medications = new ArrayList<>(List.of(new Medication("Metformin")));
         List<String> allergens = new ArrayList<>(List.of("Penicillin"));
         List<String> instructions = new ArrayList<>(List.of("Check blood sugar"));
         Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
@@ -39,10 +98,11 @@ public class PatientTest {
         medications.clear();
         allergens.clear();
         instructions.clear();
-        assertEquals(List.of("Metformin"), patient.getMedications());
+        assertEquals(List.of(new Medication("Metformin")), patient.getMedications());
         assertEquals(List.of("Penicillin"), patient.getAllergens());
         assertEquals(List.of("Check blood sugar"), patient.getCareInstructions());
-        assertThrows(UnsupportedOperationException.class, () -> patient.getMedications().add("Aspirin"));
+        Medication aspirin = new Medication("Aspirin");
+        assertThrows(UnsupportedOperationException.class, () -> patient.getMedications().add(aspirin));
         assertThrows(UnsupportedOperationException.class, () -> patient.getAllergens().clear());
         assertThrows(UnsupportedOperationException.class, () -> patient.getCareInstructions().remove(0));
     }
@@ -54,7 +114,7 @@ public class PatientTest {
         Appointment earliest = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(9, 30), "Dr Tan", "");
         List<Appointment> appointments = new ArrayList<>(List.of(laterDate, laterTime, earliest));
         Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
-                ALICE.getAddress(), List.of(), List.of(), List.of(), appointments);
+                ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(), appointments);
         assertEquals(List.of(earliest, laterTime, laterDate), patient.getAppointments());
         assertEquals(List.of(laterDate, laterTime, earliest), appointments);
     }
@@ -70,7 +130,7 @@ public class PatientTest {
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
                 ALICE.getPhone(), ALICE.getAddress(), null, List.of(), List.of(), List.of()));
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
-                ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), null));
+                ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(), null));
     }
 
     @Test
@@ -107,7 +167,7 @@ public class PatientTest {
     public void toStringMethod() {
         String expected = Patient.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", nric=" + ALICE.getNric() + ", dob=" + ALICE.getDob() + ", address=" + ALICE.getAddress()
-                + ", medications=[], allergens=[], careInstructions=[], appointments=[]}";
+                + ", medications=[], allergens=[], careInstructions=[], contacts=[], appointments=[]}";
         assertEquals(expected, ALICE.toString());
     }
 }
