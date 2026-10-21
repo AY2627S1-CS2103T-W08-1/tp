@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Dob;
@@ -22,6 +23,7 @@ import seedu.address.model.patient.Phone;
 class JsonAdaptedPatient {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Patient's %s field is missing!";
+    public static final String MESSAGE_NULL_APPOINTMENT = "Appointments must not be null.";
 
     private final String name;
     private final String phone;
@@ -32,6 +34,7 @@ class JsonAdaptedPatient {
     private final List<String> allergens = new ArrayList<>();
     private final List<String> careInstructions = new ArrayList<>();
     private final List<JsonAdaptedContact> contacts = new ArrayList<>();
+    private final List<JsonAdaptedAppointment> appointments = new ArrayList<>();
     private final boolean archived;
 
     /**
@@ -45,6 +48,7 @@ class JsonAdaptedPatient {
             @JsonProperty("allergens") List<String> allergens,
             @JsonProperty("careInstructions") List<String> careInstructions,
             @JsonProperty("contacts") List<JsonAdaptedContact> contacts,
+            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments,
             @JsonProperty("archived") Boolean archived) {
         this.name = name;
         this.nric = nric;
@@ -63,6 +67,9 @@ class JsonAdaptedPatient {
         if (careInstructions != null) {
             this.careInstructions.addAll(careInstructions);
         }
+        if (appointments != null) {
+            this.appointments.addAll(appointments);
+        }
         this.archived = archived != null && archived;
     }
 
@@ -79,6 +86,7 @@ class JsonAdaptedPatient {
         allergens.addAll(source.getAllergens());
         careInstructions.addAll(source.getCareInstructions());
         source.getContacts().stream().map(JsonAdaptedContact::new).forEach(contacts::add);
+        source.getAppointments().stream().map(JsonAdaptedAppointment::new).forEach(appointments::add);
         archived = source.isArchived();
     }
 
@@ -144,9 +152,17 @@ class JsonAdaptedPatient {
             modelContacts.add(contact.toModelType());
         }
 
+        List<Appointment> modelAppointments = new ArrayList<>();
+        for (JsonAdaptedAppointment appointment : appointments) {
+            if (appointment == null) {
+                throw new IllegalValueException(MESSAGE_NULL_APPOINTMENT);
+            }
+            modelAppointments.add(appointment.toModelType());
+        }
+
         try {
             return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
-                    modelMedications, allergens, careInstructions, modelContacts, archived);
+                    modelMedications, allergens, careInstructions, modelContacts, modelAppointments, archived);
         } catch (IllegalArgumentException e) {
             throw new IllegalValueException(e.getMessage());
         } catch (NullPointerException e) {

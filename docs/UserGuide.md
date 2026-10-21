@@ -109,7 +109,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
   A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
-* `PHONE` must be 8 digits, with an optional `+65` in front, e.g., `91234567` or `+6591234567`.
+* `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
+  e.g., `91234567` or `+6591234567`.
   It is stored without the `+65`.
 
 Examples:
@@ -129,7 +130,7 @@ Field   | Prefix | Format | Example
 Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
-Phone   | `p/`   | 8 digits with no spaces, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
+Phone   | `p/`   | 8 digits with no spaces, starting with 3, 6, 8 or 9, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
 Address | `a/`   | Cannot be blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
@@ -348,8 +349,9 @@ Format: `view INDEX`
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, care instructions and contacts. Each list is numbered (`1.`, `2.`, ...), one entry per line.
-  A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+  medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...), one
+  entry per line. A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+  Upcoming appointments are listed first, then past ones, each sorted by date, then time.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
