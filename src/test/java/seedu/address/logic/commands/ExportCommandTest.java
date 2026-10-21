@@ -19,6 +19,7 @@ import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
@@ -147,19 +148,43 @@ public class ExportCommandTest {
     }
 
     @Test
-    public void execute_writeFails_keepsEarlierExport() throws Exception {
-        Path exportFile = temporaryFolder.resolve("S0000001A.txt");
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
+    public void execute_temporaryFileCannotBeCreated_keepsEarlierExport() throws Exception {
+        Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
+        Path exportFile = exportDir.resolve("S0000001A.txt");
         Files.write(exportFile, List.of("earlier export"));
-        // a folder where the temporary file goes makes the write fail before the earlier export is touched
-        Path temporaryFile = Files.createDirectory(temporaryFolder.resolve("S0000001A.txt.tmp"));
-        ExportCommand exportCommand = createExportCommand(INDEX_FIRST_PATIENT);
+        // a read-only folder makes creating the temporary file fail before the earlier export is touched
+        assertTrue(exportDir.toFile().setWritable(false));
+        try {
+            // users with admin rights (e.g., root) can still write, so the test only applies to others
+            assumeFalse(Files.isWritable(exportDir));
+            String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                    exportFile, Messages.MESSAGE_NO_WRITE_PERMISSION);
 
-        String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
-                .getMessage();
+            assertCommandFailure(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model,
+                    expectedMessage);
+            assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+            assertNoTemporaryFiles(exportDir);
+        } finally {
+            exportDir.toFile().setWritable(true);
+        }
+    }
 
-        assertTrue(message.startsWith("Could not export Alice Pauline's record to " + exportFile + ": "), message);
-        assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
-        assertTrue(Files.isDirectory(temporaryFile));
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Creating a link needs admin rights on Windows")
+    public void execute_linkAtOldTemporaryPath_leavesLinkTargetUnchanged() throws Exception {
+        Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
+        Path unrelatedFile = Files.write(temporaryFolder.resolve("unrelated.txt"), List.of("unrelated"));
+        // exports once wrote to this fixed name, so a link there could make them overwrite another file
+        Path link = Files.createSymbolicLink(exportDir.resolve("S0000001A.txt.tmp"), unrelatedFile);
+        Path exportFile = exportDir.resolve("S0000001A.txt");
+
+        new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir).execute(model);
+
+        assertEquals(List.of("unrelated"), Files.readAllLines(unrelatedFile, StandardCharsets.UTF_8));
+        assertTrue(Files.isRegularFile(exportFile, LinkOption.NOFOLLOW_LINKS));
+        assertEquals(getExpectedRecord(ALICE), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+        assertTrue(Files.isSymbolicLink(link));
     }
 
     @Test
@@ -321,6 +346,8 @@ public class ExportCommandTest {
 
         assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", exportFile);
         assertTrue(Files.isDirectory(exportFile));
+        // the temporary file was written before the move failed, and is deleted again
+        assertNoTemporaryFiles(temporaryFolder);
     }
 
     @Test
@@ -410,6 +437,12 @@ public class ExportCommandTest {
                 ExportCommand.EXPORTED_ON_PREFIX + "2026-10-20 14:30", ""));
         lines.addAll(PatientFormatter.formatRecord(patient, LocalDateTime.now(FIXED_CLOCK)));
         return lines;
+    }
+
+    private static void assertNoTemporaryFiles(Path folder) throws Exception {
+        try (Stream<Path> files = Files.list(folder)) {
+            assertEquals(List.of(), files.filter(file -> file.getFileName().toString().endsWith(".tmp")).toList());
+        }
     }
 
     private static void assertFolderEmpty(Path folder) throws Exception {

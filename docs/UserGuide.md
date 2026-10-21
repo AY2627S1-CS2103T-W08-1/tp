@@ -484,6 +484,36 @@ Examples:
 
 Returns, for example, `Exported Alex Yeoh's record to: ` followed by the full path of the file.
 
+The file for Alex Yeoh in the sample data looks like this:
+
+```
+MediConnect patient record
+Exported on 2026-10-21 14:30
+
+Alex Yeoh
+NRIC: S0000001A
+DOB: 1948-03-15
+Phone: 87438807
+Address: Blk 30 Geylang Street 29, #06-40
+
+Medications
+1. Aspirin 100mg (08:00)
+2. Amlodipine 5mg (08:00, 20:00)
+
+Allergens
+1. Penicillin
+
+Care Instructions
+1. Monitor blood pressure every morning
+
+Contacts
+1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning
+
+Appointments
+1. 2026-11-05 09:30 with Dr Tan
+2. 2026-12-10 14:00 with Cardiology clinic (Bring BP log)
+```
+
 ### Exiting the program: `exit`
 
 Exits the program.

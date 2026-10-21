@@ -10,6 +10,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -119,24 +120,29 @@ public class ExportCommand extends Command {
 
     /**
      * Writes the record of {@code patient} to {@code exportFile}, after creating the export folder if it does not
-     * exist. The record is first written to a temporary file beside {@code exportFile}, which then replaces any
-     * earlier export of the patient, so a failed write never leaves a partial record in place of an earlier one.
+     * exist. The record is first written to a new temporary file with a unique name beside {@code exportFile},
+     * which then replaces any earlier export of the patient, so a failed write never leaves a partial record in
+     * place of an earlier one. Since the temporary file is always new, no existing file or link is written to.
      *
      * @throws CommandException if the folder or the file cannot be written.
      */
     private void writeRecord(Patient patient, Path exportFile) throws CommandException {
-        Path temporaryFile = exportFile.resolveSibling(exportFile.getFileName() + TEMPORARY_FILE_SUFFIX);
+        Path temporaryFile = null;
         try {
             Files.createDirectories(exportDir);
             // the move below would replace a read-only earlier export, so refuse it as writing to it would
             if (Files.exists(exportFile) && !Files.isWritable(exportFile)) {
                 throw new AccessDeniedException(exportFile.toString());
             }
-            Files.write(temporaryFile, createRecord(patient), StandardCharsets.UTF_8);
+            temporaryFile = Files.createTempFile(exportDir, exportFile.getFileName() + ".", TEMPORARY_FILE_SUFFIX);
+            Files.write(temporaryFile, createRecord(patient), StandardCharsets.UTF_8, StandardOpenOption.WRITE,
+                    StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
             Files.move(temporaryFile, exportFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ioe) {
             logger.warning("Could not export a patient record to " + exportFile + ": " + ioe);
-            deleteTemporaryFile(temporaryFile);
+            if (temporaryFile != null) {
+                deleteTemporaryFile(temporaryFile);
+            }
             String reason = Messages.describeWriteFailure(ioe);
             String message = String.format(MESSAGE_FAILURE, patient.getName().fullName,
                     exportFile.toAbsolutePath().normalize(), reason);
