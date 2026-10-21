@@ -64,7 +64,8 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, `clear` and `backup`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`,
+  `clear` and `backup`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -305,6 +306,55 @@ Shows a list of all active patients in MediConnect. Archived patients are not sh
 
 Format: `list`
 
+Any text after `list` is ignored. The command returns `Listed all active patients.` or, if there are none,
+`No active patients found.`
+
+### Archiving a patient: `archive`
+
+Archives a patient without deleting their record.
+
+Format: `archive INDEX`
+
+* `INDEX` refers to the patient in the currently displayed list, including a filtered `find` result.
+* The archived patient disappears from active patient lists. Their complete record is preserved.
+* If that patient is shown in the detail panel, the panel stays up to date after the patient is archived.
+
+Example: `find Alex` followed by `archive 1` archives the first patient in those results.
+
+A successful command returns `Archived patient: NAME; NRIC: NRIC`. An index outside the displayed list returns
+`The patient index provided is invalid.` Attempting to archive an archived patient returns
+`This patient is already archived.` Missing, zero, negative, nonnumeric or extra indices return
+`Invalid command format!` followed by the command usage.
+
+### Listing archived patients: `listarchived`
+
+Shows only archived patients. The displayed indices are the indices used by `unarchive` and other commands that
+operate on the currently displayed list. Active patients are not shown.
+
+Format: `listarchived`
+
+Any text after `listarchived` is ignored. The command returns `Listed all archived patients.` or, if there are none,
+`No archived patients found.` Run `list` to return to the active patient list.
+
+### Restoring an archived patient: `unarchive`
+
+Returns an archived patient to the active patient list.
+
+Format: `unarchive INDEX`
+
+* `INDEX` refers to the patient in the currently displayed list. Normally, run `listarchived` first so that the
+  index identifies an archived patient.
+* The restored patient disappears from the archived list and becomes visible again after `list` or a matching
+  `find` command.
+* The patient's complete record is preserved.
+
+Example: `listarchived` followed by `unarchive 2` restores the second archived patient.
+
+A successful command returns `Unarchived patient: NAME; NRIC: NRIC`. An index outside the displayed list returns
+`The patient index provided is invalid.` Attempting to unarchive an active patient returns
+`This patient is already active.` Missing, zero, negative, nonnumeric or extra indices return
+`Invalid command format!` followed by the command usage.
+
 ### Editing a patient: `edit`
 
 Not implemented in the MVP. The command returns `Edit command is not implemented yet.` without changing patient data.
@@ -516,6 +566,7 @@ Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
 **Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
 **Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
@@ -530,5 +581,7 @@ Action            | Format, Examples
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
 **List**          | `list`
+**List archived** | `listarchived`
 **Restore**       | `restore FILENAME` <br> e.g., `restore mediconnect-20261020-083015.json`
+**Unarchive**     | `unarchive INDEX` <br> e.g., `unarchive 1`
 **View**          | `view INDEX` <br> e.g., `view 2`

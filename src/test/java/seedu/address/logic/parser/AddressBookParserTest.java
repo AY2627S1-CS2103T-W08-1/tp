@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddContactCommand;
+import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.BackupCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteAllergyCommand;
@@ -30,8 +31,10 @@ import seedu.address.logic.commands.EditContactCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ListArchivedCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RestoreCommand;
+import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
@@ -97,6 +100,12 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_archiveAndUnarchive() throws Exception {
+        assertEquals(new ArchiveCommand(INDEX_FIRST_PATIENT), parser.parseCommand("archive 1"));
+        assertEquals(new UnarchiveCommand(INDEX_FIRST_PATIENT), parser.parseCommand("unarchive 1"));
+    }
+
+    @Test
     public void parseCommand_deleteAllergy() throws Exception {
         DeleteAllergyCommand command = (DeleteAllergyCommand) parser.parseCommand(
                 DeleteAllergyCommand.COMMAND_WORD + " 1 2");
@@ -134,6 +143,12 @@ public class AddressBookParserTest {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 123") instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_listArchived_ignoresArguments() throws Exception {
+        assertTrue(parser.parseCommand(ListArchivedCommand.COMMAND_WORD) instanceof ListArchivedCommand);
+        assertTrue(parser.parseCommand(ListArchivedCommand.COMMAND_WORD + " ignored") instanceof ListArchivedCommand);
     }
 
     @Test
