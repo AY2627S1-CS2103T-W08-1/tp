@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Dob;
@@ -33,6 +34,7 @@ public class PatientBuilder {
     private List<String> allergens = List.of();
     private List<String> careInstructions = List.of();
     private List<Contact> contacts = List.of();
+    private List<Appointment> appointments = List.of();
     private boolean archived;
 
     /**
@@ -59,6 +61,7 @@ public class PatientBuilder {
         allergens = patientToCopy.getAllergens();
         careInstructions = patientToCopy.getCareInstructions();
         contacts = patientToCopy.getContacts();
+        appointments = patientToCopy.getAppointments();
         archived = patientToCopy.isArchived();
     }
 
@@ -151,10 +154,18 @@ public class PatientBuilder {
     }
 
     /**
+     * Sets the patient's appointments.
+     */
+    public PatientBuilder withAppointments(Appointment... appointments) {
+        this.appointments = List.of(appointments);
+        return this;
+    }
+
+    /**
      * Builds an immutable patient.
      */
     public Patient build() {
-        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions, contacts,
-                archived);
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments, archived);
     }
 }

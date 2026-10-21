@@ -7,6 +7,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
@@ -80,7 +81,7 @@ public class AddCareCommandTest {
 
     @Test
     public void execute_archivedPatientForcedIntoDisplayedList_preservesArchivedState() throws Exception {
-        Patient archivedPatient = new PatientBuilder(ALICE).withArchived(true).build();
+        Patient archivedPatient = new PatientBuilder(ALICE).withAppointments(CHECKUP).withArchived(true).build();
         Model actualModel = new ModelManager(
                 new AddressBookBuilder().withPatient(archivedPatient).build(), new UserPrefs());
         actualModel.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
@@ -90,6 +91,7 @@ public class AddCareCommandTest {
         Patient updatedPatient = actualModel.getAddressBook().getPatientList().get(0);
         assertTrue(updatedPatient.isArchived());
         assertEquals(List.of("Latex"), updatedPatient.getAllergens());
+        assertEquals(List.of(CHECKUP), updatedPatient.getAppointments());
     }
 
     @Test
@@ -128,6 +130,23 @@ public class AddCareCommandTest {
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING, "Medication", "metformin")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING, "Medication", "METFORMIN")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_IN_COMMAND, "Medication", "ATORVASTATIN");
+        assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_patientWithAppointments_keepsAppointments() {
+        Patient patient = new PatientBuilder(ALICE).withAppointments(CHECKUP).build();
+        Model actualModel = new ModelManager();
+        actualModel.addPatient(patient);
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
+                List.of(), List.of("Shellfish"), List.of());
+
+        Patient editedPatient = new PatientBuilder(patient).withAllergens("Shellfish").build();
+        Model expectedModel = new ModelManager(actualModel.getAddressBook(), new UserPrefs());
+        expectedModel.setPatient(patient, editedPatient);
+
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(),
+                "Allergen: Shellfish");
         assertCommandSuccess(command, actualModel, expectedMessage, expectedModel);
     }
 

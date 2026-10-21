@@ -5,16 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BOB;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.appointment.Appointment;
 import seedu.address.testutil.PatientBuilder;
 
 public class PatientTest {
@@ -23,7 +28,8 @@ public class PatientTest {
     public void withCareInstructions_replacement_preservesOtherFields() {
         Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
         Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
-                .withCareInstructions("Old instruction").withContacts(GP).withArchived(true).build();
+                .withCareInstructions("Old instruction").withContacts(GP)
+                .withAppointments(CHECKUP).withArchived(true).build();
         List<String> instructions = new ArrayList<>(List.of("New instruction"));
 
         Patient updated = original.withCareInstructions(instructions);
@@ -32,6 +38,7 @@ public class PatientTest {
         assertEquals(new PatientBuilder(original).withCareInstructions("New instruction").build(), updated);
         assertEquals(medication.getTimes(), updated.getMedications().get(0).getTimes());
         assertEquals(original.getContacts(), updated.getContacts());
+        assertEquals(List.of(CHECKUP), updated.getAppointments());
         assertTrue(updated.isArchived());
         assertThrows(UnsupportedOperationException.class, () -> updated.getCareInstructions().clear());
         assertThrows(NullPointerException.class, () -> original.withCareInstructions(null));
@@ -41,7 +48,8 @@ public class PatientTest {
     public void withAllergens_replacement_preservesOtherFields() {
         Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
         Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")
-                .withCareInstructions("Instruction").withContacts(GP).withArchived(true).build();
+                .withCareInstructions("Instruction").withContacts(GP)
+                .withAppointments(CHECKUP).withArchived(true).build();
         List<String> allergens = new ArrayList<>(List.of("Latex", "Shellfish"));
 
         Patient updated = original.withAllergens(allergens);
@@ -50,6 +58,8 @@ public class PatientTest {
         assertFalse(original.equals(updated));
         assertEquals(List.of(medication), updated.getMedications());
         assertEquals(List.of(GP), updated.getContacts());
+        assertEquals(List.of(CHECKUP), updated.getAppointments());
+        assertTrue(updated.isArchived());
         assertThrows(UnsupportedOperationException.class, () -> updated.getAllergens().clear());
         assertThrows(NullPointerException.class, () -> original.withAllergens(null));
         allergens.clear();
@@ -59,12 +69,14 @@ public class PatientTest {
     @Test
     public void withContacts_replacement_preservesOtherFields() {
         Patient original = new PatientBuilder(ALICE).withMedications("Medication").withAllergens("Allergen")
-                .withCareInstructions("Instruction").withArchived(true).build();
+                .withCareInstructions("Instruction").withAppointments(CHECKUP).withArchived(true).build();
         Contact contact = GP;
         Patient updated = original.withContacts(List.of(contact));
         assertTrue(original.getContacts().isEmpty());
         assertEquals(new PatientBuilder(original).withContacts(contact).build(), updated);
         assertFalse(original.equals(updated));
+        assertEquals(List.of(CHECKUP), updated.getAppointments());
+        assertTrue(updated.isArchived());
         assertThrows(UnsupportedOperationException.class, () -> updated.getContacts().clear());
         assertThrows(NullPointerException.class, () -> original.withContacts(null));
         assertThrows(IllegalArgumentException.class, Contact.MESSAGE_DUPLICATE, () ->
@@ -82,6 +94,7 @@ public class PatientTest {
         assertTrue(patient.getMedications().isEmpty());
         assertTrue(patient.getAllergens().isEmpty());
         assertTrue(patient.getCareInstructions().isEmpty());
+        assertTrue(patient.getAppointments().isEmpty());
         assertFalse(patient.isArchived());
     }
 
@@ -89,13 +102,14 @@ public class PatientTest {
     public void withArchived_replacementPreservesOtherFields() {
         Medication medication = new Medication("Metformin");
         Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Penicillin")
-                .withCareInstructions("Check blood sugar").withContacts(GP).build();
+                .withCareInstructions("Check blood sugar").withContacts(GP).withAppointments(CHECKUP).build();
 
         Patient archived = original.withArchived(true);
 
         assertEquals(new PatientBuilder(original).withArchived(true).build(), archived);
         assertTrue(archived.isArchived());
         assertFalse(original.isArchived());
+        assertEquals(List.of(CHECKUP), archived.getAppointments());
         assertEquals(original, archived.withArchived(false));
     }
 
@@ -105,7 +119,7 @@ public class PatientTest {
         List<String> allergens = new ArrayList<>(List.of("Penicillin"));
         List<String> instructions = new ArrayList<>(List.of("Check blood sugar"));
         Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
-                ALICE.getAddress(), medications, allergens, instructions);
+                ALICE.getAddress(), medications, allergens, instructions, List.of());
         medications.clear();
         allergens.clear();
         instructions.clear();
@@ -119,6 +133,18 @@ public class PatientTest {
     }
 
     @Test
+    public void constructor_unsortedAppointments_sortedByDateThenTime() {
+        Appointment laterDate = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(8, 0), "Dr Lee", "");
+        Appointment laterTime = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(14, 0), "Dr Lim", "");
+        Appointment earliest = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(9, 30), "Dr Tan", "");
+        List<Appointment> appointments = new ArrayList<>(List.of(laterDate, laterTime, earliest));
+        Patient patient = new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(), ALICE.getPhone(),
+                ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(), appointments);
+        assertEquals(List.of(earliest, laterTime, laterDate), patient.getAppointments());
+        assertEquals(List.of(laterDate, laterTime, earliest), appointments);
+    }
+
+    @Test
     public void constructor_nullField_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new Patient(null, ALICE.getNric(), ALICE.getDob(),
                 ALICE.getPhone(), ALICE.getAddress()));
@@ -127,7 +153,28 @@ public class PatientTest {
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), null,
                 ALICE.getPhone(), ALICE.getAddress()));
         assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
-                ALICE.getPhone(), ALICE.getAddress(), null, List.of(), List.of()));
+                ALICE.getPhone(), ALICE.getAddress(), null, List.of(), List.of(), List.of()));
+        assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
+                ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(), null));
+        assertThrows(NullPointerException.class, () -> new Patient(ALICE.getName(), ALICE.getNric(), ALICE.getDob(),
+                ALICE.getPhone(), ALICE.getAddress(), List.of(), List.of(), List.of(), List.of(),
+                Collections.singletonList(null)));
+    }
+
+    @Test
+    public void getAppointmentsUpcomingFirst() {
+        Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Dr Lee", "");
+        Appointment now = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 0), "Dr Lim", "");
+        Appointment later = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(8, 0), "Dr Tan", "");
+        Patient patient = new PatientBuilder(ALICE).withAppointments(later, past, now).build();
+
+        // appointments in the current minute count as upcoming
+        assertEquals(List.of(now, later, past),
+                patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 0)));
+        assertEquals(List.of(now, later, past),
+                patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 0, 30)));
+        assertEquals(List.of(later, past, now),
+                patient.getAppointmentsUpcomingFirst(LocalDateTime.of(2026, 10, 18, 12, 1)));
     }
 
     @Test
@@ -159,13 +206,14 @@ public class PatientTest {
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withAllergens("Penicillin").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withCareInstructions("Rest").build());
         assertNotEquals(ALICE, new PatientBuilder(ALICE).withArchived(true).build());
+        assertNotEquals(ALICE, new PatientBuilder(ALICE).withAppointments(CHECKUP).build());
     }
 
     @Test
     public void toStringMethod() {
         String expected = Patient.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", nric=" + ALICE.getNric() + ", dob=" + ALICE.getDob() + ", address=" + ALICE.getAddress()
-                + ", medications=[], allergens=[], careInstructions=[], contacts=[], archived=false}";
+                + ", medications=[], allergens=[], careInstructions=[], contacts=[], appointments=[], archived=false}";
         assertEquals(expected, ALICE.toString());
     }
 }

@@ -12,6 +12,7 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
@@ -43,7 +44,7 @@ public class EditCommandTest {
         Medication medication = new Medication("Metformin", List.of(LocalTime.of(8, 0), LocalTime.of(20, 0)));
         Patient original = new PatientBuilder(DANIEL).withMedications(medication).withAllergens("Penicillin")
                 .withCareInstructions("Check blood sugar").withContacts(TypicalContacts.GP)
-                .withArchived(true).build();
+                .withAppointments(CHECKUP).withArchived(true).build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(original).build(), new UserPrefs());
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
         model.setViewedPatient(original);
@@ -61,6 +62,7 @@ public class EditCommandTest {
         assertEquals(original.getAllergens(), stored.getAllergens());
         assertEquals(original.getCareInstructions(), stored.getCareInstructions());
         assertEquals(original.getContacts(), stored.getContacts());
+        assertEquals(List.of(CHECKUP), stored.getAppointments());
         assertTrue(stored.isArchived());
         assertSame(stored, model.getViewedPatient().getValue());
     }
