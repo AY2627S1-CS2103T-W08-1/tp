@@ -357,7 +357,27 @@ A successful command returns `Unarchived patient: NAME; NRIC: NRIC`. An index ou
 
 ### Editing a patient: `edit`
 
-Not implemented in the MVP. The command returns `Edit command is not implemented yet.` without changing patient data.
+Edits one or more basic details of a patient without changing their care information.
+
+Format: `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]`
+
+* `INDEX` refers to the patient in the currently displayed list, including a filtered `find` result.
+* Supply at least one field. Omitted fields keep their existing values.
+* Each supplied value follows the same validation and normalization rules as `add`.
+* Medications and their times, allergens, care instructions, contacts, appointments, and archived state are
+  preserved.
+* An edit that gives a patient an NRIC already used by another patient is rejected.
+* If the patient is shown in the detail panel, the panel updates immediately.
+
+Examples:
+* `edit 1 p/91234567` changes only the first displayed patient's phone number.
+* `edit 2 n/John Tan a/21 Lorong 3` changes the second displayed patient's name and address.
+
+A successful command returns
+`Edited patient: NAME; NRIC: NRIC; DOB: DOB; Phone: PHONE; Address: ADDRESS`. An index outside the displayed list returns
+`The patient index provided is invalid.` Supplying no fields returns
+`At least one field to edit must be provided.` A duplicate NRIC returns
+`This patient (identified by NRIC) already exists in MediConnect.`
 
 ### Locating patients by name: `find`
 
@@ -565,6 +585,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
+**Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
 **Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
