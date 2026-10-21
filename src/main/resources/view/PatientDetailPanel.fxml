@@ -32,6 +32,9 @@
 
       <Label text="Contacts" styleClass="detail-heading" />
       <VBox fx:id="contacts" spacing="2" />
+
+      <Label text="Appointments" styleClass="detail-heading" />
+      <VBox fx:id="appointments" spacing="2" />
     </VBox>
   </VBox>
 </ScrollPane>
