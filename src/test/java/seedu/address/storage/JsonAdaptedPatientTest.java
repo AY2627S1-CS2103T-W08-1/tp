@@ -2,9 +2,11 @@ package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.model.patient.Contact.MESSAGE_DUPLICATE;
 import static seedu.address.storage.JsonAdaptedPatient.MESSAGE_NULL_APPOINTMENT;
+import static seedu.address.storage.JsonAdaptedPatient.MESSAGE_NULL_CARE_ENTRY;
 import static seedu.address.storage.JsonAdaptedPatient.MISSING_FIELD_MESSAGE_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
@@ -182,6 +184,30 @@ public class JsonAdaptedPatientTest {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, Arrays.asList((JsonAdaptedMedication) null), List.of(), List.of(), null, null, null);
         assertThrows(IllegalValueException.class, "Medication entries must not be null.", patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullAllergenEntry_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), Arrays.asList((String) null), List.of(), null, null, null);
+        assertThrows(IllegalValueException.class, MESSAGE_NULL_CARE_ENTRY, patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullCareInstructionEntry_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), Arrays.asList((String) null), null, null, null);
+        assertThrows(IllegalValueException.class, MESSAGE_NULL_CARE_ENTRY, patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_duplicateContacts_keepsCause() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(),
+                List.of(new JsonAdaptedContact(GP), new JsonAdaptedContact(GP)), null, null);
+        IllegalValueException thrown = org.junit.jupiter.api.Assertions.assertThrows(IllegalValueException.class,
+                patient::toModelType);
+        assertInstanceOf(IllegalArgumentException.class, thrown.getCause());
     }
 
     @Test
