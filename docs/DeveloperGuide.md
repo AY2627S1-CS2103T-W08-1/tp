@@ -269,6 +269,46 @@ is a duplicate, the command fails without changing the patient.
   * Pros: The operation has simpler all-or-nothing behavior.
   * Cons: One duplicate prevents all valid new entries in the same command from being added.
 
+### Backup and restore feature
+
+The `backup` command saves a copy of all patient data to the `data/backups` folder, and `restore FILENAME` replaces all patient data with one of those copies.
+
+#### Implementation
+
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, and returns the path of the file. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+
+The sequence diagram below shows a successful `restore old.json`.
+
+<puml src="diagrams/RestoreSequenceDiagram.puml" alt="Interactions for the `restore old.json` Command" />
+
+1. `RestoreCommandParser` checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
+1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
+1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
+1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored and the path of the automatic backup.
+1. As after every command, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
+
+Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
+
+#### Design considerations
+
+**Aspect: Keeping the current data safe during a restore**
+
+* **Alternative 1 (current choice):** Check the whole backup first, then back up the current data automatically, and only then replace it.
+  * Pros: A missing or invalid backup never changes the current data, and any restore can be undone by restoring the automatic backup it reports.
+  * Cons: Every restore adds a file to `data/backups`.
+* **Alternative 2:** Ask the user to confirm the restore, and keep no automatic backup.
+  * Pros: No extra files.
+  * Cons: Adds a step to every restore, and a restore confirmed by mistake cannot be undone.
+
+**Aspect: What a backup copies**
+
+* **Alternative 1 (current choice):** Save the patient data currently loaded in MediConnect, through `JsonAddressBookStorage`.
+  * Pros: Needs no changes to `LogicManager` or `Storage`, and every backup holds valid data in the current format.
+  * Cons: If `data/mediconnect.json` could not be loaded at startup, a backup holds the empty data MediConnect started with, not the unreadable file. `MainApp` already keeps that file as a recovery copy at startup.
+* **Alternative 2:** Copy `data/mediconnect.json` byte for byte.
+  * Pros: An unreadable data file is kept, for repair by hand, although the startup recovery copy already does this.
+  * Cons: The path of the data file would have to be passed from `Storage` through `LogicManager` to the command, and a backup could hold data that `restore` then rejects.
+
 ### Contact management
 
 `Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
@@ -419,11 +459,6 @@ The following activity diagram summarizes what happens when a user executes a ne
   * Cons: We must ensure that the implementation of each individual command is correct.
 
 _{more aspects and alternatives to be added}_
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -906,3 +941,80 @@ testers are expected to do more *exploratory* testing.
 
    1. Close the app. Repair a copy of the recovery file, replace `data/mediconnect.json` with it, and relaunch.<br>
       Expected: The repaired patients load normally without a recovery warning.
+
+### Backing up data
+
+1. Backing up the current data
+
+   1. Test case: `backup`<br>
+      Expected: A new file named after the current date and time, e.g., `mediconnect-20261020-083015.json`, appears in `data/backups`, holding the same patients as `data/mediconnect.json`. The status message shows `Backup saved to:` followed by the full path of the file.
+
+1. Backing up when the backup folder cannot be created
+
+   1. Prerequisites: The app is closed. In the `data` folder, delete the `backups` folder if there is one, and create an empty file named `backups` (with no extension) in its place.
+
+   1. Launch the app, then enter `backup`.<br>
+      Expected: No backup is saved. The status message shows `Could not save the backup to` followed by the folder and a reason, and says that your data has not been changed.
+
+### Restoring data
+
+1. Restoring a backup
+
+   1. Prerequisites: Enter `backup` and note the name of the file in the status message. Then delete a patient, e.g., with `delete 1`.
+
+   1. Test case: `restore FILENAME`, where `FILENAME` is the name you noted<br>
+      Expected: The deleted patient is back, and the list shows all active patients. The status message shows how many patients were restored, and the full path of an automatic backup of the data from just before the restore.
+
+   1. Test case: `restore FILENAME`, where `FILENAME` is the name of the automatic backup from the previous test case<br>
+      Expected: The data from before the previous restore is back, i.e., the patient is deleted again.
+
+1. Restoring a file that cannot be restored
+
+   1. Test case: `restore nosuchfile.json`<br>
+      Expected: The data is unchanged, and no automatic backup is saved. The status message says that no backup named `nosuchfile.json` was found in `data/backups`.
+
+   1. Test case: `restore ../mediconnect.json`<br>
+      Expected: The data is unchanged. The status message asks for only the name of a backup file, not a path.
+
+   1. Prerequisites: Create a file `bad.json` in `data/backups` containing only the text `hello`.<br>
+      Test case: `restore bad.json`<br>
+      Expected: The data is unchanged. The status message says that the backup could not be read.
+
+   1. Prerequisites: In `data/backups`, copy a backup to `invalid.json`, and change a patient's `nric` in it to `123`.<br>
+      Test case: `restore invalid.json`<br>
+      Expected: The data is unchanged. The status message says that the backup has invalid data, followed by the NRIC format as the details.
+
+   1. Other incorrect restore commands to try: `restore`, `restore .`, `restore data/backups/bad.json`<br>
+      Expected: The data is unchanged. The status message shows an error.
+
+### Exporting a patient's record
+
+1. Exporting a patient while all active patients are being shown
+
+   1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
+
+   1. Test case: `export 1`<br>
+      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, numbered as in the detail panel), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
+
+   1. Test case: `addcare 1 med/Paracetamol 500mg`, then `export 1` again<br>
+      Expected: The same file is replaced, and now lists `Paracetamol 500mg` under Medications.
+
+   1. Test case: `export 0`<br>
+      Expected: No file is written. The status message shows the invalid command format error.
+
+   1. Other incorrect export commands to try: `export`, `export x`, `export y` (where y is larger than the list size)<br>
+      Expected: No file is written. The status message shows an error.
+
+1. Exporting from a filtered list
+
+   1. Prerequisites: `find Bernice` shows exactly one patient.
+
+   1. Test case: `export 1`<br>
+      Expected: The file for the patient shown is written, named after their NRIC, not the file for the first patient in the full list.
+
+1. Exporting when the export folder cannot be created
+
+   1. Prerequisites: The app is closed. In the `data` folder, delete the `exports` folder if there is one, and create an empty file named `exports` (with no extension) in its place.
+
+   1. Launch the app, then enter `export 1`.<br>
+      Expected: No file is written. The status message shows `Could not export`, the patient's name, the path of the file and a reason.
