@@ -54,6 +54,7 @@
         "view-patient-feature": "View patient feature",
         "add-care-info-feature": "Add care info feature",
         "contact-management": "Contact management",
+        "add-appointment-feature": "Add appointment feature",
         "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
         "proposed-data-archiving": "[Proposed] Data archiving",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
