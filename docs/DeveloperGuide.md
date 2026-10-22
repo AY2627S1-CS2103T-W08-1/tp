@@ -233,6 +233,38 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
   * Pros: The `Model` stays unchanged.
   * Cons: The panel would show stale data after the patient is edited or deleted by another command.
 
+### Edit patient feature
+
+The `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` command replaces one or more core details
+of a patient in the displayed list while preserving all care-related data and state.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `edit 1 p/91234567`. Error paths are omitted for
+clarity.
+
+<puml src="diagrams/EditSequenceDiagram.puml" alt="Interactions for the `edit` Command" />
+
+1. `EditCommandParser` parses a positive patient index and the supplied fields. It requires at least one field,
+   rejects repeated or unknown prefixes, and uses the same field parsers as `add`.
+1. `EditCommand#execute()` resolves the index against the filtered patient list and creates an immutable replacement
+   using the supplied values and the existing values for omitted fields.
+1. The replacement preserves medications and their times, allergens, care instructions, contacts, appointments,
+   and archived state. A changed NRIC is rejected if another patient already has it.
+1. The command calls `Model#setPatient(patient, editedPatient)`. If the patient is currently being viewed,
+   `ModelManager#setPatient()` updates `viewedPatient`, and the `PatientDetailPanel` listener redraws the panel.
+
+#### Design considerations
+
+**Aspect: Preserving fields that `edit` cannot change**
+
+* **Alternative 1 (current choice):** Build the replacement through `Patient#withDetails(...)`.
+  * Pros: The model owns the copy logic, so care-related fields and state are preserved in one place.
+  * Cons: The helper must be updated whenever `Patient` gains another field.
+* **Alternative 2:** Construct a replacement directly in `EditCommand`.
+  * Pros: Avoids a model helper used by one command.
+  * Cons: Repeating the full constructor in the command makes it easier to drop an unrelated field during editing.
+
 ### Add care info feature
 
 The `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` command appends care
