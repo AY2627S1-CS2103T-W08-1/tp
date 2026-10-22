@@ -43,10 +43,10 @@ public class LogicManager implements Logic {
 
     @Override
     public CommandResult execute(String commandText) throws CommandException, ParseException {
-        logger.info("----------------[USER COMMAND][" + commandText + "]");
-
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        // the command text is not logged, as it can hold patient details
+        logger.info("----------------[USER COMMAND][" + command.getClass().getSimpleName() + "]");
         commandResult = command.execute(model);
 
         try {

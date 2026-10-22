@@ -122,8 +122,9 @@ public class RestoreCommand extends Command {
             return new JsonAddressBookStorage(backupFile).readAddressBook()
                     .orElseThrow(() -> new CommandException(notFoundMessage));
         } catch (DataLoadingException dle) {
-            logger.warning("Could not restore " + backupFile + ": " + dle.getCause());
-            throw new CommandException(describeLoadingFailure(dle), dle);
+            String reason = describeLoadingFailure(dle);
+            logger.warning("Could not restore " + backupFile + ": " + reason);
+            throw new CommandException(reason, dle);
         }
     }
 

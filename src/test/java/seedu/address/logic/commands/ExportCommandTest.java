@@ -171,6 +171,56 @@ public class ExportCommandTest {
     }
 
     @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on files")
+    public void execute_readOnlyEarlierExport_showsPermissionReasonAndKeepsEarlierExport() throws Exception {
+        Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
+        Path exportFile = exportDir.resolve("S0000001A.txt");
+        Files.write(exportFile, List.of("earlier export"));
+        assertTrue(exportFile.toFile().setWritable(false));
+        try {
+            // users with admin rights (e.g., root) can still write, so the test only applies to others
+            assumeFalse(Files.isWritable(exportFile));
+            String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                    exportFile, Messages.MESSAGE_NO_WRITE_PERMISSION);
+
+            assertCommandFailure(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model,
+                    expectedMessage);
+            assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+            assertNoTemporaryFiles(exportDir);
+        } finally {
+            exportFile.toFile().setWritable(true);
+        }
+    }
+
+    @Test
+    public void execute_nonEmptyFolderAtExportPath_failsAndRemovesTemporaryFile() throws Exception {
+        Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
+        Path exportFile = Files.createDirectory(exportDir.resolve("S0000001A.txt"));
+        Path keptFile = Files.write(exportFile.resolve("kept.txt"), List.of("kept"));
+        // the reason given by the file system differs between operating systems, so only the start is checked
+        String expectedStart = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                exportFile, "");
+
+        CommandException exception = Assertions.assertThrows(CommandException.class, () ->
+                new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir).execute(model));
+        assertTrue(exception.getMessage().startsWith(expectedStart.substring(0, expectedStart.length() - 1)));
+        assertEquals(List.of("kept"), Files.readAllLines(keptFile, StandardCharsets.UTF_8));
+        try (Stream<Path> files = Files.list(exportDir)) {
+            assertEquals(List.of(exportFile), files.toList());
+        }
+    }
+
+    @Test
+    public void deleteTemporaryFile_fileCannotBeDeleted_doesNotThrow() throws Exception {
+        Path nonEmptyFolder = Files.createDirectory(temporaryFolder.resolve("stuck"));
+        Path insideFile = Files.write(nonEmptyFolder.resolve("inside.txt"), List.of("inside"));
+
+        // deleting a folder that is not empty fails, which must only be logged
+        ExportCommand.deleteTemporaryFile(nonEmptyFolder);
+        assertTrue(Files.exists(insideFile));
+    }
+
+    @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Creating a link needs admin rights on Windows")
     public void execute_linkAtOldTemporaryPath_leavesLinkTargetUnchanged() throws Exception {
         Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
