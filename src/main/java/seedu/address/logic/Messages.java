@@ -32,6 +32,16 @@ public class Messages {
     public static final String MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT = "No medications are due today for %1$s.";
     public static final String MESSAGE_DUE_ENTRY = "%1$s %2$s: %3$s";
     public static final String MESSAGE_DUE_EARLIER_TODAY_SUFFIX = " (earlier today)";
+    public static final String MESSAGE_INVALID_MEDICATION_DISPLAYED_INDEX =
+            "The medication index provided is invalid.";
+    public static final String MESSAGE_NO_MEDICATION_FIELD_TO_EDIT =
+            "At least one of med/ or t/ must be provided.";
+    public static final String MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED =
+            "t/ with no time clears all times and cannot be combined with other times.";
+    public static final String MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION =
+            "Medication \"%1$s\" was not updated: it already exists for this patient.";
+    public static final String MESSAGE_EDIT_MEDICATION_SUCCESS = "Updated medication %1$d of %2$s: %3$s";
+    public static final String MESSAGE_DELETE_MEDICATION_SUCCESS = "Deleted medication %1$d of %2$s: %3$s";
     public static final String MESSAGE_PATIENTS_LISTED_OVERVIEW = "%1$d patient(s) listed!";
     public static final String MESSAGE_DUPLICATE_FIELDS =
                 "Multiple values specified for a single-valued field: ";

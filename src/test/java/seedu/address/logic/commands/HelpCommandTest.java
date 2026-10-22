@@ -50,6 +50,8 @@ public class HelpCommandTest {
             Map.entry("PHONE", "91234567"),
             Map.entry("ADDRESS", "21 Lorong 3"),
             Map.entry("INDEX", "1"),
+            Map.entry("MED_INDEX", "1"),
+            Map.entry("DESCRIPTION", "Metformin 850mg"),
             Map.entry("MEDICATION", "Metformin 500mg"),
             Map.entry("ALLERGEN", "Penicillin"),
             Map.entry("CARE_INSTRUCTION", "Check blood sugar"),
@@ -77,6 +79,8 @@ public class HelpCommandTest {
         commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
         commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
         commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
+        commands.put(EditMedCommand.COMMAND_WORD, EditMedCommand.class);
+        commands.put(DeleteMedCommand.COMMAND_WORD, DeleteMedCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);

@@ -194,4 +194,21 @@ public class ParserUtilTest {
     public void parseTime_inputWithWhitespace_returnsTrimmedLocalTime() throws Exception {
         assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime(WHITESPACE + "08:30" + WHITESPACE));
     }
+
+    @Test
+    public void parseMedicationDescription_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseMedicationDescription(null));
+    }
+
+    @Test
+    public void parseMedicationDescription_blank_throwsParseException() {
+        String message = Medication.MESSAGE_DESCRIPTION_CONSTRAINTS;
+        assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(""));
+        assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(WHITESPACE));
+    }
+
+    @Test
+    public void parseMedicationDescription_valid_returnsTrimmedDescription() throws Exception {
+        assertEquals("Metformin 500mg", ParserUtil.parseMedicationDescription("  Metformin 500mg" + WHITESPACE));
+    }
 }
