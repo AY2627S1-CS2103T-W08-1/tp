@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_NO_MEDICATION_FIELD_TO_EDIT;
+import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICATION;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
@@ -138,27 +139,38 @@ public class EditMedCommandParserTest {
     }
 
     @Test
-    public void parse_unknownPrefixBeforeFirstPrefix_throwsParseException() {
-        assertParseFailure(parser, " 1 2 x/foo", INVALID_FORMAT_MESSAGE);
-        assertParseFailure(parser, " 1 2 al/Penicillin", INVALID_FORMAT_MESSAGE);
-        assertParseFailure(parser, " 1 2 T/08:00", INVALID_FORMAT_MESSAGE);
-        assertParseFailure(parser, " 1 2 MED/Aspirin", INVALID_FORMAT_MESSAGE);
-        assertParseFailure(parser, " 1 2 x/foo med/Aspirin", INVALID_FORMAT_MESSAGE);
+    public void parse_unknownPrefix_throwsParseException() {
+        assertParseFailure(parser, " 1 1 med/Aspirin T/08:00", String.format(MESSAGE_UNKNOWN_PREFIX, "T/"));
+        assertParseFailure(parser, " 4 1 med/Aspirin p/123", String.format(MESSAGE_UNKNOWN_PREFIX, "p/"));
+        for (String prefix : List.of("p/", "dob/", "xyz/", "x/", "T/", "MED/", "al/", "ci/")) {
+            assertParseFailure(parser, " 1 2 med/Aspirin " + prefix + "value",
+                    String.format(MESSAGE_UNKNOWN_PREFIX, prefix));
+            assertParseFailure(parser, " 1 2 " + prefix + "value",
+                    String.format(MESSAGE_UNKNOWN_PREFIX, prefix));
+            assertParseFailure(parser, " 1 2 t/08:00 " + prefix + "value",
+                    String.format(MESSAGE_UNKNOWN_PREFIX, prefix));
+        }
     }
 
     @Test
-    public void parse_prefixLikeWordsInDescription_keptAsPartOfDescription() {
-        assertParseSuccess(parser, " 1 2 med/Insulin 10 units/day",
-                edit(Optional.of("Insulin 10 units/day"), Optional.empty()));
-        assertParseSuccess(parser, " 1 2 med/Paracetamol 500mg/5ml",
-                edit(Optional.of("Paracetamol 500mg/5ml"), Optional.empty()));
-        assertParseSuccess(parser, " 1 2 med/Amoxicillin 250 mg/ml",
-                edit(Optional.of("Amoxicillin 250 mg/ml"), Optional.empty()));
+    public void parse_unknownPrefixWithoutMedOrTime_reportsUnrecognizedParameter() {
+        assertParseFailure(parser, " 1 1 x/foo", String.format(MESSAGE_UNKNOWN_PREFIX, "x/"));
+        assertParseFailure(parser, " 1 1 al/Latex", String.format(MESSAGE_UNKNOWN_PREFIX, "al/"));
+    }
+
+    @Test
+    public void parse_prefixLikeWordWithLettersBeforeSlash_throwsParseException() {
+        assertParseFailure(parser, " 1 2 med/Insulin 10 units/day", String.format(MESSAGE_UNKNOWN_PREFIX, "units/"));
+        assertParseFailure(parser, " 1 2 med/Amoxicillin 250 mg/ml", String.format(MESSAGE_UNKNOWN_PREFIX, "mg/"));
+    }
+
+    @Test
+    public void parse_slashTextThatIsNotPrefix_success() {
+        assertParseSuccess(parser, " 1 2 med/Take 500mg/5ml t/08:00",
+                edit(Optional.of("Take 500mg/5ml"), Optional.of(List.of(MORNING))));
         assertParseSuccess(parser, " 1 2 med/Dose 1/2 tablet", edit(Optional.of("Dose 1/2 tablet"), Optional.empty()));
-        assertParseSuccess(parser, " 1 2 med/Aspirin x/foo", edit(Optional.of("Aspirin x/foo"), Optional.empty()));
-        assertParseSuccess(parser, " 1 2 med/Aspirin T/08:00", edit(Optional.of("Aspirin T/08:00"), Optional.empty()));
-        assertParseSuccess(parser, " 1 2 med/Insulin 10 units/day t/08:00",
-                edit(Optional.of("Insulin 10 units/day"), Optional.of(List.of(MORNING))));
+        assertParseSuccess(parser, " 1 2 med/See https://clinic.example/guide",
+                edit(Optional.of("See https://clinic.example/guide"), Optional.empty()));
     }
 
     @Test
