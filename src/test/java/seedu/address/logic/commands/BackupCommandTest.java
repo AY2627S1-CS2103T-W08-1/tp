@@ -11,9 +11,6 @@ import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,6 +26,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
@@ -198,7 +196,7 @@ public class BackupCommandTest {
         String message = Assertions.assertThrows(CommandException.class, () -> backupCommand.execute(model))
                 .getMessage();
 
-        // the reason comes from the OS, so it is checked only for the problems describeFailure guards against
+        // the reason comes from the OS, so it is checked only for the problems describeWriteFailure guards against
         assertTrue(message.startsWith(expectedStart));
         assertTrue(message.endsWith(expectedEnd));
         String reason = message.substring(expectedStart.length(), message.length() - expectedEnd.length());
@@ -217,7 +215,7 @@ public class BackupCommandTest {
             // users with admin rights (e.g., root) can still write, so the test only applies to others
             assumeFalse(Files.isWritable(backupDir));
             String expectedMessage = String.format(BackupCommand.MESSAGE_FAILURE, backupDir.toAbsolutePath(),
-                    BackupCommand.MESSAGE_NO_PERMISSION);
+                    Messages.MESSAGE_NO_WRITE_PERMISSION);
 
             assertCommandFailure(new BackupCommand(FIXED_CLOCK, backupDir), model, expectedMessage);
             try (Stream<Path> files = Files.list(backupDir)) {
@@ -248,68 +246,6 @@ public class BackupCommandTest {
         Path backupDir = Files.createFile(temporaryFolder.resolve("blocked")).resolve("backups");
 
         assertThrows(IOException.class, () -> new BackupCommand(FIXED_CLOCK, backupDir).saveBackup(new AddressBook()));
-    }
-
-    @Test
-    public void describeFailure_nullException_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> BackupCommand.describeFailure(null));
-    }
-
-    @Test
-    public void describeFailure_accessDenied_returnsPermissionMessage() {
-        assertEquals(BackupCommand.MESSAGE_NO_PERMISSION,
-                BackupCommand.describeFailure(new AccessDeniedException("/data/backups/file.json")));
-    }
-
-    @Test
-    public void describeFailure_fileSystemExceptionWithReason_returnsReasonWithoutPath() {
-        IOException exception = new FileSystemException("/data/backups", null, "Not a directory");
-
-        assertEquals("Not a directory", BackupCommand.describeFailure(exception));
-    }
-
-    @Test
-    public void describeFailure_fileSystemExceptionWithoutReason_returnsGenericReasonWithoutPath() {
-        IOException exception = new FileAlreadyExistsException("/data/backups");
-
-        assertEquals(BackupCommand.MESSAGE_FILE_SYSTEM_ERROR, BackupCommand.describeFailure(exception));
-    }
-
-    @Test
-    public void describeFailure_otherIoException_returnsMessage() {
-        assertEquals("Disk full", BackupCommand.describeFailure(new IOException("Disk full")));
-    }
-
-    @Test
-    public void describeFailure_ioExceptionWithoutMessage_returnsExceptionType() {
-        assertEquals("IOException", BackupCommand.describeFailure(new IOException()));
-    }
-
-    @Test
-    public void describeFailure_reasonEndingWithFullStop_fullStopRemoved() {
-        // Windows reasons end with a full stop, which MESSAGE_FAILURE already adds after the reason
-        IOException exception = new FileSystemException("C:\\data\\backups", null, "The directory name is invalid.");
-
-        assertEquals("The directory name is invalid", BackupCommand.describeFailure(exception));
-    }
-
-    @Test
-    public void describeFailure_blankReason_returnsGenericReason() {
-        IOException exception = new FileSystemException("/data/backups", null, "  ");
-
-        assertEquals(BackupCommand.MESSAGE_FILE_SYSTEM_ERROR, BackupCommand.describeFailure(exception));
-    }
-
-    @Test
-    public void describeFailure_messageEndingWithFullStopAndSpace_trimmed() {
-        IOException exception = new IOException("No space left on device. ");
-
-        assertEquals("No space left on device", BackupCommand.describeFailure(exception));
-    }
-
-    @Test
-    public void describeFailure_blankMessage_returnsExceptionType() {
-        assertEquals("IOException", BackupCommand.describeFailure(new IOException(" ")));
     }
 
     @Test

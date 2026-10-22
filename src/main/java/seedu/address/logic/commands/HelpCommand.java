@@ -81,6 +81,9 @@ public class HelpCommand extends Command {
             formatEntry(RestoreCommand.COMMAND_WORD + " FILENAME",
                     "Replaces all patient data with the backup FILENAME from data/backups, "
                             + "after backing up the current data."),
+            formatEntry(ExportCommand.COMMAND_WORD + " INDEX",
+                    "Saves the full record of the patient at INDEX to data/exports, "
+                            + "in a file named after their NRIC."),
             formatEntry(ExitCommand.COMMAND_WORD,
                     "Exits the app."));
 
