@@ -134,6 +134,14 @@ public class Patient {
         return medications;
     }
 
+    /**
+     * Returns a copy with replacement medications, preserving every other field.
+     */
+    public Patient withMedications(List<Medication> medications) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments, archived);
+    }
+
     public List<String> getAllergens() {
         return allergens;
     }

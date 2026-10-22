@@ -51,6 +51,8 @@ public class HelpCommandTest {
             Map.entry("ADDRESS", "21 Lorong 3"),
             Map.entry("INDEX", "1"),
             Map.entry("APPT_INDEX", "1"),
+            Map.entry("MED_INDEX", "1"),
+            Map.entry("DESCRIPTION", "Metformin 850mg"),
             Map.entry("MEDICATION", "Metformin 500mg"),
             Map.entry("ALLERGEN", "Penicillin"),
             Map.entry("CARE_INSTRUCTION", "Check blood sugar"),
@@ -80,6 +82,8 @@ public class HelpCommandTest {
         commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
         commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
         commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
+        commands.put(EditMedCommand.COMMAND_WORD, EditMedCommand.class);
+        commands.put(DeleteMedCommand.COMMAND_WORD, DeleteMedCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
@@ -87,6 +91,7 @@ public class HelpCommandTest {
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
         commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
         commands.put(RestoreCommand.COMMAND_WORD, RestoreCommand.class);
+        commands.put(ExportCommand.COMMAND_WORD, ExportCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
         return Collections.unmodifiableMap(commands);
     }
@@ -170,7 +175,7 @@ public class HelpCommandTest {
                 UnarchiveCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
                 AddCareCommand.COMMAND_WORD,
                 EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
-                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD,
+                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD,
                 EditApptCommand.COMMAND_WORD, CancelApptCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
