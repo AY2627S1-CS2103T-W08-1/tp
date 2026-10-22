@@ -128,6 +128,7 @@
         "adding-a-patient-add": "Adding a patient: add",
         "field-formats": "Field formats",
         "adding-care-information-addcare": "Adding care information: addcare",
+        "editing-a-medication-editmed": "Editing a medication: editmed",
         "editing-a-care-instruction-editcare": "Editing a care instruction: editcare",
         "deleting-a-care-instruction-deletecare": "Deleting a care instruction: deletecare",
         "deleting-an-allergen-deleteallergy": "Deleting an allergen: deleteallergy",
