@@ -14,6 +14,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
@@ -135,7 +136,7 @@ public class RestoreCommand extends Command {
         try {
             return new BackupCommand(clock, backupDir).saveBackup(model.getAddressBook());
         } catch (IOException ioe) {
-            String reason = BackupCommand.describeFailure(ioe);
+            String reason = Messages.describeWriteFailure(ioe);
             throw new CommandException(
                     String.format(MESSAGE_BACKUP_FAILED, backupDir.toAbsolutePath().normalize(), reason), ioe);
         }

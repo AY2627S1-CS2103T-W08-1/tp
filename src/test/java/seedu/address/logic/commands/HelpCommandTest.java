@@ -84,6 +84,7 @@ public class HelpCommandTest {
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
         commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
         commands.put(RestoreCommand.COMMAND_WORD, RestoreCommand.class);
+        commands.put(ExportCommand.COMMAND_WORD, ExportCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
         return Collections.unmodifiableMap(commands);
     }
@@ -167,7 +168,7 @@ public class HelpCommandTest {
                 UnarchiveCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
                 AddCareCommand.COMMAND_WORD,
                 EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
-                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD)) {
+                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }

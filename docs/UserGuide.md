@@ -575,6 +575,58 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup.
 
+### Exporting a patient's record: `export`
+
+Saves the full record of a patient to a text file in the `data/exports` folder, for printing or sharing.
+
+Format: `export INDEX`
+
+* Exports the patient at the specified `INDEX`.
+* The index refers to the index number shown in the displayed patient list.
+* The index **must be a positive integer** 1, 2, 3, ...
+* The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file.
+* The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
+* Appointments are numbered as in the detail panel: upcoming ones first, then past ones, at the time of the export.
+* MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
+* On macOS and Linux, only your user account can open the file, since it holds medical details.
+
+Examples:
+* `list` followed by `export 2` exports the 2nd active patient.
+* `find Alex` followed by `export 1` exports the 1st patient in the results of the `find` command.
+* `listarchived` followed by `export 1` exports the 1st archived patient.
+
+Returns, for example, `Exported Alex Yeoh's record to: ` followed by the full path of the file.
+
+The file for Alex Yeoh in the sample data looks like this:
+
+```
+MediConnect patient record
+Exported on 2026-10-21 14:30
+
+Alex Yeoh
+NRIC: S0000001A
+DOB: 1948-03-15
+Phone: 87438807
+Address: Blk 30 Geylang Street 29, #06-40
+
+Medications
+1. Aspirin 100mg (08:00)
+2. Amlodipine 5mg (08:00, 20:00)
+
+Allergens
+1. Penicillin
+
+Care Instructions
+1. Monitor blood pressure every morning
+
+Contacts
+1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning
+
+Appointments
+1. 2027-11-05 09:30 with Dr Tan
+2. 2027-12-10 14:00 with Cardiology clinic (Bring BP log)
+```
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -641,6 +693,7 @@ Action            | Format, Examples
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Exit**          | `exit`
+**Export**        | `export INDEX` <br> e.g., `export 2`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
 **List**          | `list`
