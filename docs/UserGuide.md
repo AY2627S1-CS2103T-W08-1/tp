@@ -547,10 +547,12 @@ Format: `export INDEX`
 * The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
 * Appointments are numbered as in the detail panel: upcoming ones first, then past ones, at the time of the export.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
+* On macOS and Linux, only your user account can open the file, since it holds medical details.
 
 Examples:
-* `list` followed by `export 2` exports the 2nd patient in MediConnect.
+* `list` followed by `export 2` exports the 2nd active patient.
 * `find Alex` followed by `export 1` exports the 1st patient in the results of the `find` command.
+* `listarchived` followed by `export 1` exports the 1st archived patient.
 
 Returns, for example, `Exported Alex Yeoh's record to: ` followed by the full path of the file.
 
