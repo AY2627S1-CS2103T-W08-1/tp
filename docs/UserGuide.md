@@ -300,6 +300,47 @@ For all three contact commands, `INDEX` must refer to a patient in the displayed
 returns `The contact index provided is invalid.` Missing, zero, negative, nonnumeric or extra indices give the
 command's usage. Validation failures leave patient data unchanged.
 
+### Adding an appointment: `addappt`
+
+Adds an appointment to the patient at the displayed index.
+
+Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
+
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* `DATE` must be a real date in `YYYY-MM-DD` format, e.g., `2026-11-05`.
+* `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
+* `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank. Leading and
+  trailing spaces are ignored, and multiple spaces between words are reduced to one.
+* `NOTE` is optional free text. `nt/` with nothing after it means no note.
+* Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`.
+* The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones.
+  After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
+
+Examples:
+
+* `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
+* `addappt 2 d/2027-12-10 t/14:00 w/Cardiology clinic nt/Bring BP log`
+
+A successful command returns `New appointment for NAME: DATE TIME with WITH`, followed by ` (NOTE)` if there is a
+note. For example, the second example returns
+`New appointment for Bernice Yu: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+
+* An appointment in the past is still added, so past visits can be recorded. The message then ends with
+  `Note: this appointment is in the past.`
+* An appointment at the same date and time as another appointment of the patient, but with someone else, is still
+  added. The message then ends with `Warning: NAME already has an appointment at this date and time (with WITH).`
+
+Other errors are reported as follows:
+
+* An appointment with the same date, time and `WITH` as one the patient already has, ignoring letter case and extra
+  spaces, returns `This appointment already exists for this patient.` and is not added.
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* An invalid date returns `Appointment date should be a real date in YYYY-MM-DD format, e.g. 2026-10-25.`
+* An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
+* A blank `WITH` returns `Who the appointment is with should not be blank.`
+* A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
+  command usage.
+
 ### Listing all active patients: `list`
 
 Shows a list of all active patients in MediConnect. Archived patients are not shown.
@@ -638,6 +679,7 @@ Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
 **Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
+**Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
 **Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
