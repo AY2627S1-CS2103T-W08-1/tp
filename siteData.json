@@ -57,6 +57,7 @@
         "backup-and-restore-feature": "Backup and restore feature",
         "contact-management": "Contact management",
         "add-appointment-feature": "Add appointment feature",
+        "due-medication-feature": "Due medication feature",
         "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
         "appendix-requirements": "Appendix: Requirements",
