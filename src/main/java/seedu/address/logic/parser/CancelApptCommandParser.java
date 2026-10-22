@@ -2,6 +2,8 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
+import java.util.List;
+
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.CancelApptCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -11,9 +13,6 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class CancelApptCommandParser implements Parser<CancelApptCommand> {
 
-    /** The command takes the patient's index, then the appointment's number. */
-    private static final int NUMBER_OF_INDEXES = 2;
-
     /**
      * Parses the given {@code String} of arguments in the context of the CancelApptCommand
      * and returns a CancelApptCommand object for execution.
@@ -22,19 +21,12 @@ public class CancelApptCommandParser implements Parser<CancelApptCommand> {
      */
     @Override
     public CancelApptCommand parse(String args) throws ParseException {
-        String usageMessage =
-                String.format(MESSAGE_INVALID_COMMAND_FORMAT, CancelApptCommand.MESSAGE_USAGE);
-        String[] indexes = args.trim().split("\\s+");
-        if (indexes.length != NUMBER_OF_INDEXES) {
-            throw new ParseException(usageMessage);
-        }
-
         try {
-            Index patientIndex = ParserUtil.parseIndex(indexes[0]);
-            Index appointmentIndex = ParserUtil.parseIndex(indexes[1]);
-            return new CancelApptCommand(patientIndex, appointmentIndex);
+            List<Index> indexes = ParserUtil.parseTwoIndexes(args);
+            return new CancelApptCommand(indexes.get(0), indexes.get(1));
         } catch (ParseException pe) {
-            throw new ParseException(usageMessage, pe);
+            throw new ParseException(
+                    String.format(MESSAGE_INVALID_COMMAND_FORMAT, CancelApptCommand.MESSAGE_USAGE), pe);
         }
     }
 }

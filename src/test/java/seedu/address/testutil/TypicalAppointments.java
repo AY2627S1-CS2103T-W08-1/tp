@@ -12,6 +12,8 @@ public class TypicalAppointments {
 
     public static final Appointment CHECKUP = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(9, 30),
             "Dr Tan", "Fasting");
+    public static final Appointment CARDIOLOGY = new Appointment(LocalDate.of(2026, 12, 10),
+            LocalTime.of(14, 0), "Cardiology clinic", "");
 
     private TypicalAppointments() {} // prevents instantiation
 }

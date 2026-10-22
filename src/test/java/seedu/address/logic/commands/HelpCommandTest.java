@@ -80,6 +80,7 @@ public class HelpCommandTest {
         commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
         commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
         commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
+        commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
         commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
         commands.put(EditMedCommand.COMMAND_WORD, EditMedCommand.class);
         commands.put(DeleteMedCommand.COMMAND_WORD, DeleteMedCommand.class);
@@ -175,7 +176,7 @@ public class HelpCommandTest {
                 AddCareCommand.COMMAND_WORD,
                 EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
                 DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD,
-                CancelApptCommand.COMMAND_WORD)) {
+                EditApptCommand.COMMAND_WORD, CancelApptCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }

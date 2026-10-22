@@ -37,11 +37,6 @@ public class AddApptCommand extends Command {
             + PREFIX_WITH + "Dr Tan " + PREFIX_NOTE + "Bring blood test results";
 
     public static final String MESSAGE_SUCCESS = "New appointment for %1$s: %2$s";
-    public static final String MESSAGE_DUPLICATE_APPOINTMENT =
-            "This appointment already exists for this patient.";
-    public static final String MESSAGE_PAST_APPOINTMENT = "Note: this appointment is in the past.";
-    public static final String MESSAGE_CLASH =
-            "Warning: %1$s already has an appointment at this date and time (with %2$s).";
 
     private final Index targetIndex;
     private final Appointment toAdd;
@@ -78,7 +73,7 @@ public class AddApptCommand extends Command {
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
         if (patientToEdit.getAppointments().stream().anyMatch(toAdd::isSameAppointment)) {
-            throw new CommandException(MESSAGE_DUPLICATE_APPOINTMENT);
+            throw new CommandException(Messages.MESSAGE_DUPLICATE_APPOINTMENT);
         }
 
         List<Appointment> updatedAppointments = new ArrayList<>(patientToEdit.getAppointments());
@@ -87,25 +82,10 @@ public class AddApptCommand extends Command {
         model.setPatient(patientToEdit, editedPatient);
         model.setViewedPatient(editedPatient);
 
-        return new CommandResult(buildSuccessMessage(patientToEdit));
-    }
-
-    /**
-     * Returns the success message for adding the appointment to {@code patient}, followed by a note
-     * if the appointment is in the past and a warning for each appointment at the same date and time.
-     */
-    private String buildSuccessMessage(Patient patient) {
-        String message = String.format(MESSAGE_SUCCESS, patient.getName(), toAdd);
-        boolean isInPast = toAdd.isBefore(LocalDateTime.now(clock));
-        if (isInPast) {
-            message += "\n" + MESSAGE_PAST_APPOINTMENT;
-        }
-        for (Appointment appointment : patient.getAppointments()) {
-            if (toAdd.isAtSameTimeAs(appointment)) {
-                message += "\n" + String.format(MESSAGE_CLASH, patient.getName(), appointment.getProvider());
-            }
-        }
-        return message;
+        String message = String.format(MESSAGE_SUCCESS, patientToEdit.getName(), toAdd)
+                + Messages.formatAppointmentWarnings(patientToEdit.getName(), toAdd,
+                        patientToEdit.getAppointments(), LocalDateTime.now(clock));
+        return new CommandResult(message);
     }
 
     @Override

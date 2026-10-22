@@ -6,13 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CancelApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.logic.commands.CommandTestUtil.createModelWithAppointments;
+import static seedu.address.logic.commands.CommandTestUtil.createViewedModelWithAppointments;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalAppointments.CARDIOLOGY;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,22 +24,11 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
-import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
-import seedu.address.model.ModelManager;
-import seedu.address.model.UserPrefs;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.testutil.AdjustableClock;
-import seedu.address.testutil.PatientBuilder;
 
 public class CancelApptCommandTest {
-
-    /** Fixes the current date and time at 2026-10-18 12:00:30, half a minute into the 12:00 minute. */
-    private static final Clock FIXED_CLOCK =
-            Clock.fixed(Instant.parse("2026-10-18T12:00:30Z"), ZoneOffset.UTC);
-
-    private static final Appointment LATER_APPOINTMENT =
-            new Appointment(LocalDate.of(2026, 12, 10), LocalTime.of(14, 0), "Cardiology clinic", "");
 
     @Test
     public void constructor_nullArguments_throwsNullPointerException() {
@@ -47,11 +38,11 @@ public class CancelApptCommandTest {
 
     @Test
     public void execute_validIndexes_removesAppointment() {
-        Model model = createModelWithAppointments(CHECKUP, LATER_APPOINTMENT);
+        Model model = createModelWithAppointments(CHECKUP, CARDIOLOGY);
         Model expectedModel = createViewedModelWithAppointments(CHECKUP);
 
         assertCommandSuccess(new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), model,
-                String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), LATER_APPOINTMENT), expectedModel);
+                String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), CARDIOLOGY), expectedModel);
     }
 
     @Test
@@ -68,14 +59,14 @@ public class CancelApptCommandTest {
     public void execute_appointmentPassesWhileShown_removesAppointmentWithShownNumber() {
         AdjustableClock clock = new AdjustableClock(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
         Appointment soon = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 1), "Dr Tan", "");
-        Model model = createModelWithAppointments(clock, soon, LATER_APPOINTMENT);
+        Model model = createModelWithAppointments(clock, soon, CARDIOLOGY);
         model.setViewedPatient(model.getFilteredPatientList().get(0));
         clock.advance(Duration.ofMinutes(2));
 
         // the panel still shows the appointment at 12:01 as number 1, although it has now passed
         assertCommandSuccess(new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT), model,
                 String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), soon),
-                createViewedModelWithAppointments(LATER_APPOINTMENT));
+                createViewedModelWithAppointments(CARDIOLOGY));
     }
 
     @Test
@@ -119,30 +110,5 @@ public class CancelApptCommandTest {
         String expected = CancelApptCommand.class.getCanonicalName()
                 + "{targetIndex=" + INDEX_FIRST_PATIENT + ", appointmentIndex=" + INDEX_SECOND_PATIENT + "}";
         assertEquals(expected, command.toString());
-    }
-
-    /**
-     * Returns a model using the fixed clock, whose only patient is Alice with the given {@code appointments}.
-     */
-    private static Model createModelWithAppointments(Appointment... appointments) {
-        return createModelWithAppointments(FIXED_CLOCK, appointments);
-    }
-
-    /**
-     * Returns a model using {@code clock}, whose only patient is Alice with the given {@code appointments}.
-     */
-    private static Model createModelWithAppointments(Clock clock, Appointment... appointments) {
-        Model model = new ModelManager(new AddressBook(), new UserPrefs(), clock);
-        model.addPatient(new PatientBuilder(ALICE).withAppointments(appointments).build());
-        return model;
-    }
-
-    /**
-     * Returns a model like {@code createModelWithAppointments}, with Alice shown in the detail panel.
-     */
-    private static Model createViewedModelWithAppointments(Appointment... appointments) {
-        Model model = createModelWithAppointments(appointments);
-        model.setViewedPatient(model.getFilteredPatientList().get(0));
-        return model;
     }
 }
