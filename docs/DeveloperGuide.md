@@ -574,6 +574,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | delete a contact from a patient's profile | stop outdated contacts from cluttering the record |
 | `* *`    | caregiver                                  | attach a note to a contact | remember specific advice from each provider |
 | `* *`    | caregiver                                  | see which medications are due today | give them to the patient on time |
+| `* *`    | caregiver                                  | see the medication times of today for one patient only | prepare that patient's doses without reading the others |
+| `* *`    | caregiver                                  | see which of today's medication times have already passed | check whether I missed a dose |
 | `* *`    | caregiver                                  | view a patient's full medication schedule at once | spot overlaps or issues easily |
 | `* *`    | caregiver                                  | add an appointment for a patient | keep track of upcoming visits |
 | `* *`    | caregiver                                  | see a list of upcoming appointments across all patients | plan my schedule |
@@ -583,13 +585,15 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
 | `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
 | `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
-| `* *`    | caregiver                                  | edit a medication's dosage or frequency | keep the schedule correct when the doctor changes a prescription |
-| `* *`    | caregiver                                  | remove a medication that is no longer prescribed | stop it from appearing in the patient's schedule |
+| `* *`    | caregiver                                  | edit a medication's description or daily times | keep the schedule correct when the doctor changes a prescription |
+| `* *`    | caregiver                                  | clear all the daily times of a medication | stop it from being listed as due while I wait for the doctor's new instructions |
+| `* *`    | caregiver                                  | delete a medication by its number in the patient's details | remove the right medication without retyping its description |
 | `* *`    | caregiver                                  | remove an allergy that was recorded by mistake | keep the patient's allergy information accurate |
 | `* *`    | caregiver                                  | edit or remove a care instruction | stop following routines that are no longer recommended |
 | `* *`    | caregiver                                  | edit or cancel an appointment | keep the schedule accurate when a visit is rescheduled |
 | `* *`    | new user                                   | see sample patient data when I first open the app | understand what a complete record looks like before entering real data |
-| `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients || `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
+| `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients |
+| `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
 | `*`      | caregiver                                  | set a reminder for an appointment | remember to bring the patient to it |
@@ -736,6 +740,192 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC4 - Edit a medication of a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to view a specific patient in the list.
+4.  MediConnect shows the patient's details, with the medications numbered.
+5.  Caregiver requests to edit a specific medication of the patient, giving a new description and/or new daily times.
+6.  MediConnect updates the medication and shows its number, the patient's name and the updated medication.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 5a. The patient index is invalid.
+
+    * 5a1. MediConnect shows `The patient index provided is invalid.`
+
+      Use case resumes at step 2.
+
+* 5b. The medication number (`MED_INDEX`) is invalid.
+
+    * 5b1. MediConnect shows `The medication index provided is invalid.`
+
+      Use case resumes at step 4.
+
+* 5c. An index is missing, or is not a positive integer.
+
+    * 5c1. MediConnect shows `Invalid command format!` followed by the usage of `editmed`.
+
+      Use case resumes at step 4.
+
+* 5d. Neither a new description nor a time is given.
+
+    * 5d1. MediConnect shows `At least one of med/ or t/ must be provided.`
+
+      Use case resumes at step 4.
+
+* 5e. The new description is blank.
+
+    * 5e1. MediConnect shows `Medication description cannot be blank.`
+
+      Use case resumes at step 4.
+
+* 5f. A given time is not in `HH:MM` (24-hour) format.
+
+    * 5f1. MediConnect shows `Time must be in HH:MM (24-hour), e.g. 08:30.`
+
+      Use case resumes at step 4.
+
+* 5g. Caregiver gives `t/` with no time to clear the times, but also gives another `t/`.
+
+    * 5g1. MediConnect shows `t/ with no time clears all times and cannot be combined with other times.`
+
+      Use case resumes at step 4.
+
+* 5h. Another medication of the patient already has the new description.
+
+    * 5h1. MediConnect shows `Medication "DESCRIPTION" was not updated: it already exists for this patient.`
+
+      Use case resumes at step 4.
+
+* 5i. Caregiver gives `t/` with no time to clear the times of the medication.
+
+    * 5i1. MediConnect removes all the times of the medication and shows the updated medication.
+
+      Use case ends.
+
+**Use case: UC5 - Delete a medication of a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to view a specific patient in the list.
+4.  MediConnect shows the patient's details, with the medications numbered.
+5.  Caregiver requests to delete a specific medication of the patient.
+6.  MediConnect deletes the medication and shows its number, the patient's name and the deleted medication.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 5a. The patient index is invalid.
+
+    * 5a1. MediConnect shows `The patient index provided is invalid.`
+
+      Use case resumes at step 2.
+
+* 5b. The medication number (`MED_INDEX`) is invalid.
+
+    * 5b1. MediConnect shows `The medication index provided is invalid.`
+
+      Use case resumes at step 4.
+
+* 5c. An index is missing, is not a positive integer, or more than two indexes are given.
+
+    * 5c1. MediConnect shows `Invalid command format!` followed by the usage of `deletemed`.
+
+      Use case resumes at step 4.
+
+**Use case: UC6 - See the medications due today**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to see the medications due today.
+2.  MediConnect shows one line for each medication time of today, as `HH:MM NAME: DESCRIPTION`, sorted by time, for
+    all active patients.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver requests the medications of one patient by giving the patient's index in the displayed list.
+
+    * 1a1. MediConnect shows the lines for that patient only.
+
+      Use case ends.
+
+* 1b. The given index is invalid.
+
+    * 1b1. MediConnect shows `The patient index provided is invalid.`
+
+      Use case ends.
+
+* 1c. The given index is not a positive integer, or more than one index is given.
+
+    * 1c1. MediConnect shows `Invalid command format!` followed by the usage of `due`.
+
+      Use case ends.
+
+* 2a. A time is earlier than the current time.
+
+  MediConnect adds ` (earlier today)` to its line.
+
+  Use case ends.
+
+* 2b. No medication has a time, or the patient is archived.
+
+    * 2b1. MediConnect shows `No medications are due today.`, or `No medications are due today for NAME.` if an index
+      was given.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
@@ -743,11 +933,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
-4. MediConnect must store its data locally in a human-editable text file, with at least the same level of manual-editing support as AddressBook Level 3.
+4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path.
 5. MediConnect must not use a database management system.
 6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
-7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and update the displayed results within one second when managing up to 100 patient records on a typical modern computer.
-8. A user with above-average typing speed for regular English text should be able to perform common record-management tasks faster using commands than using mouse interactions.
+7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
+8. A user who types at least 60 words per minute should be able to add a patient, add a medication and delete a patient each in under 30 seconds using commands.
 9. MediConnect's GUI should work without resolution-related inconvenience at resolutions of 1920x1080 or higher with 100% or 125% display scaling. All functions must remain accessible at resolutions of 1280x720 or higher with display scaling up to 150%.
 
 ### Glossary
@@ -772,8 +962,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Community nurse**: A nurse who cares for patients through scheduled home visits.
 * **Contact**: A person or organisation linked to a patient's profile, which is either a healthcare provider (e.g., a
   GP, specialist, or pharmacist) or an emergency contact.
+* **Daily time**: A time of day, in 24-hour `HH:MM` format, at which a patient takes a medication every day, e.g.,
+  `08:00`. A medication can have any number of daily times, or none.
 * **Display scaling**: An operating system setting that enlarges text and other on-screen elements by a percentage
   (e.g., 125%) to make them easier to read.
+* **Dose**: One daily time of one medication of one patient. `due` lists one line for each dose.
 * **Emergency contact**: A person to notify in an emergency involving the patient, such as a family member. An
   emergency contact is not involved in the patient's medical treatment.
 * **Expert user**: A user who is familiar with MediConnect's commands and prefers to complete tasks using as few
@@ -787,11 +980,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   deletion.
 * **JAR file**: A Java Archive file. MediConnect is distributed as a single JAR file, which can be run on any computer
   with Java installed.
+* **MED_INDEX**: The number shown beside a medication in the numbered medication list of the patient's details,
+  starting from 1. `editmed` and `deletemed` use it, together with the patient's index, to refer to a medication. It
+  can change when a medication before it is deleted.
 * **Medical condition**: A long-term illness or diagnosis that a patient has, e.g., diabetes or hypertension.
 * **Medical note**: A free-text note about a patient's health or treatment, e.g., advice given by a doctor during an
   appointment.
-* **Medication**: A drug prescribed to a patient, recorded with its dosage (the amount per dose, e.g., `500mg`) and
-  frequency (how often it is taken, e.g., `twice daily`).
+* **Medication**: A drug prescribed to a patient, recorded with a description (e.g., `Metformin 500mg`) and its daily
+  times (e.g., `08:00` and `20:00`).
 * **MSS (Main Success Scenario)**: The sequence of steps in a use case that describes the most straightforward
   interaction, in which nothing goes wrong.
 * **NRIC**: The identification number on a Singapore National Registration Identity Card, or a Foreign Identification
