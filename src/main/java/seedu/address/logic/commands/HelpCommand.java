@@ -73,6 +73,11 @@ public class HelpCommand extends Command {
                     "Cancels appointment APPT_INDEX of the patient at INDEX."),
             formatEntry(ListApptCommand.COMMAND_WORD + " [INDEX]",
                     "Lists all upcoming appointments, or every appointment of the active patient at INDEX."),
+            formatEntry(EditMedCommand.COMMAND_WORD + " INDEX MED_INDEX [" + PREFIX_MEDICATION + "DESCRIPTION] ["
+                    + PREFIX_TIME + "TIME]...",
+                    "Edits the description and/or daily times of the medication at MED_INDEX of the patient at INDEX."),
+            formatEntry(DeleteMedCommand.COMMAND_WORD + " INDEX MED_INDEX",
+                    "Deletes the medication at MED_INDEX of the patient at INDEX."),
             formatEntry(ViewCommand.COMMAND_WORD + " INDEX",
                     "Shows the full details of the patient at INDEX."),
             formatEntry(DueCommand.COMMAND_WORD + " [INDEX]",
@@ -88,6 +93,9 @@ public class HelpCommand extends Command {
             formatEntry(RestoreCommand.COMMAND_WORD + " FILENAME",
                     "Replaces all patient data with the backup FILENAME from data/backups, "
                             + "after backing up the current data."),
+            formatEntry(ExportCommand.COMMAND_WORD + " INDEX",
+                    "Saves the full record of the patient at INDEX to data/exports, "
+                            + "in a file named after their NRIC."),
             formatEntry(ExitCommand.COMMAND_WORD,
                     "Exits the app."));
 

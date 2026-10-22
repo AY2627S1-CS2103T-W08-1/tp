@@ -138,11 +138,19 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus a
-`List<Medication>` medication list, `List<String>` allergen and care instruction lists, and a `List<Contact>`
-contact list.
+**Patient records:** Each `Patient` is composed of `Name`, `Nric`, `Dob`, `Phone` and `Address` values (one of each),
+an `archived` flag, and lists of care information, as shown in the diagram:
+* zero or more `Medication` objects, each with a description and a list of daily times (`LocalTime`),
+* zero or more `Contact` objects, each with a name, role, phone and note,
+* zero or more `Appointment` objects, each with a date, time, provider and note, kept sorted by date, then time,
+* `allergens` and `careInstructions`, which are plain `String` lists.
+
 These lists default to empty and are defensively copied with `List.copyOf`, so callers cannot modify them through
 the getters. Updating a patient creates a replacement `Patient`, which the model stores using `setPatient`.
+The diagram leaves out the constraints of each value class and the exceptions of `UniquePatientList`.
+
+**Archived patients:** An archived patient stays in the `UniquePatientList`. `ModelManager` only changes which patients
+its filtered list shows, using `Model#PREDICATE_SHOW_ACTIVE_PATIENTS` or `Model#PREDICATE_SHOW_ARCHIVED_PATIENTS`.
 
 **Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
 is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
@@ -162,12 +170,15 @@ The `Storage` component,
 
 The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
 
-Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address
-as strings, medications as a list of `JsonAdaptedMedication` objects, allergens and care instructions as lists of
-strings, and contacts as a list of `JsonAdaptedContact` objects. Each contact stores its name, role, phone and note.
+As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
+`JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
+objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
+allergens and care instructions as lists of strings, and an `archived` flag. A medication is saved with its description
+and its times as `HH:MM` strings. A contact is saved with its name, role, phone and note, and an appointment with its
+date, time, provider and note.
 The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
-`JsonAdaptedPatient#toModelType()` validates patient
-fields and converts contacts using their model constraints. If any patient or contact is invalid, two patients share
+`JsonAdaptedPatient#toModelType()` validates patient fields and converts medications, contacts and appointments using
+their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
 an NRIC, or a patient has duplicate contacts, the whole file is rejected.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
@@ -222,6 +233,38 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
   * Pros: The `Model` stays unchanged.
   * Cons: The panel would show stale data after the patient is edited or deleted by another command.
 
+### Edit patient feature
+
+The `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` command replaces one or more core details
+of a patient in the displayed list while preserving all care-related data and state.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `edit 1 p/91234567`. Error paths are omitted for
+clarity.
+
+<puml src="diagrams/EditSequenceDiagram.puml" alt="Interactions for the `edit` Command" />
+
+1. `EditCommandParser` parses a positive patient index and the supplied fields. It requires at least one field,
+   rejects repeated or unknown prefixes, and uses the same field parsers as `add`.
+1. `EditCommand#execute()` resolves the index against the filtered patient list and creates an immutable replacement
+   using the supplied values and the existing values for omitted fields.
+1. The replacement preserves medications and their times, allergens, care instructions, contacts, appointments,
+   and archived state. A changed NRIC is rejected if another patient already has it.
+1. The command calls `Model#setPatient(patient, editedPatient)`. If the patient is currently being viewed,
+   `ModelManager#setPatient()` updates `viewedPatient`, and the `PatientDetailPanel` listener redraws the panel.
+
+#### Design considerations
+
+**Aspect: Preserving fields that `edit` cannot change**
+
+* **Alternative 1 (current choice):** Build the replacement through `Patient#withDetails(...)`.
+  * Pros: The model owns the copy logic, so care-related fields and state are preserved in one place.
+  * Cons: The helper must be updated whenever `Patient` gains another field.
+* **Alternative 2:** Construct a replacement directly in `EditCommand`.
+  * Pros: Avoids a model helper used by one command.
+  * Cons: Repeating the full constructor in the command makes it easier to drop an unrelated field during editing.
+
 ### Add care info feature
 
 The `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` command appends care
@@ -269,6 +312,46 @@ is a duplicate, the command fails without changing the patient.
   * Pros: The operation has simpler all-or-nothing behavior.
   * Cons: One duplicate prevents all valid new entries in the same command from being added.
 
+### Backup and restore feature
+
+The `backup` command saves a copy of all patient data to the `data/backups` folder, and `restore FILENAME` replaces all patient data with one of those copies.
+
+#### Implementation
+
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, and returns the path of the file. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+
+The sequence diagram below shows a successful `restore old.json`.
+
+<puml src="diagrams/RestoreSequenceDiagram.puml" alt="Interactions for the `restore old.json` Command" />
+
+1. `RestoreCommandParser` checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
+1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
+1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
+1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored and the path of the automatic backup.
+1. As after every command, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
+
+Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
+
+#### Design considerations
+
+**Aspect: Keeping the current data safe during a restore**
+
+* **Alternative 1 (current choice):** Check the whole backup first, then back up the current data automatically, and only then replace it.
+  * Pros: A missing or invalid backup never changes the current data, and any restore can be undone by restoring the automatic backup it reports.
+  * Cons: Every restore adds a file to `data/backups`.
+* **Alternative 2:** Ask the user to confirm the restore, and keep no automatic backup.
+  * Pros: No extra files.
+  * Cons: Adds a step to every restore, and a restore confirmed by mistake cannot be undone.
+
+**Aspect: What a backup copies**
+
+* **Alternative 1 (current choice):** Save the patient data currently loaded in MediConnect, through `JsonAddressBookStorage`.
+  * Pros: Needs no changes to `LogicManager` or `Storage`, and every backup holds valid data in the current format.
+  * Cons: If `data/mediconnect.json` could not be loaded at startup, a backup holds the empty data MediConnect started with, not the unreadable file. `MainApp` already keeps that file as a recovery copy at startup.
+* **Alternative 2:** Copy `data/mediconnect.json` byte for byte.
+  * Pros: An unreadable data file is kept, for repair by hand, although the startup recovery copy already does this.
+  * Cons: The path of the data file would have to be passed from `Storage` through `LogicManager` to the command, and a backup could hold data that `restore` then rejects.
+
 ### Contact management
 
 `Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
@@ -294,6 +377,87 @@ empty strings. Null entries, invalid fields and duplicate identities reject the 
 The diagram focuses on parsing and updating the patient; `LogicManager` performs its usual save after execution.
 
 <puml src="diagrams/AddContactSequenceDiagram.puml" alt="Adding a contact to a patient" />
+
+### Add appointment feature
+
+The `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` command adds an appointment to a patient in the displayed list.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `addappt 1 d/2027-11-05 t/09:30 w/Dr Tan`. Error paths
+are omitted for clarity.
+
+<puml src="diagrams/AddApptSequenceDiagram.puml" alt="Interactions for the `addappt` Command" />
+
+1. `AddApptCommandParser` requires `d/`, `t/` and `w/` once each and rejects unknown prefixes. It parses the index,
+   the date, the time (with `ParserUtil#parseTime`, as for medication times) and who the appointment is with, and
+   creates the `Appointment` `toAdd`, with an empty note if `nt/` is not given.
+1. `AddApptCommand#execute()` resolves the index against the filtered patient list. It rejects `toAdd` if the patient
+   already has an appointment at the same date and time with the same person, ignoring case and extra spaces.
+1. The command creates a replacement immutable `Patient` with `toAdd` added, which keeps its appointments sorted by
+   date, then time. `Model#setPatient()` stores it, and `Model#setViewedPatient()` shows it in the detail panel, so
+   the new appointment and its number can be checked.
+1. The command adds a note to the result if `toAdd` is in the past, and a warning for each of the patient's other
+   appointments at the same date and time. The current time comes from a `java.time.Clock` given to the command:
+   the system clock by default, and a fixed one in tests, so that the tests do not depend on when they run.
+   `Appointment#isBefore` ignores seconds, so an appointment in the current minute is not in the past.
+
+#### Design considerations
+
+**Aspect: Appointments in the past or at the same time as another**
+
+* **Alternative 1 (current choice):** Add the appointment, with a note or a warning in the result.
+  * Pros: A caregiver can record a visit that already happened, or two appointments at the same time, e.g., with a
+    doctor and a nurse together.
+  * Cons: A mistyped date is only flagged, not prevented, so the user has to read the result.
+* **Alternative 2:** Reject such appointments.
+  * Pros: A mistyped date or time cannot be saved.
+  * Cons: Past visits could not be recorded, and genuine overlapping appointments would need a workaround.
+
+### Due medication feature
+
+The `due [INDEX]` command lists the medication times of today, for all active patients or only for the patient at
+`INDEX` in the displayed list.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `due 1`. Error paths are omitted for clarity.
+
+<puml src="diagrams/DueSequenceDiagram.puml" alt="Interactions for the `due 1` Command" />
+
+1. `DueCommandParser` accepts either no arguments or a single positive index; anything else throws a `ParseException`
+   with the usage message of `due`. It creates a `DueCommand` with a `java.time.Clock` from
+   `Clock.systemDefaultZone()`, and with the index if one was given.
+1. `DueCommand#execute()` chooses the patients to list. With an index, it resolves the index against the filtered
+   patient list. Without one, it takes every patient in the address book, so that a `find` does not hide a dose.
+   Archived patients are always left out.
+1. It reads the current time as `LocalTime.now(clock)`, cut to the minute, and turns every time of every medication
+   into a dose. The doses are sorted by time, then by patient name, then by NRIC.
+1. It writes one line per dose, as `HH:MM NAME: DESCRIPTION`, and adds ` (earlier today)` to a dose whose time is
+   before now. If there are no doses, it returns `No medications are due today.`, or
+   `No medications are due today for NAME.` when an index was given.
+
+`due` does not change the `Model`, so `LogicManager` still saves it after execution, but with the same data.
+
+#### Design considerations
+
+**Aspect: Where the current time comes from**
+
+* **Alternative 1 (current choice):** `DueCommand` receives a `Clock`, as `AddApptCommand` does.
+  * Pros: Tests pass a fixed clock, so the marking of earlier doses does not depend on when the tests run.
+  * Cons: Every constructor takes one more parameter, and `DueCommandParser` has to create the clock.
+* **Alternative 2:** `DueCommand` calls `LocalTime.now()` itself.
+  * Pros: Simpler constructors.
+  * Cons: Tests of the `(earlier today)` marking would pass or fail depending on the time of the day.
+
+**Aspect: Which patients are listed without an index**
+
+* **Alternative 1 (current choice):** All active patients, not only the displayed ones.
+  * Pros: The caregiver sees every dose due today, even after a `find` or after `listarchived`.
+  * Cons: The result can differ from the patients shown in the list.
+* **Alternative 2:** Only the displayed patients.
+  * Pros: The result always matches the list.
+  * Cons: A dose can be missed because an earlier `find` is still in effect.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -384,11 +548,6 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 _{more aspects and alternatives to be added}_
 
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Documentation, logging, testing, dev-ops**
@@ -447,6 +606,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | delete a contact from a patient's profile | stop outdated contacts from cluttering the record |
 | `* *`    | caregiver                                  | attach a note to a contact | remember specific advice from each provider |
 | `* *`    | caregiver                                  | see which medications are due today | give them to the patient on time |
+| `* *`    | caregiver                                  | see the medication times of today for one patient only | prepare that patient's doses without reading the others |
+| `* *`    | caregiver                                  | see which of today's medication times have already passed | check whether I missed a dose |
 | `* *`    | caregiver                                  | view a patient's full medication schedule at once | spot overlaps or issues easily |
 | `* *`    | caregiver                                  | add an appointment for a patient | keep track of upcoming visits |
 | `* *`    | caregiver                                  | see a list of upcoming appointments across all patients | plan my schedule |
@@ -456,13 +617,15 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
 | `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
 | `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
-| `* *`    | caregiver                                  | edit a medication's dosage or frequency | keep the schedule correct when the doctor changes a prescription |
-| `* *`    | caregiver                                  | remove a medication that is no longer prescribed | stop it from appearing in the patient's schedule |
+| `* *`    | caregiver                                  | edit a medication's description or daily times | keep the schedule correct when the doctor changes a prescription |
+| `* *`    | caregiver                                  | clear all the daily times of a medication | stop it from being listed as due while I wait for the doctor's new instructions |
+| `* *`    | caregiver                                  | delete a medication by its number in the patient's details | remove the right medication without retyping its description |
 | `* *`    | caregiver                                  | remove an allergy that was recorded by mistake | keep the patient's allergy information accurate |
 | `* *`    | caregiver                                  | edit or remove a care instruction | stop following routines that are no longer recommended |
 | `* *`    | caregiver                                  | edit or cancel an appointment | keep the schedule accurate when a visit is rescheduled |
 | `* *`    | new user                                   | see sample patient data when I first open the app | understand what a complete record looks like before entering real data |
-| `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients || `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
+| `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients |
+| `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
 | `*`      | caregiver                                  | set a reminder for an appointment | remember to bring the patient to it |
@@ -609,6 +772,192 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC4 - Edit a medication of a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to view a specific patient in the list.
+4.  MediConnect shows the patient's details, with the medications numbered.
+5.  Caregiver requests to edit a specific medication of the patient, giving a new description and/or new daily times.
+6.  MediConnect updates the medication and shows its number, the patient's name and the updated medication.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 5a. The patient index is invalid.
+
+    * 5a1. MediConnect shows `The patient index provided is invalid.`
+
+      Use case resumes at step 2.
+
+* 5b. The medication number (`MED_INDEX`) is invalid.
+
+    * 5b1. MediConnect shows `The medication index provided is invalid.`
+
+      Use case resumes at step 4.
+
+* 5c. An index is missing, or is not a positive integer.
+
+    * 5c1. MediConnect shows `Invalid command format!` followed by the usage of `editmed`.
+
+      Use case resumes at step 4.
+
+* 5d. Neither a new description nor a time is given.
+
+    * 5d1. MediConnect shows `At least one of med/ or t/ must be provided.`
+
+      Use case resumes at step 4.
+
+* 5e. The new description is blank.
+
+    * 5e1. MediConnect shows `Medication description cannot be blank.`
+
+      Use case resumes at step 4.
+
+* 5f. A given time is not in `HH:MM` (24-hour) format.
+
+    * 5f1. MediConnect shows `Time must be in HH:MM (24-hour), e.g. 08:30.`
+
+      Use case resumes at step 4.
+
+* 5g. Caregiver gives `t/` with no time to clear the times, but also gives another `t/`.
+
+    * 5g1. MediConnect shows `t/ with no time clears all times and cannot be combined with other times.`
+
+      Use case resumes at step 4.
+
+* 5h. Another medication of the patient already has the new description.
+
+    * 5h1. MediConnect shows `Medication "DESCRIPTION" was not updated: it already exists for this patient.`
+
+      Use case resumes at step 4.
+
+* 5i. Caregiver gives `t/` with no time to clear the times of the medication.
+
+    * 5i1. MediConnect removes all the times of the medication and shows the updated medication.
+
+      Use case ends.
+
+**Use case: UC5 - Delete a medication of a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to view a specific patient in the list.
+4.  MediConnect shows the patient's details, with the medications numbered.
+5.  Caregiver requests to delete a specific medication of the patient.
+6.  MediConnect deletes the medication and shows its number, the patient's name and the deleted medication.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 5a. The patient index is invalid.
+
+    * 5a1. MediConnect shows `The patient index provided is invalid.`
+
+      Use case resumes at step 2.
+
+* 5b. The medication number (`MED_INDEX`) is invalid.
+
+    * 5b1. MediConnect shows `The medication index provided is invalid.`
+
+      Use case resumes at step 4.
+
+* 5c. An index is missing, is not a positive integer, or more than two indexes are given.
+
+    * 5c1. MediConnect shows `Invalid command format!` followed by the usage of `deletemed`.
+
+      Use case resumes at step 4.
+
+**Use case: UC6 - See the medications due today**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to see the medications due today.
+2.  MediConnect shows one line for each medication time of today, as `HH:MM NAME: DESCRIPTION`, sorted by time, for
+    all active patients.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver requests the medications of one patient by giving the patient's index in the displayed list.
+
+    * 1a1. MediConnect shows the lines for that patient only.
+
+      Use case ends.
+
+* 1b. The given index is invalid.
+
+    * 1b1. MediConnect shows `The patient index provided is invalid.`
+
+      Use case ends.
+
+* 1c. The given index is not a positive integer, or more than one index is given.
+
+    * 1c1. MediConnect shows `Invalid command format!` followed by the usage of `due`.
+
+      Use case ends.
+
+* 2a. A time is earlier than the current time.
+
+  MediConnect adds ` (earlier today)` to its line.
+
+  Use case ends.
+
+* 2b. No medication has a time, or the patient is archived.
+
+    * 2b1. MediConnect shows `No medications are due today.`, or `No medications are due today for NAME.` if an index
+      was given.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
@@ -616,11 +965,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
-4. MediConnect must store its data locally in a human-editable text file, with at least the same level of manual-editing support as AddressBook Level 3.
+4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path.
 5. MediConnect must not use a database management system.
 6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
-7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and update the displayed results within one second when managing up to 100 patient records on a typical modern computer.
-8. A user with above-average typing speed for regular English text should be able to perform common record-management tasks faster using commands than using mouse interactions.
+7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
+8. A user who types at least 60 words per minute should be able to add a patient, add a medication and delete a patient each in under 30 seconds using commands.
 9. MediConnect's GUI should work without resolution-related inconvenience at resolutions of 1920x1080 or higher with 100% or 125% display scaling. All functions must remain accessible at resolutions of 1280x720 or higher with display scaling up to 150%.
 
 ### Glossary
@@ -645,8 +994,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Community nurse**: A nurse who cares for patients through scheduled home visits.
 * **Contact**: A person or organisation linked to a patient's profile, which is either a healthcare provider (e.g., a
   GP, specialist, or pharmacist) or an emergency contact.
+* **Daily time**: A time of day, in 24-hour `HH:MM` format, at which a patient takes a medication every day, e.g.,
+  `08:00`. A medication can have any number of daily times, or none.
 * **Display scaling**: An operating system setting that enlarges text and other on-screen elements by a percentage
   (e.g., 125%) to make them easier to read.
+* **Dose**: One daily time of one medication of one patient. `due` lists one line for each dose.
 * **Emergency contact**: A person to notify in an emergency involving the patient, such as a family member. An
   emergency contact is not involved in the patient's medical treatment.
 * **Expert user**: A user who is familiar with MediConnect's commands and prefers to complete tasks using as few
@@ -660,11 +1012,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   deletion.
 * **JAR file**: A Java Archive file. MediConnect is distributed as a single JAR file, which can be run on any computer
   with Java installed.
+* **MED_INDEX**: The number shown beside a medication in the numbered medication list of the patient's details,
+  starting from 1. `editmed` and `deletemed` use it, together with the patient's index, to refer to a medication. It
+  can change when a medication before it is deleted.
 * **Medical condition**: A long-term illness or diagnosis that a patient has, e.g., diabetes or hypertension.
 * **Medical note**: A free-text note about a patient's health or treatment, e.g., advice given by a doctor during an
   appointment.
-* **Medication**: A drug prescribed to a patient, recorded with its dosage (the amount per dose, e.g., `500mg`) and
-  frequency (how often it is taken, e.g., `twice daily`).
+* **Medication**: A drug prescribed to a patient, recorded with a description (e.g., `Metformin 500mg`) and its daily
+  times (e.g., `08:00` and `20:00`).
 * **MSS (Main Success Scenario)**: The sequence of steps in a use case that describes the most straightforward
   interaction, in which nothing goes wrong.
 * **NRIC**: The identification number on a Singapore National Registration Identity Card, or a Foreign Identification
@@ -870,3 +1225,80 @@ testers are expected to do more *exploratory* testing.
 
    1. Close the app. Repair a copy of the recovery file, replace `data/mediconnect.json` with it, and relaunch.<br>
       Expected: The repaired patients load normally without a recovery warning.
+
+### Backing up data
+
+1. Backing up the current data
+
+   1. Test case: `backup`<br>
+      Expected: A new file named after the current date and time, e.g., `mediconnect-20261020-083015.json`, appears in `data/backups`, holding the same patients as `data/mediconnect.json`. The status message shows `Backup saved to:` followed by the full path of the file.
+
+1. Backing up when the backup folder cannot be created
+
+   1. Prerequisites: The app is closed. In the `data` folder, delete the `backups` folder if there is one, and create an empty file named `backups` (with no extension) in its place.
+
+   1. Launch the app, then enter `backup`.<br>
+      Expected: No backup is saved. The status message shows `Could not save the backup to` followed by the folder and a reason, and says that your data has not been changed.
+
+### Restoring data
+
+1. Restoring a backup
+
+   1. Prerequisites: Enter `backup` and note the name of the file in the status message. Then delete a patient, e.g., with `delete 1`.
+
+   1. Test case: `restore FILENAME`, where `FILENAME` is the name you noted<br>
+      Expected: The deleted patient is back, and the list shows all active patients. The status message shows how many patients were restored, and the full path of an automatic backup of the data from just before the restore.
+
+   1. Test case: `restore FILENAME`, where `FILENAME` is the name of the automatic backup from the previous test case<br>
+      Expected: The data from before the previous restore is back, i.e., the patient is deleted again.
+
+1. Restoring a file that cannot be restored
+
+   1. Test case: `restore nosuchfile.json`<br>
+      Expected: The data is unchanged, and no automatic backup is saved. The status message says that no backup named `nosuchfile.json` was found in `data/backups`.
+
+   1. Test case: `restore ../mediconnect.json`<br>
+      Expected: The data is unchanged. The status message asks for only the name of a backup file, not a path.
+
+   1. Prerequisites: Create a file `bad.json` in `data/backups` containing only the text `hello`.<br>
+      Test case: `restore bad.json`<br>
+      Expected: The data is unchanged. The status message says that the backup could not be read.
+
+   1. Prerequisites: In `data/backups`, copy a backup to `invalid.json`, and change a patient's `nric` in it to `123`.<br>
+      Test case: `restore invalid.json`<br>
+      Expected: The data is unchanged. The status message says that the backup has invalid data, followed by the NRIC format as the details.
+
+   1. Other incorrect restore commands to try: `restore`, `restore .`, `restore data/backups/bad.json`<br>
+      Expected: The data is unchanged. The status message shows an error.
+
+### Exporting a patient's record
+
+1. Exporting a patient while all active patients are being shown
+
+   1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
+
+   1. Test case: `export 1`<br>
+      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, numbered as in the detail panel), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
+
+   1. Test case: `addcare 1 med/Paracetamol 500mg`, then `export 1` again<br>
+      Expected: The same file is replaced, and now lists `Paracetamol 500mg` under Medications.
+
+   1. Test case: `export 0`<br>
+      Expected: No file is written. The status message shows the invalid command format error.
+
+   1. Other incorrect export commands to try: `export`, `export x`, `export y` (where y is larger than the list size)<br>
+      Expected: No file is written. The status message shows an error.
+
+1. Exporting from a filtered list
+
+   1. Prerequisites: `find Bernice` shows exactly one patient.
+
+   1. Test case: `export 1`<br>
+      Expected: The file for the patient shown is written, named after their NRIC, not the file for the first patient in the full list.
+
+1. Exporting when the export folder cannot be created
+
+   1. Prerequisites: The app is closed. In the `data` folder, delete the `exports` folder if there is one, and create an empty file named `exports` (with no extension) in its place.
+
+   1. Launch the app, then enter `export 1`.<br>
+      Expected: No file is written. The status message shows `Could not export`, the patient's name, the path of the file and a reason.

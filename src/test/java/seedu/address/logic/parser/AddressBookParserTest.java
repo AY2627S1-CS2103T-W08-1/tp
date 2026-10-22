@@ -10,6 +10,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
 import java.time.Clock;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,12 +29,15 @@ import seedu.address.logic.commands.DeleteAllergyCommand;
 import seedu.address.logic.commands.DeleteCareCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteContactCommand;
+import seedu.address.logic.commands.DeleteMedCommand;
 import seedu.address.logic.commands.DueCommand;
 import seedu.address.logic.commands.EditApptCommand;
 import seedu.address.logic.commands.EditCareCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditContactCommand;
+import seedu.address.logic.commands.EditMedCommand;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListApptCommand;
@@ -108,6 +112,19 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_editMed() throws Exception {
+        EditMedCommand command = (EditMedCommand) parser.parseCommand("editmed 1 2 med/Aspirin t/08:00");
+        assertEquals(new EditMedCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.of("Aspirin"),
+                Optional.of(List.of(LocalTime.of(8, 0)))), command);
+    }
+
+    @Test
+    public void parseCommand_deleteMed() throws Exception {
+        DeleteMedCommand command = (DeleteMedCommand) parser.parseCommand("deletemed 1 2");
+        assertEquals(new DeleteMedCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), command);
+    }
+
+    @Test
     public void parseCommand_clear() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
@@ -117,6 +134,13 @@ public class AddressBookParserTest {
     public void parseCommand_backup() throws Exception {
         assertTrue(parser.parseCommand(BackupCommand.COMMAND_WORD) instanceof BackupCommand);
         assertTrue(parser.parseCommand(BackupCommand.COMMAND_WORD + " 3") instanceof BackupCommand);
+    }
+
+    @Test
+    public void parseCommand_export() throws Exception {
+        ExportCommand command = (ExportCommand) parser.parseCommand(
+                ExportCommand.COMMAND_WORD + " " + INDEX_FIRST_PATIENT.getOneBased());
+        assertEquals(new ExportCommand(INDEX_FIRST_PATIENT), command);
     }
 
     @Test

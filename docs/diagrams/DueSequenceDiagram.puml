@@ -1,0 +1,95 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":DueCommandParser" as DueCommandParser LOGIC_COLOR
+participant "d:DueCommand" as DueCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+participant "<<class>>\nClock" as Clock #555555
+participant "<<class>>\nLocalTime" as LocalTime #555555
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+[-> LogicManager : execute("due 1")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand("due 1")
+activate AddressBookParser
+
+create DueCommandParser
+AddressBookParser -> DueCommandParser
+activate DueCommandParser
+
+DueCommandParser --> AddressBookParser
+deactivate DueCommandParser
+
+AddressBookParser -> DueCommandParser : parse("1")
+activate DueCommandParser
+
+DueCommandParser -> Clock : systemDefaultZone()
+activate Clock
+
+Clock --> DueCommandParser : clock
+deactivate Clock
+
+create DueCommand
+DueCommandParser -> DueCommand : DueCommand(index, clock)
+activate DueCommand
+
+DueCommand --> DueCommandParser
+deactivate DueCommand
+
+DueCommandParser --> AddressBookParser : d
+deactivate DueCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+DueCommandParser -[hidden]-> AddressBookParser
+destroy DueCommandParser
+
+AddressBookParser --> LogicManager : d
+deactivate AddressBookParser
+
+LogicManager -> DueCommand : execute(m)
+activate DueCommand
+
+DueCommand -> DueCommand : getCandidatePatients(m)
+activate DueCommand
+
+DueCommand -> Model : getFilteredPatientList()
+activate Model
+
+Model --> DueCommand : patients
+deactivate Model
+
+DueCommand --> DueCommand : candidates
+deactivate DueCommand
+
+DueCommand -> LocalTime : now(clock)
+activate LocalTime
+
+LocalTime --> DueCommand : now
+deactivate LocalTime
+
+note right of DueCommand
+Builds the due list using now.
+end note
+
+create CommandResult
+DueCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> DueCommand : r
+deactivate CommandResult
+
+DueCommand --> LogicManager : r
+deactivate DueCommand
+
+[<-- LogicManager
+deactivate LogicManager
+@enduml

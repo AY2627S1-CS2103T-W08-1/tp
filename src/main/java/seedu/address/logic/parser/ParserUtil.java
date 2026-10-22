@@ -116,6 +116,21 @@ public class ParserUtil {
     }
 
     /**
+     * Parses a {@code String description} into a medication description.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code description} is blank.
+     */
+    public static String parseMedicationDescription(String description) throws ParseException {
+        requireNonNull(description);
+        String trimmedDescription = description.trim();
+        if (!Medication.isValidDescription(trimmedDescription)) {
+            throw new ParseException(Medication.MESSAGE_DESCRIPTION_CONSTRAINTS);
+        }
+        return trimmedDescription;
+    }
+
+    /**
      * Parses a {@code String time} in 24-hour HH:MM format into a {@code LocalTime}.
      * Leading and trailing whitespaces will be trimmed.
      *
