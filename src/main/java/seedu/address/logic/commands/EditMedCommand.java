@@ -79,9 +79,7 @@ public class EditMedCommand extends Command {
         rejectDuplicateDescription(medications, editedMedication);
         medications.set(medicationIndex.getZeroBased(), editedMedication);
 
-        Patient editedPatient = new Patient(patientToEdit.getName(), patientToEdit.getNric(),
-                patientToEdit.getDob(), patientToEdit.getPhone(), patientToEdit.getAddress(), medications,
-                patientToEdit.getAllergens(), patientToEdit.getCareInstructions());
+        Patient editedPatient = patientToEdit.withMedications(medications);
         model.setPatient(patientToEdit, editedPatient);
 
         return new CommandResult(String.format(Messages.MESSAGE_EDIT_MEDICATION_SUCCESS,

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION;
 import static seedu.address.logic.Messages.MESSAGE_EDIT_MEDICATION_SUCCESS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_MEDICATION_DISPLAYED_INDEX;
@@ -11,6 +12,8 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_IND
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
+import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_THIRD_PATIENT;
@@ -140,6 +143,23 @@ public class EditMedCommandTest {
         assertEquals(patient.getAllergens(), edited.getAllergens());
         assertEquals(patient.getCareInstructions(), edited.getCareInstructions());
         assertEquals(List.of(METFORMIN, new Medication("Aspirin 75mg")), edited.getMedications());
+    }
+
+    @Test
+    public void execute_contactsAppointmentsAndArchivedFlag_allKeptAfterEdit() throws Exception {
+        Patient archivedPatient = new PatientBuilder(patient).withContacts(GP).withAppointments(CHECKUP)
+                .withArchived(true).build();
+        Model archivedModel = createModel(archivedPatient);
+        archivedModel.updateFilteredPatientList(Model.PREDICATE_SHOW_ARCHIVED_PATIENTS);
+
+        descriptionOnly(FIRST_MEDICATION, "Metformin 850mg").execute(archivedModel);
+
+        Patient edited = archivedModel.getAddressBook().getPatientList().get(0);
+        assertEquals(List.of(GP), edited.getContacts());
+        assertEquals(List.of(CHECKUP), edited.getAppointments());
+        assertTrue(edited.isArchived());
+        assertEquals(new PatientBuilder(archivedPatient).withMedications(
+                new Medication("Metformin 850mg", METFORMIN.getTimes()), ASPIRIN).build(), edited);
     }
 
     @Test
