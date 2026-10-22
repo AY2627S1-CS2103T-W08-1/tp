@@ -113,7 +113,8 @@ public class ExportCommand extends Command {
         Path exportFile = exportDir.resolve(patient.getNric() + FILE_EXTENSION);
         writeRecord(patient, exportFile);
 
-        logger.info("Exported a patient record to " + exportFile);
+        // the file is named after the NRIC, so only the folder is logged
+        logger.info("Exported a patient record to " + exportDir);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName().fullName,
                 exportFile.toAbsolutePath().normalize()));
     }
@@ -139,7 +140,7 @@ public class ExportCommand extends Command {
                     StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
             Files.move(temporaryFile, exportFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ioe) {
-            logger.warning("Could not export a patient record to " + exportFile + ": " + ioe);
+            logger.warning("Could not export a patient record to " + exportDir + ": " + ioe.getClass().getSimpleName());
             if (temporaryFile != null) {
                 deleteTemporaryFile(temporaryFile);
             }
@@ -153,11 +154,12 @@ public class ExportCommand extends Command {
     /**
      * Deletes {@code temporaryFile}, which a failed export created and left behind, if it is still there.
      */
-    private static void deleteTemporaryFile(Path temporaryFile) {
+    static void deleteTemporaryFile(Path temporaryFile) {
         try {
             Files.deleteIfExists(temporaryFile);
         } catch (IOException ioe) {
-            logger.warning("Could not delete the temporary file " + temporaryFile + ": " + ioe);
+            logger.warning("Could not delete a temporary file in " + temporaryFile.getParent() + ": "
+                    + ioe.getClass().getSimpleName());
         }
     }
 

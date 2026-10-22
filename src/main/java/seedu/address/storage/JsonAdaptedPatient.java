@@ -24,6 +24,7 @@ class JsonAdaptedPatient {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Patient's %s field is missing!";
     public static final String MESSAGE_NULL_APPOINTMENT = "Appointments must not be null.";
+    public static final String MESSAGE_NULL_CARE_ENTRY = "Care entries must not be null.";
 
     private final String name;
     private final String phone;
@@ -160,13 +161,15 @@ class JsonAdaptedPatient {
             modelAppointments.add(appointment.toModelType());
         }
 
+        if (allergens.contains(null) || careInstructions.contains(null)) {
+            throw new IllegalValueException(MESSAGE_NULL_CARE_ENTRY);
+        }
+
         try {
             return new Patient(modelName, modelNric, modelDob, modelPhone, modelAddress,
                     modelMedications, allergens, careInstructions, modelContacts, modelAppointments, archived);
         } catch (IllegalArgumentException e) {
-            throw new IllegalValueException(e.getMessage());
-        } catch (NullPointerException e) {
-            throw new IllegalValueException("Care entries must not be null.");
+            throw new IllegalValueException(e.getMessage(), e);
         }
     }
 
