@@ -40,6 +40,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ListApptCommand;
 import seedu.address.logic.commands.ListArchivedCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RestoreCommand;
@@ -88,6 +89,13 @@ public class AddressBookParserTest {
     public void parseCommand_cancelAppt() throws Exception {
         CancelApptCommand command = (CancelApptCommand) parser.parseCommand("cancelappt 1 2");
         assertEquals(new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), command);
+    }
+
+    @Test
+    public void parseCommand_listAppt() throws Exception {
+        assertEquals(new ListApptCommand(Optional.empty()), parser.parseCommand("listappt"));
+        assertEquals(new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT)),
+                parser.parseCommand("listappt 1"));
     }
 
     @Test
