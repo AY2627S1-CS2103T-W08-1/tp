@@ -140,6 +140,7 @@
         "adding-an-appointment-addappt": "Adding an appointment: addappt",
         "editing-an-appointment-editappt": "Editing an appointment: editappt",
         "cancelling-an-appointment-cancelappt": "Cancelling an appointment: cancelappt",
+        "listing-appointments-listappt": "Listing appointments: listappt",
         "listing-all-active-patients-list": "Listing all active patients: list",
         "archiving-a-patient-archive": "Archiving a patient: archive",
         "listing-archived-patients-listarchived": "Listing archived patients: listarchived",
