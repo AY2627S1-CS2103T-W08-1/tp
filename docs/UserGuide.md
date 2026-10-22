@@ -623,8 +623,8 @@ Contacts
 1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning
 
 Appointments
-1. 2026-11-05 09:30 with Dr Tan
-2. 2026-12-10 14:00 with Cardiology clinic (Bring BP log)
+1. 2027-11-05 09:30 with Dr Tan
+2. 2027-12-10 14:00 with Cardiology clinic (Bring BP log)
 ```
 
 ### Exiting the program: `exit`
