@@ -382,6 +382,51 @@ are omitted for clarity.
   * Pros: A mistyped date or time cannot be saved.
   * Cons: Past visits could not be recorded, and genuine overlapping appointments would need a workaround.
 
+### Due medication feature
+
+The `due [INDEX]` command lists the medication times of today, for all active patients or only for the patient at
+`INDEX` in the displayed list.
+
+#### Implementation
+
+The sequence diagram below shows the successful execution of `due 1`. Error paths are omitted for clarity.
+
+<puml src="diagrams/DueSequenceDiagram.puml" alt="Interactions for the `due 1` Command" />
+
+1. `DueCommandParser` accepts either no arguments or a single positive index; anything else throws a `ParseException`
+   with the usage message of `due`. It creates a `DueCommand` with a `java.time.Clock` from
+   `Clock.systemDefaultZone()`, and with the index if one was given.
+1. `DueCommand#execute()` chooses the patients to list. With an index, it resolves the index against the filtered
+   patient list. Without one, it takes every patient in the address book, so that a `find` does not hide a dose.
+   Archived patients are always left out.
+1. It reads the current time as `LocalTime.now(clock)`, cut to the minute, and turns every time of every medication
+   into a dose. The doses are sorted by time, then by patient name, then by NRIC.
+1. It writes one line per dose, as `HH:MM NAME: DESCRIPTION`, and adds ` (earlier today)` to a dose whose time is
+   before now. If there are no doses, it returns `No medications are due today.`, or
+   `No medications are due today for NAME.` when an index was given.
+
+`due` does not change the `Model`, so `LogicManager` still saves it after execution, but with the same data.
+
+#### Design considerations
+
+**Aspect: Where the current time comes from**
+
+* **Alternative 1 (current choice):** `DueCommand` receives a `Clock`, as `AddApptCommand` does.
+  * Pros: Tests pass a fixed clock, so the marking of earlier doses does not depend on when the tests run.
+  * Cons: Every constructor takes one more parameter, and `DueCommandParser` has to create the clock.
+* **Alternative 2:** `DueCommand` calls `LocalTime.now()` itself.
+  * Pros: Simpler constructors.
+  * Cons: Tests of the `(earlier today)` marking would pass or fail depending on the time of the day.
+
+**Aspect: Which patients are listed without an index**
+
+* **Alternative 1 (current choice):** All active patients, not only the displayed ones.
+  * Pros: The caregiver sees every dose due today, even after a `find` or after `listarchived`.
+  * Cons: The result can differ from the patients shown in the list.
+* **Alternative 2:** Only the displayed patients.
+  * Pros: The result always matches the list.
+  * Cons: A dose can be missed because an earlier `find` is still in effect.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
