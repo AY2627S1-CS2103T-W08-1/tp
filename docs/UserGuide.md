@@ -519,6 +519,46 @@ Examples:
 * `list` followed by `delete 2` deletes the 2nd patient in MediConnect.
 * `find Alex` followed by `delete 1` deletes the 1st patient in the results of the `find` command.
 
+### Deleting a medication: `deletemed`
+
+Deletes one medication of a patient.
+
+Format: `deletemed INDEX MED_INDEX`
+
+* `INDEX` is the number of the patient in the currently displayed patient list, as for `delete`. It must be a
+  positive whole number (1, 2, 3, ...).
+* `MED_INDEX` is the number of the medication in the numbered medication list that `view` shows for the patient
+  (`1`, `2`, ...). It must be a positive whole number.
+* `INDEX` and `MED_INDEX` must both be given, in that order, and nothing else may follow them.
+* The other medications, allergens, care instructions, and details of the patient are not changed. The
+  medications after the deleted one move up by one number, e.g., deleting medication 1 makes the old medication 2
+  the new medication 1. If the patient is shown in the details panel, the panel updates and renumbers its list.
+  When the last medication is deleted, the panel shows `None recorded`.
+
+Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
+`2. Amlodipine 5mg (08:00, 20:00)`):
+
+* `deletemed 1 2` deletes Amlodipine 5mg.<br>
+  Returns `Deleted medication 2 of Alex Yeoh: Amlodipine 5mg (08:00, 20:00)`
+* `deletemed 1 1` deletes Aspirin 100mg, so Amlodipine 5mg becomes medication 1.<br>
+  Returns `Deleted medication 1 of Alex Yeoh: Aspirin 100mg (08:00)`
+
+A successful command returns `Deleted medication MED_INDEX of PATIENT_NAME: MEDICATION`, where `MEDICATION` is the
+description of the deleted medication followed by its times in brackets. The brackets are left out when it has no
+times.
+
+Running the same command again deletes the medication that has since moved into that number, not the same one
+again. For example, `deletemed 1 1` run twice on Alex Yeoh deletes both medications.
+
+A command that fails changes nothing. Errors are reported as follows:
+
+* An `INDEX` outside the displayed list returns `The patient index provided is invalid.`
+* A `MED_INDEX` larger than the number of medications of the patient, or any `MED_INDEX` for a patient with no
+  medications, returns `The medication index provided is invalid.`
+* A missing, zero, negative, non-numeric, or excessively large `INDEX` or `MED_INDEX`, or a number of values other
+  than two (including extra words such as `deletemed 1 1 med/Aspirin`), returns `Invalid command format!`, followed
+  by the command usage.
+
 ### Viewing a patient's full details: `view`
 
 Shows all the details of the specified patient in the panel to the right of the patient list.
@@ -759,6 +799,7 @@ Action            | Format, Examples
 **Backup**        | `backup`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Delete medication** | `deletemed INDEX MED_INDEX` <br> e.g., `deletemed 1 2`
 **Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Edit medication** | `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...` <br> e.g., `editmed 1 2 med/Metformin 850mg t/08:00 t/20:00`
 **Exit**          | `exit`
