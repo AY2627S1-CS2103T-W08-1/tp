@@ -143,6 +143,7 @@
         "editing-a-patient-edit": "Editing a patient: edit",
         "locating-patients-by-name-find": "Locating patients by name: find",
         "deleting-a-patient-delete": "Deleting a patient: delete",
+        "deleting-a-medication-deletemed": "Deleting a medication: deletemed",
         "viewing-a-patient-s-full-details-view": "Viewing a patient's full details: view",
         "listing-today-s-medication-times-due": "Listing today's medication times: due",
         "clearing-all-patients-clear": "Clearing all patients: clear",
