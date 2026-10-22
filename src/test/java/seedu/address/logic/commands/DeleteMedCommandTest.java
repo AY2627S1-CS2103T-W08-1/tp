@@ -11,6 +11,8 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_IND
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
+import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_THIRD_PATIENT;
@@ -102,6 +104,30 @@ public class DeleteMedCommandTest {
         assertEquals(patient.getAddress(), edited.getAddress());
         assertEquals(patient.getAllergens(), edited.getAllergens());
         assertEquals(patient.getCareInstructions(), edited.getCareInstructions());
+    }
+
+    @Test
+    public void execute_fullyPopulatedPatient_keepsEveryOtherField() throws Exception {
+        Patient populated = new PatientBuilder(patient).withContacts(GP).withAppointments(CHECKUP)
+                .withArchived(true).build();
+        Model populatedModel = createModel(populated);
+        populatedModel.updateFilteredPatientList(Model.PREDICATE_SHOW_ARCHIVED_PATIENTS);
+
+        new DeleteMedCommand(INDEX_FIRST_PATIENT, SECOND_MEDICATION).execute(populatedModel);
+
+        Patient edited = populatedModel.getAddressBook().getPatientList().get(0);
+        assertEquals(List.of(METFORMIN, AMLODIPINE), edited.getMedications());
+        assertEquals(populated.getName(), edited.getName());
+        assertEquals(populated.getNric(), edited.getNric());
+        assertEquals(populated.getDob(), edited.getDob());
+        assertEquals(populated.getPhone(), edited.getPhone());
+        assertEquals(populated.getAddress(), edited.getAddress());
+        assertEquals(List.of("Penicillin"), edited.getAllergens());
+        assertEquals(List.of("Check blood sugar"), edited.getCareInstructions());
+        assertEquals(List.of(GP), edited.getContacts());
+        assertEquals(List.of(CHECKUP), edited.getAppointments());
+        assertTrue(edited.isArchived());
+        assertEquals(new PatientBuilder(populated).withMedications(METFORMIN, AMLODIPINE).build(), edited);
     }
 
     @Test
