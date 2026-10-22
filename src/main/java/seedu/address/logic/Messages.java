@@ -36,6 +36,8 @@ public class Messages {
             "The medication index provided is invalid.";
     public static final String MESSAGE_NO_MEDICATION_FIELD_TO_EDIT =
             "At least one of med/ or t/ must be provided.";
+    public static final String MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED =
+            "t/ with no time clears all times and cannot be combined with other times.";
     public static final String MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION =
             "Medication \"%1$s\" was not updated: it already exists for this patient.";
     public static final String MESSAGE_EDIT_MEDICATION_SUCCESS = "Updated medication %1$d of %2$s: %3$s";

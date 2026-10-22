@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.Messages.MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_NO_MEDICATION_FIELD_TO_EDIT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICATION;
@@ -85,7 +86,7 @@ public class EditMedCommandParser implements Parser<EditMedCommand> {
      * Parses the values of every {@code t/}. No value means the times are not edited; a single blank value
      * means the times are cleared; otherwise every value must be a valid time.
      *
-     * @throws ParseException if any time is invalid, including a blank {@code t/} next to other values.
+     * @throws ParseException if a blank {@code t/} is next to other values, or if any time is invalid.
      */
     private static Optional<List<LocalTime>> parseOptionalTimes(List<String> timeValues) throws ParseException {
         if (timeValues.isEmpty()) {
@@ -93,6 +94,9 @@ public class EditMedCommandParser implements Parser<EditMedCommand> {
         }
         if (timeValues.size() == 1 && timeValues.get(0).isBlank()) {
             return Optional.of(List.of());
+        }
+        if (timeValues.stream().anyMatch(String::isBlank)) {
+            throw new ParseException(MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED);
         }
 
         List<LocalTime> times = new ArrayList<>();

@@ -201,7 +201,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   * Giving `t/` **replaces all** the existing times of the medication, so the new times are the only ones left.
     Repeat `t/` for more than one time, e.g., `t/08:00 t/20:00`.
   * Times are shown in ascending order, and a time given more than once is kept once.
-  * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`.
+  * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`: for example,
+    `t/08:00 t/` is rejected.
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
 * The patient's other details and other medications are not changed. If the patient is shown in the details panel,
   the panel updates.
@@ -236,8 +237,10 @@ A command that fails changes nothing. Errors are reported as follows:
   than two, returns `Invalid command format!`, followed by the command usage.
 * A command with neither `med/` nor `t/` returns `At least one of med/ or t/ must be provided.`
 * A blank `med/` returns `Medication description cannot be blank.`
-* A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, or a `t/` with nothing after it next to
-  another `t/`, returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
+* A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, returns
+  `Time must be in HH:MM (24-hour), e.g. 08:30.`
+* A `t/` with nothing after it next to another `t/` (e.g., `t/08:00 t/`) returns
+  `t/ with no time clears all times and cannot be combined with other times.`
 * A description that already belongs to another medication of the patient returns
   `Medication "amlodipine 5mg" was not updated: it already exists for this patient.`
 * More than one `med/` returns `Multiple values specified for a single-valued field: med/`

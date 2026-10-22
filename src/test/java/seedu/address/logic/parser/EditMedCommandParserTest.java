@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static seedu.address.logic.Messages.MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_NO_MEDICATION_FIELD_TO_EDIT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
@@ -127,9 +128,15 @@ public class EditMedCommandParserTest {
 
     @Test
     public void parse_emptyTimeMixedWithOtherTimes_throwsParseException() {
-        assertParseFailure(parser, " 1 2 t/ t/08:00", Medication.MESSAGE_TIME_CONSTRAINTS);
-        assertParseFailure(parser, " 1 2 t/08:00 t/", Medication.MESSAGE_TIME_CONSTRAINTS);
-        assertParseFailure(parser, " 1 2 t/ t/", Medication.MESSAGE_TIME_CONSTRAINTS);
+        for (String times : new String[] {"t/ t/08:00", "t/08:00 t/", "t/ t/", "t/08:00 t/ t/20:00", "t/   t/08:00"}) {
+            assertParseFailure(parser, " 1 2 " + times, MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED);
+        }
+        assertParseFailure(parser, " 1 2 med/Aspirin t/ t/08:00", MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED);
+    }
+
+    @Test
+    public void parse_blankTimeWithInvalidTime_reportsCombinationFirst() {
+        assertParseFailure(parser, " 1 2 t/ t/24:00", MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED);
     }
 
     @Test
