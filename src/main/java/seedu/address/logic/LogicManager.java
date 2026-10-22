@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javafx.beans.value.ObservableValue;
@@ -14,6 +15,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.Storage;
 
@@ -68,6 +70,11 @@ public class LogicManager implements Logic {
     @Override
     public ObservableValue<Patient> getViewedPatient() {
         return model.getViewedPatient();
+    }
+
+    @Override
+    public List<Appointment> getAppointmentsAsShown(Patient patient) {
+        return model.getAppointmentsAsShown(patient);
     }
 
     @Override

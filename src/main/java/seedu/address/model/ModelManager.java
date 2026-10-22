@@ -3,6 +3,9 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -14,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -26,18 +30,29 @@ public class ModelManager implements Model {
     private final UserPrefs userPrefs;
     private final FilteredList<Patient> filteredPatients;
     private final ObjectProperty<Patient> viewedPatient = new SimpleObjectProperty<>();
+    private final Clock clock;
+    private LocalDateTime viewedPatientShownAt;
 
     /**
-     * Initializes a ModelManager with the given addressBook and userPrefs.
+     * Initializes a ModelManager with the given addressBook and userPrefs, using the system clock.
      */
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
-        requireAllNonNull(addressBook, userPrefs);
+        this(addressBook, userPrefs, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Initializes a ModelManager with the given addressBook and userPrefs, using {@code clock} to tell which
+     * appointments are upcoming.
+     */
+    public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs, Clock clock) {
+        requireAllNonNull(addressBook, userPrefs, clock);
 
         logger.fine("Initializing with " + addressBook.getPatientList().size() + " patient(s) and user prefs "
                 + userPrefs);
 
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
+        this.clock = clock;
         filteredPatients = new FilteredList<>(this.addressBook.getPatientList(), PREDICATE_SHOW_ACTIVE_PATIENTS);
     }
 
@@ -140,7 +155,21 @@ public class ModelManager implements Model {
         requireNonNull(patient);
         assert addressBook.hasPatient(patient) : "Viewed patient must exist in MediConnect";
 
+        viewedPatientShownAt = LocalDateTime.now(clock);
+        if (patient.equals(viewedPatient.get())) {
+            // clears first so that listeners redraw the same patient with the new order of appointments
+            viewedPatient.set(null);
+        }
         viewedPatient.set(patient);
+    }
+
+    @Override
+    public List<Appointment> getAppointmentsAsShown(Patient patient) {
+        requireNonNull(patient);
+        LocalDateTime decidedAt = patient.equals(viewedPatient.get())
+                ? viewedPatientShownAt
+                : LocalDateTime.now(clock);
+        return patient.getAppointmentsUpcomingFirst(decidedAt);
     }
 
     @Override

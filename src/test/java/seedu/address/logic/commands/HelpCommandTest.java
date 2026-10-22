@@ -50,6 +50,7 @@ public class HelpCommandTest {
             Map.entry("PHONE", "91234567"),
             Map.entry("ADDRESS", "21 Lorong 3"),
             Map.entry("INDEX", "1"),
+            Map.entry("APPT_INDEX", "1"),
             Map.entry("MED_INDEX", "1"),
             Map.entry("DESCRIPTION", "Metformin 850mg"),
             Map.entry("MEDICATION", "Metformin 500mg"),
@@ -79,6 +80,9 @@ public class HelpCommandTest {
         commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
         commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
         commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
+        commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
+        commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
+        commands.put(ListApptCommand.COMMAND_WORD, ListApptCommand.class);
         commands.put(EditMedCommand.COMMAND_WORD, EditMedCommand.class);
         commands.put(DeleteMedCommand.COMMAND_WORD, DeleteMedCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
@@ -172,7 +176,8 @@ public class HelpCommandTest {
                 UnarchiveCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
                 AddCareCommand.COMMAND_WORD,
                 EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
-                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD)) {
+                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD,
+                EditApptCommand.COMMAND_WORD, CancelApptCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }
