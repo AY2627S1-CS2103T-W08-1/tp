@@ -409,6 +409,102 @@ Other errors are reported as follows:
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
   command usage.
 
+### Editing an appointment: `editappt`
+
+Changes an appointment of the patient at the displayed index.
+
+Format: `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]`
+
+* `INDEX` and `APPT_INDEX` follow the same rules as `cancelappt`.
+* At least one of `d/`, `t/`, `w/` or `nt/` must be given. Only the fields given are changed.
+* `DATE`, `TIME`, `WITH` and `NOTE` follow the same rules as `addappt`. `nt/` with nothing after it clears the note.
+* The appointments are sorted again after the edit, so an appointment's number can change. The detail panel then
+  shows the patient.
+
+Examples:
+
+* `view 1` followed by `editappt 1 2 t/10:00 nt/` moves the 2nd appointment of the 1st patient to 10:00 and clears
+  its note.
+* `editappt 1 1 d/2027-11-12 w/Dr Lim` changes the date and who the 1st appointment of the 1st patient is with.
+
+A successful command returns `Edited appointment APPT_INDEX of NAME: APPOINTMENT`, with the updated appointment shown
+as in the detail panel. `APPT_INDEX` is the appointment's number after the edit, which can differ from the one typed.
+For example, the first example returns `Edited appointment 2 of Alex Yeoh: 2027-12-10 10:00 with Cardiology clinic`.
+
+* As with `addappt`, an appointment moved into the past or to the same date and time as another appointment of the
+  patient is still saved, and the message ends with the same note or warning.
+
+Other errors are reported as follows:
+
+* An edit that makes the appointment the same as another appointment of the patient returns
+  `This appointment already exists for this patient.` and changes nothing.
+* No `d/`, `t/`, `w/` or `nt/` returns `At least one of d/, t/, w/ or nt/ must be provided.`
+* Index errors and invalid fields are reported as for `cancelappt` and `addappt`.
+
+### Cancelling an appointment: `cancelappt`
+
+Removes an appointment from the patient at the displayed index.
+
+Format: `cancelappt INDEX APPT_INDEX`
+
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* `APPT_INDEX` is the appointment's number in the Appointments section of the patient's detail panel, where
+  upcoming appointments come first, then past ones. The numbers stay as shown, even after an appointment passes,
+  until the patient is shown again, e.g., with `view`.
+* Both indexes **must be positive integers** 1, 2, 3, ...
+* The appointment is removed, not kept as cancelled. The detail panel then shows the patient.
+* Use `cancelappt` also to remove a past appointment that was entered by mistake.
+
+Examples:
+
+* `view 1` followed by `cancelappt 1 2` cancels the 2nd appointment of the 1st patient.
+
+A successful command returns `Cancelled appointment APPT_INDEX of NAME: APPOINTMENT`, with the appointment shown as
+in the detail panel. For example, the example above returns
+`Cancelled appointment 2 of Alex Yeoh: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+
+Errors are reported as follows:
+
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* An `APPT_INDEX` larger than the number of the patient's appointments returns
+  `The appointment index provided is invalid.` So does any `APPT_INDEX` for a patient with no appointments.
+* A missing, zero, negative, non-numeric or excessively large index (e.g., `99999999999`), or a number of values
+  other than two (e.g., `cancelappt 1` or `cancelappt 1 2 x`), returns `Invalid command format!`, followed by the
+  command usage.
+
+### Listing appointments: `listappt`
+
+Lists the upcoming appointments of all patients, or every appointment of one patient.
+
+Format: `listappt [INDEX]`
+
+* Without `INDEX`, lists the appointments of all active patients at or after the current date and time, soonest
+  first. An appointment earlier today is past and is not listed. Archived patients are skipped, and every active
+  patient is included, even after `find`.
+* With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
+  appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`. The detail panel then
+  shows the patient, with the same numbers.
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. An archived patient
+  is not listed: run `unarchive` first to see their appointments.
+* The patient list does not change.
+
+Examples:
+
+* `listappt` returns `Upcoming appointments:`, followed by one line per appointment with the patient's name, e.g.,
+  `Alex Yeoh: 2027-11-05 09:30 with Dr Tan`.
+* `listappt 2` returns `Appointments for Bernice Yu:`, then `Upcoming: none`, then `Past:` followed by
+  `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal)`.
+
+Other messages are as follows:
+
+* With no upcoming appointments, `listappt` returns `No upcoming appointments.`
+* For a patient with no appointments, `listappt INDEX` returns `NAME has no appointments.`
+* For an archived patient, e.g., after `listarchived`, `listappt INDEX` returns
+  `This patient is archived. Unarchive them to list their appointments.`
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* A zero, negative, or non-numeric index, or more than one index, returns `Invalid command format!`, followed by
+  the command usage.
+
 ### Listing all active patients: `list`
 
 Shows a list of all active patients in MediConnect. Archived patients are not shown.
@@ -789,6 +885,7 @@ Action            | Format, Examples
 **Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
 **Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
 **Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
@@ -801,12 +898,14 @@ Action            | Format, Examples
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Delete medication** | `deletemed INDEX MED_INDEX` <br> e.g., `deletemed 1 2`
 **Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
+**Edit appointment** | `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]` <br> e.g., `editappt 1 2 t/10:00 nt/`
 **Edit medication** | `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...` <br> e.g., `editmed 1 2 med/Metformin 850mg t/08:00 t/20:00`
 **Exit**          | `exit`
 **Export**        | `export INDEX` <br> e.g., `export 2`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
 **Help**          | `help`
 **List**          | `list`
+**List appointments** | `listappt [INDEX]` <br> e.g., `listappt`, `listappt 2`
 **List archived** | `listarchived`
 **Restore**       | `restore FILENAME` <br> e.g., `restore mediconnect-20261020-083015.json`
 **Unarchive**     | `unarchive INDEX` <br> e.g., `unarchive 1`

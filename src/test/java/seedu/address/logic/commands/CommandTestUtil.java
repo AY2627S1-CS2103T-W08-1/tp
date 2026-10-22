@@ -8,7 +8,11 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalPatients.ALICE;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +20,12 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.PatientBuilder;
 
 /**
  * Contains helper methods for testing commands.
@@ -52,6 +60,10 @@ public class CommandTestUtil {
 
     public static final String PREAMBLE_WHITESPACE = "\t  \r  \n";
     public static final String PREAMBLE_NON_EMPTY = "NonEmptyPreamble";
+
+    /** Fixes the current date and time at 2026-10-18 12:00:30, half a minute into the 12:00 minute. */
+    public static final Clock FIXED_CLOCK =
+            Clock.fixed(Instant.parse("2026-10-18T12:00:30Z"), ZoneOffset.UTC);
 
     /**
      * Executes the given {@code command}, confirms that <br>
@@ -107,6 +119,31 @@ public class CommandTestUtil {
         model.updateFilteredPatientList(new NameContainsKeywordsPredicate(List.of(splitName[0])));
 
         assertEquals(1, model.getFilteredPatientList().size());
+    }
+
+    /**
+     * Returns a model using {@code FIXED_CLOCK}, whose only patient is Alice with the given {@code appointments}.
+     */
+    public static Model createModelWithAppointments(Appointment... appointments) {
+        return createModelWithAppointments(FIXED_CLOCK, appointments);
+    }
+
+    /**
+     * Returns a model using {@code clock}, whose only patient is Alice with the given {@code appointments}.
+     */
+    public static Model createModelWithAppointments(Clock clock, Appointment... appointments) {
+        Model model = new ModelManager(new AddressBook(), new UserPrefs(), clock);
+        model.addPatient(new PatientBuilder(ALICE).withAppointments(appointments).build());
+        return model;
+    }
+
+    /**
+     * Returns a model like {@code createModelWithAppointments}, with Alice shown in the detail panel.
+     */
+    public static Model createViewedModelWithAppointments(Appointment... appointments) {
+        Model model = createModelWithAppointments(appointments);
+        model.setViewedPatient(model.getFilteredPatientList().get(0));
+        return model;
     }
 
 }

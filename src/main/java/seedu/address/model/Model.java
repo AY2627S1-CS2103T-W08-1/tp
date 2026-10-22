@@ -1,10 +1,12 @@
 package seedu.address.model;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -84,8 +86,17 @@ public interface Model {
     ObservableValue<Patient> getViewedPatient();
 
     /**
-     * Sets the patient whose full details are being viewed.
+     * Sets the patient whose full details are being viewed, and shows them again even if they already are,
+     * with upcoming and past appointments decided at the current time.
      * {@code patient} must exist in the address book.
      */
     void setViewedPatient(Patient patient);
+
+    /**
+     * Returns the appointments of {@code patient} in the order the detail panel numbers them:
+     * upcoming ones first, then past ones. For the viewed patient, upcoming and past are decided at the
+     * time they were last shown, so the numbers stay the same as the panel's even after an appointment
+     * passes. For any other patient, they are decided at the current time.
+     */
+    List<Appointment> getAppointmentsAsShown(Patient patient);
 }

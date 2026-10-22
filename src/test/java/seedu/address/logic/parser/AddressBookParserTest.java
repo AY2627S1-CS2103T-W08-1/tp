@@ -23,6 +23,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddContactCommand;
 import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.BackupCommand;
+import seedu.address.logic.commands.CancelApptCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteAllergyCommand;
 import seedu.address.logic.commands.DeleteCareCommand;
@@ -30,6 +31,7 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteContactCommand;
 import seedu.address.logic.commands.DeleteMedCommand;
 import seedu.address.logic.commands.DueCommand;
+import seedu.address.logic.commands.EditApptCommand;
 import seedu.address.logic.commands.EditCareCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditContactCommand;
@@ -38,6 +40,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ListApptCommand;
 import seedu.address.logic.commands.ListArchivedCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RestoreCommand;
@@ -73,6 +76,26 @@ public class AddressBookParserTest {
         AddApptCommand command = (AddApptCommand) parser.parseCommand(
                 "addappt 1 d/2026-11-05 t/09:30 w/Dr Tan nt/Fasting");
         assertEquals(new AddApptCommand(INDEX_FIRST_PATIENT, CHECKUP), command);
+    }
+
+    @Test
+    public void parseCommand_editAppt() throws Exception {
+        EditApptCommand command = (EditApptCommand) parser.parseCommand("editappt 1 2 w/Dr Lim");
+        assertEquals(new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.empty(),
+                Optional.empty(), Optional.of("Dr Lim"), Optional.empty()), command);
+    }
+
+    @Test
+    public void parseCommand_cancelAppt() throws Exception {
+        CancelApptCommand command = (CancelApptCommand) parser.parseCommand("cancelappt 1 2");
+        assertEquals(new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), command);
+    }
+
+    @Test
+    public void parseCommand_listAppt() throws Exception {
+        assertEquals(new ListApptCommand(Optional.empty()), parser.parseCommand("listappt"));
+        assertEquals(new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT)),
+                parser.parseCommand("listappt 1"));
     }
 
     @Test
