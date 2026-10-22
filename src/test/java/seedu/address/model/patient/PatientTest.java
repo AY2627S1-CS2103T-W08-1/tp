@@ -45,6 +45,31 @@ public class PatientTest {
     }
 
     @Test
+    public void withMedications_replacement_preservesOtherFields() {
+        Medication oldMedication = new Medication("Old medication", List.of(LocalTime.of(8, 0)));
+        Medication newMedication = new Medication("New medication", List.of(LocalTime.of(9, 30)));
+        Patient original = new PatientBuilder(ALICE).withMedications(oldMedication).withAllergens("Allergen")
+                .withCareInstructions("Instruction").withContacts(GP)
+                .withAppointments(CHECKUP).withArchived(true).build();
+        List<Medication> medications = new ArrayList<>(List.of(newMedication));
+
+        Patient updated = original.withMedications(medications);
+        medications.clear();
+
+        assertEquals(new PatientBuilder(original).withMedications(newMedication).build(), updated);
+        assertNotEquals(original, updated);
+        assertEquals(List.of(newMedication), updated.getMedications());
+        assertEquals(original.getAllergens(), updated.getAllergens());
+        assertEquals(original.getCareInstructions(), updated.getCareInstructions());
+        assertEquals(List.of(GP), updated.getContacts());
+        assertEquals(List.of(CHECKUP), updated.getAppointments());
+        assertTrue(updated.isArchived());
+        assertEquals(List.of(oldMedication), original.getMedications());
+        assertThrows(UnsupportedOperationException.class, () -> updated.getMedications().clear());
+        assertThrows(NullPointerException.class, () -> original.withMedications(null));
+    }
+
+    @Test
     public void withAllergens_replacement_preservesOtherFields() {
         Medication medication = new Medication("Medication", List.of(LocalTime.of(8, 0)));
         Patient original = new PatientBuilder(ALICE).withMedications(medication).withAllergens("Allergen")

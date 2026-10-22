@@ -1,6 +1,8 @@
 @startuml
 !include style.puml
 skinparam arrowThickness 1.1
+skinparam ranksep 80
+skinparam nodesep 30
 skinparam arrowColor MODEL_COLOR
 skinparam classBackgroundColor MODEL_COLOR
 skinparam classAttributeFontColor #FFFFFF
@@ -15,11 +17,30 @@ Class UserPrefs
 
 Class UniquePatientList
 Class Patient {
-  List<String> medications
-  List<String> allergens
-  List<String> careInstructions
+  archived : boolean
+  allergens : List<String>
+  careInstructions : List<String>
+}
+Class Medication {
+  description : String
+  times : List<LocalTime>
+}
+Class Contact {
+  name : String
+  role : String
+  phone : String
+  note : String
+}
+Class Appointment {
+  date : LocalDate
+  time : LocalTime
+  provider : String
+  note : String
 }
 show Patient fields
+show Medication fields
+show Contact fields
+show Appointment fields
 Class Address
 Class Name
 Class Nric
@@ -41,20 +62,25 @@ ModelManager -left-> "1" AddressBook
 ModelManager -right-> "1" UserPrefs
 UserPrefs .up.|> ReadOnlyUserPrefs
 
-AddressBook *--> "1" UniquePatientList
-UniquePatientList --> "~* all" Patient
-Patient *--> Name
-Patient *--> Nric
-Patient *--> Dob
-Patient *--> Phone
-Patient *--> Address
+AddressBook *--> "1\n" UniquePatientList
+UniquePatientList --> "*\n" Patient : all
+Patient *-down-> "1\n\n" Name
+Patient *-down-> "1\n\n" Nric
+Patient *-down-> "1\n\n" Dob
+Patient *-down-> "1\n\n" Phone
+Patient *-down-> "1\n\n" Address
+Patient *-down-> "*\n" Medication
+Patient *-down-> "*\n" Contact
+Patient *-down-> "*\n" Appointment
 
 Patient -[hidden]up--> I
 UniquePatientList -[hidden]right-> I
 
 Name -[hidden]right-> Phone
 Phone -[hidden]right-> Address
+Medication -[hidden]right-> Contact
+Contact -[hidden]right-> Appointment
 
-ModelManager --> "0..*" Patient : filtered patients
-ModelManager --> "0..1" Patient : viewed patient
+ModelManager --> "0..*\n" Patient : filtered patients
+ModelManager --> "0..1\n" Patient : viewed patient
 @enduml

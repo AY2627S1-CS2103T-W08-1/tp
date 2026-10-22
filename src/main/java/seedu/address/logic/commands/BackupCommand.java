@@ -3,8 +3,6 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,6 +14,7 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
@@ -31,12 +30,6 @@ public class BackupCommand extends Command {
     public static final String MESSAGE_SUCCESS = "Backup saved to: %1$s";
     public static final String MESSAGE_FAILURE =
             "Could not save the backup to %1$s: %2$s. Your data has not been changed.";
-
-    /** Reason shown in {@code MESSAGE_FAILURE} when MediConnect is not allowed to write to the backup folder. */
-    public static final String MESSAGE_NO_PERMISSION = "MediConnect does not have permission to write there";
-
-    /** Reason shown in {@code MESSAGE_FAILURE} when the file system does not give a reason of its own. */
-    public static final String MESSAGE_FILE_SYSTEM_ERROR = "the folder or file could not be created";
 
     /** Folder that backups are saved to, relative to the folder MediConnect is launched from. */
     public static final Path DEFAULT_BACKUP_DIR = Paths.get("data", "backups");
@@ -88,8 +81,9 @@ public class BackupCommand extends Command {
             Path backupFile = saveBackup(model.getAddressBook());
             return new CommandResult(String.format(MESSAGE_SUCCESS, backupFile.toAbsolutePath().normalize()));
         } catch (IOException ioe) {
+            String reason = Messages.describeWriteFailure(ioe);
             throw new CommandException(
-                    String.format(MESSAGE_FAILURE, backupDir.toAbsolutePath().normalize(), describeFailure(ioe)), ioe);
+                    String.format(MESSAGE_FAILURE, backupDir.toAbsolutePath().normalize(), reason), ioe);
         }
     }
 
@@ -127,32 +121,6 @@ public class BackupCommand extends Command {
         }
 
         return backupFile;
-    }
-
-    /**
-     * Returns a short, readable reason for {@code ioe}, suitable for showing to the user.
-     * File system exceptions use the file path as their message, so their reason is used instead.
-     * Trailing full stops are removed, as {@code MESSAGE_FAILURE} adds its own after the reason.
-     * Package-private so that tests can cover failures that are hard to cause on a real file system.
-     */
-    static String describeFailure(IOException ioe) {
-        requireNonNull(ioe);
-        if (ioe instanceof AccessDeniedException) {
-            return MESSAGE_NO_PERMISSION;
-        }
-
-        String reason;
-        String fallback;
-        if (ioe instanceof FileSystemException fileSystemException) {
-            reason = fileSystemException.getReason();
-            fallback = MESSAGE_FILE_SYSTEM_ERROR;
-        } else {
-            reason = ioe.getMessage();
-            fallback = ioe.getClass().getSimpleName();
-        }
-
-        String trimmedReason = reason == null ? "" : reason.replaceAll("[\\s.]+$", "").strip();
-        return trimmedReason.isEmpty() ? fallback : trimmedReason;
     }
 
     /**
