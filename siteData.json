@@ -130,6 +130,7 @@
         "adding-a-contact-addcontact": "Adding a contact: addcontact",
         "editing-a-contact-editcontact": "Editing a contact: editcontact",
         "deleting-a-contact-deletecontact": "Deleting a contact: deletecontact",
+        "adding-an-appointment-addappt": "Adding an appointment: addappt",
         "listing-all-active-patients-list": "Listing all active patients: list",
         "archiving-a-patient-archive": "Archiving a patient: archive",
         "listing-archived-patients-listarchived": "Listing archived patients: listarchived",
