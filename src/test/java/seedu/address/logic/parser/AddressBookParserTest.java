@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.AddApptCommand;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddContactCommand;
@@ -60,6 +62,13 @@ public class AddressBookParserTest {
         AddCareCommand command = (AddCareCommand) parser.parseCommand("addcare 1 med/Metformin al/Penicillin");
         assertEquals(new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Metformin"), List.of("Penicillin"), List.of()),
                 command);
+    }
+
+    @Test
+    public void parseCommand_addAppt() throws Exception {
+        AddApptCommand command = (AddApptCommand) parser.parseCommand(
+                "addappt 1 d/2026-11-05 t/09:30 w/Dr Tan nt/Fasting");
+        assertEquals(new AddApptCommand(INDEX_FIRST_PATIENT, CHECKUP), command);
     }
 
     @Test

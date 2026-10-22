@@ -53,6 +53,9 @@ public class HelpCommandTest {
             Map.entry("MEDICATION", "Metformin 500mg"),
             Map.entry("ALLERGEN", "Penicillin"),
             Map.entry("CARE_INSTRUCTION", "Check blood sugar"),
+            Map.entry("DATE", "2026-11-05"),
+            Map.entry("TIME", "09:30"),
+            Map.entry("WITH", "Dr Tan"),
             Map.entry("KEYWORD", "alice"),
             Map.entry("MORE_KEYWORDS", "bob"),
             Map.entry("FILENAME", "mediconnect-20261020-083015.json"));
@@ -73,6 +76,7 @@ public class HelpCommandTest {
         commands.put(AddContactCommand.COMMAND_WORD, AddContactCommand.class);
         commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
         commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
+        commands.put(AddApptCommand.COMMAND_WORD, AddApptCommand.class);
         commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
         commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
@@ -164,7 +168,7 @@ public class HelpCommandTest {
                 UnarchiveCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD, ViewCommand.COMMAND_WORD,
                 AddCareCommand.COMMAND_WORD,
                 EditCareCommand.COMMAND_WORD, DeleteCareCommand.COMMAND_WORD,
-                DeleteAllergyCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD)) {
+                DeleteAllergyCommand.COMMAND_WORD, AddApptCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD)) {
             assertTrue(getFormat(commandWord).startsWith(commandWord + " INDEX"));
             assertTrue(getDescription(commandWord).contains("INDEX"));
         }

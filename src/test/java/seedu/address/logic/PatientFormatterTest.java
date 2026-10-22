@@ -158,4 +158,16 @@ public class PatientFormatterTest {
         assertEquals(List.of("Appointments", "1. 2026-12-01 14:00 with Dr Lim", "2. 2026-10-01 09:00 with Polyclinic"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
+
+    @Test
+    public void formatRecord_appointmentAtNow_listedAsUpcoming() {
+        Appointment minuteEarlier = new Appointment(NOW.toLocalDate(), LocalTime.of(14, 29), "Polyclinic", "");
+        Appointment atNow = new Appointment(NOW.toLocalDate(), NOW.toLocalTime(), "Dr Lim", "");
+        Patient patient = new PatientBuilder(ALICE).withAppointments(minuteEarlier, atNow).build();
+
+        List<String> lines = PatientFormatter.formatRecord(patient, NOW);
+
+        assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim", "2. 2026-10-20 14:29 with Polyclinic"),
+                lines.subList(lines.size() - 3, lines.size()));
+    }
 }

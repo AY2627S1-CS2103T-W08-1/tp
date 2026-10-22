@@ -22,11 +22,13 @@ public class ParserUtilTest {
     private static final String INVALID_PHONE = "+651234";
     private static final String INVALID_ADDRESS = " ";
     private static final String INVALID_DATE = "2026-02-30";
+    private static final String INVALID_PROVIDER = " ";
 
     private static final String VALID_NAME = "Rachel Walker";
     private static final String VALID_PHONE = "91234567";
     private static final String VALID_ADDRESS = "123 Main Street #0505";
     private static final String VALID_DATE = "2026-10-25";
+    private static final String VALID_PROVIDER = "Dr Tan";
 
     private static final String WHITESPACE = " \t\r\n";
 
@@ -146,6 +148,22 @@ public class ParserUtilTest {
     @Test
     public void parseDate_validValueWithWhitespace_returnsTrimmedDate() throws Exception {
         assertEquals(LocalDate.of(2026, 10, 25), ParserUtil.parseDate(WHITESPACE + VALID_DATE + WHITESPACE));
+    }
+
+    @Test
+    public void parseProvider_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseProvider((String) null));
+    }
+
+    @Test
+    public void parseProvider_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, Appointment.MESSAGE_PROVIDER_CONSTRAINTS, ()
+            -> ParserUtil.parseProvider(INVALID_PROVIDER));
+    }
+
+    @Test
+    public void parseProvider_extraSpaces_returnsTrimmedAndCollapsedProvider() throws Exception {
+        assertEquals(VALID_PROVIDER, ParserUtil.parseProvider(WHITESPACE + "Dr   Tan" + WHITESPACE));
     }
 
 
