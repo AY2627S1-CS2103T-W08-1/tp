@@ -108,12 +108,39 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
+     * Returns the date and time of the appointment together.
+     */
+    public LocalDateTime getDateTime() {
+        return LocalDateTime.of(date, time);
+    }
+
+    /**
+     * Returns true if both appointments are at the same date and time, whoever they are with.
+     */
+    public boolean isAtSameTimeAs(Appointment otherAppointment) {
+        return otherAppointment != null
+                && date.equals(otherAppointment.date)
+                && time.equals(otherAppointment.time);
+    }
+
+    /**
+     * Returns true if both appointments are at the same date and time with the same provider,
+     * ignoring letter case and repeated spaces in the provider. Notes are not compared.
+     * This defines a weaker notion of equality between two appointments.
+     */
+    public boolean isSameAppointment(Appointment otherAppointment) {
+        return isAtSameTimeAs(otherAppointment)
+                && provider.replaceAll("\\s+", " ")
+                        .equalsIgnoreCase(otherAppointment.provider.replaceAll("\\s+", " "));
+    }
+
+    /**
      * Returns true if the appointment is before the minute of {@code dateTime}, i.e. in the past if
      * {@code dateTime} is now. Seconds are ignored, since appointments are in whole minutes, so an
      * appointment at 12:00 is not before 12:00:30.
      */
     public boolean isBefore(LocalDateTime dateTime) {
-        return LocalDateTime.of(date, time).isBefore(dateTime.truncatedTo(ChronoUnit.MINUTES));
+        return getDateTime().isBefore(dateTime.truncatedTo(ChronoUnit.MINUTES));
     }
 
     /**
@@ -122,12 +149,7 @@ public class Appointment implements Comparable<Appointment> {
      */
     @Override
     public int compareTo(Appointment other) {
-        int dateComparison = date.compareTo(other.date);
-        if (dateComparison != 0) {
-            return dateComparison;
-        }
-
-        return time.compareTo(other.time);
+        return getDateTime().compareTo(other.getDateTime());
     }
 
     @Override
