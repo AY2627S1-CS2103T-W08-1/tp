@@ -91,8 +91,21 @@ public class Messages {
             fallback = ioe.getClass().getSimpleName();
         }
 
-        String trimmedReason = reason == null ? "" : reason.replaceAll("[\\s.]+$", "").strip();
+        String trimmedReason = reason == null ? "" : stripTrailingSpacesAndFullStops(reason).strip();
         return trimmedReason.isEmpty() ? fallback : trimmedReason;
+    }
+
+    /**
+     * Returns {@code text} without the spaces and full stops at its end.
+     * Checks one character at a time from the end, so a long run of spaces inside {@code text} is not
+     * checked again and again, as a regular expression would.
+     */
+    private static String stripTrailingSpacesAndFullStops(String text) {
+        int end = text.length();
+        while (end > 0 && (Character.isWhitespace(text.charAt(end - 1)) || text.charAt(end - 1) == '.')) {
+            end--;
+        }
+        return text.substring(0, end);
     }
 
 }

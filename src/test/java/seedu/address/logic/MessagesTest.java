@@ -1,12 +1,14 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
+import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +69,16 @@ public class MessagesTest {
         IOException exception = new IOException("No space left on device. ");
 
         assertEquals("No space left on device", Messages.describeWriteFailure(exception));
+    }
+
+    @Test
+    public void describeWriteFailure_longRunOfSpacesInsideMessage_spacesKept() {
+        String message = "No space" + " ".repeat(60_000) + "left";
+
+        String reason = assertTimeout(Duration.ofSeconds(1), () -> Messages.describeWriteFailure(
+                new IOException(message)));
+
+        assertEquals(message, reason);
     }
 
     @Test
