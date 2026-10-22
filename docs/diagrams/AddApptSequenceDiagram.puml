@@ -1,0 +1,102 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":AddApptCommandParser" as AddApptCommandParser LOGIC_COLOR
+participant "a:AddApptCommand" as AddApptCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+[-> LogicManager : execute("addappt 1 d/2027-11-05 t/09:30 w/Dr Tan")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand("addappt 1 d/2027-11-05 t/09:30 w/Dr Tan")
+activate AddressBookParser
+
+create AddApptCommandParser
+AddressBookParser -> AddApptCommandParser
+activate AddApptCommandParser
+
+AddApptCommandParser --> AddressBookParser
+deactivate AddApptCommandParser
+
+AddressBookParser -> AddApptCommandParser : parse("1 d/2027-11-05 t/09:30 w/Dr Tan")
+activate AddApptCommandParser
+
+create AddApptCommand
+AddApptCommandParser -> AddApptCommand : AddApptCommand(1, toAdd)
+activate AddApptCommand
+
+AddApptCommand --> AddApptCommandParser
+deactivate AddApptCommand
+
+AddApptCommandParser --> AddressBookParser : a
+deactivate AddApptCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+AddApptCommandParser -[hidden]-> AddressBookParser
+destroy AddApptCommandParser
+
+AddressBookParser --> LogicManager : a
+deactivate AddressBookParser
+
+LogicManager -> AddApptCommand : execute(m)
+activate AddApptCommand
+
+AddApptCommand -> Model : getFilteredPatientList()
+activate Model
+
+Model --> AddApptCommand : patients
+deactivate Model
+
+AddApptCommand -> AddApptCommand : check that toAdd is not a duplicate
+activate AddApptCommand
+deactivate AddApptCommand
+
+AddApptCommand -> AddApptCommand : copy the patient with toAdd added
+activate AddApptCommand
+deactivate AddApptCommand
+
+AddApptCommand -> Model : setPatient(patientToEdit, editedPatient)
+activate Model
+
+Model --> AddApptCommand
+deactivate Model
+
+AddApptCommand -> Model : setViewedPatient(editedPatient)
+activate Model
+
+Model --> AddApptCommand
+deactivate Model
+
+AddApptCommand -> AddApptCommand : add warnings to the message
+activate AddApptCommand
+deactivate AddApptCommand
+
+note right of AddApptCommand
+The current time comes from the injected
+Clock, as LocalDateTime.now(clock). If toAdd
+is before it, a past-date note is added. Each
+other appointment at the same date and time
+adds a clash warning. Neither stops the add.
+end note
+
+create CommandResult
+AddApptCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> AddApptCommand : r
+deactivate CommandResult
+
+AddApptCommand --> LogicManager : r
+deactivate AddApptCommand
+
+[<-- LogicManager
+deactivate LogicManager
+@enduml
