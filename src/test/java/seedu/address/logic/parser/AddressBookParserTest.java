@@ -10,7 +10,9 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
 import java.time.Clock;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ import seedu.address.logic.commands.DueCommand;
 import seedu.address.logic.commands.EditCareCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditContactCommand;
+import seedu.address.logic.commands.EditMedCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
@@ -82,6 +85,13 @@ public class AddressBookParserTest {
         assertEquals(new DueCommand(Clock.systemDefaultZone()), parser.parseCommand(DueCommand.COMMAND_WORD));
         assertEquals(new DueCommand(INDEX_FIRST_PATIENT, Clock.systemDefaultZone()),
                 parser.parseCommand(DueCommand.COMMAND_WORD + " 1"));
+    }
+
+    @Test
+    public void parseCommand_editMed() throws Exception {
+        EditMedCommand command = (EditMedCommand) parser.parseCommand("editmed 1 2 med/Aspirin t/08:00");
+        assertEquals(new EditMedCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.of("Aspirin"),
+                Optional.of(List.of(LocalTime.of(8, 0)))), command);
     }
 
     @Test
