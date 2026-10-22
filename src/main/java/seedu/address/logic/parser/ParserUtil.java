@@ -114,6 +114,21 @@ public class ParserUtil {
     }
 
     /**
+     * Parses a {@code String provider}, who an appointment is with.
+     * Leading and trailing whitespaces will be trimmed, and multiple spaces between words reduced to one.
+     *
+     * @throws ParseException if the given {@code provider} is blank.
+     */
+    public static String parseProvider(String provider) throws ParseException {
+        requireNonNull(provider);
+        String trimmedProvider = provider.trim().replaceAll("\\s+", " ");
+        if (!Appointment.isValidProvider(trimmedProvider)) {
+            throw new ParseException(Appointment.MESSAGE_PROVIDER_CONSTRAINTS);
+        }
+        return trimmedProvider;
+    }
+
+    /**
      * Parses a {@code String phone} into a {@code Phone}.
      * Leading and trailing whitespaces will be trimmed.
      *
