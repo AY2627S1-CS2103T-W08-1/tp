@@ -409,6 +409,37 @@ Other errors are reported as follows:
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
   command usage.
 
+### Cancelling an appointment: `cancelappt`
+
+Removes an appointment from the patient at the displayed index.
+
+Format: `cancelappt INDEX APPT_INDEX`
+
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
+* `APPT_INDEX` is the appointment's number in the Appointments section of the patient's detail panel, where
+  upcoming appointments come first, then past ones. The numbers stay as shown, even after an appointment passes,
+  until the patient is shown again, e.g., with `view`.
+* Both indexes **must be positive integers** 1, 2, 3, ...
+* The appointment is removed, not kept as cancelled. The detail panel then shows the patient.
+* Use `cancelappt` also to remove a past appointment that was entered by mistake.
+
+Examples:
+
+* `view 1` followed by `cancelappt 1 2` cancels the 2nd appointment of the 1st patient.
+
+A successful command returns `Cancelled appointment APPT_INDEX of NAME: APPOINTMENT`, with the appointment shown as
+in the detail panel. For example, the example above returns
+`Cancelled appointment 2 of Alex Yeoh: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`.
+
+Errors are reported as follows:
+
+* An index outside the displayed list returns `The patient index provided is invalid.`
+* An `APPT_INDEX` larger than the number of the patient's appointments returns
+  `The appointment index provided is invalid.` So does any `APPT_INDEX` for a patient with no appointments.
+* A missing, zero, negative, non-numeric or excessively large index (e.g., `99999999999`), or a number of values
+  other than two (e.g., `cancelappt 1` or `cancelappt 1 2 x`), returns `Invalid command format!`, followed by the
+  command usage.
+
 ### Listing all active patients: `list`
 
 Shows a list of all active patients in MediConnect. Archived patients are not shown.
@@ -789,6 +820,7 @@ Action            | Format, Examples
 **Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
 **Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
+**Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
 **Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`

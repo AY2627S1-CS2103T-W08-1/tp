@@ -185,6 +185,14 @@ public class Patient {
     }
 
     /**
+     * Returns a copy with replacement appointments, preserving every other field.
+     */
+    public Patient withAppointments(List<Appointment> appointments) {
+        return new Patient(name, nric, dob, phone, address, medications, allergens, careInstructions,
+                contacts, appointments, archived);
+    }
+
+    /**
      * Returns the appointments in the order the detail panel numbers them: upcoming ones (at or after
      * {@code now}) first, then past ones, each sorted by date, then time.
      */

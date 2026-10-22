@@ -12,6 +12,7 @@ import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
 import java.awt.GraphicsEnvironment;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -36,6 +37,8 @@ import seedu.address.testutil.PatientBuilder;
 public class PatientDetailPanelTest {
 
     private static final long TOOLKIT_TIMEOUT_SECONDS = 5;
+    /** Time at which the panel's appointments are split into upcoming and past ones. */
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 18, 12, 0);
 
     private static boolean isToolkitAvailable;
 
@@ -220,7 +223,8 @@ public class PatientDetailPanelTest {
      */
     private VBox createPanelContent() {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
-        PatientDetailPanel panel = new PatientDetailPanel(viewedPatient);
+        PatientDetailPanel panel = new PatientDetailPanel(viewedPatient,
+                patient -> patient.getAppointmentsUpcomingFirst(NOW));
         return (VBox) ((ScrollPane) panel.getRoot()).getContent();
     }
 
