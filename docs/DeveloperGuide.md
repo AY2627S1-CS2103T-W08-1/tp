@@ -126,6 +126,10 @@ How the parsing works:
 
 <puml src="diagrams/ModelClassDiagram.puml" width="450" />
 
+The diagram below shows the `Patient` class in more detail.
+
+<puml src="diagrams/PatientClassDiagram.puml" width="450" />
+
 
 The `Model` component,
 
@@ -139,7 +143,7 @@ The `Model` component,
 <box type="info" seamless>
 
 **Patient records:** Each `Patient` is composed of `Name`, `Nric`, `Dob`, `Phone` and `Address` values (one of each),
-an `archived` flag, and lists of care information, as shown in the diagram:
+an `archived` flag, and lists of care information, as shown in the second diagram:
 * zero or more `Medication` objects, each with a description and a list of daily times (`LocalTime`),
 * zero or more `Contact` objects, each with a name, role, phone and note,
 * zero or more `Appointment` objects, each with a date, time, provider and note, kept sorted by date, then time,
@@ -808,53 +812,53 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 5a. The patient index is invalid.
 
-    * 5a1. MediConnect shows `The patient index provided is invalid.`
+    * 5a1. MediConnect shows an error message that the patient index is invalid.
 
       Use case resumes at step 2.
 
-* 5b. The medication number (`MED_INDEX`) is invalid.
+* 5b. The medication number is invalid.
 
-    * 5b1. MediConnect shows `The medication index provided is invalid.`
+    * 5b1. MediConnect shows an error message that the medication number is invalid.
 
       Use case resumes at step 4.
 
 * 5c. An index is missing, or is not a positive integer.
 
-    * 5c1. MediConnect shows `Invalid command format!` followed by the usage of `editmed`.
+    * 5c1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
 
       Use case resumes at step 4.
 
 * 5d. Neither a new description nor a time is given.
 
-    * 5d1. MediConnect shows `At least one of med/ or t/ must be provided.`
+    * 5d1. MediConnect shows an error message that at least a new description or new times must be given.
 
       Use case resumes at step 4.
 
 * 5e. The new description is blank.
 
-    * 5e1. MediConnect shows `Medication description cannot be blank.`
+    * 5e1. MediConnect shows an error message that the description cannot be blank.
 
       Use case resumes at step 4.
 
-* 5f. A given time is not in `HH:MM` (24-hour) format.
+* 5f. A given time is not a valid 24-hour time.
 
-    * 5f1. MediConnect shows `Time must be in HH:MM (24-hour), e.g. 08:30.`
+    * 5f1. MediConnect shows an error message that times must be in 24-hour format, with an example.
 
       Use case resumes at step 4.
 
-* 5g. Caregiver gives `t/` with no time to clear the times, but also gives another `t/`.
+* 5g. Caregiver requests to clear all daily times but also gives new times.
 
-    * 5g1. MediConnect shows `t/ with no time clears all times and cannot be combined with other times.`
+    * 5g1. MediConnect shows an error message that clearing all times cannot be combined with giving new times.
 
       Use case resumes at step 4.
 
 * 5h. Another medication of the patient already has the new description.
 
-    * 5h1. MediConnect shows `Medication "DESCRIPTION" was not updated: it already exists for this patient.`
+    * 5h1. MediConnect shows an error message that the medication was not updated because the patient already has a medication with that description.
 
       Use case resumes at step 4.
 
-* 5i. Caregiver gives `t/` with no time to clear the times of the medication.
+* 5i. Caregiver requests to clear all daily times of the medication, without giving new times.
 
     * 5i1. MediConnect removes all the times of the medication and shows the updated medication.
 
@@ -896,19 +900,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 5a. The patient index is invalid.
 
-    * 5a1. MediConnect shows `The patient index provided is invalid.`
+    * 5a1. MediConnect shows an error message that the patient index is invalid.
 
       Use case resumes at step 2.
 
-* 5b. The medication number (`MED_INDEX`) is invalid.
+* 5b. The medication number is invalid.
 
-    * 5b1. MediConnect shows `The medication index provided is invalid.`
+    * 5b1. MediConnect shows an error message that the medication number is invalid.
 
       Use case resumes at step 4.
 
 * 5c. An index is missing, is not a positive integer, or more than two indexes are given.
 
-    * 5c1. MediConnect shows `Invalid command format!` followed by the usage of `deletemed`.
+    * 5c1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
 
       Use case resumes at step 4.
 
@@ -920,41 +924,39 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1.  Caregiver requests to see the medications due today.
-2.  MediConnect shows one line for each medication time of today, as `HH:MM NAME: DESCRIPTION`, sorted by time, for
-    all active patients.
+2.  MediConnect shows today's medication times, sorted by time, for all active patients.
 
     Use case ends.
 
 **Extensions**
 
-* 1a. Caregiver requests the medications of one patient by giving the patient's index in the displayed list.
+* 1a. Caregiver requests the medications due today for one patient only.
 
-    * 1a1. MediConnect shows the lines for that patient only.
+    * 1a1. MediConnect considers only that patient.
 
-      Use case ends.
+      Use case resumes at step 2.
 
-* 1b. The given index is invalid.
+* 1b. The given patient index is invalid.
 
-    * 1b1. MediConnect shows `The patient index provided is invalid.`
+    * 1b1. MediConnect shows an error message that the patient index is invalid.
 
       Use case ends.
 
 * 1c. The given index is not a positive integer, or more than one index is given.
 
-    * 1c1. MediConnect shows `Invalid command format!` followed by the usage of `due`.
+    * 1c1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
 
       Use case ends.
 
 * 2a. A time is earlier than the current time.
 
-  MediConnect adds ` (earlier today)` to its line.
+    * 2a1. MediConnect marks that time as earlier today.
 
-  Use case ends.
+      Use case ends.
 
 * 2b. No medication has a time, or the patient is archived.
 
-    * 2b1. MediConnect shows `No medications are due today.`, or `No medications are due today for NAME.` if an index
-      was given.
+    * 2b1. MediConnect shows a message that no medications are due today, naming the patient if only one patient was requested.
 
       Use case ends.
 
