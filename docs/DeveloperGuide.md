@@ -138,11 +138,19 @@ The `Model` component,
 
 <box type="info" seamless>
 
-**Patient records:** Each `Patient` contains `Name`, `Nric`, `Dob`, `Phone` and `Address` values, plus a
-`List<Medication>` medication list, `List<String>` allergen and care instruction lists, and a `List<Contact>`
-contact list.
+**Patient records:** Each `Patient` is composed of `Name`, `Nric`, `Dob`, `Phone` and `Address` values (one of each),
+an `archived` flag, and lists of care information, as shown in the diagram:
+* zero or more `Medication` objects, each with a description and a list of daily times (`LocalTime`),
+* zero or more `Contact` objects, each with a name, role, phone and note,
+* zero or more `Appointment` objects, each with a date, time, provider and note, kept sorted by date, then time,
+* `allergens` and `careInstructions`, which are plain `String` lists.
+
 These lists default to empty and are defensively copied with `List.copyOf`, so callers cannot modify them through
 the getters. Updating a patient creates a replacement `Patient`, which the model stores using `setPatient`.
+The diagram leaves out the constraints of each value class and the exceptions of `UniquePatientList`.
+
+**Archived patients:** An archived patient stays in the `UniquePatientList`. `ModelManager` only changes which patients
+its filtered list shows, using `Model#PREDICATE_SHOW_ACTIVE_PATIENTS` or `Model#PREDICATE_SHOW_ARCHIVED_PATIENTS`.
 
 **Duplicate identity:** `Patient.isSamePatient` compares NRIC values. `Nric` stores input in uppercase, so NRIC identity
 is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; different patients can share a name.
@@ -162,12 +170,15 @@ The `Storage` component,
 
 The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
 
-Each patient is saved as a `JsonAdaptedPatient`, which holds the name, NRIC, date of birth, phone number and address
-as strings, medications as a list of `JsonAdaptedMedication` objects, allergens and care instructions as lists of
-strings, and contacts as a list of `JsonAdaptedContact` objects. Each contact stores its name, role, phone and note.
+As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
+`JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
+objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
+allergens and care instructions as lists of strings, and an `archived` flag. A medication is saved with its description
+and its times as `HH:MM` strings. A contact is saved with its name, role, phone and note, and an appointment with its
+date, time, provider and note.
 The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
-`JsonAdaptedPatient#toModelType()` validates patient
-fields and converts contacts using their model constraints. If any patient or contact is invalid, two patients share
+`JsonAdaptedPatient#toModelType()` validates patient fields and converts medications, contacts and appointments using
+their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
 an NRIC, or a patient has duplicate contacts, the whole file is rejected.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
