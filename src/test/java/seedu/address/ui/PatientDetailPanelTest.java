@@ -11,19 +11,15 @@ import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
-import java.awt.GraphicsEnvironment;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -38,7 +34,6 @@ import seedu.address.testutil.PatientBuilder;
 
 public class PatientDetailPanelTest {
 
-    private static final long TOOLKIT_TIMEOUT_SECONDS = 5;
     /** Time at which the panel's appointments are split into upcoming and past ones. */
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 18, 12, 0);
 
@@ -51,39 +46,7 @@ public class PatientDetailPanelTest {
      */
     @BeforeAll
     public static void startToolkit() {
-        // A failed startup makes later JavaFX calls in the same JVM wait forever,
-        // so do not attempt one when there is no display, e.g. on a headless CI runner.
-        if (GraphicsEnvironment.isHeadless()) {
-            isToolkitAvailable = false;
-            return;
-        }
-
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException e) {
-            // toolkit was already started earlier in this JVM; checked below
-        } catch (RuntimeException | LinkageError e) {
-            isToolkitAvailable = false;
-            return;
-        }
-
-        isToolkitAvailable = isToolkitRunning();
-    }
-
-    /**
-     * Returns true if the JavaFX application thread runs a task within {@code TOOLKIT_TIMEOUT_SECONDS}.
-     */
-    private static boolean isToolkitRunning() {
-        CountDownLatch latch = new CountDownLatch(1);
-        try {
-            Platform.runLater(latch::countDown);
-            return latch.await(TOOLKIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (IllegalStateException e) {
-            return false;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        }
+        isToolkitAvailable = JavaFxTestUtil.startToolkit();
     }
 
     @Test
