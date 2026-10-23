@@ -55,6 +55,7 @@ public class MainWindowSizeTest {
     @Test
     public void constructor_savedSizeLargerThanScreen_shrunkToFitScreen() throws Exception {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        assumeOnlyOneScreen();
         Rectangle2D screen = getMainScreen();
 
         Stage stage = createMainWindowStage(new GuiSettings(screen.getWidth() + 1000, screen.getHeight() + 1000,
@@ -66,6 +67,7 @@ public class MainWindowSizeTest {
     @Test
     public void constructor_savedPositionPartlyOffScreen_movedOntoScreen() throws Exception {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        assumeOnlyOneScreen();
         Rectangle2D screen = getMainScreen();
 
         // the top-left corner is on the screen, but the rest of the window would be past its bottom-right corner
@@ -98,6 +100,14 @@ public class MainWindowSizeTest {
         assertEquals(Math.min(defaultSettings.getWindowHeight(), screen.getHeight()), stage.getHeight());
         assertEquals(Double.NaN, stage.getX());
         assertEquals(Double.NaN, stage.getY());
+    }
+
+    /**
+     * Skips the calling test on a computer with more than one screen, where a window that does not fit the main
+     * screen can rightly be placed on another screen instead.
+     */
+    private static void assumeOnlyOneScreen() throws Exception {
+        assumeTrue(runOnFxThread(() -> Screen.getScreens().size()) == 1, "The test needs exactly one screen");
     }
 
     private static Rectangle2D getMainScreen() throws Exception {

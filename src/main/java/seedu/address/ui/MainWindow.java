@@ -139,17 +139,16 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Sets the size and position of the window from {@code guiSettings}, reduced and moved where needed so that the
-     * whole window fits the visible area of the screen it was last on, e.g., on a small or scaled screen.
-     * If that screen is not connected any more, the window is placed on the main screen instead.
+     * whole window fits the visible area of the screen that showed most of it, e.g., on a small or scaled screen.
+     * If no screen shows any of it, e.g., when the screen it was last on is not connected any more, or if it has no
+     * saved position, the window is placed on the main screen instead.
      */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
         Point coordinates = guiSettings.getWindowCoordinates();
-        // the screen the window was last on, or the main screen if that screen is not connected any more
-        Rectangle2D screen = Screen.getScreens().stream()
-                .map(Screen::getVisualBounds)
-                .filter(bounds -> coordinates != null && bounds.contains(coordinates.getX(), coordinates.getY()))
-                .findFirst()
-                .orElse(Screen.getPrimary().getVisualBounds());
+        Rectangle2D screen = coordinates == null
+                ? Screen.getPrimary().getVisualBounds()
+                : getScreenShowingMost(coordinates.getX(), coordinates.getY(), guiSettings.getWindowWidth(),
+                        guiSettings.getWindowHeight());
         double width = Math.min(guiSettings.getWindowWidth(), screen.getWidth());
         double height = Math.min(guiSettings.getWindowHeight(), screen.getHeight());
         primaryStage.setWidth(width);
@@ -170,6 +169,26 @@ public class MainWindow extends UiPart<Stage> {
         } else {
             helpWindow.focus();
         }
+    }
+
+    /**
+     * Returns the visible area of the screen that shows the largest part of a window at {@code x} and {@code y} with
+     * the given {@code width} and {@code height}, or that of the main screen if no screen shows any of it.
+     */
+    private static Rectangle2D getScreenShowingMost(double x, double y, double width, double height) {
+        Rectangle2D bestScreen = Screen.getPrimary().getVisualBounds();
+        double largestOverlap = 0;
+        for (Screen candidate : Screen.getScreens()) {
+            Rectangle2D bounds = candidate.getVisualBounds();
+            double overlapWidth = Math.min(bounds.getMaxX(), x + width) - Math.max(bounds.getMinX(), x);
+            double overlapHeight = Math.min(bounds.getMaxY(), y + height) - Math.max(bounds.getMinY(), y);
+            double overlap = Math.max(0, overlapWidth) * Math.max(0, overlapHeight);
+            if (overlap > largestOverlap) {
+                bestScreen = bounds;
+                largestOverlap = overlap;
+            }
+        }
+        return bestScreen;
     }
 
     void show() {
