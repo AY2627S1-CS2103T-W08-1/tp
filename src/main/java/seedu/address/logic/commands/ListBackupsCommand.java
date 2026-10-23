@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,6 +38,9 @@ public class ListBackupsCommand extends Command {
     public static final int MAX_LISTED_BACKUPS = 10;
 
     private static final String BACKUP_EXTENSION = ".json";
+    private static final Pattern NUMBER = Pattern.compile("\\d+");
+    /** Number of digits that every number in a backup name is padded to, more than a {@code long} has. */
+    private static final int PADDED_NUMBER_LENGTH = 20;
 
     private static final Logger logger = LogsCenter.getLogger(ListBackupsCommand.class);
 
@@ -109,7 +113,9 @@ public class ListBackupsCommand extends Command {
 
     /**
      * Returns {@code backups} sorted from the most recently changed to the least, and by name, last first, if two
-     * were changed at the same time.
+     * were changed at the same time, e.g., after being copied together. Numbers in the names are compared as numbers,
+     * so "mediconnect-20261020-083015-10.json" comes before "mediconnect-20261020-083015-9.json", and both before
+     * "mediconnect-20261020-083015.json", the first backup made in that second.
      *
      * @throws IOException if the time a file was last changed cannot be read.
      */
@@ -120,8 +126,19 @@ public class ListBackupsCommand extends Command {
         }
 
         Comparator<Path> newestFirst = Comparator.comparing((Path backup) -> changedTimes.get(backup)).reversed();
-        Comparator<Path> lastNameFirst = Comparator.comparing((Path backup) -> backup.getFileName()).reversed();
+        Comparator<Path> lastNameFirst = Comparator.comparing(ListBackupsCommand::toNameSortKey).reversed();
         return backups.stream().sorted(newestFirst.thenComparing(lastNameFirst)).toList();
+    }
+
+    /**
+     * Returns the name of {@code backup} without its extension, with every number in it padded with zeros to
+     * {@code PADDED_NUMBER_LENGTH} digits, so that comparing the keys compares the numbers by value.
+     */
+    private static String toNameSortKey(Path backup) {
+        String name = backup.getFileName().toString();
+        String nameWithoutExtension = name.substring(0, name.length() - BACKUP_EXTENSION.length());
+        return NUMBER.matcher(nameWithoutExtension).replaceAll(number ->
+                "0".repeat(Math.max(0, PADDED_NUMBER_LENGTH - number.group().length())) + number.group());
     }
 
     /**

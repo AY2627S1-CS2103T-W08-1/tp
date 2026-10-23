@@ -81,13 +81,20 @@ public class ListBackupsCommandTest {
     }
 
     @Test
-    public void execute_backupsChangedAtSameTime_listsLastNameFirst() throws Exception {
+    public void execute_backupsChangedAtSameTime_listsLastNameFirstComparingNumbersByValue() throws Exception {
+        // e.g., backups copied together to another computer, which all get the time of the copy
         createBackup("mediconnect-20261020-083015.json", EARLIER);
         createBackup("mediconnect-20261020-083015-1.json", EARLIER);
         createBackup("mediconnect-20261020-083015-2.json", EARLIER);
+        createBackup("mediconnect-20261020-083015-9.json", EARLIER);
+        createBackup("mediconnect-20261020-083015-10.json", EARLIER);
+        createBackup("mediconnect-20261020-083015-copy.json", EARLIER);
+        createBackup("notes.json", EARLIER);
 
-        String expectedNames = "mediconnect-20261020-083015.json\nmediconnect-20261020-083015-2.json\n"
-                + "mediconnect-20261020-083015-1.json";
+        String expectedNames = String.join("\n", "notes.json", "mediconnect-20261020-083015-copy.json",
+                "mediconnect-20261020-083015-10.json", "mediconnect-20261020-083015-9.json",
+                "mediconnect-20261020-083015-2.json", "mediconnect-20261020-083015-1.json",
+                "mediconnect-20261020-083015.json");
         assertCommandSuccess(new ListBackupsCommand(temporaryFolder), model,
                 getExpectedSuccessMessage(expectedNames), expectedModel);
     }
