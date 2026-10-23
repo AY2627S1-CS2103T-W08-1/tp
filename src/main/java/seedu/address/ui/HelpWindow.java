@@ -44,7 +44,7 @@ public class HelpWindow extends UiPart<Stage> {
         root.setAlwaysOnTop(true);
 
         EventHandler<KeyEvent> hideOnEscape = event -> {
-            if (event.getCode() == KeyCode.ESCAPE && isShowing()) {
+            if (event.getCode() == KeyCode.ESCAPE) {
                 hide();
                 event.consume();
             }
