@@ -73,14 +73,18 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 ### Viewing help: `help`
 
-Opens a help window that lists every command with its format and a one-line description.
+Opens a help window that lists every command with its format and a one-line description, grouped as patients,
+care information, contacts, appointments, data and other commands. The top of the window links to this User Guide;
+**Copy URL** copies the link, to paste into a browser.
 
-![help message](images/helpMessage.png)
+<img src="images/helpMessage.png" alt="help window" width="560" />
 
 Format: `help`
 
 * You can also open the help window with the `Help` menu or by pressing `F1`.
 * Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
+* The help window stays in front of other windows, and you can keep typing commands in the main window while it is
+  open. Press `Esc` to close it.
 * If the help window is already open, no second help window is opened.
 
 The command returns `Opened help window.`

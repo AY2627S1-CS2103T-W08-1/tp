@@ -3,30 +3,53 @@ package seedu.address.ui;
 import java.util.logging.Logger;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.HelpCommand;
 
 /**
- * Controller for a help page that lists every command.
+ * Controller for a help page that lists every command and links to the User Guide.
  */
 public class HelpWindow extends UiPart<Stage> {
+
+    public static final String USERGUIDE_URL = "https://ay2627s1-cs2103t-w08-1.github.io/tp/UserGuide.html";
+    public static final String USERGUIDE_MESSAGE = "For examples and details, see the User Guide:\n" + USERGUIDE_URL;
 
     private static final Logger logger = LogsCenter.getLogger(HelpWindow.class);
     private static final String FXML = "HelpWindow.fxml";
 
     @FXML
+    private Label userGuideMessage;
+
+    @FXML
+    private Button copyButton;
+
+    @FXML
     private Label helpMessage;
 
     /**
-     * Creates a new HelpWindow.
+     * Creates a new HelpWindow, which stays on top of other windows, so that commands can be typed in the main
+     * window while it is open, and is hidden again when Esc is pressed in it.
      *
      * @param root Stage to use as the root of the HelpWindow.
      */
     public HelpWindow(Stage root) {
         super(FXML, root);
+        userGuideMessage.setText(USERGUIDE_MESSAGE);
         helpMessage.setText(HelpCommand.COMMAND_SUMMARY);
+        root.setAlwaysOnTop(true);
+        root.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                hide();
+                event.consume();
+            }
+        });
     }
 
     /**
@@ -79,5 +102,16 @@ public class HelpWindow extends UiPart<Stage> {
      */
     public void focus() {
         getRoot().requestFocus();
+    }
+
+    /**
+     * Copies the URL of the User Guide to the clipboard.
+     */
+    @FXML
+    private void copyUrl() {
+        final Clipboard clipboard = Clipboard.getSystemClipboard();
+        final ClipboardContent url = new ClipboardContent();
+        url.putString(USERGUIDE_URL);
+        clipboard.setContent(url);
     }
 }
