@@ -4,7 +4,6 @@ import java.util.logging.Logger;
 
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -28,9 +27,6 @@ public class HelpWindow extends UiPart<Stage> {
 
     @FXML
     private Label userGuideMessage;
-
-    @FXML
-    private Button copyButton;
 
     @FXML
     private Label helpMessage;
