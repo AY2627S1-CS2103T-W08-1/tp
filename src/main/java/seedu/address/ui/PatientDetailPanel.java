@@ -105,7 +105,7 @@ public class PatientDetailPanel extends UiPart<Region> {
     private void fillDetails(Patient patient) {
         name.setText(patient.getName().fullName);
         basicDetails.getChildren().setAll(PatientFormatter.formatDetails(patient).stream()
-                .map(PatientDetailPanel::createLabel).toList());
+                .map(detail -> addCopyMenu(createLabel(detail))).toList());
         fillEntries(medications, patient.getMedications().stream().map(Medication::toString).toList());
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
@@ -130,7 +130,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         for (int i = 0; i < entries.size(); i++) {
             Label numberLabel = createLabel((i + 1) + ENTRY_NUMBER_SUFFIX);
             numberLabel.setMinWidth(Region.USE_PREF_SIZE);
-            Label entryLabel = createLabel(entries.get(i));
+            Label entryLabel = addCopyMenu(createLabel(entries.get(i)));
             entryLabel.setMinWidth(0);
             HBox.setHgrow(entryLabel, Priority.ALWAYS);
             container.getChildren().add(new HBox(ENTRY_NUMBER_GAP, numberLabel, entryLabel));
@@ -138,21 +138,20 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
-     * Returns a wrapping label showing {@code text}, which can be copied with a right-click.
+     * Returns a wrapping label showing {@code text}.
      */
     private static Label createLabel(String text) {
         Label label = new Label(text);
         label.getStyleClass().add(ENTRY_STYLE_CLASS);
         label.setWrapText(true);
-        addCopyMenu(label);
         return label;
     }
 
     /**
      * Gives {@code label} a right-click menu with {@code COPY_MENU_TEXT}, which copies its text to the clipboard,
-     * since the text of a label cannot be selected.
+     * since the text of a label cannot be selected, and returns {@code label}.
      */
-    private static void addCopyMenu(Label label) {
+    private static Label addCopyMenu(Label label) {
         MenuItem copyItem = new MenuItem(COPY_MENU_TEXT);
         copyItem.setOnAction(event -> {
             ClipboardContent content = new ClipboardContent();
@@ -160,6 +159,7 @@ public class PatientDetailPanel extends UiPart<Region> {
             Clipboard.getSystemClipboard().setContent(content);
         });
         label.setContextMenu(new ContextMenu(copyItem));
+        return label;
     }
 
     private static void setShown(Region region, boolean isShown) {

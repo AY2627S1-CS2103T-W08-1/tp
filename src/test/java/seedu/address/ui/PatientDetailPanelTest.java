@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
@@ -81,6 +82,17 @@ public class PatientDetailPanelTest {
         assertEquals(PatientFormatter.HEADING_CARE_INSTRUCTIONS, getLabelText(content, "#careInstructionsHeading"));
         assertEquals(PatientFormatter.HEADING_CONTACTS, getLabelText(content, "#contactsHeading"));
         assertEquals(PatientFormatter.HEADING_APPOINTMENTS, getLabelText(content, "#appointmentsHeading"));
+    }
+
+    @Test
+    public void copyMenu_numbersAndNoneRecorded_notGivenMenu() {
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("Penicillin").build());
+        HBox allergenRow = (HBox) ((VBox) lookup(content, "#allergens")).getChildren().get(0);
+        Label noMedications = (Label) ((VBox) lookup(content, "#medications")).getChildren().get(0);
+
+        assertNull(((Label) allergenRow.getChildren().get(0)).getContextMenu());
+        assertNull(noMedications.getContextMenu());
     }
 
     @Test
