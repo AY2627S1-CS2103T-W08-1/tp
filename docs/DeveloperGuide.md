@@ -226,7 +226,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
 
-The panel numbers the appointments upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
+The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
 
 #### Design considerations
 
@@ -1294,7 +1294,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `export 1`<br>
-      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, then past ones marked `(past)`, numbered as in the detail panel), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
+      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, then past ones marked `(past)`, decided at the time of the export), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
 
    1. Test case: `addcare 1 med/Paracetamol 500mg`, then `export 1` again<br>
       Expected: The same file is replaced, and now lists `Paracetamol 500mg` under Medications.
