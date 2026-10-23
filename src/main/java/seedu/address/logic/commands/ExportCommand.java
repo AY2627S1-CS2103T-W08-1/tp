@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.PatientFormatter;
@@ -142,24 +143,12 @@ public class ExportCommand extends Command {
         } catch (IOException ioe) {
             logger.warning("Could not export a patient record to " + exportDir + ": " + ioe.getClass().getSimpleName());
             if (temporaryFile != null) {
-                deleteTemporaryFile(temporaryFile);
+                FileUtil.deleteTemporaryFile(temporaryFile);
             }
             String reason = Messages.describeWriteFailure(ioe);
             String message = String.format(MESSAGE_FAILURE, patient.getName().fullName,
                     exportFile.toAbsolutePath().normalize(), reason);
             throw new CommandException(message, ioe);
-        }
-    }
-
-    /**
-     * Deletes {@code temporaryFile}, which a failed export created and left behind, if it is still there.
-     */
-    static void deleteTemporaryFile(Path temporaryFile) {
-        try {
-            Files.deleteIfExists(temporaryFile);
-        } catch (IOException ioe) {
-            logger.warning("Could not delete a temporary file in " + temporaryFile.getParent() + ": "
-                    + ioe.getClass().getSimpleName());
         }
     }
 

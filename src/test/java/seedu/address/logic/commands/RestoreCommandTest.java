@@ -84,7 +84,8 @@ public class RestoreCommandTest {
         writeBackup(backupData);
         Model expectedModel = new ModelManager(backupData, new UserPrefs());
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"), expectedModel);
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", ""),
+                expectedModel);
         // the automatic backup holds the data from before the restore
         assertEquals(getTypicalAddressBook(), readAddressBook(temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME)));
     }
@@ -94,7 +95,7 @@ public class RestoreCommandTest {
         AddressBook backupData = createAddressBook(HOON);
         writeBackup(backupData);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(1, "patient"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(1, "patient", ""),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -102,7 +103,7 @@ public class RestoreCommandTest {
     public void execute_emptyBackup_removesAllPatients() throws Exception {
         writeBackup(new AddressBook());
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(0, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(0, "patients", ""),
                 new ModelManager());
     }
 
@@ -111,7 +112,7 @@ public class RestoreCommandTest {
         model.updateFilteredPatientList(patient -> false);
         writeBackup(getTypicalAddressBook());
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients", ""),
                 new ModelManager(getTypicalAddressBook(), new UserPrefs()));
     }
 
@@ -120,8 +121,9 @@ public class RestoreCommandTest {
         Patient archivedHoon = new PatientBuilder(HOON).withArchived(true).build();
         AddressBook backupData = createAddressBook(ALICE, archivedHoon);
         writeBackup(backupData);
+        String archivedNote = String.format(RestoreCommand.MESSAGE_ARCHIVED_COUNT, 1);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", archivedNote),
                 new ModelManager(backupData, new UserPrefs()));
         assertEquals(List.of(ALICE), model.getFilteredPatientList());
         assertEquals(2, model.getAddressBook().getPatientList().size());
@@ -133,7 +135,7 @@ public class RestoreCommandTest {
         AddressBook backupData = createAddressBook(HOON, IDA);
         writeBackup(backupData);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", ""),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -144,7 +146,8 @@ public class RestoreCommandTest {
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.setViewedPatient(ALICE);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients"), expectedModel);
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients", ""),
+                expectedModel);
     }
 
     @Test
@@ -154,7 +157,7 @@ public class RestoreCommandTest {
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
                 toPathRelativeToWorkingDir(temporaryFolder));
 
-        assertCommandSuccess(restoreCommand, model, getExpectedSuccessMessage(1, "patient"),
+        assertCommandSuccess(restoreCommand, model, getExpectedSuccessMessage(1, "patient", ""),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -311,8 +314,8 @@ public class RestoreCommandTest {
         return new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder);
     }
 
-    private String getExpectedSuccessMessage(int patientCount, String patientWord) {
-        return String.format(RestoreCommand.MESSAGE_SUCCESS, patientCount, patientWord, BACKUP_NAME,
+    private String getExpectedSuccessMessage(int patientCount, String patientWord, String archivedNote) {
+        return String.format(RestoreCommand.MESSAGE_SUCCESS, patientCount, patientWord, archivedNote, BACKUP_NAME,
                 temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
     }
 

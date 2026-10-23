@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +14,7 @@ import java.util.Locale;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -37,6 +39,7 @@ public class BackupCommand extends Command {
     private static final String FILE_NAME_PREFIX = "mediconnect-";
     private static final String FILE_EXTENSION = ".json";
     private static final String SUFFIX_SEPARATOR = "-";
+    private static final String TEMPORARY_FILE_SUFFIX = ".tmp";
     // Locale.ROOT keeps file names the same whatever the computer's language settings are
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss", Locale.ROOT);
@@ -90,17 +93,28 @@ public class BackupCommand extends Command {
     /**
      * Saves {@code addressBook} to a new timestamped file in the backup folder and returns the file's path.
      * {@code RestoreCommand} also uses this, to back up the current data before replacing it.
+     * The data is first written to a new temporary file beside the backup, which is then renamed to the backup's
+     * name, so a failed write never leaves a cut-off backup. On macOS and Linux, a new temporary file can be opened
+     * only by the current user, and the backup keeps that when it is renamed.
      *
-     * @throws IOException if the backup file cannot be written.
+     * @throws IOException if the backup folder or file cannot be written.
      */
     Path saveBackup(ReadOnlyAddressBook addressBook) throws IOException {
         requireNonNull(addressBook);
-        Path backupFile = getBackupFilePath();
+        Path temporaryFile = null;
+        Path backupFile = null;
 
         try {
-            new JsonAddressBookStorage(backupFile).saveAddressBook(addressBook);
+            Files.createDirectories(backupDir);
+            backupFile = getBackupFilePath();
+            temporaryFile = Files.createTempFile(backupDir, backupFile.getFileName() + ".", TEMPORARY_FILE_SUFFIX);
+            new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook);
+            Files.move(temporaryFile, backupFile, StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException ioe) {
-            logger.warning("Could not save backup to " + backupFile + ": " + ioe);
+            logger.warning("Could not save a backup to " + backupDir + ": " + ioe.getClass().getSimpleName());
+            if (temporaryFile != null) {
+                FileUtil.deleteTemporaryFile(temporaryFile);
+            }
             throw ioe;
         }
 

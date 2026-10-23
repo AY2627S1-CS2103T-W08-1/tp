@@ -746,6 +746,8 @@ Format: `backup`
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
 * If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
+* On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
+* A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
 
 Returns `Backup saved to: ` followed by the full path of the backup file.
 
@@ -766,8 +768,9 @@ If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows
 
 Replaces all patient data with the data in a backup file from the `data/backups` folder.
 
-Format: `restore FILENAME`
+Format: `restore [FILENAME]`
 
+* `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
@@ -777,7 +780,9 @@ Format: `restore FILENAME`
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
 
-Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup.
+Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
+
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder.
 
 ### Exporting a patient's record: `export`
 
@@ -907,6 +912,6 @@ Action            | Format, Examples
 **List**          | `list`
 **List appointments** | `listappt [INDEX]` <br> e.g., `listappt`, `listappt 2`
 **List archived** | `listarchived`
-**Restore**       | `restore FILENAME` <br> e.g., `restore mediconnect-20261020-083015.json`
+**Restore**       | `restore [FILENAME]` <br> e.g., `restore`, `restore mediconnect-20261020-083015.json`
 **Unarchive**     | `unarchive INDEX` <br> e.g., `unarchive 1`
 **View**          | `view INDEX` <br> e.g., `view 2`

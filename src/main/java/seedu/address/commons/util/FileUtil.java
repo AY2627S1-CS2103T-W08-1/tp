@@ -1,8 +1,13 @@
 package seedu.address.commons.util;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.Logger;
+
+import seedu.address.commons.core.LogsCenter;
 
 /**
  * Writes and reads files
@@ -10,6 +15,8 @@ import java.nio.file.Path;
 public class FileUtil {
 
     private static final String CHARSET = "UTF-8";
+
+    private static final Logger logger = LogsCenter.getLogger(FileUtil.class);
 
     /**
      * Creates a file if it does not exist along with its missing parent directories.
@@ -49,6 +56,22 @@ public class FileUtil {
      */
     public static void writeToFile(Path file, String content) throws IOException {
         Files.write(file, content.getBytes(CHARSET));
+    }
+
+    /**
+     * Deletes {@code temporaryFile}, which a failed write created and left behind, if it is still there.
+     * A failure to delete it is only logged, so that it does not hide the failure that left the file behind.
+     *
+     * @param temporaryFile Temporary file to delete.
+     */
+    public static void deleteTemporaryFile(Path temporaryFile) {
+        requireNonNull(temporaryFile);
+        try {
+            Files.deleteIfExists(temporaryFile);
+        } catch (IOException ioe) {
+            logger.warning("Could not delete a temporary file in " + temporaryFile.getParent() + ": "
+                    + ioe.getClass().getSimpleName());
+        }
     }
 
 }
