@@ -1,15 +1,18 @@
 package seedu.address.ui;
 
+import java.awt.Point;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
@@ -135,14 +138,25 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Sets the default size based on {@code guiSettings}.
+     * Sets the size and position of the window from {@code guiSettings}, reduced and moved where needed so that the
+     * whole window fits the visible area of the screen it was last on, e.g., on a small or scaled screen.
+     * If that screen is not connected any more, the window is placed on the main screen instead.
      */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
-        primaryStage.setHeight(guiSettings.getWindowHeight());
-        primaryStage.setWidth(guiSettings.getWindowWidth());
-        if (guiSettings.getWindowCoordinates() != null) {
-            primaryStage.setX(guiSettings.getWindowCoordinates().getX());
-            primaryStage.setY(guiSettings.getWindowCoordinates().getY());
+        Point coordinates = guiSettings.getWindowCoordinates();
+        // the screen the window was last on, or the main screen if that screen is not connected any more
+        Rectangle2D screen = Screen.getScreens().stream()
+                .map(Screen::getVisualBounds)
+                .filter(bounds -> coordinates != null && bounds.contains(coordinates.getX(), coordinates.getY()))
+                .findFirst()
+                .orElse(Screen.getPrimary().getVisualBounds());
+        double width = Math.min(guiSettings.getWindowWidth(), screen.getWidth());
+        double height = Math.min(guiSettings.getWindowHeight(), screen.getHeight());
+        primaryStage.setWidth(width);
+        primaryStage.setHeight(height);
+        if (coordinates != null) {
+            primaryStage.setX(Math.min(Math.max(coordinates.getX(), screen.getMinX()), screen.getMaxX() - width));
+            primaryStage.setY(Math.min(Math.max(coordinates.getY(), screen.getMinY()), screen.getMaxY() - height));
         }
     }
 
