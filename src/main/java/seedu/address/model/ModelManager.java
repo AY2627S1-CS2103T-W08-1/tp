@@ -166,11 +166,9 @@ public class ModelManager implements Model {
     @Override
     public LocalDateTime getAppointmentsOrderedAt(Patient patient) {
         requireNonNull(patient);
-        if (!patient.equals(viewedPatient.get())) {
-            return LocalDateTime.now(clock);
-        }
-        assert viewedPatientShownAt != null : "A viewed patient must have a time they were shown at";
-        return viewedPatientShownAt;
+        return patient.equals(viewedPatient.get())
+                ? viewedPatientShownAt
+                : LocalDateTime.now(clock);
     }
 
     @Override
