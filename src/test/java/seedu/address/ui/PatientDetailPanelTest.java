@@ -7,7 +7,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalContacts.GUARDIAN;
+import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.BENSON;
+import static seedu.address.ui.PatientDetailPanel.MESSAGE_LIST_INDEX;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
+import static seedu.address.ui.PatientDetailPanel.MESSAGE_NOT_IN_LIST;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
 import java.awt.GraphicsEnvironment;
@@ -24,6 +28,8 @@ import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -43,6 +49,7 @@ public class PatientDetailPanelTest {
     private static boolean isToolkitAvailable;
 
     private final SimpleObjectProperty<Patient> viewedPatient = new SimpleObjectProperty<>();
+    private final ObservableList<Patient> displayedPatients = FXCollections.observableArrayList();
 
     /**
      * Starts the JavaFX toolkit. The tests in this class are skipped in environments without a display.
@@ -218,14 +225,84 @@ public class PatientDetailPanelTest {
         assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
     }
 
+    @Test
+    public void viewedPatient_inDisplayedList_showsOneBasedListIndex() {
+        VBox content = createPanelContent();
+        displayedPatients.setAll(ALICE, BENSON);
+        viewedPatient.set(BENSON);
+
+        assertEquals(String.format(MESSAGE_LIST_INDEX, 2), ((Label) lookup(content, "#listIndex")).getText());
+    }
+
+    @Test
+    public void displayedPatients_listChanged_listIndexUpdated() {
+        VBox content = createPanelContent();
+        Label listIndex = (Label) lookup(content, "#listIndex");
+        displayedPatients.setAll(ALICE, BENSON);
+        viewedPatient.set(ALICE);
+        assertEquals(String.format(MESSAGE_LIST_INDEX, 1), listIndex.getText());
+
+        // e.g., after find hides the viewed patient
+        displayedPatients.setAll(BENSON);
+        assertEquals(MESSAGE_NOT_IN_LIST, listIndex.getText());
+
+        // e.g., after list shows the viewed patient again, at another index
+        displayedPatients.setAll(BENSON, ALICE);
+        assertEquals(String.format(MESSAGE_LIST_INDEX, 2), listIndex.getText());
+    }
+
+    @Test
+    public void displayedPatients_listChangedWithNoPatientViewed_showsPlaceholder() {
+        VBox content = createPanelContent();
+        displayedPatients.setAll(ALICE, BENSON);
+
+        assertTrue(lookup(content, "#placeholder").isVisible());
+        assertFalse(lookup(content, "#details").isVisible());
+    }
+
+    @Test
+    public void viewedPatient_differentPatient_scrollsToTop() {
+        ScrollPane scrollPane = createPanel();
+        viewedPatient.set(ALICE);
+        scrollPane.setVvalue(scrollPane.getVmax());
+
+        viewedPatient.set(BENSON);
+
+        assertEquals(scrollPane.getVmin(), scrollPane.getVvalue());
+    }
+
+    @Test
+    public void viewedPatient_samePatientRedrawn_keepsScrollPosition() {
+        ScrollPane scrollPane = createPanel();
+        viewedPatient.set(ALICE);
+        scrollPane.setVvalue(scrollPane.getVmax());
+
+        // e.g., after addcare on the viewed patient
+        viewedPatient.set(new PatientBuilder(ALICE).withAllergens("Latex").build());
+        assertEquals(scrollPane.getVmax(), scrollPane.getVvalue());
+
+        // e.g., after view on the patient already viewed, which clears the panel before showing them again
+        viewedPatient.set(null);
+        viewedPatient.set(ALICE);
+        assertEquals(scrollPane.getVmax(), scrollPane.getVvalue());
+    }
+
     /**
-     * Creates a panel bound to {@code viewedPatient} and returns the content of its scroll pane.
+     * Creates a panel bound to {@code viewedPatient} and {@code displayedPatients}, and returns its scroll pane.
+     */
+    private ScrollPane createPanel() {
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        PatientDetailPanel panel = new PatientDetailPanel(viewedPatient, displayedPatients,
+                patient -> patient.getAppointmentsUpcomingFirst(NOW));
+        return (ScrollPane) panel.getRoot();
+    }
+
+    /**
+     * Creates a panel bound to {@code viewedPatient} and {@code displayedPatients}, and returns the content of its
+     * scroll pane.
      */
     private VBox createPanelContent() {
-        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
-        PatientDetailPanel panel = new PatientDetailPanel(viewedPatient,
-                patient -> patient.getAppointmentsUpcomingFirst(NOW));
-        return (VBox) ((ScrollPane) panel.getRoot()).getContent();
+        return (VBox) createPanel().getContent();
     }
 
     private static Node lookup(VBox content, String selector) {
