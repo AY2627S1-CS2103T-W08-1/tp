@@ -16,24 +16,21 @@
 
     <VBox fx:id="details" spacing="6">
       <Label fx:id="name" styleClass="detail-name" wrapText="true" />
-      <Label fx:id="nric" styleClass="label-bright" wrapText="true" />
-      <Label fx:id="dob" styleClass="label-bright" wrapText="true" />
-      <Label fx:id="phone" styleClass="label-bright" wrapText="true" />
-      <Label fx:id="address" styleClass="label-bright" wrapText="true" />
+      <VBox fx:id="basicDetails" spacing="6" />
 
-      <Label text="Medications" styleClass="detail-heading" />
+      <Label fx:id="medicationsHeading" styleClass="detail-heading" />
       <VBox fx:id="medications" spacing="2" />
 
-      <Label text="Allergens" styleClass="detail-heading" />
+      <Label fx:id="allergensHeading" styleClass="detail-heading" />
       <VBox fx:id="allergens" spacing="2" />
 
-      <Label text="Care Instructions" styleClass="detail-heading" />
+      <Label fx:id="careInstructionsHeading" styleClass="detail-heading" />
       <VBox fx:id="careInstructions" spacing="2" />
 
-      <Label text="Contacts" styleClass="detail-heading" />
+      <Label fx:id="contactsHeading" styleClass="detail-heading" />
       <VBox fx:id="contacts" spacing="2" />
 
-      <Label text="Appointments" styleClass="detail-heading" />
+      <Label fx:id="appointmentsHeading" styleClass="detail-heading" />
       <VBox fx:id="appointments" spacing="2" />
     </VBox>
   </VBox>

@@ -669,6 +669,8 @@ Format: `view INDEX`
   Upcoming appointments are listed first, then past ones, each sorted by date, then time.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
+  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
   to the message above when the patient is deleted or all patients are cleared.
