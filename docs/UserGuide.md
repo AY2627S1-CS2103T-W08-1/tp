@@ -675,7 +675,8 @@ Format: `view INDEX`
 * Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
   `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
   the list does not show the patient, e.g., after `find` hides them or they are archived, it shows
-  `Not in the displayed list`: run `list` or `find` to show the patient again before changing them.
+  `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
+  `listarchived` for an archived patient.
 * When a different patient is viewed, the panel scrolls back to the top, so their name is shown first. When the same
   patient is shown again, e.g., after `addcare`, the panel stays where it was scrolled to.
 
