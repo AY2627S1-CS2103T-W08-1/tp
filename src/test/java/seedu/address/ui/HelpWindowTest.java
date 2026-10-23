@@ -19,7 +19,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import seedu.address.logic.commands.HelpCommand;
 
 public class HelpWindowTest {
@@ -103,32 +102,30 @@ public class HelpWindowTest {
     @Test
     public void focusChanged_shownWithOwner_inFrontOnlyWhileHelpWindowOrOwnerFocused() throws Exception {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
-        Stage owner = runOnFxThread(HelpWindowTest::createShownStage);
+        Stage owner = runOnFxThread(HelpWindowTest::createStage);
         // stands for a window of another app, e.g., a browser
-        Stage otherWindow = runOnFxThread(HelpWindowTest::createShownStage);
-        HelpWindow helpWindow = runOnFxThread(() -> {
-            HelpWindow newHelpWindow = new HelpWindow();
-            newHelpWindow.getRoot().initOwner(owner);
-            newHelpWindow.show();
-            return newHelpWindow;
+        Stage otherWindow = runOnFxThread(HelpWindowTest::createStage);
+        Stage root = runOnFxThread(() -> {
+            HelpWindow helpWindow = new HelpWindow();
+            helpWindow.getRoot().initOwner(owner);
+            return helpWindow.getRoot();
         });
-        Stage root = helpWindow.getRoot();
 
         try {
-            // e.g., typing in the main window
-            focusAndWait(owner);
+            // e.g., opening the help window
+            showAndWaitForFocus(root);
             assertTrue(runOnFxThread(root::isAlwaysOnTop));
 
-            // e.g., clicking the help window
-            focusAndWait(root);
+            // e.g., typing in the main window
+            showAndWaitForFocus(owner);
             assertTrue(runOnFxThread(root::isAlwaysOnTop));
 
             // e.g., switching to a browser
-            focusAndWait(otherWindow);
+            showAndWaitForFocus(otherWindow);
             assertFalse(runOnFxThread(root::isAlwaysOnTop));
         } finally {
             runOnFxThread(() -> {
-                helpWindow.hide();
+                root.hide();
                 owner.hide();
                 otherWindow.hide();
                 return null;
@@ -150,25 +147,25 @@ public class HelpWindowTest {
         assertEquals(HelpWindow.USERGUIDE_URL, copiedText);
     }
 
-    private static Stage createShownStage() {
+    private static Stage createStage() {
         Stage stage = new Stage();
         stage.setScene(new Scene(new Pane(), STAGE_SIZE, STAGE_SIZE));
-        stage.show();
         return stage;
     }
 
     /**
-     * Asks for the focus to be given to {@code window}, and waits until the operating system gives it, which happens
-     * after the request returns. Skips the test if the focus is not given within {@code FOCUS_TIMEOUT_MILLIS}, e.g.,
-     * on a display that does not give windows the focus.
+     * Shows {@code stage}, and waits until the operating system gives it the focus, which happens after it is shown.
+     * A window is given the focus by showing it, since some displays, e.g., a virtual display with no window manager,
+     * ignore later requests for the focus. Skips the test if the focus is not given within
+     * {@code FOCUS_TIMEOUT_MILLIS}.
      */
-    private static void focusAndWait(Window window) throws Exception {
+    private static void showAndWaitForFocus(Stage stage) throws Exception {
         runOnFxThread(() -> {
-            window.requestFocus();
+            stage.show();
             return null;
         });
         long deadline = System.currentTimeMillis() + FOCUS_TIMEOUT_MILLIS;
-        while (!runOnFxThread(window::isFocused)) {
+        while (!runOnFxThread(stage::isFocused)) {
             assumeTrue(System.currentTimeMillis() < deadline, "The display did not give the window the focus");
             Thread.sleep(FOCUS_POLL_MILLIS);
         }
