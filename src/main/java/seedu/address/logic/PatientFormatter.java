@@ -38,6 +38,9 @@ public class PatientFormatter {
     /** Heading of the list of appointments. */
     public static final String HEADING_APPOINTMENTS = "Appointments";
 
+    /** Added after each past appointment. */
+    public static final String PAST_MARK = " (past)";
+
     /** A line break inside an entry. */
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
@@ -81,10 +84,25 @@ public class PatientFormatter {
     }
 
     /**
+     * Returns the text of each of {@code appointments}, in the same order, with {@code PAST_MARK} after each
+     * appointment before {@code now}, e.g., "2026-10-02 10:00 with Dr Tan (past)".
+     *
+     * @param appointments Appointments in the order they are numbered.
+     * @param now Date and time that decides which appointments are past.
+     * @return the entries to number, one per appointment.
+     */
+    public static List<String> formatAppointments(List<Appointment> appointments, LocalDateTime now) {
+        requireAllNonNull(appointments, now);
+        return appointments.stream()
+                .map(appointment -> appointment + (appointment.isBefore(now) ? PAST_MARK : ""))
+                .toList();
+    }
+
+    /**
      * Returns the full record of {@code patient}: the name and basic details, then each care list, the contacts
      * and the appointments under their headings, with a blank line before each heading.
      * Appointments are numbered as in the detail panel: upcoming ones (at or after {@code now}) first,
-     * then past ones.
+     * then past ones, each marked with {@code PAST_MARK}.
      *
      * @param patient Patient whose record is formatted.
      * @param now Date and time that decides which appointments are upcoming.
@@ -101,8 +119,8 @@ public class PatientFormatter {
                 Map.entry(HEADING_ALLERGENS, patient.getAllergens()),
                 Map.entry(HEADING_CARE_INSTRUCTIONS, patient.getCareInstructions()),
                 Map.entry(HEADING_CONTACTS, patient.getContacts().stream().map(Contact::toString).toList()),
-                Map.entry(HEADING_APPOINTMENTS, patient.getAppointmentsUpcomingFirst(now).stream()
-                        .map(Appointment::toString).toList()))) {
+                Map.entry(HEADING_APPOINTMENTS,
+                        formatAppointments(patient.getAppointmentsUpcomingFirst(now), now)))) {
             lines.add("");
             lines.add(careList.getKey());
             lines.addAll(formatEntries(careList.getValue()));

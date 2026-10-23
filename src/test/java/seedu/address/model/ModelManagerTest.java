@@ -13,6 +13,7 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -155,6 +156,23 @@ public class ModelManagerTest {
 
         modelManager.setViewedPatient(ALICE);
         assertEquals(ALICE, shownPatients.get(shownPatients.size() - 1));
+    }
+
+    @Test
+    public void getAppointmentsOrderedAt_nullPatient_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> modelManager.getAppointmentsOrderedAt(null));
+    }
+
+    @Test
+    public void getAppointmentsOrderedAt_viewedAndOtherPatient_returnsTimeShownAndCurrentTime() {
+        AdjustableClock clock = new AdjustableClock(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
+        AddressBook addressBook = new AddressBookBuilder().withPatient(ALICE).withPatient(BENSON).build();
+        ModelManager model = new ModelManager(addressBook, new UserPrefs(), clock);
+        model.setViewedPatient(ALICE);
+        clock.advance(Duration.ofMinutes(2));
+
+        assertEquals(LocalDateTime.of(2026, 10, 18, 12, 0), model.getAppointmentsOrderedAt(ALICE));
+        assertEquals(LocalDateTime.of(2026, 10, 18, 12, 2), model.getAppointmentsOrderedAt(BENSON));
     }
 
     @Test

@@ -88,6 +88,34 @@ public class PatientFormatterTest {
     }
 
     @Test
+    public void formatAppointments_nullAppointmentsOrTime_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> PatientFormatter.formatAppointments(null, NOW));
+        assertThrows(NullPointerException.class, () -> PatientFormatter.formatAppointments(List.of(), null));
+    }
+
+    @Test
+    public void formatAppointments_noAppointments_returnsNoEntries() {
+        assertEquals(List.of(), PatientFormatter.formatAppointments(List.of(), NOW));
+    }
+
+    @Test
+    public void formatAppointments_pastAndUpcomingAppointments_orderKeptAndOnlyPastMarked() {
+        Appointment upcoming = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(14, 0), "Dr Lim", "");
+        Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Polyclinic", "");
+
+        assertEquals(List.of("2026-12-01 14:00 with Dr Lim", "2026-10-01 09:00 with Polyclinic (past)"),
+                PatientFormatter.formatAppointments(List.of(upcoming, past), NOW));
+    }
+
+    @Test
+    public void formatAppointments_appointmentInCurrentMinute_notMarked() {
+        Appointment atNow = new Appointment(NOW.toLocalDate(), NOW.toLocalTime(), "Dr Lim", "");
+
+        assertEquals(List.of("2026-10-20 14:30 with Dr Lim"),
+                PatientFormatter.formatAppointments(List.of(atNow), NOW.plusSeconds(59)));
+    }
+
+    @Test
     public void formatRecord_nullPatientOrTime_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> PatientFormatter.formatRecord(null, NOW));
         assertThrows(NullPointerException.class, () -> PatientFormatter.formatRecord(ALICE, null));
@@ -148,26 +176,28 @@ public class PatientFormatterTest {
     }
 
     @Test
-    public void formatRecord_pastAndUpcomingAppointments_upcomingFirst() {
+    public void formatRecord_pastAndUpcomingAppointments_upcomingFirstAndPastMarked() {
         Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Polyclinic", "");
         Appointment upcoming = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(14, 0), "Dr Lim", "");
         Patient patient = new PatientBuilder(ALICE).withAppointments(past, upcoming).build();
 
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
-        assertEquals(List.of("Appointments", "1. 2026-12-01 14:00 with Dr Lim", "2. 2026-10-01 09:00 with Polyclinic"),
+        assertEquals(List.of("Appointments", "1. 2026-12-01 14:00 with Dr Lim",
+                "2. 2026-10-01 09:00 with Polyclinic (past)"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
 
     @Test
-    public void formatRecord_appointmentAtNow_listedAsUpcoming() {
+    public void formatRecord_appointmentAtNow_listedAsUpcomingAndNotMarked() {
         Appointment minuteEarlier = new Appointment(NOW.toLocalDate(), LocalTime.of(14, 29), "Polyclinic", "");
         Appointment atNow = new Appointment(NOW.toLocalDate(), NOW.toLocalTime(), "Dr Lim", "");
         Patient patient = new PatientBuilder(ALICE).withAppointments(minuteEarlier, atNow).build();
 
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
-        assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim", "2. 2026-10-20 14:29 with Polyclinic"),
+        assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim",
+                "2. 2026-10-20 14:29 with Polyclinic (past)"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
 }
