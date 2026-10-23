@@ -29,13 +29,6 @@ public class RestoreCommand extends Command {
 
     public static final String COMMAND_WORD = "restore";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Replaces all patient data with a backup from the data/backups folder, "
-            + "after backing up the current data.\n"
-            + "Parameters: FILENAME (the name of a backup file in data/backups; "
-            + "enter " + COMMAND_WORD + " alone to list them)\n"
-            + "Example: " + COMMAND_WORD + " mediconnect-20261020-083015.json";
-
     public static final String MESSAGE_INVALID_FILE_NAME = "Give only the name of a backup file in data/backups, "
             + "not a path, e.g., " + COMMAND_WORD + " mediconnect-20261020-083015.json";
 
