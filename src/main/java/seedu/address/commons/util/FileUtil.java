@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -15,6 +16,7 @@ import seedu.address.commons.core.LogsCenter;
 public class FileUtil {
 
     private static final String CHARSET = "UTF-8";
+    private static final String TEMPORARY_FILE_SUFFIX = ".tmp";
 
     private static final Logger logger = LogsCenter.getLogger(FileUtil.class);
 
@@ -59,6 +61,30 @@ public class FileUtil {
     }
 
     /**
+     * Writes {@code file} through a new temporary file in the same folder: {@code writer} writes the content to the
+     * temporary file, which then replaces {@code file}. A write that fails partway therefore never leaves a cut-off
+     * {@code file}, and the temporary file is deleted. On macOS and Linux, a new temporary file can be opened only by
+     * the current user, and {@code file} keeps that.
+     *
+     * @param file File to write. Its folder must exist.
+     * @param writer Writes the content of {@code file} to the temporary file.
+     * @throws IOException if the temporary file cannot be created or written, or cannot replace {@code file}.
+     */
+    public static void writeThroughTemporaryFile(Path file, TemporaryFileWriter writer) throws IOException {
+        requireNonNull(file);
+        requireNonNull(writer);
+        Path folder = file.toAbsolutePath().getParent();
+        Path temporaryFile = Files.createTempFile(folder, file.getFileName() + ".", TEMPORARY_FILE_SUFFIX);
+        try {
+            writer.write(temporaryFile);
+            Files.move(temporaryFile, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ioe) {
+            deleteTemporaryFile(temporaryFile);
+            throw ioe;
+        }
+    }
+
+    /**
      * Deletes {@code temporaryFile}, which a failed write created and left behind, if it is still there.
      * A failure to delete it is only logged, so that it does not hide the failure that left the file behind.
      *
@@ -74,4 +100,17 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Writes the content of a file to the temporary file that {@code writeThroughTemporaryFile} creates.
+     */
+    @FunctionalInterface
+    public interface TemporaryFileWriter {
+        /**
+         * Writes the content to {@code temporaryFile}, which exists and is empty.
+         *
+         * @param temporaryFile Temporary file to write to.
+         * @throws IOException if the content cannot be written.
+         */
+        void write(Path temporaryFile) throws IOException;
+    }
 }

@@ -1,20 +1,97 @@
 package seedu.address.commons.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 public class FileUtilTest {
 
     @TempDir
     public Path temporaryFolder;
+
+    @Test
+    public void writeThroughTemporaryFile_nullArguments_throwsNullPointerException() {
+        Path file = temporaryFolder.resolve("record.txt");
+
+        assertThrows(NullPointerException.class, () -> FileUtil.writeThroughTemporaryFile(null, temporaryFile -> {}));
+        assertThrows(NullPointerException.class, () -> FileUtil.writeThroughTemporaryFile(file, null));
+    }
+
+    @Test
+    public void writeThroughTemporaryFile_newFile_writesContentAndLeavesNoTemporaryFile() throws Exception {
+        Path file = temporaryFolder.resolve("record.txt");
+
+        FileUtil.writeThroughTemporaryFile(file, temporaryFile -> Files.write(temporaryFile, List.of("new")));
+
+        assertEquals(List.of("new"), Files.readAllLines(file));
+        assertEquals(List.of(file), listFolder());
+    }
+
+    @Test
+    public void writeThroughTemporaryFile_existingFile_replacesFile() throws Exception {
+        Path file = Files.write(temporaryFolder.resolve("record.txt"), List.of("earlier"));
+
+        FileUtil.writeThroughTemporaryFile(file, temporaryFile -> Files.write(temporaryFile, List.of("later")));
+
+        assertEquals(List.of("later"), Files.readAllLines(file));
+        assertEquals(List.of(file), listFolder());
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows has no POSIX file permissions")
+    public void writeThroughTemporaryFile_newFile_readableOnlyByOwner() throws Exception {
+        Path file = temporaryFolder.resolve("record.txt");
+
+        FileUtil.writeThroughTemporaryFile(file, temporaryFile -> Files.write(temporaryFile, List.of("new")));
+
+        assertEquals(Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE),
+                Files.getPosixFilePermissions(file));
+    }
+
+    @Test
+    public void writeThroughTemporaryFile_writeFails_keepsFileAndDeletesTemporaryFile() throws Exception {
+        Path file = Files.write(temporaryFolder.resolve("record.txt"), List.of("earlier"));
+        IOException failure = new IOException("disk full");
+
+        IOException thrown = Assertions.assertThrows(IOException.class, () ->
+                FileUtil.writeThroughTemporaryFile(file, temporaryFile -> {
+                    Files.write(temporaryFile, List.of("cut"));
+                    throw failure;
+                }));
+
+        assertSame(failure, thrown);
+        assertEquals(List.of("earlier"), Files.readAllLines(file));
+        assertEquals(List.of(file), listFolder());
+    }
+
+    @Test
+    public void writeThroughTemporaryFile_replaceFails_deletesTemporaryFile() throws Exception {
+        // a folder that is not empty cannot be replaced by a file
+        Path file = Files.createDirectory(temporaryFolder.resolve("record.txt"));
+        Path insideFile = Files.write(file.resolve("inside.txt"), List.of("inside"));
+
+        Assertions.assertThrows(IOException.class, () ->
+                FileUtil.writeThroughTemporaryFile(file, temporaryFile -> Files.write(temporaryFile, List.of("new"))));
+
+        assertEquals(List.of("inside"), Files.readAllLines(insideFile));
+        assertEquals(List.of(file), listFolder());
+    }
 
     @Test
     public void deleteTemporaryFile_nullFile_throwsNullPointerException() {
@@ -48,5 +125,14 @@ public class FileUtilTest {
         FileUtil.deleteTemporaryFile(nonEmptyFolder);
 
         assertTrue(Files.exists(insideFile));
+    }
+
+    /**
+     * Returns the files and folders directly in the temporary folder.
+     */
+    private List<Path> listFolder() throws IOException {
+        try (Stream<Path> files = Files.list(temporaryFolder)) {
+            return files.toList();
+        }
     }
 }
