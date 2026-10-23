@@ -3,11 +3,12 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.assertReadableReason;
+import static seedu.address.testutil.TestUtil.runWhileReadOnly;
 import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
@@ -149,47 +150,23 @@ public class ExportCommandTest {
 
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
-    public void execute_temporaryFileCannotBeCreated_keepsEarlierExport() throws Exception {
+    public void execute_temporaryFileCannotBeCreated_keepsEarlierExport() throws Throwable {
         Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
         Path exportFile = exportDir.resolve("S0000001A.txt");
         Files.write(exportFile, List.of("earlier export"));
-        // a read-only folder makes creating the temporary file fail before the earlier export is touched
-        assertTrue(exportDir.toFile().setWritable(false));
-        try {
-            // users with admin rights (e.g., root) can still write, so the test only applies to others
-            assumeFalse(Files.isWritable(exportDir));
-            String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
-                    exportFile, Messages.MESSAGE_NO_WRITE_PERMISSION);
 
-            assertCommandFailure(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model,
-                    expectedMessage);
-            assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
-            assertNoTemporaryFiles(exportDir);
-        } finally {
-            exportDir.toFile().setWritable(true);
-        }
+        // a read-only folder makes creating the temporary file fail before the earlier export is touched
+        runWhileReadOnly(exportDir, () -> assertExportFailsWithPermissionReason(exportDir, exportFile));
     }
 
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on files")
-    public void execute_readOnlyEarlierExport_showsPermissionReasonAndKeepsEarlierExport() throws Exception {
+    public void execute_readOnlyEarlierExport_showsPermissionReasonAndKeepsEarlierExport() throws Throwable {
         Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
         Path exportFile = exportDir.resolve("S0000001A.txt");
         Files.write(exportFile, List.of("earlier export"));
-        assertTrue(exportFile.toFile().setWritable(false));
-        try {
-            // users with admin rights (e.g., root) can still write, so the test only applies to others
-            assumeFalse(Files.isWritable(exportFile));
-            String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
-                    exportFile, Messages.MESSAGE_NO_WRITE_PERMISSION);
 
-            assertCommandFailure(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model,
-                    expectedMessage);
-            assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
-            assertNoTemporaryFiles(exportDir);
-        } finally {
-            exportFile.toFile().setWritable(true);
-        }
+        runWhileReadOnly(exportFile, () -> assertExportFailsWithPermissionReason(exportDir, exportFile));
     }
 
     @Test
@@ -274,7 +251,7 @@ public class ExportCommandTest {
     }
 
     @Test
-    public void execute_appointmentPassedAtExportTime_listedAfterUpcoming() throws Exception {
+    public void execute_exportClock_decidesAppointmentOrder() throws Exception {
         // 20:00 on 2026-10-20 is after the export clock's 14:30, but before the system clock's date and time
         Appointment laterToday = new Appointment(LocalDate.of(2026, 10, 20), LocalTime.of(20, 0), "Dr Tan", "");
         Appointment nextWeek = new Appointment(LocalDate.of(2026, 10, 27), LocalTime.of(9, 0), "Dr Lim", "");
@@ -337,7 +314,9 @@ public class ExportCommandTest {
 
         assertCommandSuccess(createExportCommand(INDEX_FIRST_PATIENT), archivedListModel,
                 getExpectedSuccessMessage(archivedPatient, expectedFile), expectedModel);
-        assertEquals(getExpectedRecord(archivedPatient), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+        List<String> lines = Files.readAllLines(expectedFile, StandardCharsets.UTF_8);
+        assertEquals(getExpectedRecord(archivedPatient), lines);
+        assertTrue(lines.contains(PatientFormatter.ARCHIVED_STATUS));
     }
 
     @Test
@@ -372,7 +351,8 @@ public class ExportCommandTest {
         String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
                 .getMessage();
 
-        assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", exportDir);
+        assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", ".",
+                exportDir);
         assertCommandFailure(exportCommand, model, message);
     }
 
@@ -394,7 +374,8 @@ public class ExportCommandTest {
         String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
                 .getMessage();
 
-        assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", exportFile);
+        assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", ".",
+                exportFile);
         assertTrue(Files.isDirectory(exportFile));
         // the temporary file was written before the move failed, and is deleted again
         assertNoTemporaryFiles(temporaryFolder);
@@ -411,25 +392,6 @@ public class ExportCommandTest {
 
         assertTrue(message.startsWith("Could not export Alice Pauline's record to "
                 + exportDir.resolve("S0000001A.txt") + ": "));
-    }
-
-    @Test
-    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
-    public void execute_readOnlyEarlierExport_throwsCommandExceptionAndKeepsFile() throws Exception {
-        Path exportFile = temporaryFolder.resolve("S0000001A.txt");
-        Files.write(exportFile, List.of("earlier export"));
-        assertTrue(exportFile.toFile().setWritable(false));
-        try {
-            // users with admin rights (e.g., root) can still write, so the test only applies to others
-            assumeFalse(Files.isWritable(exportFile));
-            String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
-                    exportFile, Messages.MESSAGE_NO_WRITE_PERMISSION);
-
-            assertCommandFailure(createExportCommand(INDEX_FIRST_PATIENT), model, expectedMessage);
-            assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
-        } finally {
-            exportFile.toFile().setWritable(true);
-        }
     }
 
     @Test
@@ -502,16 +464,16 @@ public class ExportCommandTest {
     }
 
     /**
-     * Confirms that {@code message} starts with {@code expectedStart} and ends with a reason that is not blank,
-     * does not end with a full stop and does not repeat {@code path}. The reason itself comes from the OS.
+     * Confirms that exporting the first patient to {@code exportDir} fails because MediConnect may not write there,
+     * and that the earlier export in {@code exportFile} is kept, with no temporary file left behind.
      */
-    private static void assertReadableReason(String message, String expectedStart, Path path) {
-        assertTrue(message.startsWith(expectedStart), message);
-        assertTrue(message.endsWith("."), message);
-        String reason = message.substring(expectedStart.length(), message.length() - 1);
-        assertFalse(reason.isBlank(), message);
-        assertFalse(reason.endsWith("."), message);
-        assertFalse(reason.contains(path.toString()), message);
+    private void assertExportFailsWithPermissionReason(Path exportDir, Path exportFile) throws Exception {
+        String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                exportFile, Messages.MESSAGE_NO_WRITE_PERMISSION);
+
+        assertCommandFailure(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model, expectedMessage);
+        assertEquals(List.of("earlier export"), Files.readAllLines(exportFile, StandardCharsets.UTF_8));
+        assertNoTemporaryFiles(exportDir);
     }
 
     /**

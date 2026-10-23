@@ -3,10 +3,11 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.assertReadableReason;
+import static seedu.address.testutil.TestUtil.runWhileReadOnly;
 import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
@@ -196,34 +197,23 @@ public class BackupCommandTest {
         String message = Assertions.assertThrows(CommandException.class, () -> backupCommand.execute(model))
                 .getMessage();
 
-        // the reason comes from the OS, so it is checked only for the problems describeWriteFailure guards against
-        assertTrue(message.startsWith(expectedStart));
-        assertTrue(message.endsWith(expectedEnd));
-        String reason = message.substring(expectedStart.length(), message.length() - expectedEnd.length());
-        assertFalse(reason.isBlank());
-        assertFalse(reason.endsWith("."));
-        assertFalse(reason.contains(backupDir.toString()));
+        assertReadableReason(message, expectedStart, expectedEnd, backupDir);
         assertCommandFailure(backupCommand, model, message);
     }
 
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
-    public void execute_readOnlyBackupFolder_showsPermissionReasonAndLeavesNoFile() throws Exception {
+    public void execute_readOnlyBackupFolder_showsPermissionReasonAndLeavesNoFile() throws Throwable {
         Path backupDir = Files.createDirectory(temporaryFolder.resolve("readonly"));
-        assertTrue(backupDir.toFile().setWritable(false));
-        try {
-            // users with admin rights (e.g., root) can still write, so the test only applies to others
-            assumeFalse(Files.isWritable(backupDir));
-            String expectedMessage = String.format(BackupCommand.MESSAGE_FAILURE, backupDir.toAbsolutePath(),
-                    Messages.MESSAGE_NO_WRITE_PERMISSION);
+        String expectedMessage = String.format(BackupCommand.MESSAGE_FAILURE, backupDir.toAbsolutePath(),
+                Messages.MESSAGE_NO_WRITE_PERMISSION);
 
+        runWhileReadOnly(backupDir, () -> {
             assertCommandFailure(new BackupCommand(FIXED_CLOCK, backupDir), model, expectedMessage);
             try (Stream<Path> files = Files.list(backupDir)) {
                 assertEquals(0, files.count());
             }
-        } finally {
-            backupDir.toFile().setWritable(true);
-        }
+        });
     }
 
     @Test
