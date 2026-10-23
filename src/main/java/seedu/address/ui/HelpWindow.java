@@ -2,7 +2,9 @@ package seedu.address.ui;
 
 import java.util.logging.Logger;
 
-import javafx.beans.value.ChangeListener;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -11,7 +13,6 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.HelpCommand;
@@ -33,6 +34,15 @@ public class HelpWindow extends UiPart<Stage> {
     @FXML
     private Label helpMessage;
 
+    /** True while the window that owns the help window, if any, has the focus. */
+    private final BooleanProperty isOwnerFocused = new SimpleBooleanProperty();
+
+    /**
+     * True while the help window or its owner has the focus. It is kept in a field, as a binding is only weakly
+     * referenced by the properties it depends on, and would otherwise stop updating once garbage collected.
+     */
+    private final BooleanBinding isAppFocused;
+
     /**
      * Creates a new HelpWindow. While it or the window that owns it, e.g., the main window, has the focus, it stays
      * in front of other windows, so that commands can be typed in the main window while it is open. It is hidden
@@ -52,22 +62,26 @@ public class HelpWindow extends UiPart<Stage> {
             }
         };
         root.addEventHandler(KeyEvent.KEY_PRESSED, hideOnEscape);
-        ChangeListener<Boolean> keepInFront = (focused, wasFocused, isFocused) -> keepInFrontWhileAppFocused();
-        root.focusedProperty().addListener(keepInFront);
+
+        // in front of other windows only while MediConnect has the focus, so that it stays above the main window,
+        // but goes behind the windows of other apps, e.g., a browser, when the user switches to them
+        isAppFocused = root.focusedProperty().or(isOwnerFocused);
+        isAppFocused.addListener((appFocused, wasAppFocused, isNowAppFocused) -> root.setAlwaysOnTop(isNowAppFocused));
+
         // while shown, Esc in the owner, e.g., the main window, also hides it; a filter sees Esc before the
         // focused text box does. The owner's focus also keeps it in front.
         root.addEventHandler(WindowEvent.WINDOW_SHOWN, event -> {
             if (root.getOwner() != null) {
                 root.getOwner().addEventFilter(KeyEvent.KEY_PRESSED, hideOnEscape);
-                root.getOwner().focusedProperty().addListener(keepInFront);
+                isOwnerFocused.bind(root.getOwner().focusedProperty());
             }
-            keepInFrontWhileAppFocused();
+            root.setAlwaysOnTop(isAppFocused.get());
         });
         root.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> {
             if (root.getOwner() != null) {
                 root.getOwner().removeEventFilter(KeyEvent.KEY_PRESSED, hideOnEscape);
-                root.getOwner().focusedProperty().removeListener(keepInFront);
             }
+            isOwnerFocused.unbind();
         });
     }
 
@@ -114,17 +128,6 @@ public class HelpWindow extends UiPart<Stage> {
      */
     public void hide() {
         getRoot().hide();
-    }
-
-    /**
-     * Keeps the help window in front of other windows only while it or its owner has the focus, so that it stays
-     * above the main window, but goes behind the windows of other apps, e.g., a browser, when the user switches to
-     * them.
-     */
-    private void keepInFrontWhileAppFocused() {
-        Stage root = getRoot();
-        Window owner = root.getOwner();
-        root.setAlwaysOnTop(root.isFocused() || (owner != null && owner.isFocused()));
     }
 
     /**
