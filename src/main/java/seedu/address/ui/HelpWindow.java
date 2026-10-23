@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import java.util.logging.Logger;
 
+import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -10,6 +11,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.HelpCommand;
@@ -32,8 +34,9 @@ public class HelpWindow extends UiPart<Stage> {
     private Label helpMessage;
 
     /**
-     * Creates a new HelpWindow, which stays on top of other windows, so that commands can be typed in the main
-     * window while it is open. It is hidden again when Esc is pressed in it, or in the window that owns it, if any.
+     * Creates a new HelpWindow. While it or the window that owns it, e.g., the main window, has the focus, it stays
+     * in front of other windows, so that commands can be typed in the main window while it is open. It is hidden
+     * again when Esc is pressed in it, or in its owner, if any.
      *
      * @param root Stage to use as the root of the HelpWindow.
      */
@@ -41,7 +44,6 @@ public class HelpWindow extends UiPart<Stage> {
         super(FXML, root);
         userGuideMessage.setText(USERGUIDE_MESSAGE);
         helpMessage.setText(HelpCommand.COMMAND_SUMMARY);
-        root.setAlwaysOnTop(true);
 
         EventHandler<KeyEvent> hideOnEscape = event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
@@ -50,16 +52,21 @@ public class HelpWindow extends UiPart<Stage> {
             }
         };
         root.addEventHandler(KeyEvent.KEY_PRESSED, hideOnEscape);
+        ChangeListener<Boolean> keepInFront = (focused, wasFocused, isFocused) -> keepInFrontWhileAppFocused();
+        root.focusedProperty().addListener(keepInFront);
         // while shown, Esc in the owner, e.g., the main window, also hides it; a filter sees Esc before the
-        // focused text box does
+        // focused text box does. The owner's focus also keeps it in front.
         root.addEventHandler(WindowEvent.WINDOW_SHOWN, event -> {
             if (root.getOwner() != null) {
                 root.getOwner().addEventFilter(KeyEvent.KEY_PRESSED, hideOnEscape);
+                root.getOwner().focusedProperty().addListener(keepInFront);
             }
+            keepInFrontWhileAppFocused();
         });
         root.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> {
             if (root.getOwner() != null) {
                 root.getOwner().removeEventFilter(KeyEvent.KEY_PRESSED, hideOnEscape);
+                root.getOwner().focusedProperty().removeListener(keepInFront);
             }
         });
     }
@@ -110,10 +117,14 @@ public class HelpWindow extends UiPart<Stage> {
     }
 
     /**
-     * Focuses on the help window.
+     * Keeps the help window in front of other windows only while it or its owner has the focus, so that it stays
+     * above the main window, but goes behind the windows of other apps, e.g., a browser, when the user switches to
+     * them.
      */
-    public void focus() {
-        getRoot().requestFocus();
+    private void keepInFrontWhileAppFocused() {
+        Stage root = getRoot();
+        Window owner = root.getOwner();
+        root.setAlwaysOnTop(root.isFocused() || (owner != null && owner.isFocused()));
     }
 
     /**

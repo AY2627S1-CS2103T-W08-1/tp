@@ -149,17 +149,15 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Opens the help window, or brings it to the front if it is already open, and keeps the keyboard focus in the
-     * main window, so that the next command can be typed straight away. Esc closes the help window.
+     * Opens the help window if it is not already open, and keeps the keyboard focus in the main window, so that the
+     * next command can be typed straight away. Esc closes the help window.
      */
     @FXML
     public void handleHelp() {
         if (!helpWindow.isShowing()) {
             helpWindow.show();
-        } else {
-            helpWindow.focus();
         }
-        // keeps typing in the command box; the help window stays on top until it is closed
+        // keeps typing in the command box; the help window stays in front of the main window until it is closed
         primaryStage.requestFocus();
     }
 

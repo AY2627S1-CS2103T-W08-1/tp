@@ -83,8 +83,9 @@ Format: `help`
 
 * You can also open the help window with the `Help` menu or by pressing `F1`.
 * Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
-* The help window stays in front of other windows, and you can keep typing commands in the main window while it is
-  open. Press `Esc` to close it.
+* The help window stays in front of the main window, and you can keep typing commands in the main window while it
+  is open. When you switch to another app, such as a browser, the help window goes behind that app's windows.
+  Press `Esc` to close it.
 * If the help window is already open, no second help window is opened.
 
 The command returns `Opened help window.`
