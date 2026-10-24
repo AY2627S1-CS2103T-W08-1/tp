@@ -285,7 +285,20 @@ public class ExportCommandTest {
     }
 
     @Test
+    public void execute_lastIndex_exportsLastPatient() throws Exception {
+        // Boundary value analysis: the size of the displayed list is the largest valid index
+        Index lastIndex = Index.fromOneBased(model.getFilteredPatientList().size());
+        Patient lastPatient = model.getFilteredPatientList().get(lastIndex.getZeroBased());
+        Path expectedFile = temporaryFolder.resolve(lastPatient.getNric() + ".txt");
+
+        assertCommandSuccess(createExportCommand(lastIndex), model,
+                getExpectedSuccessMessage(lastPatient, expectedFile), createTypicalModel());
+        assertEquals(getExpectedRecord(lastPatient), Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+    }
+
+    @Test
     public void execute_indexOutOfRange_throwsCommandExceptionAndWritesNothing() throws Exception {
+        // Boundary value analysis: one more than the size of the displayed list is the smallest invalid index
         Index outOfRangeIndex = Index.fromOneBased(model.getFilteredPatientList().size() + 1);
 
         assertCommandFailure(createExportCommand(outOfRangeIndex), model,
