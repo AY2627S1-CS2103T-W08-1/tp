@@ -29,6 +29,8 @@ public class ListBackupsCommandTest {
 
     private static final Instant EARLIER = Instant.parse("2026-10-20T08:30:15Z");
     private static final Instant LATER = Instant.parse("2026-10-21T09:00:00Z");
+    /** First number in the names of numbered backups, so that every number up to 99 has two digits. */
+    private static final int TWO_DIGIT_START = 10;
 
     @TempDir
     public Path temporaryFolder;
@@ -100,19 +102,24 @@ public class ListBackupsCommandTest {
     }
 
     @Test
-    public void execute_moreBackupsThanListed_listsNewestAndCountsOlder() throws Exception {
-        int backupCount = ListBackupsCommand.MAX_LISTED_BACKUPS + 2;
-        List<String> newestNames = new ArrayList<>();
-        for (int i = 0; i < backupCount; i++) {
-            String name = "backup-" + (10 + i) + ".json";
-            createBackup(name, EARLIER.plusSeconds(i));
-            newestNames.add(0, name);
-        }
+    public void execute_exactlyMaxListedBackups_listsAllWithoutOlderCount() throws Exception {
+        // Boundary value analysis: MAX_LISTED_BACKUPS is the largest count that is listed in full
+        List<String> newestNames = createBackupsNewestFirst(ListBackupsCommand.MAX_LISTED_BACKUPS);
 
-        String expectedNames = String.join("\n", newestNames.subList(0, ListBackupsCommand.MAX_LISTED_BACKUPS))
-                + "\n" + String.format(ListBackupsCommand.MESSAGE_OLDER_BACKUPS, 2);
         assertCommandSuccess(new ListBackupsCommand(temporaryFolder), model,
-                getExpectedSuccessMessage(expectedNames), expectedModel);
+                getExpectedSuccessMessage(String.join("\n", newestNames)), expectedModel);
+    }
+
+    @Test
+    public void execute_oneMoreThanMaxListedBackups_listsNewestAndCountsOneOlder() throws Exception {
+        // Boundary value analysis: MAX_LISTED_BACKUPS + 1 is the smallest count that is cut short
+        assertListsNewestAndCountsOlder(ListBackupsCommand.MAX_LISTED_BACKUPS + 1);
+    }
+
+    @Test
+    public void execute_moreBackupsThanListed_listsNewestAndCountsOlder() throws Exception {
+        // Equivalence partitioning: a count well inside the partition of counts that are cut short
+        assertListsNewestAndCountsOlder(ListBackupsCommand.MAX_LISTED_BACKUPS + 2);
     }
 
     @Test
@@ -163,6 +170,34 @@ public class ListBackupsCommandTest {
     private void createBackup(String name, Instant changedAt) throws Exception {
         Path backup = Files.createFile(temporaryFolder.resolve(name));
         Files.setLastModifiedTime(backup, FileTime.from(changedAt));
+    }
+
+    /**
+     * Creates {@code count} backups, each changed a second after the one before, and returns their names, newest
+     * first. Every number in the names has two digits, so the names also sort in the order the backups were made.
+     */
+    private List<String> createBackupsNewestFirst(int count) throws Exception {
+        List<String> newestNames = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            String name = "backup-" + (TWO_DIGIT_START + i) + ".json";
+            createBackup(name, EARLIER.plusSeconds(i));
+            newestNames.add(0, name);
+        }
+        return newestNames;
+    }
+
+    /**
+     * Creates {@code backupCount} backups, which is more than {@code MAX_LISTED_BACKUPS}, and confirms that only the
+     * newest {@code MAX_LISTED_BACKUPS} are listed, followed by how many older ones there are.
+     */
+    private void assertListsNewestAndCountsOlder(int backupCount) throws Exception {
+        List<String> newestNames = createBackupsNewestFirst(backupCount);
+        int olderCount = backupCount - ListBackupsCommand.MAX_LISTED_BACKUPS;
+
+        String expectedNames = String.join("\n", newestNames.subList(0, ListBackupsCommand.MAX_LISTED_BACKUPS))
+                + "\n" + String.format(ListBackupsCommand.MESSAGE_OLDER_BACKUPS, olderCount);
+        assertCommandSuccess(new ListBackupsCommand(temporaryFolder), model,
+                getExpectedSuccessMessage(expectedNames), expectedModel);
     }
 
     private String getExpectedSuccessMessage(String names) {
