@@ -59,6 +59,35 @@ public class ExportCommandTest {
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-10-20T14:30:15Z"), ZoneOffset.UTC);
     private static final Index INDEX_DANIEL = Index.fromOneBased(4);
 
+    /**
+     * The exported record of Daniel, written out in full rather than built with {@code PatientFormatter}, so that a
+     * change to the record format is noticed here.
+     */
+    private static final List<String> DANIEL_RECORD = List.of(
+            "MediConnect patient record",
+            "Exported on 2026-10-20 14:30",
+            "",
+            "Daniel Meier",
+            "NRIC: S0000004A",
+            "DOB: " + DANIEL.getDob(),
+            "Phone: 87652533",
+            "Address: 10th street",
+            "",
+            "Medications",
+            "1. Metformin (08:00, 20:00)",
+            "",
+            "Allergens",
+            "1. Penicillin",
+            "",
+            "Care Instructions",
+            "1. Check blood sugar",
+            "",
+            "Contacts",
+            "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning",
+            "",
+            "Appointments",
+            "1. 2026-11-05 09:30 with Dr Tan (Fasting)");
+
     @TempDir
     private Path temporaryFolder;
 
@@ -93,35 +122,12 @@ public class ExportCommandTest {
 
     @Test
     public void execute_patientWithCareInfo_writesFullRecordToNricFile() throws Exception {
+        // Equivalence partitioning: a patient with an entry in every list, the partition with the fullest record
         Path expectedFile = temporaryFolder.resolve("S0000004A.txt");
-        List<String> expectedLines = List.of(
-                "MediConnect patient record",
-                "Exported on 2026-10-20 14:30",
-                "",
-                "Daniel Meier",
-                "NRIC: S0000004A",
-                "DOB: " + DANIEL.getDob(),
-                "Phone: 87652533",
-                "Address: 10th street",
-                "",
-                "Medications",
-                "1. Metformin (08:00, 20:00)",
-                "",
-                "Allergens",
-                "1. Penicillin",
-                "",
-                "Care Instructions",
-                "1. Check blood sugar",
-                "",
-                "Contacts",
-                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning",
-                "",
-                "Appointments",
-                "1. 2026-11-05 09:30 with Dr Tan (Fasting)");
 
         assertCommandSuccess(createExportCommand(INDEX_DANIEL), model, getExpectedSuccessMessage(DANIEL, expectedFile),
                 createTypicalModel());
-        assertEquals(expectedLines, Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+        assertEquals(DANIEL_RECORD, Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
     }
 
     @Test
@@ -395,29 +401,25 @@ public class ExportCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_sameObjectOrSameValues_returnsTrue() {
+        // Equivalence partitioning: the two partitions that are equal, the same object and an equal copy
+        ExportCommand exportCommand = createExportCommand(INDEX_FIRST_PATIENT);
+
+        assertTrue(exportCommand.equals(exportCommand));
+        assertTrue(exportCommand.equals(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, temporaryFolder)));
+    }
+
+    @Test
+    public void equals_differentTypeOrValue_returnsFalse() {
+        // Equivalence partitioning: null, another type, then one field different at a time,
+        // so that each test input has no more than one invalid value
         Clock otherClock = Clock.fixed(Instant.parse("2026-10-21T09:00:00Z"), ZoneOffset.UTC);
         ExportCommand exportCommand = createExportCommand(INDEX_FIRST_PATIENT);
 
-        // same object -> returns true
-        assertTrue(exportCommand.equals(exportCommand));
-
-        // same values -> returns true
-        assertTrue(exportCommand.equals(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, temporaryFolder)));
-
-        // null -> returns false
         assertFalse(exportCommand.equals(null));
-
-        // different types -> returns false
         assertFalse(exportCommand.equals(new ViewCommand(INDEX_FIRST_PATIENT)));
-
-        // different index -> returns false
         assertFalse(exportCommand.equals(createExportCommand(INDEX_SECOND_PATIENT)));
-
-        // different clock -> returns false
         assertFalse(exportCommand.equals(new ExportCommand(INDEX_FIRST_PATIENT, otherClock, temporaryFolder)));
-
-        // different export folder -> returns false
         assertFalse(exportCommand.equals(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK,
                 temporaryFolder.resolve("other"))));
     }

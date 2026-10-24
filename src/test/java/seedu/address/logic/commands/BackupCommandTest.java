@@ -239,26 +239,24 @@ public class BackupCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_sameObjectOrSameValues_returnsTrue() {
+        // Equivalence partitioning: the two partitions that are equal, the same object and an equal copy
+        BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, temporaryFolder);
+
+        assertTrue(backupCommand.equals(backupCommand));
+        assertTrue(backupCommand.equals(new BackupCommand(FIXED_CLOCK, temporaryFolder)));
+    }
+
+    @Test
+    public void equals_differentTypeOrValue_returnsFalse() {
+        // Equivalence partitioning: null, another type, then one field different at a time,
+        // so that each test input has no more than one invalid value
         Clock otherClock = Clock.fixed(Instant.parse("2026-10-21T09:00:00Z"), ZoneOffset.UTC);
         BackupCommand backupCommand = new BackupCommand(FIXED_CLOCK, temporaryFolder);
 
-        // same object -> returns true
-        assertTrue(backupCommand.equals(backupCommand));
-
-        // same values -> returns true
-        assertTrue(backupCommand.equals(new BackupCommand(FIXED_CLOCK, temporaryFolder)));
-
-        // null -> returns false
         assertFalse(backupCommand.equals(null));
-
-        // different types -> returns false
         assertFalse(backupCommand.equals(new ClearCommand()));
-
-        // different clock -> returns false
         assertFalse(backupCommand.equals(new BackupCommand(otherClock, temporaryFolder)));
-
-        // different backup folder -> returns false
         assertFalse(backupCommand.equals(new BackupCommand(FIXED_CLOCK, temporaryFolder.resolve("other"))));
     }
 
