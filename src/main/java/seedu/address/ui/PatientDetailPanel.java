@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
 import java.util.List;
 import java.util.function.Function;
 
@@ -81,6 +83,7 @@ public class PatientDetailPanel extends UiPart<Region> {
     public PatientDetailPanel(ObservableValue<Patient> viewedPatient, ObservableList<Patient> displayedPatients,
             Function<Patient, List<Appointment>> appointmentsAsShown) {
         super(FXML);
+        requireAllNonNull(viewedPatient, displayedPatients, appointmentsAsShown);
         this.displayedPatients = displayedPatients;
         this.appointmentsAsShown = appointmentsAsShown;
         placeholder.setText(MESSAGE_NO_PATIENT);

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalContacts.GUARDIAN;
@@ -61,6 +62,17 @@ public class PatientDetailPanelTest {
         assertTrue(lookup(content, "#placeholder").isVisible());
         assertEquals(MESSAGE_NO_PATIENT, ((Label) lookup(content, "#placeholder")).getText());
         assertFalse(lookup(content, "#details").isVisible());
+    }
+
+    @Test
+    public void constructor_nullArgument_throwsNullPointerException() {
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        assertThrows(NullPointerException.class, () -> new PatientDetailPanel(null, displayedPatients,
+                patient -> patient.getAppointmentsUpcomingFirst(NOW)));
+        assertThrows(NullPointerException.class, () -> new PatientDetailPanel(viewedPatient, null,
+                patient -> patient.getAppointmentsUpcomingFirst(NOW)));
+        assertThrows(NullPointerException.class, () -> new PatientDetailPanel(viewedPatient, displayedPatients,
+                null));
     }
 
     @Test
