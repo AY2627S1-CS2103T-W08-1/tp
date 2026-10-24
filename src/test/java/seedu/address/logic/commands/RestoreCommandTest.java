@@ -67,6 +67,11 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void constructor_pathInsteadOfFileName_failsAssertion() {
+        assertThrows(AssertionError.class, () -> new RestoreCommand("../" + BACKUP_NAME, FIXED_CLOCK, temporaryFolder));
+    }
+
+    @Test
     public void constructor_fileNameOnly_usesSystemClockAndDataBackupsFolder() {
         // the UG and help text tell users that restore looks in data/backups
         assertEquals(new RestoreCommand(BACKUP_NAME, Clock.systemDefaultZone(), Paths.get("data", "backups")),
