@@ -71,7 +71,7 @@ public class MainWindow extends UiPart<Stage> {
         this.dataFilePath = dataFilePath;
 
         // Configure the UI
-        setWindowDefaultSize(logic.getGuiSettings());
+        fitWindowToScreen(logic.getGuiSettings());
 
         setAccelerators();
 
@@ -145,21 +145,19 @@ public class MainWindow extends UiPart<Stage> {
      * If no screen shows any of it, e.g., when the screen it was last on is not connected any more, or if it has no
      * saved position, the window is placed on the main screen instead.
      */
-    private void setWindowDefaultSize(GuiSettings guiSettings) {
-        Point coordinates = guiSettings.getWindowCoordinates();
-        Rectangle2D screen = coordinates == null
-                ? Screen.getPrimary().getVisualBounds()
-                : getScreenShowingMost(coordinates.getX(), coordinates.getY(), guiSettings.getWindowWidth(),
-                        guiSettings.getWindowHeight());
-        double width = Math.min(guiSettings.getWindowWidth(), screen.getWidth());
-        double height = Math.min(guiSettings.getWindowHeight(), screen.getHeight());
-        primaryStage.setMinWidth(Math.min(primaryStage.getMinWidth(), screen.getWidth()));
-        primaryStage.setMinHeight(Math.min(primaryStage.getMinHeight(), screen.getHeight()));
+    private void fitWindowToScreen(GuiSettings guiSettings) {
+        Rectangle2D screenBounds = getTargetScreenBounds(guiSettings);
+        double width = Math.min(guiSettings.getWindowWidth(), screenBounds.getWidth());
+        double height = Math.min(guiSettings.getWindowHeight(), screenBounds.getHeight());
+        primaryStage.setMinWidth(Math.min(primaryStage.getMinWidth(), screenBounds.getWidth()));
+        primaryStage.setMinHeight(Math.min(primaryStage.getMinHeight(), screenBounds.getHeight()));
         primaryStage.setWidth(width);
         primaryStage.setHeight(height);
+
+        Point coordinates = guiSettings.getWindowCoordinates();
         if (coordinates != null) {
-            primaryStage.setX(Math.min(Math.max(coordinates.getX(), screen.getMinX()), screen.getMaxX() - width));
-            primaryStage.setY(Math.min(Math.max(coordinates.getY(), screen.getMinY()), screen.getMaxY() - height));
+            primaryStage.setX(clamp(coordinates.getX(), screenBounds.getMinX(), screenBounds.getMaxX() - width));
+            primaryStage.setY(clamp(coordinates.getY(), screenBounds.getMinY(), screenBounds.getMaxY() - height));
         }
     }
 
@@ -179,7 +177,7 @@ public class MainWindow extends UiPart<Stage> {
      * Returns the visible area of the screen that shows the largest part of a window at {@code x} and {@code y} with
      * the given {@code width} and {@code height}, or that of the main screen if no screen shows any of it.
      */
-    private static Rectangle2D getScreenShowingMost(double x, double y, double width, double height) {
+    private static Rectangle2D getBoundsOfScreenShowingMost(double x, double y, double width, double height) {
         Rectangle2D bestScreen = Screen.getPrimary().getVisualBounds();
         double largestOverlap = 0;
         for (Screen candidate : Screen.getScreens()) {
@@ -193,6 +191,27 @@ public class MainWindow extends UiPart<Stage> {
             }
         }
         return bestScreen;
+    }
+
+    /**
+     * Returns the visible area of the screen to fit the window to: the screen that shows most of the window saved in
+     * {@code guiSettings}, or the main screen if the window has no saved position.
+     */
+    private static Rectangle2D getTargetScreenBounds(GuiSettings guiSettings) {
+        Point coordinates = guiSettings.getWindowCoordinates();
+        if (coordinates == null) {
+            return Screen.getPrimary().getVisualBounds();
+        }
+        return getBoundsOfScreenShowingMost(coordinates.getX(), coordinates.getY(), guiSettings.getWindowWidth(),
+                guiSettings.getWindowHeight());
+    }
+
+    /**
+     * Returns {@code value} moved up to {@code min} if it is below it, then down to {@code max} if it is above it.
+     * Unlike {@code Math.clamp}, it does not throw if rounding makes {@code max} a little less than {@code min}.
+     */
+    private static double clamp(double value, double min, double max) {
+        return Math.min(Math.max(value, min), max);
     }
 
     void show() {
