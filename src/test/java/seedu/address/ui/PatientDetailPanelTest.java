@@ -269,7 +269,7 @@ public class PatientDetailPanelTest {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
         PatientDetailPanel panel = new PatientDetailPanel(viewedPatient, displayedPatients,
                 patient -> patient.getAppointmentsUpcomingFirst(NOW));
-        return (ScrollPane) panel.getRoot();
+        return panel.getRoot();
     }
 
     /**

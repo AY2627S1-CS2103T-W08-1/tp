@@ -24,7 +24,7 @@ import seedu.address.model.patient.Patient;
 /**
  * Panel showing the full details of the patient being viewed.
  */
-public class PatientDetailPanel extends UiPart<Region> {
+public class PatientDetailPanel extends UiPart<ScrollPane> {
 
     public static final String MESSAGE_NO_PATIENT =
             "Enter 'view INDEX' to see a patient's full details here.";
@@ -37,8 +37,6 @@ public class PatientDetailPanel extends UiPart<Region> {
     private static final double ENTRY_NUMBER_GAP = 6;
     private static final String ENTRY_STYLE_CLASS = "label-bright";
 
-    @FXML
-    private ScrollPane patientDetailPanel;
     @FXML
     private Label placeholder;
     @FXML
@@ -114,7 +112,7 @@ public class PatientDetailPanel extends UiPart<Region> {
      */
     private void scrollToTopIfNewPatient(Patient patient) {
         if (!patient.isSamePatient(lastShownPatient)) {
-            patientDetailPanel.setVvalue(patientDetailPanel.getVmin());
+            getRoot().setVvalue(getRoot().getVmin());
         }
         lastShownPatient = patient;
     }
