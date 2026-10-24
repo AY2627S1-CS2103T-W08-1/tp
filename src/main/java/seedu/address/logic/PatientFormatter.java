@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -114,17 +115,25 @@ public class PatientFormatter {
         lines.add(patient.getName().fullName);
         lines.addAll(formatDetails(patient));
 
-        for (Map.Entry<String, List<String>> careList : List.of(
-                Map.entry(HEADING_MEDICATIONS, patient.getMedications().stream().map(Medication::toString).toList()),
-                Map.entry(HEADING_ALLERGENS, patient.getAllergens()),
-                Map.entry(HEADING_CARE_INSTRUCTIONS, patient.getCareInstructions()),
-                Map.entry(HEADING_CONTACTS, patient.getContacts().stream().map(Contact::toString).toList()),
-                Map.entry(HEADING_APPOINTMENTS,
-                        formatAppointments(patient.getAppointmentsUpcomingFirst(now), now)))) {
+        for (Map.Entry<String, List<String>> section : createSections(patient, now).entrySet()) {
             lines.add("");
-            lines.add(careList.getKey());
-            lines.addAll(formatEntries(careList.getValue()));
+            lines.add(section.getKey());
+            lines.addAll(formatEntries(section.getValue()));
         }
         return lines;
+    }
+
+    /**
+     * Returns the entries of each numbered list in the record of {@code patient}, keyed by the list's heading, in the
+     * order the record shows them. Appointments are ordered and marked as past at {@code now}.
+     */
+    private static Map<String, List<String>> createSections(Patient patient, LocalDateTime now) {
+        Map<String, List<String>> sections = new LinkedHashMap<>();
+        sections.put(HEADING_MEDICATIONS, patient.getMedications().stream().map(Medication::toString).toList());
+        sections.put(HEADING_ALLERGENS, patient.getAllergens());
+        sections.put(HEADING_CARE_INSTRUCTIONS, patient.getCareInstructions());
+        sections.put(HEADING_CONTACTS, patient.getContacts().stream().map(Contact::toString).toList());
+        sections.put(HEADING_APPOINTMENTS, formatAppointments(patient.getAppointmentsUpcomingFirst(now), now));
+        return sections;
     }
 }

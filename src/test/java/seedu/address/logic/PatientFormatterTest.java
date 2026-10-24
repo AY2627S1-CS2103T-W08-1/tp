@@ -123,54 +123,27 @@ public class PatientFormatterTest {
 
     @Test
     public void formatRecord_patientWithCareInfo_listsEachListUnderItsHeading() {
-        List<String> expectedLines = List.of(
-                "Daniel Meier",
-                "NRIC: S0000004A",
-                "DOB: " + DANIEL.getDob(),
-                "Phone: 87652533",
-                "Address: 10th street",
-                "",
-                "Medications",
-                "1. Metformin (08:00, 20:00)",
-                "",
-                "Allergens",
-                "1. Penicillin",
-                "",
-                "Care Instructions",
-                "1. Check blood sugar",
-                "",
-                "Contacts",
-                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning",
-                "",
-                "Appointments",
-                "1. 2026-11-05 09:30 with Dr Tan (Fasting)");
+        // Equivalence partitioning: a patient with an entry in every list, the partition with the fullest record
+        List<String> expectedLines = new ArrayList<>(List.of("Daniel Meier", "NRIC: S0000004A",
+                "DOB: " + DANIEL.getDob(), "Phone: 87652533", "Address: 10th street"));
+        expectedLines.addAll(createSection("Medications", "1. Metformin (08:00, 20:00)"));
+        expectedLines.addAll(createSection("Allergens", "1. Penicillin"));
+        expectedLines.addAll(createSection("Care Instructions", "1. Check blood sugar"));
+        expectedLines.addAll(createSection("Contacts",
+                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning"));
+        expectedLines.addAll(createSection("Appointments", "1. 2026-11-05 09:30 with Dr Tan (Fasting)"));
 
         assertEquals(expectedLines, PatientFormatter.formatRecord(DANIEL, NOW));
     }
 
     @Test
     public void formatRecord_patientWithoutCareInfo_showsNoneRecordedInEachSection() {
-        List<String> expectedLines = List.of(
-                "Alice Pauline",
-                "NRIC: S0000001A",
-                "DOB: " + ALICE.getDob(),
-                "Phone: 94351253",
-                "Address: 123, Jurong West Ave 6, #08-111",
-                "",
-                "Medications",
-                "None recorded",
-                "",
-                "Allergens",
-                "None recorded",
-                "",
-                "Care Instructions",
-                "None recorded",
-                "",
-                "Contacts",
-                "None recorded",
-                "",
-                "Appointments",
-                "None recorded");
+        // Equivalence partitioning: a patient with every list empty, the partition shown as "None recorded"
+        List<String> expectedLines = new ArrayList<>(List.of("Alice Pauline", "NRIC: S0000001A",
+                "DOB: " + ALICE.getDob(), "Phone: 94351253", "Address: 123, Jurong West Ave 6, #08-111"));
+        for (String heading : List.of("Medications", "Allergens", "Care Instructions", "Contacts", "Appointments")) {
+            expectedLines.addAll(createSection(heading, "None recorded"));
+        }
 
         assertEquals(expectedLines, PatientFormatter.formatRecord(ALICE, NOW));
     }
@@ -199,5 +172,14 @@ public class PatientFormatterTest {
         assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim",
                 "2. 2026-10-20 14:29 with Polyclinic (past)"),
                 lines.subList(lines.size() - 3, lines.size()));
+    }
+
+    /**
+     * Returns the lines that the record shows for one list: a blank line, {@code heading}, then {@code entries}.
+     */
+    private static List<String> createSection(String heading, String... entries) {
+        List<String> lines = new ArrayList<>(List.of("", heading));
+        lines.addAll(List.of(entries));
+        return lines;
     }
 }
