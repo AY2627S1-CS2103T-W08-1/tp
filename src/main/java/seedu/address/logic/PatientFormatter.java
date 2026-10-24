@@ -23,6 +23,9 @@ public class PatientFormatter {
     /** Shown in place of the entries of an empty care list. */
     public static final String NONE_RECORDED = "None recorded";
 
+    /** Shown after the basic details of an archived patient. */
+    public static final String ARCHIVED_STATUS = "Status: Archived";
+
     /** Heading of the list of medications. */
     public static final String HEADING_MEDICATIONS = "Medications";
 
@@ -45,15 +48,20 @@ public class PatientFormatter {
 
     /**
      * Returns the basic details of {@code patient} other than the name, one labeled line each,
-     * e.g., "NRIC: S1234567A".
+     * e.g., "NRIC: S1234567A", followed by {@code ARCHIVED_STATUS} if the patient is archived.
      *
      * @param patient Patient whose details are formatted.
-     * @return the NRIC, DOB, phone and address lines, in the order the detail panel shows them.
+     * @return the NRIC, DOB, phone and address lines, in the order the detail panel shows them, and the status line
+     *     of an archived patient.
      */
     public static List<String> formatDetails(Patient patient) {
         requireNonNull(patient);
-        return List.of("NRIC: " + patient.getNric(), "DOB: " + patient.getDob(),
-                "Phone: " + patient.getPhone(), "Address: " + patient.getAddress());
+        List<String> details = new ArrayList<>(List.of("NRIC: " + patient.getNric(), "DOB: " + patient.getDob(),
+                "Phone: " + patient.getPhone(), "Address: " + patient.getAddress()));
+        if (patient.isArchived()) {
+            details.add(ARCHIVED_STATUS);
+        }
+        return details;
     }
 
     /**
