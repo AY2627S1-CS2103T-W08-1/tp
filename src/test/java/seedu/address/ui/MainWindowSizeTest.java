@@ -67,6 +67,18 @@ public class MainWindowSizeTest {
     }
 
     @Test
+    public void constructor_savedSizeEqualToScreen_keepsSavedSize() throws Exception {
+        // Boundary value analysis: the size of the screen is the largest saved size that is kept unchanged
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        Rectangle2D screen = getMainScreen();
+
+        Stage stage = createMainWindowStage(new GuiSettings(screen.getWidth(), screen.getHeight(),
+                (int) screen.getMinX(), (int) screen.getMinY()));
+
+        assertWindowBounds(screen, stage);
+    }
+
+    @Test
     public void constructor_savedSizeLargerThanScreen_shrunkToFitScreen() throws Exception {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
         assumeOnlyOneScreen();
@@ -90,6 +102,20 @@ public class MainWindowSizeTest {
 
         assertWindowBounds(new Rectangle2D(screen.getMaxX() - SMALL_WIDTH, screen.getMaxY() - SMALL_HEIGHT,
                 SMALL_WIDTH, SMALL_HEIGHT), stage);
+    }
+
+    @Test
+    public void constructor_savedPositionPartlyAboveAndLeftOfScreen_movedOntoScreen() throws Exception {
+        // Equivalence partitioning: a window past the top-left corner of the screen, the opposite partition to
+        // constructor_savedPositionPartlyOffScreen_movedOntoScreen, which is past the bottom-right corner
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        assumeOnlyOneScreen();
+        Rectangle2D screen = getMainScreen();
+
+        Stage stage = createMainWindowStage(new GuiSettings(SMALL_WIDTH, SMALL_HEIGHT,
+                (int) screen.getMinX() - SCREEN_MARGIN, (int) screen.getMinY() - SCREEN_MARGIN));
+
+        assertWindowBounds(new Rectangle2D(screen.getMinX(), screen.getMinY(), SMALL_WIDTH, SMALL_HEIGHT), stage);
     }
 
     @Test
