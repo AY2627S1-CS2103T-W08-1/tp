@@ -7,6 +7,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.ExportCommand;
 
 public class ExportCommandParserTest {
@@ -46,7 +47,15 @@ public class ExportCommandParserTest {
     }
 
     @Test
+    public void parse_largestIndex_returnsExportCommand() {
+        // Boundary value analysis: 2147483647 is the largest valid index, one below the 2147483648 that
+        // parse_indexTooLarge_throwsParseException rejects
+        assertParseSuccess(parser, "2147483647", new ExportCommand(Index.fromOneBased(Integer.MAX_VALUE)));
+    }
+
+    @Test
     public void parse_indexTooLarge_throwsParseException() {
+        // Boundary value analysis: 2147483648 is the smallest index too large to be an int
         assertParseFailure(parser, "2147483648", MESSAGE_INVALID_FORMAT);
     }
 }
