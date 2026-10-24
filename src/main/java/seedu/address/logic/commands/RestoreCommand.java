@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.logging.Logger;
 
@@ -77,6 +78,8 @@ public class RestoreCommand extends Command {
         requireNonNull(fileName);
         requireNonNull(clock);
         requireNonNull(backupDir);
+        assert Paths.get(fileName).getFileName().toString().equals(fileName)
+                : "the parser accepts only a file name, so the backup cannot be outside the backup folder";
         this.fileName = fileName;
         this.clock = clock;
         this.backupDir = backupDir;
