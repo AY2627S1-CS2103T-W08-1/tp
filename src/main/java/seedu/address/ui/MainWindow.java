@@ -140,6 +140,8 @@ public class MainWindow extends UiPart<Stage> {
     /**
      * Sets the size and position of the window from {@code guiSettings}, reduced and moved where needed so that the
      * whole window fits the visible area of the screen that showed most of it, e.g., on a small or scaled screen.
+     * The minimum size from {@code MainWindow.fxml} is reduced in the same way, since a shown window is never
+     * smaller than its minimum size.
      * If no screen shows any of it, e.g., when the screen it was last on is not connected any more, or if it has no
      * saved position, the window is placed on the main screen instead.
      */
@@ -151,6 +153,8 @@ public class MainWindow extends UiPart<Stage> {
                         guiSettings.getWindowHeight());
         double width = Math.min(guiSettings.getWindowWidth(), screen.getWidth());
         double height = Math.min(guiSettings.getWindowHeight(), screen.getHeight());
+        primaryStage.setMinWidth(Math.min(primaryStage.getMinWidth(), screen.getWidth()));
+        primaryStage.setMinHeight(Math.min(primaryStage.getMinHeight(), screen.getHeight()));
         primaryStage.setWidth(width);
         primaryStage.setHeight(height);
         if (coordinates != null) {

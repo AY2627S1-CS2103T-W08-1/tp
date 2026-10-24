@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.ui.JavaFxTestUtil.runOnFxThread;
 
@@ -100,6 +101,18 @@ public class MainWindowSizeTest {
         assertEquals(Math.min(defaultSettings.getWindowHeight(), screen.getHeight()), stage.getHeight());
         assertEquals(Double.NaN, stage.getX());
         assertEquals(Double.NaN, stage.getY());
+    }
+
+    @Test
+    public void constructor_anyScreen_minimumSizeFitsScreen() throws Exception {
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        Rectangle2D screen = getMainScreen();
+
+        Stage stage = createMainWindowStage(new GuiSettings());
+
+        // e.g., a 1280 x 720 screen at 150% scaling is less than 450 points tall above the Windows taskbar
+        assertTrue(stage.getMinWidth() <= screen.getWidth());
+        assertTrue(stage.getMinHeight() <= screen.getHeight());
     }
 
     /**
