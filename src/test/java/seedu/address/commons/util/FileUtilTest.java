@@ -94,6 +94,25 @@ public class FileUtilTest {
     }
 
     @Test
+    public void writeThroughTemporaryFile_writerThrowsUncheckedException_keepsFileAndDeletesTemporaryFile()
+            throws Exception {
+        // Equivalence partitioning: a writer failing with an unchecked exception, a separate partition from
+        // the IOException that writeThroughTemporaryFile_writeFails_keepsFileAndDeletesTemporaryFile covers
+        Path file = Files.write(temporaryFolder.resolve("record.txt"), List.of("earlier"));
+        IllegalStateException failure = new IllegalStateException("bug in writer");
+
+        IllegalStateException thrown = Assertions.assertThrows(IllegalStateException.class, () ->
+                FileUtil.writeThroughTemporaryFile(file, temporaryFile -> {
+                    Files.write(temporaryFile, List.of("cut"));
+                    throw failure;
+                }));
+
+        assertSame(failure, thrown);
+        assertEquals(List.of("earlier"), Files.readAllLines(file));
+        assertEquals(List.of(file), listFolder());
+    }
+
+    @Test
     public void deleteTemporaryFile_nullFile_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> FileUtil.deleteTemporaryFile(null));
     }

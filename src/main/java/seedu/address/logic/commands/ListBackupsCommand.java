@@ -38,9 +38,10 @@ public class ListBackupsCommand extends Command {
     public static final int MAX_LISTED_BACKUPS = 10;
 
     private static final String BACKUP_EXTENSION = ".json";
-    private static final Pattern NUMBER = Pattern.compile("\\d+");
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
     /** Number of digits that every number in a backup name is padded to, more than a {@code long} has. */
     private static final int PADDED_NUMBER_LENGTH = 20;
+    private static final String PADDING_DIGIT = "0";
 
     private static final Logger logger = LogsCenter.getLogger(ListBackupsCommand.class);
 
@@ -97,9 +98,9 @@ public class ListBackupsCommand extends Command {
 
         try (Stream<Path> files = Files.list(backupDir)) {
             return sortNewestFirst(files.filter(ListBackupsCommand::isBackupFile).toList());
-        } catch (IOException | UncheckedIOException e) {
-            logger.warning("Could not list the backups in " + backupDir + ": " + e.getClass().getSimpleName());
-            throw new CommandException(String.format(MESSAGE_FAILURE, shownBackupDir), e);
+        } catch (IOException | UncheckedIOException ioe) {
+            logger.warning("Could not list the backups in " + backupDir + ": " + ioe.getClass().getSimpleName());
+            throw new CommandException(String.format(MESSAGE_FAILURE, shownBackupDir), ioe);
         }
     }
 
@@ -137,8 +138,16 @@ public class ListBackupsCommand extends Command {
     private static String toNameSortKey(Path backup) {
         String name = backup.getFileName().toString();
         String nameWithoutExtension = name.substring(0, name.length() - BACKUP_EXTENSION.length());
-        return NUMBER.matcher(nameWithoutExtension).replaceAll(number ->
-                "0".repeat(Math.max(0, PADDED_NUMBER_LENGTH - number.group().length())) + number.group());
+        return NUMBER_PATTERN.matcher(nameWithoutExtension).replaceAll(number -> padWithZeros(number.group()));
+    }
+
+    /**
+     * Returns {@code number} with zeros added in front of it to make it {@code PADDED_NUMBER_LENGTH} digits long,
+     * or {@code number} itself if it is already that long.
+     */
+    private static String padWithZeros(String number) {
+        int missingDigitCount = Math.max(0, PADDED_NUMBER_LENGTH - number.length());
+        return PADDING_DIGIT.repeat(missingDigitCount) + number;
     }
 
     /**

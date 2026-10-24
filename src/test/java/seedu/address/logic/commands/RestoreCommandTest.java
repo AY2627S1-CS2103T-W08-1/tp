@@ -254,51 +254,38 @@ public class RestoreCommandTest {
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
     public void execute_currentDataCannotBeBackedUp_throwsCommandExceptionAndRestoresNothing() throws Exception {
+        // Equivalence partitioning: a backup folder that cannot be written to, so the automatic backup fails
         writeBackup(createAddressBook(HOON));
         assertTrue(temporaryFolder.toFile().setWritable(false));
         try {
             // users with admin rights (e.g., root) can still write, so the test only applies to others
             assumeFalse(Files.isWritable(temporaryFolder));
-            String expectedMessage = String.format(RestoreCommand.MESSAGE_BACKUP_FAILED, temporaryFolder,
-                    Messages.MESSAGE_NO_WRITE_PERMISSION);
-
-            // a relative folder also checks that the message shows the full path
-            RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
-                    toPathRelativeToWorkingDir(temporaryFolder));
-
-            assertCommandFailure(restoreCommand, model, expectedMessage);
-            try (Stream<Path> files = Files.list(temporaryFolder)) {
-                assertEquals(List.of(temporaryFolder.resolve(BACKUP_NAME)), files.toList());
-            }
+            assertRestoreFailsAsCurrentDataCannotBeBackedUp();
         } finally {
             temporaryFolder.toFile().setWritable(true);
         }
     }
 
     @Test
-    public void equals() {
+    public void equals_sameObjectOrSameValues_returnsTrue() {
+        // Equivalence partitioning: the two partitions that are equal, the same object and an equal copy
+        RestoreCommand restoreCommand = createRestoreCommand();
+
+        assertTrue(restoreCommand.equals(restoreCommand));
+        assertTrue(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder)));
+    }
+
+    @Test
+    public void equals_differentTypeOrValue_returnsFalse() {
+        // Equivalence partitioning: null, another type, then one field different at a time,
+        // so that each test input has no more than one invalid value
         Clock otherClock = Clock.fixed(Instant.parse("2026-10-22T09:00:00Z"), ZoneOffset.UTC);
         RestoreCommand restoreCommand = createRestoreCommand();
 
-        // same object -> returns true
-        assertTrue(restoreCommand.equals(restoreCommand));
-
-        // same values -> returns true
-        assertTrue(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder)));
-
-        // null -> returns false
         assertFalse(restoreCommand.equals(null));
-
-        // different types -> returns false
         assertFalse(restoreCommand.equals(new BackupCommand(FIXED_CLOCK, temporaryFolder)));
-
-        // different file name -> returns false
         assertFalse(restoreCommand.equals(new RestoreCommand("other.json", FIXED_CLOCK, temporaryFolder)));
-
-        // different clock -> returns false
         assertFalse(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, otherClock, temporaryFolder)));
-
-        // different backup folder -> returns false
         assertFalse(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
                 temporaryFolder.resolve("other"))));
     }
@@ -333,6 +320,22 @@ public class RestoreCommandTest {
     private void assertRestoreFailure(String expectedMessage) {
         assertCommandFailure(createRestoreCommand(), model, expectedMessage);
         assertFalse(Files.exists(temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME)));
+    }
+
+    /**
+     * Confirms that restoring from the read-only temporary folder, given as a relative path, fails because the current
+     * data cannot be backed up, shows the full folder path, and leaves only the backup file in the folder.
+     */
+    private void assertRestoreFailsAsCurrentDataCannotBeBackedUp() throws IOException {
+        String expectedMessage = String.format(RestoreCommand.MESSAGE_BACKUP_FAILED, temporaryFolder,
+                Messages.MESSAGE_NO_WRITE_PERMISSION);
+        RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
+                toPathRelativeToWorkingDir(temporaryFolder));
+
+        assertCommandFailure(restoreCommand, model, expectedMessage);
+        try (Stream<Path> files = Files.list(temporaryFolder)) {
+            assertEquals(List.of(temporaryFolder.resolve(BACKUP_NAME)), files.toList());
+        }
     }
 
     private static AddressBook createAddressBook(Patient... patients) {

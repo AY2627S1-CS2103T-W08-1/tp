@@ -129,13 +129,9 @@ public class ExportCommand extends Command {
     private void writeRecord(Patient patient, Path exportFile) throws CommandException {
         try {
             Files.createDirectories(exportDir);
-            // the temporary file would replace a read-only earlier export, so refuse it as writing to it would
-            if (Files.exists(exportFile) && !Files.isWritable(exportFile)) {
-                throw new AccessDeniedException(exportFile.toString());
-            }
-            FileUtil.writeThroughTemporaryFile(exportFile, temporaryFile -> Files.write(temporaryFile,
-                    createRecord(patient), StandardCharsets.UTF_8, StandardOpenOption.WRITE,
-                    StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS));
+            checkEarlierExportIsWritable(exportFile);
+            List<String> record = createRecord(patient);
+            FileUtil.writeThroughTemporaryFile(exportFile, temporaryFile -> writeLines(temporaryFile, record));
         } catch (IOException ioe) {
             logger.warning("Could not export a patient record to " + exportDir + ": " + ioe.getClass().getSimpleName());
             String reason = Messages.describeWriteFailure(ioe);
@@ -143,6 +139,28 @@ public class ExportCommand extends Command {
                     exportFile.toAbsolutePath().normalize(), reason);
             throw new CommandException(message, ioe);
         }
+    }
+
+    /**
+     * Throws an {@code AccessDeniedException} if {@code exportFile} is an earlier export that is read-only.
+     * The new record would otherwise replace it through a temporary file, although the user made it read-only.
+     *
+     * @throws AccessDeniedException if {@code exportFile} exists and cannot be written to.
+     */
+    private static void checkEarlierExportIsWritable(Path exportFile) throws AccessDeniedException {
+        if (Files.exists(exportFile) && !Files.isWritable(exportFile)) {
+            throw new AccessDeniedException(exportFile.toString());
+        }
+    }
+
+    /**
+     * Writes {@code lines} to {@code temporaryFile} in UTF-8, without following {@code temporaryFile} if it is a link.
+     *
+     * @throws IOException if the lines cannot be written.
+     */
+    private static void writeLines(Path temporaryFile, List<String> lines) throws IOException {
+        Files.write(temporaryFile, lines, StandardCharsets.UTF_8, StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
     }
 
     /**

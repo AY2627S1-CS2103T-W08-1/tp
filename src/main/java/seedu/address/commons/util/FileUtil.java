@@ -63,8 +63,8 @@ public class FileUtil {
     /**
      * Writes {@code file} through a new temporary file in the same folder: {@code writer} writes the content to the
      * temporary file, which then replaces {@code file}. A write that fails partway therefore never leaves a cut-off
-     * {@code file}, and the temporary file is deleted. On macOS and Linux, a new temporary file can be opened only by
-     * the current user, and {@code file} keeps that.
+     * {@code file}, and the temporary file is deleted, whatever exception the failure throws. On macOS and Linux,
+     * a new temporary file can be opened only by the current user, and {@code file} keeps that.
      *
      * @param file File to write. Its folder must exist.
      * @param writer Writes the content of {@code file} to the temporary file.
@@ -74,13 +74,17 @@ public class FileUtil {
         requireNonNull(file);
         requireNonNull(writer);
         Path folder = file.toAbsolutePath().getParent();
+        assert folder != null : "a file to write is always inside a folder";
         Path temporaryFile = Files.createTempFile(folder, file.getFileName() + ".", TEMPORARY_FILE_SUFFIX);
+        boolean isReplaced = false;
         try {
             writer.write(temporaryFile);
             Files.move(temporaryFile, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ioe) {
-            deleteTemporaryFile(temporaryFile);
-            throw ioe;
+            isReplaced = true;
+        } finally {
+            if (!isReplaced) {
+                deleteTemporaryFile(temporaryFile);
+            }
         }
     }
 
