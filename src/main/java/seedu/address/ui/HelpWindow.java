@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.logging.Logger;
 
 import javafx.beans.binding.BooleanBinding;
@@ -51,7 +53,7 @@ public class HelpWindow extends UiPart<Stage> {
      * @param root Stage to use as the root of the HelpWindow.
      */
     public HelpWindow(Stage root) {
-        super(FXML, root);
+        super(FXML, requireNonNull(root));
         userGuideMessage.setText(USERGUIDE_MESSAGE);
         helpMessage.setText(HelpCommand.COMMAND_SUMMARY);
 
