@@ -68,9 +68,9 @@ public class PatientDetailPanelTest {
     public void constructor_nullArgument_throwsNullPointerException() {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
         assertThrows(NullPointerException.class, () -> new PatientDetailPanel(null, displayedPatients,
-                patient -> patient.getAppointmentsUpcomingFirst(NOW)));
+                patient -> List.of()));
         assertThrows(NullPointerException.class, () -> new PatientDetailPanel(viewedPatient, null,
-                patient -> patient.getAppointmentsUpcomingFirst(NOW)));
+                patient -> List.of()));
         assertThrows(NullPointerException.class, () -> new PatientDetailPanel(viewedPatient, displayedPatients,
                 null));
     }
