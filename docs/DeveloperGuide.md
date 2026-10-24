@@ -322,16 +322,16 @@ The `backup` command saves a copy of all patient data to the `data/backups` fold
 
 #### Implementation
 
-`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, and returns the path of the file. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 
 The sequence diagram below shows a successful `restore old.json`.
 
 <puml src="diagrams/RestoreSequenceDiagram.puml" alt="Interactions for the `restore old.json` Command" />
 
-1. `RestoreCommandParser` checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
+1. `RestoreCommandParser` returns a `ListBackupsCommand` if no `FILENAME` is given. It lists the `.json` files in `data/backups` by the time they were last changed, newest first, so that the user can copy a name. Files changed at the same time, e.g., after being copied together, are listed by name, last first, with numbers compared by value, so that `-10` comes before `-9`. Otherwise, it checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
 1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
 1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
-1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored and the path of the automatic backup.
+1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored, how many of them are archived, since only active patients are then listed, and the path of the automatic backup.
 1. As after every command, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
@@ -1254,6 +1254,13 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `restore FILENAME`, where `FILENAME` is the name of the automatic backup from the previous test case<br>
       Expected: The data from before the previous restore is back, i.e., the patient is deleted again.
 
+1. Listing the backups
+
+   1. Prerequisites: The test cases under "Restoring a backup" above have been run.
+
+   1. Test case: `restore`<br>
+      Expected: The data is unchanged. The status message lists the backups in `data/backups`, newest first: the automatic backups made by the two restores, then the backup you made.
+
 1. Restoring a file that cannot be restored
 
    1. Test case: `restore nosuchfile.json`<br>
@@ -1270,7 +1277,7 @@ testers are expected to do more *exploratory* testing.
       Test case: `restore invalid.json`<br>
       Expected: The data is unchanged. The status message says that the backup has invalid data, followed by the NRIC format as the details.
 
-   1. Other incorrect restore commands to try: `restore`, `restore .`, `restore data/backups/bad.json`<br>
+   1. Other incorrect restore commands to try: `restore .`, `restore data/backups/bad.json`<br>
       Expected: The data is unchanged. The status message shows an error.
 
 ### Exporting a patient's record

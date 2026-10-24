@@ -8,6 +8,7 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.util.List;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -18,6 +19,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonAddressBookStorage;
 
 /**
@@ -27,17 +29,13 @@ public class RestoreCommand extends Command {
 
     public static final String COMMAND_WORD = "restore";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Replaces all patient data with a backup from the data/backups folder, "
-            + "after backing up the current data.\n"
-            + "Parameters: FILENAME (the name of a backup file in data/backups)\n"
-            + "Example: " + COMMAND_WORD + " mediconnect-20261020-083015.json";
-
     public static final String MESSAGE_INVALID_FILE_NAME = "Give only the name of a backup file in data/backups, "
             + "not a path, e.g., " + COMMAND_WORD + " mediconnect-20261020-083015.json";
 
     public static final String MESSAGE_SUCCESS =
-            "Restored %1$d %2$s from %3$s. Your previous data was backed up to: %4$s";
+            "Restored %1$d %2$s%3$s from %4$s. Your previous data was backed up to: %5$s";
+    /** Added after the number of restored patients when some of them are archived. */
+    public static final String MESSAGE_ARCHIVED_COUNT = " (%1$d archived, shown by listarchived)";
     public static final String MESSAGE_NOT_FOUND =
             "No backup named %1$s was found in %2$s. Your data has not been changed.";
     public static final String MESSAGE_NO_READ_PERMISSION =
@@ -144,13 +142,17 @@ public class RestoreCommand extends Command {
     }
 
     /**
-     * Returns the result to show after restoring {@code restoredData}: how many patients were restored, and the full
-     * path of {@code automaticBackupFile}, which holds the data from before the restore.
+     * Returns the result to show after restoring {@code restoredData}: how many patients were restored and how many
+     * of them are archived, since only active patients are listed after a restore, and the full path of
+     * {@code automaticBackupFile}, which holds the data from before the restore.
      */
     private CommandResult createSuccessResult(ReadOnlyAddressBook restoredData, Path automaticBackupFile) {
-        int patientCount = restoredData.getPatientList().size();
+        List<Patient> restoredPatients = restoredData.getPatientList();
+        int patientCount = restoredPatients.size();
         String patientWord = patientCount == 1 ? "patient" : "patients";
-        return new CommandResult(String.format(MESSAGE_SUCCESS, patientCount, patientWord, fileName,
+        long archivedCount = restoredPatients.stream().filter(Patient::isArchived).count();
+        String archivedNote = archivedCount == 0 ? "" : String.format(MESSAGE_ARCHIVED_COUNT, archivedCount);
+        return new CommandResult(String.format(MESSAGE_SUCCESS, patientCount, patientWord, archivedNote, fileName,
                 automaticBackupFile.toAbsolutePath().normalize()));
     }
 
