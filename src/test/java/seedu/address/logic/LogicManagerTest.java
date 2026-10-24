@@ -18,6 +18,11 @@ import static seedu.address.testutil.TypicalPatients.AMY;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -40,10 +45,13 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
+import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.AdjustableClock;
 import seedu.address.testutil.PatientBuilder;
 
 public class LogicManagerTest {
@@ -54,6 +62,7 @@ public class LogicManagerTest {
     public Path temporaryFolder;
 
     private Model model = new ModelManager();
+    private StorageManager storage;
     private Logic logic;
 
     @BeforeEach
@@ -61,7 +70,7 @@ public class LogicManagerTest {
         JsonAddressBookStorage addressBookStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        storage = new StorageManager(addressBookStorage, userPrefsStorage);
         logic = new LogicManager(model, storage);
     }
 
@@ -135,6 +144,27 @@ public class LogicManagerTest {
         model.addPatient(ALICE);
         logic.execute(ViewCommand.COMMAND_WORD + " 1");
         assertEquals(ALICE, logic.getViewedPatient().getValue());
+    }
+
+    @Test
+    public void getAppointmentLinesAsShown_appointmentPassesWhileViewed_ordersAndMarksAtTimeShown() {
+        AdjustableClock clock = new AdjustableClock(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
+        Appointment soon = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 1), "Dr Tan", "");
+        Appointment later = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(14, 0), "Dr Lim", "");
+        Patient patient = new PatientBuilder(ALICE).withAppointments(soon, later).build();
+        Model clockedModel = new ModelManager(new AddressBookBuilder().withPatient(patient).build(),
+                new UserPrefs(), clock);
+        Logic clockedLogic = new LogicManager(clockedModel, storage);
+        clockedModel.setViewedPatient(patient);
+        clock.advance(Duration.ofMinutes(2));
+
+        // the appointment at 12:01 has passed, but is not marked until the patient is shown again
+        assertEquals(List.of("2026-10-18 12:01 with Dr Tan", "2026-10-18 14:00 with Dr Lim"),
+                clockedLogic.getAppointmentLinesAsShown(patient));
+
+        clockedModel.setViewedPatient(patient);
+        assertEquals(List.of("2026-10-18 14:00 with Dr Lim", "2026-10-18 12:01 with Dr Tan (past)"),
+                clockedLogic.getAppointmentLinesAsShown(patient));
     }
 
     @Test
