@@ -122,7 +122,7 @@ public class HelpCommand extends Command {
      *
      * @param heading Name of the group, e.g., "Patients".
      * @param entries Lines made by {@code formatEntry}, in the order to list them.
-     * @return The heading and entries, each on its own line.
+     * @return the heading and entries, each on its own line.
      */
     private static String formatGroup(String heading, String... entries) {
         return heading + "\n" + String.join("\n", entries);
@@ -133,7 +133,7 @@ public class HelpCommand extends Command {
      *
      * @param format Format of the command, starting with its command word.
      * @param description One-sentence description of what the command does.
-     * @return The format and description joined by {@code FORMAT_DESCRIPTION_SEPARATOR}.
+     * @return the format and description joined by {@code FORMAT_DESCRIPTION_SEPARATOR}.
      */
     private static String formatEntry(String format, String description) {
         return format + FORMAT_DESCRIPTION_SEPARATOR + description;

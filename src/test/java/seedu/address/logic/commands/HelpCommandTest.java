@@ -64,8 +64,19 @@ public class HelpCommandTest {
             Map.entry("MORE_KEYWORDS", "bob"),
             Map.entry("FILENAME", "mediconnect-20261020-083015.json"));
 
+    /**
+     * Returns the command words in the order the help window lists them, group by group, mapped to their commands.
+     */
     private static Map<String, Class<? extends Command>> createExpectedCommands() {
         Map<String, Class<? extends Command>> commands = new LinkedHashMap<>();
+        putPatientCommands(commands);
+        putCareCommands(commands);
+        putContactAndAppointmentCommands(commands);
+        putDataAndOtherCommands(commands);
+        return Collections.unmodifiableMap(commands);
+    }
+
+    private static void putPatientCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(AddCommand.COMMAND_WORD, AddCommand.class);
         commands.put(EditCommand.COMMAND_WORD, EditCommand.class);
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
@@ -75,6 +86,9 @@ public class HelpCommandTest {
         commands.put(ListArchivedCommand.COMMAND_WORD, ListArchivedCommand.class);
         commands.put(UnarchiveCommand.COMMAND_WORD, UnarchiveCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
+    }
+
+    private static void putCareCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
         commands.put(EditCareCommand.COMMAND_WORD, EditCareCommand.class);
         commands.put(DeleteCareCommand.COMMAND_WORD, DeleteCareCommand.class);
@@ -82,6 +96,9 @@ public class HelpCommandTest {
         commands.put(EditMedCommand.COMMAND_WORD, EditMedCommand.class);
         commands.put(DeleteMedCommand.COMMAND_WORD, DeleteMedCommand.class);
         commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
+    }
+
+    private static void putContactAndAppointmentCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(AddContactCommand.COMMAND_WORD, AddContactCommand.class);
         commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
         commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
@@ -89,13 +106,15 @@ public class HelpCommandTest {
         commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
         commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
         commands.put(ListApptCommand.COMMAND_WORD, ListApptCommand.class);
+    }
+
+    private static void putDataAndOtherCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
         commands.put(RestoreCommand.COMMAND_WORD, RestoreCommand.class);
         commands.put(ExportCommand.COMMAND_WORD, ExportCommand.class);
         commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
         commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
-        return Collections.unmodifiableMap(commands);
     }
 
     @Test

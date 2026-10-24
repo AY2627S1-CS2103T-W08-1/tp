@@ -93,10 +93,8 @@ public class HelpWindowTest {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
 
         boolean isShowing = runOnFxThread(() -> {
-            Stage owner = new Stage();
-            owner.setScene(new Scene(new Pane()));
-            HelpWindow helpWindow = new HelpWindow();
-            helpWindow.getRoot().initOwner(owner);
+            Stage owner = createStage();
+            HelpWindow helpWindow = createHelpWindowOwnedBy(owner);
             helpWindow.show();
             pressKey(owner, KeyCode.ESCAPE);
             return helpWindow.isShowing();
@@ -107,35 +105,20 @@ public class HelpWindowTest {
 
     @Test
     public void focusChanged_shownWithOwner_inFrontOnlyWhileHelpWindowOrOwnerFocused() throws Exception {
+        // Equivalence partitioning: the focus is on the help window, on its owner, or on a window of another app
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
         Stage owner = runOnFxThread(HelpWindowTest::createStage);
         // stands for a window of another app, e.g., a browser
         Stage otherWindow = runOnFxThread(HelpWindowTest::createStage);
-        Stage root = runOnFxThread(() -> {
-            HelpWindow helpWindow = new HelpWindow();
-            helpWindow.getRoot().initOwner(owner);
-            return helpWindow.getRoot();
-        });
+        Stage root = runOnFxThread(() -> createHelpWindowOwnedBy(owner).getRoot());
 
         try {
-            // e.g., opening the help window
-            showAndWaitForFocus(root);
-            assertTrue(runOnFxThread(root::isAlwaysOnTop));
-
-            // e.g., typing in the main window
-            showAndWaitForFocus(owner);
-            assertTrue(runOnFxThread(root::isAlwaysOnTop));
-
-            // e.g., switching to a browser
-            showAndWaitForFocus(otherWindow);
-            assertFalse(runOnFxThread(root::isAlwaysOnTop));
+            // e.g., opening the help window, typing in the main window, then switching to a browser
+            assertInFrontAfterFocusing(root, root, true);
+            assertInFrontAfterFocusing(owner, root, true);
+            assertInFrontAfterFocusing(otherWindow, root, false);
         } finally {
-            runOnFxThread(() -> {
-                root.hide();
-                owner.hide();
-                otherWindow.hide();
-                return null;
-            });
+            hideAll(root, owner, otherWindow);
         }
     }
 
@@ -157,6 +140,34 @@ public class HelpWindowTest {
         Stage stage = new Stage();
         stage.setScene(new Scene(new Pane(), STAGE_SIZE, STAGE_SIZE));
         return stage;
+    }
+
+    /**
+     * Returns a new help window whose owner is {@code owner}, as the main window owns it in the app.
+     * Must be called on the JavaFX application thread.
+     */
+    private static HelpWindow createHelpWindowOwnedBy(Stage owner) {
+        HelpWindow helpWindow = new HelpWindow();
+        helpWindow.getRoot().initOwner(owner);
+        return helpWindow;
+    }
+
+    /**
+     * Gives {@code focusedStage} the focus, then asserts whether {@code helpWindowRoot} is in front of other windows.
+     */
+    private static void assertInFrontAfterFocusing(Stage focusedStage, Stage helpWindowRoot, boolean isExpectedInFront)
+            throws Exception {
+        showAndWaitForFocus(focusedStage);
+        assertEquals(isExpectedInFront, runOnFxThread(helpWindowRoot::isAlwaysOnTop));
+    }
+
+    private static void hideAll(Stage... stages) throws Exception {
+        runOnFxThread(() -> {
+            for (Stage stage : stages) {
+                stage.hide();
+            }
+            return null;
+        });
     }
 
     /**
