@@ -33,7 +33,7 @@ public class ListBackupsCommandTest {
     private static final int TWO_DIGIT_START = 10;
 
     @TempDir
-    public Path temporaryFolder;
+    private Path temporaryFolder;
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
     private final Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());

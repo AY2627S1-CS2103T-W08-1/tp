@@ -130,8 +130,8 @@ public class ExportCommand extends Command {
         try {
             Files.createDirectories(exportDir);
             checkEarlierExportIsWritable(exportFile);
-            List<String> record = createRecord(patient);
-            FileUtil.writeThroughTemporaryFile(exportFile, temporaryFile -> writeLines(temporaryFile, record));
+            List<String> recordLines = createRecord(patient);
+            FileUtil.writeThroughTemporaryFile(exportFile, temporaryFile -> writeLines(temporaryFile, recordLines));
         } catch (IOException ioe) {
             logger.warning("Could not export a patient record to " + exportDir + ": " + ioe.getClass().getSimpleName());
             String reason = Messages.describeWriteFailure(ioe);

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 public class FileUtilTest {
 
     @TempDir
-    public Path temporaryFolder;
+    private Path temporaryFolder;
 
     @Test
     public void writeThroughTemporaryFile_nullArguments_throwsNullPointerException() {

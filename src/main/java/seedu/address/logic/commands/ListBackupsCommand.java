@@ -40,7 +40,7 @@ public class ListBackupsCommand extends Command {
     private static final String BACKUP_EXTENSION = ".json";
     private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
     /** Number of digits that every number in a backup name is padded to, more than a {@code long} has. */
-    private static final int PADDED_NUMBER_LENGTH = 20;
+    private static final int PADDING_LENGTH = 20;
     private static final String PADDING_DIGIT = "0";
 
     private static final Logger logger = LogsCenter.getLogger(ListBackupsCommand.class);
@@ -133,7 +133,7 @@ public class ListBackupsCommand extends Command {
 
     /**
      * Returns the name of {@code backup} without its extension, with every number in it padded with zeros to
-     * {@code PADDED_NUMBER_LENGTH} digits, so that comparing the keys compares the numbers by value.
+     * {@code PADDING_LENGTH} digits, so that comparing the keys compares the numbers by value.
      */
     private static String toNameSortKey(Path backup) {
         String name = backup.getFileName().toString();
@@ -142,11 +142,11 @@ public class ListBackupsCommand extends Command {
     }
 
     /**
-     * Returns {@code number} with zeros added in front of it to make it {@code PADDED_NUMBER_LENGTH} digits long,
+     * Returns {@code number} with zeros added in front of it to make it {@code PADDING_LENGTH} digits long,
      * or {@code number} itself if it is already that long.
      */
     private static String padWithZeros(String number) {
-        int missingDigitCount = Math.max(0, PADDED_NUMBER_LENGTH - number.length());
+        int missingDigitCount = Math.max(0, PADDING_LENGTH - number.length());
         return PADDING_DIGIT.repeat(missingDigitCount) + number;
     }
 

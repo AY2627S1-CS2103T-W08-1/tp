@@ -73,9 +73,11 @@ public class FileUtil {
     public static void writeThroughTemporaryFile(Path file, TemporaryFileWriter writer) throws IOException {
         requireNonNull(file);
         requireNonNull(writer);
+
         Path folder = file.toAbsolutePath().getParent();
         assert folder != null : "a file to write is always inside a folder";
         Path temporaryFile = Files.createTempFile(folder, file.getFileName() + ".", TEMPORARY_FILE_SUFFIX);
+
         boolean isReplaced = false;
         try {
             writer.write(temporaryFile);
