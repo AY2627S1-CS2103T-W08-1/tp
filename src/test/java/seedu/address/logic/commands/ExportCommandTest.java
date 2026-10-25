@@ -63,7 +63,7 @@ public class ExportCommandTest {
      * The exported record of Daniel, written out in full rather than built with {@code PatientFormatter}, so that a
      * change to the record format is noticed here.
      */
-    private static final List<String> DANIEL_RECORD = List.of(
+    private static final List<String> DANIEL_RECORD_LINES = List.of(
             "MediConnect patient record",
             "Exported on 2026-10-20 14:30",
             "",
@@ -127,7 +127,7 @@ public class ExportCommandTest {
 
         assertCommandSuccess(createExportCommand(INDEX_DANIEL), model, getExpectedSuccessMessage(DANIEL, expectedFile),
                 createTypicalModel());
-        assertEquals(DANIEL_RECORD, Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
+        assertEquals(DANIEL_RECORD_LINES, Files.readAllLines(expectedFile, StandardCharsets.UTF_8));
     }
 
     @Test
