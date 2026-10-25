@@ -52,7 +52,8 @@ public class PatientDetailPanelTest {
      */
     @BeforeAll
     public static void startToolkit() {
-        isToolkitAvailable = JavaFxTestUtil.startToolkit();
+        JavaFxTestUtil.startToolkit();
+        isToolkitAvailable = JavaFxTestUtil.isToolkitAvailable();
     }
 
     @Test
