@@ -104,7 +104,7 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
-    public void readAddressBook_contentAfterSavedData_throwDataLoadingException() throws Exception {
+    public void readAddressBook_contentAfterSavedData_throwsDataLoadingException() throws Exception {
         // Equivalence partitioning: a saved data file damaged later by text added after its data
         Path filePath = testFolder.resolve("ContentAfterData.json");
         JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);

@@ -14,7 +14,7 @@ import seedu.address.testutil.SerializableTestClass;
 import seedu.address.testutil.TestUtil;
 
 /**
- * Tests JSON Read and Write
+ * Tests JSON read and write.
  */
 public class JsonUtilTest {
 
@@ -30,7 +30,7 @@ public class JsonUtilTest {
 
         JsonUtil.serializeObjectToJsonFile(SERIALIZATION_FILE, serializableTestClass);
 
-        assertEquals(FileUtil.readFromFile(SERIALIZATION_FILE), SerializableTestClass.JSON_STRING_REPRESENTATION);
+        assertEquals(SerializableTestClass.JSON_STRING_REPRESENTATION, FileUtil.readFromFile(SERIALIZATION_FILE));
     }
 
     @Test
@@ -40,13 +40,15 @@ public class JsonUtilTest {
         SerializableTestClass serializableTestClass = JsonUtil
                 .deserializeObjectFromJsonFile(SERIALIZATION_FILE, SerializableTestClass.class);
 
-        assertEquals(serializableTestClass.getName(), SerializableTestClass.getNameTestValue());
-        assertEquals(serializableTestClass.getListOfLocalDateTimes(), SerializableTestClass.getListTestValues());
-        assertEquals(serializableTestClass.getMapOfIntegerToString(), SerializableTestClass.getHashMapTestValues());
+        assertEquals(SerializableTestClass.getNameTestValue(), serializableTestClass.getName());
+        assertEquals(SerializableTestClass.getListTestValues(), serializableTestClass.getListOfLocalDateTimes());
+        assertEquals(SerializableTestClass.getHashMapTestValues(), serializableTestClass.getMapOfIntegerToString());
     }
 
     @Test
     public void readJsonFile_nullContent_throwsDataLoadingException() throws IOException {
+        // Equivalence partitioning: a file holding only null, which is valid JSON but no object, tested both bare
+        // and with whitespace around it, as Jackson skips whitespace before reading the value
         Path nullFile = temporaryFolder.resolve("null.json");
         Path paddedNullFile = temporaryFolder.resolve("paddedNull.json");
         FileUtil.writeToFile(nullFile, "null");
