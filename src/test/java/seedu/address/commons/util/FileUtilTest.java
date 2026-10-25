@@ -66,18 +66,13 @@ public class FileUtilTest {
 
     @Test
     public void writeThroughTemporaryFile_writeFails_keepsFileAndDeletesTemporaryFile() throws Exception {
-        Path file = Files.write(temporaryFolder.resolve("record.txt"), List.of("earlier"));
+        // Equivalence partitioning: a writer failing partway with an IOException, e.g., when the disk is full
         IOException failure = new IOException("disk full");
 
-        IOException thrown = Assertions.assertThrows(IOException.class, () ->
-                FileUtil.writeThroughTemporaryFile(file, temporaryFile -> {
-                    Files.write(temporaryFile, List.of("cut"));
-                    throw failure;
-                }));
-
-        assertSame(failure, thrown);
-        assertEquals(List.of("earlier"), Files.readAllLines(file));
-        assertEquals(List.of(file), listFolder());
+        assertFailedWriteKeepsFile(failure, temporaryFile -> {
+            writeCutContent(temporaryFile);
+            throw failure;
+        });
     }
 
     @Test
@@ -98,18 +93,12 @@ public class FileUtilTest {
             throws Exception {
         // Equivalence partitioning: a writer failing with an unchecked exception, a separate partition from
         // the IOException that writeThroughTemporaryFile_writeFails_keepsFileAndDeletesTemporaryFile covers
-        Path file = Files.write(temporaryFolder.resolve("record.txt"), List.of("earlier"));
         IllegalStateException failure = new IllegalStateException("bug in writer");
 
-        IllegalStateException thrown = Assertions.assertThrows(IllegalStateException.class, () ->
-                FileUtil.writeThroughTemporaryFile(file, temporaryFile -> {
-                    Files.write(temporaryFile, List.of("cut"));
-                    throw failure;
-                }));
-
-        assertSame(failure, thrown);
-        assertEquals(List.of("earlier"), Files.readAllLines(file));
-        assertEquals(List.of(file), listFolder());
+        assertFailedWriteKeepsFile(failure, temporaryFile -> {
+            writeCutContent(temporaryFile);
+            throw failure;
+        });
     }
 
     @Test
@@ -144,6 +133,29 @@ public class FileUtilTest {
         FileUtil.deleteTemporaryFile(nonEmptyFolder);
 
         assertTrue(Files.exists(insideFile));
+    }
+
+    /**
+     * Confirms that writing {@code record.txt}, which already holds "earlier", with {@code failingWriter} rethrows
+     * {@code failure}, which the writer throws, keeps the earlier content and leaves no temporary file behind.
+     */
+    private void assertFailedWriteKeepsFile(Exception failure, FileUtil.TemporaryFileWriter failingWriter)
+            throws Exception {
+        Path file = Files.write(temporaryFolder.resolve("record.txt"), List.of("earlier"));
+
+        Exception thrown = Assertions.assertThrows(failure.getClass(), () ->
+                FileUtil.writeThroughTemporaryFile(file, failingWriter));
+
+        assertSame(failure, thrown);
+        assertEquals(List.of("earlier"), Files.readAllLines(file));
+        assertEquals(List.of(file), listFolder());
+    }
+
+    /**
+     * Writes part of some content to {@code temporaryFile}, as a write that fails partway would.
+     */
+    private static void writeCutContent(Path temporaryFile) throws IOException {
+        Files.write(temporaryFile, List.of("cut"));
     }
 
     /**
