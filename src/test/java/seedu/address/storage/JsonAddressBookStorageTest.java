@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -100,6 +101,17 @@ public class JsonAddressBookStorageTest {
                 + "\"nric\" : \"S9999999A\", \"dob\" : \"1950-01-01\", \"address\" : \"123 Jurong West\", "
                 + "\"medications\" : " + medicationsJson + " } ] }");
         return filePath;
+    }
+
+    @Test
+    public void readAddressBook_contentAfterSavedData_throwDataLoadingException() throws Exception {
+        // Equivalence partitioning: a saved data file damaged later by text added after its data
+        Path filePath = testFolder.resolve("ContentAfterData.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        Files.writeString(filePath, "\nTHIS IS NOT JSON", StandardOpenOption.APPEND);
+
+        assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
     }
 
     @Test

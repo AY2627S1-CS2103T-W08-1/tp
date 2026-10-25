@@ -57,6 +57,38 @@ public class JsonUtilTest {
                 JsonUtil.readJsonFile(paddedNullFile, SerializableTestClass.class));
     }
 
+    @Test
+    public void fromJsonString_whitespaceAfterValue_returnsValue() throws IOException {
+        // Boundary value analysis: whitespace is the most that can follow the JSON value and still be accepted
+        SerializableTestClass readBack = JsonUtil.fromJsonString(
+                SerializableTestClass.JSON_STRING_REPRESENTATION + " \n\t", SerializableTestClass.class);
+
+        assertEquals(SerializableTestClass.getNameTestValue(), readBack.getName());
+    }
+
+    @Test
+    public void fromJsonString_oneCharacterAfterValue_throwsIoException() {
+        // Boundary value analysis: a single extra closing brace is the least content after the JSON value
+        assertRejectsContentAfterValue("}");
+    }
+
+    @Test
+    public void fromJsonString_textAfterValue_throwsIoException() {
+        // Equivalence partitioning: content after the JSON value that is not JSON
+        assertRejectsContentAfterValue("\nTHIS IS NOT JSON");
+    }
+
+    @Test
+    public void fromJsonString_secondValueAfterValue_throwsIoException() {
+        // Equivalence partitioning: content after the JSON value that is itself valid JSON
+        assertRejectsContentAfterValue("\n{}");
+    }
+
+    private static void assertRejectsContentAfterValue(String contentAfterValue) {
+        assertThrows(IOException.class, () -> JsonUtil.fromJsonString(
+                SerializableTestClass.JSON_STRING_REPRESENTATION + contentAfterValue, SerializableTestClass.class));
+    }
+
     //TODO: @Test jsonUtil_readJsonStringToObjectInstance_correctObject()
 
     //TODO: @Test jsonUtil_writeThenReadObjectToJson_correctObject()
