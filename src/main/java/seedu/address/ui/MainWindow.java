@@ -180,6 +180,7 @@ public class MainWindow extends UiPart<Stage> {
     private static Rectangle2D getBoundsOfScreenShowingMost(double x, double y, double width, double height) {
         Rectangle2D bestScreen = Screen.getPrimary().getVisualBounds();
         double largestOverlap = 0;
+
         for (Screen candidate : Screen.getScreens()) {
             Rectangle2D bounds = candidate.getVisualBounds();
             double overlapWidth = Math.min(bounds.getMaxX(), x + width) - Math.max(bounds.getMinX(), x);
@@ -190,6 +191,7 @@ public class MainWindow extends UiPart<Stage> {
                 largestOverlap = overlap;
             }
         }
+
         return bestScreen;
     }
 

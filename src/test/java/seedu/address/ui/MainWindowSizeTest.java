@@ -44,14 +44,15 @@ public class MainWindowSizeTest {
     private static boolean isToolkitAvailable;
 
     @TempDir
-    public Path temporaryFolder;
+    private Path temporaryFolder;
 
     /**
      * Starts the JavaFX toolkit. The tests in this class are skipped in environments without a display.
      */
     @BeforeAll
     public static void startToolkit() {
-        isToolkitAvailable = JavaFxTestUtil.startToolkit();
+        JavaFxTestUtil.startToolkit();
+        isToolkitAvailable = JavaFxTestUtil.isToolkitAvailable();
     }
 
     @Test
