@@ -15,17 +15,20 @@ public class JavaFxTestUtil {
 
     private static final long TOOLKIT_TIMEOUT_SECONDS = 5;
 
+    /** True once {@code startToolkit} has started the JavaFX toolkit, or found it running, in this JVM. */
+    private static boolean isToolkitStarted;
+
     private JavaFxTestUtil() {} // prevents instantiation
 
     /**
-     * Starts the JavaFX toolkit, if it is not running yet, and returns true if it runs.
-     * Returns false in environments without a display, so that the calling tests can be skipped.
+     * Starts the JavaFX toolkit, if it is not running yet. In environments without a display, the toolkit is not
+     * started and {@code isToolkitAvailable()} stays false, so that the calling tests can be skipped.
      */
-    public static boolean startToolkit() {
+    public static void startToolkit() {
         // A failed startup makes later JavaFX calls in the same JVM wait forever,
-        // so do not attempt one when there is no display, e.g. on a headless CI runner.
+        // so do not attempt one when there is no display, e.g., on a headless CI runner.
         if (GraphicsEnvironment.isHeadless()) {
-            return false;
+            return;
         }
 
         try {
@@ -33,12 +36,20 @@ public class JavaFxTestUtil {
         } catch (IllegalStateException e) {
             // toolkit was already started earlier in this JVM; checked below
         } catch (RuntimeException | LinkageError e) {
-            return false;
+            return;
         }
 
         // keeps the toolkit running for later tests after a test closes its last window
         Platform.setImplicitExit(false);
-        return isToolkitRunning();
+        isToolkitStarted = isToolkitRunning();
+    }
+
+    /**
+     * Returns true if {@code startToolkit} has started the JavaFX toolkit, or found it running, so that GUI tests
+     * can run.
+     */
+    public static boolean isToolkitAvailable() {
+        return isToolkitStarted;
     }
 
     /**
