@@ -1,5 +1,6 @@
 package seedu.address.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -91,6 +92,12 @@ public interface Model {
      * {@code patient} must exist in the address book.
      */
     void setViewedPatient(Patient patient);
+
+    /**
+     * Returns the date and time at which the appointments of {@code patient} are decided to be upcoming or past:
+     * for the viewed patient, the time they were last shown, and for any other patient, the current time.
+     */
+    LocalDateTime getAppointmentsOrderedAt(Patient patient);
 
     /**
      * Returns the appointments of {@code patient} in the order the detail panel numbers them:

@@ -14,10 +14,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
@@ -224,6 +227,24 @@ public class BackupCommandTest {
         } finally {
             backupDir.toFile().setWritable(true);
         }
+    }
+
+    @Test
+    public void execute_success_leavesOnlyBackupFile() throws Exception {
+        new BackupCommand(FIXED_CLOCK, temporaryFolder).execute(model);
+
+        try (Stream<Path> files = Files.list(temporaryFolder)) {
+            assertEquals(List.of(temporaryFolder.resolve(EXPECTED_FILE_NAME)), files.toList());
+        }
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows has no POSIX file permissions")
+    public void execute_success_backupReadableOnlyByOwner() throws Exception {
+        new BackupCommand(FIXED_CLOCK, temporaryFolder).execute(model);
+
+        assertEquals(Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE),
+                Files.getPosixFilePermissions(temporaryFolder.resolve(EXPECTED_FILE_NAME)));
     }
 
     @Test

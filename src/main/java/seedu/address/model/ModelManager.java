@@ -166,12 +166,17 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public List<Appointment> getAppointmentsAsShown(Patient patient) {
+    public LocalDateTime getAppointmentsOrderedAt(Patient patient) {
         requireNonNull(patient);
-        LocalDateTime decidedAt = patient.equals(viewedPatient.get())
+        return patient.equals(viewedPatient.get())
                 ? viewedPatientShownAt
                 : LocalDateTime.now(clock);
-        return patient.getAppointmentsUpcomingFirst(decidedAt);
+    }
+
+    @Override
+    public List<Appointment> getAppointmentsAsShown(Patient patient) {
+        requireNonNull(patient);
+        return patient.getAppointmentsUpcomingFirst(getAppointmentsOrderedAt(patient));
     }
 
     @Override
