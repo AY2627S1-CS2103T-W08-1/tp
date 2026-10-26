@@ -21,7 +21,7 @@ import seedu.address.model.patient.Contact;
  */
 public class EditContactCommandParser implements Parser<EditContactCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("a/l", "a/p");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
 
     @Override
     public EditContactCommand parse(String args) throws ParseException {

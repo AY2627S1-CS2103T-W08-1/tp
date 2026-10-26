@@ -29,12 +29,14 @@ public class AddContactCommandParserTest {
     }
 
     @Test
-    public void parse_indianNameSlashWords_contactCreated() {
-        for (String token : List.of("a/l", "a/p", "A/L", "A/P")) {
-            String name = "Muthu " + token + " Ramasamy";
-            Contact contact = new Contact(name, "Emergency", "123", "");
+    public void parse_standaloneSlashWords_preservedInContactFields() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "S/O", "D/O", "C/O", "A/L", "A/P")) {
+            String name = "Tan " + token + " Lim";
+            String role = "Guardian " + token + " family";
+            String note = "Call " + token + " daughter";
+            Contact contact = new Contact(name, role, "123", note);
 
-            assertParseSuccess(parser, " 1 n/" + name + " r/Emergency p/123",
+            assertParseSuccess(parser, " 1 n/" + name + " r/" + role + " p/123 nt/" + note,
                     new AddContactCommand(INDEX_FIRST_PATIENT, contact));
         }
     }
@@ -69,12 +71,11 @@ public class AddContactCommandParserTest {
     }
 
     @Test
-    public void parse_slashWords_rejected() {
-        for (String token : List.of("s/o", "d/o", "c/o", "S/O")) {
-            String prefix = token.substring(0, token.indexOf('/') + 1);
-            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix);
-            assertParseFailure(parser, " 1 n/Ali " + token + " Abu r/Emergency p/123", expected);
-            assertParseFailure(parser, " 1" + FIELDS + " nt/Ask " + token + " Clinic", expected);
+    public void parse_punctuatedSlashWords_rejected() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p")) {
+            String expected = String.format(Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token + ",", token);
+            assertParseFailure(parser, " 1 n/Tan " + token + ", Lim r/Guardian p/123", expected);
+            assertParseFailure(parser, " 1" + FIELDS + " nt/Call " + token + ", daughter", expected);
         }
     }
 
