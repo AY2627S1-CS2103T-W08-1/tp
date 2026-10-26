@@ -16,7 +16,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.commons.core.index.Index;
-import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
@@ -65,7 +64,7 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
     private VBox appointments;
 
     private final ObservableList<Patient> displayedPatients;
-    private final Function<Patient, List<Appointment>> appointmentsAsShown;
+    private final Function<Patient, List<String>> appointmentLinesAsShown;
 
     /**
      * The last patient shown. It is kept while no patient is shown, so that the same patient shown again, e.g.,
@@ -76,14 +75,15 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
     /**
      * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
      * The patient's index in {@code displayedPatients} is shown under their name, and updates whenever that list
-     * changes. Appointments are numbered in the order given by {@code appointmentsAsShown}, which commands also use.
+     * changes. Appointments are shown as given by {@code appointmentLinesAsShown}, in the order commands also
+     * number them.
      */
     public PatientDetailPanel(ObservableValue<Patient> viewedPatient, ObservableList<Patient> displayedPatients,
-            Function<Patient, List<Appointment>> appointmentsAsShown) {
+            Function<Patient, List<String>> appointmentLinesAsShown) {
         super(FXML);
-        requireAllNonNull(viewedPatient, displayedPatients, appointmentsAsShown);
+        requireAllNonNull(viewedPatient, displayedPatients, appointmentLinesAsShown);
         this.displayedPatients = displayedPatients;
-        this.appointmentsAsShown = appointmentsAsShown;
+        this.appointmentLinesAsShown = appointmentLinesAsShown;
         placeholder.setText(MESSAGE_NO_PATIENT);
         viewedPatient.addListener((observable, oldPatient, newPatient) -> showPatient(newPatient));
         displayedPatients.addListener((ListChangeListener<Patient>) change -> showListIndex(viewedPatient.getValue()));
@@ -145,8 +145,7 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
         fillEntries(contacts, patient.getContacts().stream().map(Contact::toString).toList());
-        fillEntries(appointments, appointmentsAsShown.apply(patient).stream()
-                .map(Appointment::toString).toList());
+        fillEntries(appointments, appointmentLinesAsShown.apply(patient));
     }
 
     /**

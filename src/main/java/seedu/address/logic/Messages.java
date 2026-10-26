@@ -121,18 +121,27 @@ public class Messages {
             return MESSAGE_NO_WRITE_PERMISSION;
         }
 
-        String reason;
-        String fallback;
-        if (ioe instanceof FileSystemException fileSystemException) {
-            reason = fileSystemException.getReason();
-            fallback = MESSAGE_FILE_SYSTEM_ERROR;
-        } else {
-            reason = ioe.getMessage();
-            fallback = ioe.getClass().getSimpleName();
-        }
-
+        String reason = getReportedReason(ioe);
         String trimmedReason = reason == null ? "" : stripTrailingSpacesAndFullStops(reason).strip();
-        return trimmedReason.isEmpty() ? fallback : trimmedReason;
+        return trimmedReason.isEmpty() ? getFallbackReason(ioe) : trimmedReason;
+    }
+
+    /**
+     * Returns the reason that {@code ioe} reports: the file system's reason for a file system exception, whose
+     * message is only the file path, or the message of any other exception. Either can be null.
+     */
+    private static String getReportedReason(IOException ioe) {
+        return ioe instanceof FileSystemException fileSystemException
+                ? fileSystemException.getReason()
+                : ioe.getMessage();
+    }
+
+    /**
+     * Returns the reason to show when {@code ioe} reports none: a general file system error for a file system
+     * exception, or the name of the exception type otherwise.
+     */
+    private static String getFallbackReason(IOException ioe) {
+        return ioe instanceof FileSystemException ? MESSAGE_FILE_SYSTEM_ERROR : ioe.getClass().getSimpleName();
     }
 
     /**

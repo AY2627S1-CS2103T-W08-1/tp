@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -21,6 +20,7 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.PatientFormatter;
@@ -54,7 +54,6 @@ public class ExportCommand extends Command {
     public static final String EXPORTED_ON_PREFIX = "Exported on ";
 
     private static final String FILE_EXTENSION = ".txt";
-    private static final String TEMPORARY_FILE_SUFFIX = ".tmp";
     // Locale.ROOT keeps the export date the same whatever the computer's language settings are
     private static final DateTimeFormatter EXPORT_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ROOT);
@@ -121,29 +120,20 @@ public class ExportCommand extends Command {
 
     /**
      * Writes the record of {@code patient} to {@code exportFile}, after creating the export folder if it does not
-     * exist. The record is first written to a new temporary file with a unique name beside {@code exportFile},
-     * which then replaces any earlier export of the patient, so a failed write never leaves a partial record in
-     * place of an earlier one. Since the temporary file is always new, no existing file or link is written to.
+     * exist. The record is written through {@code FileUtil#writeThroughTemporaryFile}, so a failed write never leaves
+     * a partial record in place of an earlier one. Since the temporary file is always new, no existing file or link
+     * is written to.
      *
      * @throws CommandException if the folder or the file cannot be written.
      */
     private void writeRecord(Patient patient, Path exportFile) throws CommandException {
-        Path temporaryFile = null;
         try {
             Files.createDirectories(exportDir);
-            // the move below would replace a read-only earlier export, so refuse it as writing to it would
-            if (Files.exists(exportFile) && !Files.isWritable(exportFile)) {
-                throw new AccessDeniedException(exportFile.toString());
-            }
-            temporaryFile = Files.createTempFile(exportDir, exportFile.getFileName() + ".", TEMPORARY_FILE_SUFFIX);
-            Files.write(temporaryFile, createRecord(patient), StandardCharsets.UTF_8, StandardOpenOption.WRITE,
-                    StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
-            Files.move(temporaryFile, exportFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            checkEarlierExportIsWritable(exportFile);
+            List<String> recordLines = createRecord(patient);
+            FileUtil.writeThroughTemporaryFile(exportFile, temporaryFile -> writeLines(temporaryFile, recordLines));
         } catch (IOException ioe) {
             logger.warning("Could not export a patient record to " + exportDir + ": " + ioe.getClass().getSimpleName());
-            if (temporaryFile != null) {
-                deleteTemporaryFile(temporaryFile);
-            }
             String reason = Messages.describeWriteFailure(ioe);
             String message = String.format(MESSAGE_FAILURE, patient.getName().fullName,
                     exportFile.toAbsolutePath().normalize(), reason);
@@ -152,15 +142,25 @@ public class ExportCommand extends Command {
     }
 
     /**
-     * Deletes {@code temporaryFile}, which a failed export created and left behind, if it is still there.
+     * Throws an {@code AccessDeniedException} if {@code exportFile} is an earlier export that is read-only.
+     * The new record would otherwise replace it through a temporary file, although the user made it read-only.
+     *
+     * @throws AccessDeniedException if {@code exportFile} exists and cannot be written to.
      */
-    static void deleteTemporaryFile(Path temporaryFile) {
-        try {
-            Files.deleteIfExists(temporaryFile);
-        } catch (IOException ioe) {
-            logger.warning("Could not delete a temporary file in " + temporaryFile.getParent() + ": "
-                    + ioe.getClass().getSimpleName());
+    private static void checkEarlierExportIsWritable(Path exportFile) throws AccessDeniedException {
+        if (Files.exists(exportFile) && !Files.isWritable(exportFile)) {
+            throw new AccessDeniedException(exportFile.toString());
         }
+    }
+
+    /**
+     * Writes {@code lines} to {@code temporaryFile} in UTF-8, without following {@code temporaryFile} if it is a link.
+     *
+     * @throws IOException if the lines cannot be written.
+     */
+    private static void writeLines(Path temporaryFile, List<String> lines) throws IOException {
+        Files.write(temporaryFile, lines, StandardCharsets.UTF_8, StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
     }
 
     /**
