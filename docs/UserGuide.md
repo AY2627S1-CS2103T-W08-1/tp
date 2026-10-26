@@ -273,7 +273,7 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
   Editing an instruction to its current text is allowed.
 * `ci/` must appear exactly once. Unrecognized prefixes are rejected.
 
-Example: `editcare 1 2 ci/Check blood sugar after lunch`
+Example: `editcare 1 1 ci/Check blood sugar after lunch`
 
 For patient `Alex Yeoh`, this returns:
 `Updated care instruction for Alex Yeoh: Check blood sugar after lunch`
@@ -284,10 +284,10 @@ Removes one numbered care instruction and reports the removed text.
 
 Format: `deletecare INDEX CI_INDEX`
 
-Example: `deletecare 1 2`
+Example: `deletecare 1 1`
 
-For patient `Alex Yeoh`, deleting `Walk after lunch` returns:
-`Deleted care instruction for Alex Yeoh: Walk after lunch`
+For patient `Alex Yeoh` in the sample data, deleting `Monitor blood pressure every morning` returns:
+`Deleted care instruction for Alex Yeoh: Monitor blood pressure every morning`
 
 After either command, the detail panel shows the updated patient immediately and the remaining instructions are
 numbered from `1` again. `The patient index provided is invalid.` means `INDEX` is outside the displayed list.
@@ -307,10 +307,10 @@ Format: `deleteallergy INDEX ALLERGY_INDEX`
 * The removed allergen is reported in the success message. Remaining allergens are renumbered immediately in the
   detail panel, which shows the updated patient. All other patient details are unchanged.
 
-Example: `deleteallergy 1 2`
+Example: `deleteallergy 1 1`
 
-For patient `Alex Yeoh`, if allergen 2 is `Shellfish`, this returns
-`Deleted allergen for Alex Yeoh: Shellfish`.
+For patient `Alex Yeoh` in the sample data, allergen 1 is `Penicillin`, so this returns
+`Deleted allergen for Alex Yeoh: Penicillin`.
 
 An `INDEX` outside the displayed patient list returns `The patient index provided is invalid.` An
 `ALLERGY_INDEX` past the end of the patient's allergens, including when none are recorded, returns
@@ -373,7 +373,8 @@ Format: `deletecontact INDEX CONTACT_INDEX`
 Removes that contact and reports `Deleted contact for NAME:` followed by the removed contact's details.
 Remaining contacts are renumbered. Other patient details are unchanged.
 
-Example: `deletecontact 1 2`
+Example: `deletecontact 1 1` removes `Tan & Partners Clinic` from `Alex Yeoh` in the sample data and returns
+`Deleted contact for Alex Yeoh: Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`.
 
 For all three contact commands, `INDEX` must refer to a patient in the displayed list; otherwise the error is
 `The patient index provided is invalid.` A contact number past the end, including when there are no contacts,
@@ -550,6 +551,10 @@ A successful command returns `Archived patient: NAME; NRIC: NRIC`. An index outs
 Shows only archived patients. The displayed indices are the indices used by `unarchive` and other commands that
 operate on the currently displayed list. Active patients are not shown.
 
+Archived patients can still be updated with patient-editing commands such as `edit`, `addcare`, `editcare`,
+`deletecare`, and `deleteallergy`. These commands update the archived record without making it active again.
+Use `unarchive` when the patient should return to the active list.
+
 Format: `listarchived`
 
 Any text after `listarchived` is ignored. The command returns `Listed all archived patients.` or, if there are none,
@@ -567,7 +572,8 @@ Format: `unarchive INDEX`
   `find` command.
 * The patient's complete record is preserved.
 
-Example: `listarchived` followed by `unarchive 2` restores the second archived patient.
+Example with fresh sample data: `archive 1`, followed by `listarchived`, then `unarchive 1` archives and restores
+`Alex Yeoh`.
 
 A successful command returns `Unarchived patient: NAME; NRIC: NRIC`. An index outside the displayed list returns
 `The patient index provided is invalid.` Attempting to unarchive an active patient returns
@@ -921,13 +927,13 @@ Action            | Format, Examples
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
-**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
-**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
-**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
+**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 1`
+**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 1`
+**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 1`
 **Delete medication** | `deletemed INDEX MED_INDEX` <br> e.g., `deletemed 1 2`
 **Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Edit appointment** | `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]` <br> e.g., `editappt 1 2 t/10:00 nt/`
-**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
+**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 1 ci/Check blood sugar after lunch`
 **Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
 **Edit medication** | `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...` <br> e.g., `editmed 1 2 med/Metformin 850mg t/08:00 t/20:00`
 **Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
