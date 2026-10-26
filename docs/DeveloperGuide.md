@@ -262,10 +262,13 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 `confirm` token, with surrounding whitespace allowed. Missing confirmation or extra arguments produce a
 `ParseException` with the warning and command format before any data is changed.
 
-`ClearCommand#execute()` replaces the entire address book with an empty one through `Model#setAddressBook()`,
+`ClearCommand#execute()` first calls `BackupCommand#execute()` to save all current data using the existing
+backup implementation. A backup failure propagates as a `CommandException` before the model is changed.
+Only after the backup succeeds does it replace the entire address book with an empty one through `Model#setAddressBook()`,
 including archived patients and patients hidden by a filter. The existing model logic clears the viewed patient.
-`LogicManager` saves the change and restores its snapshot if saving fails. No automatic backup is created;
-users can run `backup` before `clear confirm` and recover that backup with `restore`.
+The success message includes the backup location. `LogicManager` saves the change and restores its snapshot
+if saving fails; the automatic backup remains available. Backups include archived and filtered-out patients,
+even for an empty address book, and can be recovered with `restore`.
 
 ### Edit patient feature
 
@@ -1592,27 +1595,33 @@ testers are expected to do more *exploratory* testing.
 
 1. Listing patients when there is no data
 
-   1. Prerequisites: Back up any needed data using `backup`, then clear all data using `clear confirm`.<br>
-      Expected: The status message shows `All patients have been cleared.`
+   1. Prerequisites: Clear all data using `clear confirm`; its automatic backup preserves the previous data.<br>
+      Expected: The status message shows `All patients have been cleared.` followed by the backup path.
 
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No active patients found.`
 
 ### Clearing all patients
 
-1. Prerequisites: Run `backup` to preserve any needed data. Have active and archived patients, and run `view 1`.
+1. Prerequisites: Have active and archived patients, and run `view 1`.
 
 1. Test cases: `clear`, `clear 1`, `clear CONFIRM`, `clear confirm extra`<br>
    Expected: `Invalid command format!` followed by the clearing warning and `Format: clear confirm`.
-   All patients and the viewed patient remain unchanged.
+   All patients and the viewed patient remain unchanged, and no backup is created.
 
 1. Test case: `clear confirm`<br>
-   Expected: `All patients have been cleared.` The patient list is empty, `listarchived` reports no archived
-   patients, and the detail panel shows its placeholder. Restarting the app still shows no patients.
-   No new backup is created. Use `restore` to select the backup made in the prerequisite if needed.
+   Expected: `All patients have been cleared.` followed by `Backup saved to: PATH`. The patient list is empty,
+   `listarchived` reports no archived patients, and the detail panel shows its placeholder. Restarting the app still shows no patients.
+   A new backup contains all previous active and archived patients. Run `restore`, then `restore FILENAME`
+   with that backup's name to recover them.
 
 1. Test case: `clear confirm` again<br>
-   Expected: `All patients have been cleared.` The empty address book remains unchanged.
+   Expected: The same success message and a new backup path. The empty address book is backed up without
+   overwriting the earlier backup.
+
+1. Simulate a backup failure in a disposable app folder by making `data/backups` a regular file, then run
+   `clear confirm`.<br>
+   Expected: A backup failure message. All patients and the viewed patient remain unchanged.
 
 ### Deleting a patient
 

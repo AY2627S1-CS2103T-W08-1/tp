@@ -156,7 +156,8 @@ public class LogicManagerTest {
         model.setViewedPatient(ALICE);
         storage.saveAddressBook(model.getAddressBook());
 
-        assertEquals(ClearCommand.MESSAGE_SUCCESS, logic.execute(ClearCommand.COMMAND_FORMAT).getFeedbackToUser());
+        assertTrue(logic.execute(ClearCommand.COMMAND_FORMAT).getFeedbackToUser()
+                .startsWith(ClearCommand.MESSAGE_SUCCESS + "\nBackup saved to: "));
 
         assertTrue(model.getAddressBook().getPatientList().isEmpty());
         assertNull(model.getViewedPatient().getValue());

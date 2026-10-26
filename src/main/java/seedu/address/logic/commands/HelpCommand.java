@@ -103,7 +103,7 @@ public class HelpCommand extends Command {
                             "Saves the full record of the patient at INDEX to data/exports, "
                                     + "in a file named after their NRIC."),
                     formatEntry(ClearCommand.COMMAND_FORMAT,
-                            "Permanently deletes all active and archived patients. Run backup first if needed.")),
+                            "Backs up all active and archived patients, then clears them.")),
             formatGroup("Other",
                     formatEntry(COMMAND_WORD,
                             "Shows this list of commands."),

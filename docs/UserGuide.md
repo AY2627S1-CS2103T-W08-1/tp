@@ -774,7 +774,7 @@ Errors are reported as follows:
 
 ### Clearing all patients: `clear`
 
-Permanently clears all active and archived patients and their care information from MediConnect, and clears
+Backs up, then clears all active and archived patients and their care information from MediConnect, and clears
 any patient details in the view panel. This includes patients hidden by `find` or the current list filter.
 
 Format: `clear confirm`
@@ -782,10 +782,15 @@ Format: `clear confirm`
 * `confirm` must be lowercase. Surrounding whitespace is allowed; additional arguments are rejected.
 * `clear` alone shows a warning and the required format without deleting anything. `clear 1` is also rejected;
   use `delete INDEX` to delete one patient.
-* No automatic backup is created. Run `backup` first if you may need to recover the data using `restore`.
-  There is no undo command.
+* Before clearing, all patient data is saved to a new timestamped file in `data/backups`, using the same naming
+  and collision handling as `backup`. If the backup fails, no patients are cleared.
+* The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
+  using that file's name to recover the data. There is no undo command.
+* An empty address book is backed up too. Existing backups are never overwritten.
+* If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
 
-Returns `All patients have been cleared.`, including when there are no patients to clear.
+Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
+patients to clear.
 
 ### Backing up data: `backup`
 
