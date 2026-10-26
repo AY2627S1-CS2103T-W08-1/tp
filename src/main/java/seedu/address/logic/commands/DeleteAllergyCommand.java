@@ -21,7 +21,7 @@ public class DeleteAllergyCommand extends Command {
     public static final String COMMAND_WORD = "deleteallergy";
     public static final String COMMAND_FORMAT = COMMAND_WORD + " INDEX ALLERGY_INDEX";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Deletes a patient's allergen.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 2";
     public static final String MESSAGE_SUCCESS = "Deleted allergen for %1$s: %2$s";
 

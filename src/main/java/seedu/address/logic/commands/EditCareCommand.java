@@ -23,7 +23,7 @@ public class EditCareCommand extends Command {
     public static final String COMMAND_FORMAT = COMMAND_WORD + " INDEX CI_INDEX "
             + PREFIX_CARE_INSTRUCTION + "NEW_TEXT";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits a patient's care instruction.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 2 " + PREFIX_CARE_INSTRUCTION + "Check blood sugar after lunch";
     public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
     public static final String MESSAGE_DUPLICATE_CARE_INSTRUCTION =

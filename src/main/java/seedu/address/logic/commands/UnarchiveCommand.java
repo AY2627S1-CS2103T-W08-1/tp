@@ -20,7 +20,7 @@ public class UnarchiveCommand extends Command {
     public static final String COMMAND_FORMAT = COMMAND_WORD + " INDEX";
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Restores the archived patient at the specified INDEX.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: INDEX (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
 
     public static final String MESSAGE_UNARCHIVE_PATIENT_SUCCESS = "Unarchived patient: %1$s; NRIC: %2$s";
