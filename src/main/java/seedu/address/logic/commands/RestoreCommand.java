@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -154,9 +155,13 @@ public class RestoreCommand extends Command {
         int patientCount = restoredPatients.size();
         String patientWord = patientCount == 1 ? "patient" : "patients";
         long archivedCount = restoredPatients.stream().filter(Patient::isArchived).count();
-        String archivedNote = archivedCount == 0 ? "" : String.format(MESSAGE_ARCHIVED_COUNT, archivedCount);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, patientCount, patientWord, archivedNote, fileName,
-                automaticBackupFile.toAbsolutePath().normalize()));
+        // Locale.ROOT writes the counts with the digits 0 to 9, as the list and the detail panel do, whatever the
+        // computer's language settings are
+        String archivedNote = archivedCount == 0
+                ? ""
+                : String.format(Locale.ROOT, MESSAGE_ARCHIVED_COUNT, archivedCount);
+        return new CommandResult(String.format(Locale.ROOT, MESSAGE_SUCCESS, patientCount, patientWord, archivedNote,
+                fileName, automaticBackupFile.toAbsolutePath().normalize()));
     }
 
     /**

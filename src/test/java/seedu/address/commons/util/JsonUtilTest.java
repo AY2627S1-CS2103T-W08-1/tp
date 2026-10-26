@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,6 +34,31 @@ public class JsonUtilTest {
         JsonUtil.serializeObjectToJsonFile(SERIALIZATION_FILE, serializableTestClass);
 
         assertEquals(SerializableTestClass.JSON_STRING_REPRESENTATION, FileUtil.readFromFile(SERIALIZATION_FILE));
+    }
+
+    @Test
+    public void saveJsonFile_existingFile_replacesFileAndLeavesNoTemporaryFile() throws IOException {
+        Path file = temporaryFolder.resolve("serialize.json");
+        FileUtil.writeToFile(file, "old content");
+        SerializableTestClass serializableTestClass = new SerializableTestClass();
+        serializableTestClass.setTestValues();
+
+        JsonUtil.saveJsonFile(serializableTestClass, file);
+
+        assertEquals(SerializableTestClass.JSON_STRING_REPRESENTATION, FileUtil.readFromFile(file));
+        assertEquals(List.of(file), listFiles(temporaryFolder));
+    }
+
+    @Test
+    public void saveJsonFile_serializationFails_keepsFileAndLeavesNoTemporaryFile() throws IOException {
+        Path file = temporaryFolder.resolve("serialize.json");
+        FileUtil.writeToFile(file, "old content");
+
+        // an object with no properties cannot be serialized
+        assertThrows(IOException.class, () -> JsonUtil.saveJsonFile(new Object(), file));
+
+        assertEquals("old content", FileUtil.readFromFile(file));
+        assertEquals(List.of(file), listFiles(temporaryFolder));
     }
 
     @Test
@@ -94,4 +122,13 @@ public class JsonUtilTest {
     //TODO: @Test jsonUtil_readJsonStringToObjectInstance_correctObject()
 
     //TODO: @Test jsonUtil_writeThenReadObjectToJson_correctObject()
+
+    /**
+     * Returns the files in {@code folder}.
+     */
+    private static List<Path> listFiles(Path folder) throws IOException {
+        try (Stream<Path> files = Files.list(folder)) {
+            return files.toList();
+        }
+    }
 }

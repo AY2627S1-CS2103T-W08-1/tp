@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_CLASH;
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_APPOINTMENT;
+import static seedu.address.logic.Messages.MESSAGE_FAR_FUTURE_APPOINTMENT;
 import static seedu.address.logic.Messages.MESSAGE_PAST_APPOINTMENT;
 import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
@@ -24,14 +25,21 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Patient;
 import seedu.address.testutil.AdjustableClock;
+import seedu.address.testutil.PatientBuilder;
 
 public class EditApptCommandTest {
 
@@ -74,12 +82,52 @@ public class EditApptCommandTest {
     }
 
     @Test
+    public void execute_modelLosesEditedAppointment_throwsAssertionError() {
+        // a model that does not show the edited appointment breaks the command's assumption
+        Model model = new ModelManager(new AddressBook(), new UserPrefs(), FIXED_CLOCK) {
+            @Override
+            public List<Appointment> getAppointmentsAsShown(Patient patient) {
+                return patient.getAppointments().contains(CHECKUP) ? super.getAppointmentsAsShown(patient) : List.of();
+            }
+        };
+        model.addPatient(new PatientBuilder(ALICE).withAppointments(CHECKUP).build());
+        EditApptCommand command = createCommand(Optional.empty(), Optional.of(NEW_TIME), Optional.empty(),
+                Optional.empty());
+
+        assertThrows(AssertionError.class, () -> command.execute(model));
+    }
+
+    @Test
+    public void execute_localeWithOtherDigits_givesNumberInPanelDigits() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // String.format writes 1 as an Arabic-Indic digit in Egyptian Arabic unless given Locale.ROOT
+            Locale.setDefault(Locale.forLanguageTag("ar-EG"));
+            Appointment editedAppointment = new Appointment(CHECKUP.getDate(), NEW_TIME, "Dr Tan", "Fasting");
+            assertCommandSuccess(createCommand(Optional.empty(), Optional.of(NEW_TIME), Optional.empty(),
+                    Optional.empty()), createModelWithAppointments(CHECKUP),
+                    "Edited appointment 1 of " + ALICE.getName() + ": " + editedAppointment,
+                    createViewedModelWithAppointments(editedAppointment));
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
+
+    @Test
     public void execute_pastDateAndTime_editsWithPastNote() {
         LocalDate today = LocalDate.of(2026, 10, 18);
         LocalTime oneMinuteBeforeNow = LocalTime.of(11, 59);
         assertEditSuccess(createCommand(Optional.of(today), Optional.of(oneMinuteBeforeNow), Optional.empty(),
                 Optional.empty()), new Appointment(today, oneMinuteBeforeNow, "Dr Tan", "Fasting"),
                 "\n" + MESSAGE_PAST_APPOINTMENT);
+    }
+
+    @Test
+    public void execute_dateMoreThanTwoYearsAhead_editsWithFarFutureNote() {
+        LocalDate farAhead = LocalDate.of(2028, 10, 19);
+        assertEditSuccess(createCommand(Optional.of(farAhead), Optional.empty(), Optional.empty(),
+                Optional.empty()), new Appointment(farAhead, CHECKUP.getTime(), "Dr Tan", "Fasting"),
+                "\n" + MESSAGE_FAR_FUTURE_APPOINTMENT);
     }
 
     @Test

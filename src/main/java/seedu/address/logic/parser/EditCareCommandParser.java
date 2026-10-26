@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CARE_INSTRUCTION;
 
@@ -16,6 +17,7 @@ public class EditCareCommandParser implements Parser<EditCareCommand> {
 
     @Override
     public EditCareCommand parse(String args) throws ParseException {
+        requireNonNull(args);
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), PREFIX_CARE_INSTRUCTION);
         ArgumentMultimap fields = ArgumentTokenizer.tokenize(args, PREFIX_CARE_INSTRUCTION);
         fields.verifyNoDuplicatePrefixesFor(PREFIX_CARE_INSTRUCTION);

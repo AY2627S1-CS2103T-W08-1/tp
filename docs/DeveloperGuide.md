@@ -112,6 +112,7 @@ How the `Logic` component works:
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
 1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
+1. If the command changed the patient data, `LogicManager` saves it through `Storage`. Before executing the command, it takes a `Model.Snapshot` of the patient data, the patient list filter and the viewed patient. If the save fails, it restores the `Model` from the snapshot and reports the failure, so a command reported as failed leaves no change that would be lost on restart. Commands that change no patient data, such as `list` or `exit`, are not saved, so they still work when the data file is read-only.
 1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
@@ -175,6 +176,8 @@ The `Storage` component,
 
 The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
 
+`JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted.
+
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
 objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
@@ -184,7 +187,7 @@ date, time, provider and note.
 The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
 `JsonAdaptedPatient#toModelType()` validates patient fields and converts medications, contacts and appointments using
 their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
-an NRIC, or a patient has duplicate contacts, the whole file is rejected.
+an NRIC, or a patient has duplicate contacts or duplicate appointments, the whole file is rejected.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
 `mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
@@ -226,6 +229,8 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 * `setAddressBook(...)`, which the `clear` command uses, clears the viewed patient if it is not in the new data.
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
+
+Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
 
 The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
 
@@ -344,7 +349,7 @@ The sequence diagram below shows a successful `restore old.json`.
 1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
 1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
 1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored, how many of them are archived, since only active patients are then listed, and the path of the automatic backup.
-1. As after every command, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
+1. As after every command that changes the patient data, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
@@ -453,7 +458,7 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
    before now. If there are no doses, it returns `No medications are due today.`, or
    `No medications are due today for NAME.` when an index was given.
 
-`due` does not change the `Model`, so `LogicManager` still saves it after execution, but with the same data.
+`due` does not change the patient data, so `LogicManager` does not save after it.
 
 #### Design considerations
 
@@ -586,13 +591,13 @@ elderly or chronically ill patients. Community nurses conducting home visits are
 user:
 
 * manages care information across multiple healthcare providers and emergency contacts
-* needs to track patient profiles, conditions, allergies, medications, appointments, and care instructions
+* needs to track patient profiles, allergies, medications, appointments, and care instructions
 * currently relies on fragmented sources such as messaging threads, paper notes, and memory
 * needs quick access to accurate information during daily care, handovers, appointments, and emergencies
 * is comfortable with everyday applications but may not be technically proficient
 * prefers a local desktop application with a fast, keyboard-first workflow
 
-**Value proposition**: MediConnect centralizes patient profiles, care contacts, medical notes, appointment history,
+**Value proposition**: MediConnect centralizes patient profiles, care contacts, allergies, appointment history,
 medication schedules, and care instructions in one local desktop application. It gives patients and caregivers a
 single, quickly accessible source of care information, reducing the risk of important details being missed and
 making day-to-day coordination and care handovers easier.
@@ -1484,6 +1489,39 @@ testers are expected to do more *exploratory* testing.
    1. Test case: Close the window using the window's close button.<br>
       Expected: The app window closes. The window size and location are retained on the next launch.
 
+### Viewing help
+
+1. Opening the help window
+
+   1. Test case: `help`<br>
+      Expected: A help window opens in front of the main window. It lists every command with its format and a one-line description, under the headings Patients, Care information, Contacts, Appointments, Data and Other, below a link to the User Guide. The status message shows `Opened help window.`
+
+   1. Test case: Click **Copy URL**, then paste into a browser's address bar.<br>
+      Expected: The User Guide opens.
+
+   1. Test case: `help add`<br>
+      Expected: Same as `help`, because any text after `help` is ignored.
+
+1. Typing while the help window is open
+
+   1. Prerequisites: The help window is open.
+
+   1. Test case: Type `list` and press Enter.<br>
+      Expected: The text goes to the main window's command box, not the help window, and the command runs. The help window stays open in front of the main window.
+
+   1. Test case: `help` again<br>
+      Expected: No second help window opens. The status message shows `Opened help window.`
+
+1. Closing the help window
+
+   1. Prerequisites: The help window has just been opened with `help`, so the main window's command box has the focus.
+
+   1. Test case: Type some text in the command box without pressing Enter, then press `Esc`.<br>
+      Expected: The help window closes. The typed text stays in the command box.
+
+   1. Test case: Press `F1`, or choose **Help** in the menu bar. Click the help window, then press `Esc`.<br>
+      Expected: `F1` and the menu open the help window as `help` does, and `Esc` in the help window closes it.
+
 ### Entering a blank command
 
 1. Test case: Leave the command box empty and press Enter.<br>
@@ -1613,6 +1651,13 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect view commands to try: `view`, `view x`, `view 1 2`, `view y` (where y is larger than the list size)<br>
       Expected: The detail panel is unchanged. The status message shows an error.
+
+1. Filtering out the patient being viewed
+
+   1. Prerequisites: `list`, then `view 1`. The detail panel shows `List index: 1` under the name.
+
+   1. Test case: `find Bernice`<br>
+      Expected: The detail panel still shows the first patient, now with `Not in the displayed list` under the name. Running `list` shows `List index: 1` again.
 
 1. Deleting the patient being viewed
 
