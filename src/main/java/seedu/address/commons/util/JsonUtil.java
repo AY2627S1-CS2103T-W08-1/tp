@@ -87,11 +87,11 @@ public class JsonUtil {
     }
 
     /**
-     * Saves the JSON object to the specified file.
-     * Overwrites existing file if it exists, creates a new file if it doesn't.
+     * Saves the JSON object to the specified file, through a temporary file in the same folder.
+     * Replaces the existing file if it exists, creates a new file if it doesn't.
      *
      * @param objectToSave cannot be null.
-     * @param filePath cannot be null.
+     * @param filePath cannot be null. Its folder must exist.
      * @param <T> The type of the object to save.
      * @throws IOException if there was an error during writing to the file.
      */
@@ -99,7 +99,9 @@ public class JsonUtil {
         requireNonNull(filePath);
         requireNonNull(objectToSave);
 
-        serializeObjectToJsonFile(filePath, objectToSave);
+        // A save that fails partway, e.g. on a full disk, then leaves the last complete file in place.
+        FileUtil.writeThroughTemporaryFile(filePath,
+                temporaryFile -> serializeObjectToJsonFile(temporaryFile, objectToSave));
     }
 
     /**
