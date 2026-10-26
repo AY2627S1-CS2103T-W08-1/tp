@@ -212,6 +212,16 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void setPatient_viewedActivePatientArchived_viewedPatientCleared() {
+        modelManager.addPatient(ALICE);
+        modelManager.setViewedPatient(ALICE);
+
+        modelManager.setPatient(ALICE, ALICE.withArchived(true));
+
+        assertNull(modelManager.getViewedPatient().getValue());
+    }
+
+    @Test
     public void setPatient_otherPatientReplaced_viewedPatientUnchanged() {
         modelManager.addPatient(ALICE);
         modelManager.addPatient(BENSON);

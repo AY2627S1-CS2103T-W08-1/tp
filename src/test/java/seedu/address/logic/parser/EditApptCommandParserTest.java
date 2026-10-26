@@ -43,6 +43,29 @@ public class EditApptCommandParserTest {
     }
 
     @Test
+    public void parse_indianNameSlashWords_providerAccepted() {
+        for (String token : new String[] {"a/l", "a/p", "A/L", "A/P"}) {
+            String provider = "Dr Muthu " + token + " Ramasamy";
+
+            assertParseSuccess(parser, "1 2 w/" + provider,
+                    new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.empty(),
+                            Optional.empty(), Optional.of(provider), Optional.empty()));
+        }
+    }
+
+    @Test
+    public void parse_slashWordsInNote_keptInNote() {
+        // w/o and d/o start like the w/ and d/ prefixes, but must not change who or when
+        for (String token : new String[] {"w/o", "W/O", "d/o", "s/o", "c/o"}) {
+            String note = "MRI " + token + " contrast";
+
+            assertParseSuccess(parser, "1 2 nt/" + note,
+                    new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.empty(),
+                            Optional.empty(), Optional.empty(), Optional.of(note)));
+        }
+    }
+
+    @Test
     public void parse_emptyNote_successWithEmptyNote() {
         assertParseSuccess(parser, "1 2 nt/", new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("")));

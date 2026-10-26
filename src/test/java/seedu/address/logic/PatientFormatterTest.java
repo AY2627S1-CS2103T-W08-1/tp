@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.ARCHIVED_ALICE;
 import static seedu.address.testutil.TypicalPatients.DANIEL;
 
 import java.time.Duration;
@@ -32,6 +33,13 @@ public class PatientFormatterTest {
     public void formatDetails_patient_returnsLabeledLinesInPanelOrder() {
         assertEquals(List.of("NRIC: S0000001A", "DOB: " + ALICE.getDob(), "Phone: 94351253",
                 "Address: 123, Jurong West Ave 6, #08-111"), PatientFormatter.formatDetails(ALICE));
+    }
+
+    @Test
+    public void formatDetails_archivedPatient_endsWithArchivedStatus() {
+        assertEquals(List.of("NRIC: S0000001A", "DOB: " + ALICE.getDob(), "Phone: 94351253",
+                "Address: 123, Jurong West Ave 6, #08-111", PatientFormatter.ARCHIVED_STATUS),
+                PatientFormatter.formatDetails(ARCHIVED_ALICE));
     }
 
     @Test

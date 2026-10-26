@@ -1,15 +1,18 @@
 package seedu.address.ui;
 
+import java.awt.Point;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
@@ -68,11 +71,13 @@ public class MainWindow extends UiPart<Stage> {
         this.dataFilePath = dataFilePath;
 
         // Configure the UI
-        setWindowDefaultSize(logic.getGuiSettings());
+        fitWindowToScreen(logic.getGuiSettings());
 
         setAccelerators();
 
+        // the help window closes and minimizes with the main window, and Esc in the main window closes it
         helpWindow = new HelpWindow();
+        helpWindow.getRoot().initOwner(primaryStage);
     }
 
     public Stage getPrimaryStage() {
@@ -121,7 +126,7 @@ public class MainWindow extends UiPart<Stage> {
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
 
         PatientDetailPanel patientDetailPanel = new PatientDetailPanel(logic.getViewedPatient(),
-                logic::getAppointmentLinesAsShown);
+                logic.getFilteredPatientList(), logic::getAppointmentLinesAsShown);
         patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
@@ -135,27 +140,83 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Sets the default size based on {@code guiSettings}.
+     * Sets the size and position of the window from {@code guiSettings}, reduced and moved where needed so that the
+     * whole window fits the visible area of the screen that showed most of it, e.g., on a small or scaled screen.
+     * The minimum size from {@code MainWindow.fxml} is reduced in the same way, since a shown window is never
+     * smaller than its minimum size.
+     * If no screen shows any of it, e.g., when the screen it was last on is not connected any more, or if it has no
+     * saved position, the window is placed on the main screen instead.
      */
-    private void setWindowDefaultSize(GuiSettings guiSettings) {
-        primaryStage.setHeight(guiSettings.getWindowHeight());
-        primaryStage.setWidth(guiSettings.getWindowWidth());
-        if (guiSettings.getWindowCoordinates() != null) {
-            primaryStage.setX(guiSettings.getWindowCoordinates().getX());
-            primaryStage.setY(guiSettings.getWindowCoordinates().getY());
+    private void fitWindowToScreen(GuiSettings guiSettings) {
+        Rectangle2D screenBounds = getTargetScreenBounds(guiSettings);
+        double width = Math.min(guiSettings.getWindowWidth(), screenBounds.getWidth());
+        double height = Math.min(guiSettings.getWindowHeight(), screenBounds.getHeight());
+        primaryStage.setMinWidth(Math.min(primaryStage.getMinWidth(), screenBounds.getWidth()));
+        primaryStage.setMinHeight(Math.min(primaryStage.getMinHeight(), screenBounds.getHeight()));
+        primaryStage.setWidth(width);
+        primaryStage.setHeight(height);
+
+        Point coordinates = guiSettings.getWindowCoordinates();
+        if (coordinates != null) {
+            primaryStage.setX(clamp(coordinates.getX(), screenBounds.getMinX(), screenBounds.getMaxX() - width));
+            primaryStage.setY(clamp(coordinates.getY(), screenBounds.getMinY(), screenBounds.getMaxY() - height));
         }
     }
 
     /**
-     * Opens the help window or focuses on it if it's already opened.
+     * Opens the help window if it is not already open, and keeps the keyboard focus in the main window, so that the
+     * next command can be typed straight away. Esc closes the help window.
      */
     @FXML
     public void handleHelp() {
         if (!helpWindow.isShowing()) {
             helpWindow.show();
-        } else {
-            helpWindow.focus();
         }
+        // keeps typing in the command box; the help window stays in front of the main window until it is closed
+        primaryStage.requestFocus();
+    }
+
+    /**
+     * Returns the visible area of the screen that shows the largest part of a window at {@code x} and {@code y} with
+     * the given {@code width} and {@code height}, or that of the main screen if no screen shows any of it.
+     */
+    private static Rectangle2D getBoundsOfScreenShowingMost(double x, double y, double width, double height) {
+        Rectangle2D bestScreen = Screen.getPrimary().getVisualBounds();
+        double largestOverlap = 0;
+
+        for (Screen candidate : Screen.getScreens()) {
+            Rectangle2D bounds = candidate.getVisualBounds();
+            double overlapWidth = Math.min(bounds.getMaxX(), x + width) - Math.max(bounds.getMinX(), x);
+            double overlapHeight = Math.min(bounds.getMaxY(), y + height) - Math.max(bounds.getMinY(), y);
+            double overlap = Math.max(0, overlapWidth) * Math.max(0, overlapHeight);
+            if (overlap > largestOverlap) {
+                bestScreen = bounds;
+                largestOverlap = overlap;
+            }
+        }
+
+        return bestScreen;
+    }
+
+    /**
+     * Returns the visible area of the screen to fit the window to: the screen that shows most of the window saved in
+     * {@code guiSettings}, or the main screen if the window has no saved position.
+     */
+    private static Rectangle2D getTargetScreenBounds(GuiSettings guiSettings) {
+        Point coordinates = guiSettings.getWindowCoordinates();
+        if (coordinates == null) {
+            return Screen.getPrimary().getVisualBounds();
+        }
+        return getBoundsOfScreenShowingMost(coordinates.getX(), coordinates.getY(), guiSettings.getWindowWidth(),
+                guiSettings.getWindowHeight());
+    }
+
+    /**
+     * Returns {@code value} moved up to {@code min} if it is below it, then down to {@code max} if it is above it.
+     * Unlike {@code Math.clamp}, it does not throw if rounding makes {@code max} a little less than {@code min}.
+     */
+    private static double clamp(double value, double min, double max) {
+        return Math.min(Math.max(value, min), max);
     }
 
     void show() {

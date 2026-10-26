@@ -3,6 +3,8 @@ package seedu.address.model.patient;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.util.Locale;
+
 /**
  * Represents a Patient's NRIC in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidNric(String)}
@@ -22,7 +24,8 @@ public class Nric {
     public Nric(String nric) {
         requireNonNull(nric);
         checkArgument(isValidNric(nric), MESSAGE_CONSTRAINTS);
-        value = nric.toUpperCase();
+        // Locale.ROOT, so that "i" becomes "I" on every computer, not "İ" in Turkish
+        value = nric.toUpperCase(Locale.ROOT);
     }
 
     /**
