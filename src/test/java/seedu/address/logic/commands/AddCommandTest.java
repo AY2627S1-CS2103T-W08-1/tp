@@ -186,6 +186,16 @@ public class AddCommandTest {
         public List<Appointment> getAppointmentsAsShown(Patient patient) {
             throw new AssertionError("This method should not be called.");
         }
+
+        @Override
+        public Snapshot takeSnapshot() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void restoreSnapshot(Snapshot snapshot) {
+            throw new AssertionError("This method should not be called.");
+        }
     }
 
     /**

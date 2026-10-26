@@ -111,6 +111,7 @@ How the `Logic` component works:
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
 1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
+1. If the command changed the patient data, `LogicManager` saves it through `Storage`. Before executing the command, it takes a `Model.Snapshot` of the patient data, the patient list filter and the viewed patient. If the save fails, it restores the `Model` from the snapshot and reports the failure, so a command reported as failed leaves no change that would be lost on restart. Commands that change no patient data, such as `list` or `exit`, are not saved, so they still work when the data file is read-only.
 1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
@@ -343,7 +344,7 @@ The sequence diagram below shows a successful `restore old.json`.
 1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
 1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
 1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored, how many of them are archived, since only active patients are then listed, and the path of the automatic backup.
-1. As after every command, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
+1. As after every command that changes the patient data, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
@@ -452,7 +453,7 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
    before now. If there are no doses, it returns `No medications are due today.`, or
    `No medications are due today for NAME.` when an index was given.
 
-`due` does not change the `Model`, so `LogicManager` still saves it after execution, but with the same data.
+`due` does not change the patient data, so `LogicManager` does not save after it.
 
 #### Design considerations
 
