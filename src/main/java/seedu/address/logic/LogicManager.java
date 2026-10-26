@@ -25,10 +25,12 @@ import seedu.address.storage.Storage;
  * The main LogicManager of the app.
  */
 public class LogicManager implements Logic {
-    public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";
+    public static final String FILE_OPS_ERROR_FORMAT =
+            "Could not save data due to the following error: %s\nNothing was changed.";
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
-            "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+            "Could not save data to file %s due to insufficient permissions to write to the file or the folder.\n"
+            + "Nothing was changed.";
 
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
@@ -51,14 +53,23 @@ public class LogicManager implements Logic {
         Command command = addressBookParser.parseCommand(commandText);
         // the command text is not logged, as it can hold patient details
         logger.info("----------------[USER COMMAND][" + command.getClass().getSimpleName() + "]");
+        Model.Snapshot snapshot = model.takeSnapshot();
         commandResult = command.execute(model);
+
+        // Saves only changed patient data, so that commands that only read it still work if the file is read-only.
+        if (model.getAddressBook().equals(snapshot.addressBook())) {
+            return commandResult;
+        }
 
         try {
             storage.saveAddressBook(model.getAddressBook());
-        } catch (AccessDeniedException e) {
-            throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
         } catch (IOException ioe) {
-            throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
+            // Undoes the command, since it is reported as failed and its change would be lost on restart.
+            model.restoreSnapshot(snapshot);
+            logger.warning("Could not save the patient data, so the command was undone: " + ioe.getMessage());
+            String format = ioe instanceof AccessDeniedException ? FILE_OPS_PERMISSION_ERROR_FORMAT
+                    : FILE_OPS_ERROR_FORMAT;
+            throw new CommandException(String.format(format, ioe.getMessage()), ioe);
         }
 
         return commandResult;

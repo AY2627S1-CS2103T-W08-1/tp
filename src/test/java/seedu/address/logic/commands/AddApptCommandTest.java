@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_CLASH;
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_APPOINTMENT;
+import static seedu.address.logic.Messages.MESSAGE_FAR_FUTURE_APPOINTMENT;
 import static seedu.address.logic.Messages.MESSAGE_PAST_APPOINTMENT;
 import static seedu.address.logic.commands.AddApptCommand.MESSAGE_SUCCESS;
 import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
@@ -58,6 +59,20 @@ public class AddApptCommandTest {
         Appointment now = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(12, 0), "Dr Tan", "");
         assertAddSuccess(ALICE, now, new PatientBuilder(ALICE).withAppointments(now).build(),
                 String.format(MESSAGE_SUCCESS, ALICE.getName(), now));
+    }
+
+    @Test
+    public void execute_dayAfterTwoYearsAhead_addsWithFarFutureNote() {
+        Appointment farAhead = new Appointment(LocalDate.of(2028, 10, 19), LocalTime.of(9, 30), "Dr Tan", "");
+        assertAddSuccess(ALICE, farAhead, new PatientBuilder(ALICE).withAppointments(farAhead).build(),
+                String.format(MESSAGE_SUCCESS, ALICE.getName(), farAhead) + "\n" + MESSAGE_FAR_FUTURE_APPOINTMENT);
+    }
+
+    @Test
+    public void execute_exactlyTwoYearsAhead_addsWithoutFarFutureNote() {
+        Appointment twoYearsAhead = new Appointment(LocalDate.of(2028, 10, 18), LocalTime.of(23, 59), "Dr Tan", "");
+        assertAddSuccess(ALICE, twoYearsAhead, new PatientBuilder(ALICE).withAppointments(twoYearsAhead).build(),
+                String.format(MESSAGE_SUCCESS, ALICE.getName(), twoYearsAhead));
     }
 
     @Test

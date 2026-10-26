@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.util.Locale;
+
 import org.junit.jupiter.api.Test;
 
 public class NricTest {
@@ -23,6 +25,20 @@ public class NricTest {
     @Test
     public void constructor_lowercaseNric_storedInUppercase() {
         assertEquals("S1234567A", new Nric("s1234567a").value);
+    }
+
+    @Test
+    public void constructor_lowercaseNricInTurkishLocale_storedInAsciiUppercase() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // in Turkish, "i" is upper-cased to "İ" (U+0130), which a saved NRIC must not contain
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            Nric nric = new Nric("s1234567i");
+            assertEquals("S1234567I", nric.value);
+            assertTrue(Nric.isValidNric(nric.value));
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     @Test
