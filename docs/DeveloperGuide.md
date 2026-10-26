@@ -193,7 +193,12 @@ do.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
 `mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
-existing recovery file is never overwritten. The UI shows its absolute path in a startup warning, and later commands
+existing recovery file is never overwritten. The UI shows its absolute path and failure details in a startup warning.
+`JsonSerializableAddressBook#toModelType()` prefixes validation failures with the one-based entry position in the
+JSON `persons` array, including null entries and duplicate patients, while preserving the original exception as
+the cause. The first invalid entry is reported. Both startup and `restore` use these diagnostics. `MainApp` shows
+validation messages for `IllegalValueException` causes; other read failures receive a generic format/permissions
+message rather than raw parser exceptions that can include file contents. Later commands
 save normally to the original data path. If preservation fails, the exception stops initialization before commands
 can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
@@ -1387,7 +1392,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
-4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path.
+4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors.
 5. MediConnect must not use a database management system.
 6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
 7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
@@ -1679,17 +1684,23 @@ testers are expected to do more *exploratory* testing.
 
 1. Dealing with corrupted data files
 
-   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
+   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change the second patient's `phone` to `123`.
 
    1. Launch the app.<br>
-      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path.
+      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path and
+      `Details: Patient entry 2:` followed by the phone-number constraints.
       The recovery copy contains the original invalid file unchanged.
 
    1. Run `list`, then close and relaunch the app.<br>
-      Expected: The active data file contains an empty patient list, and the recovery copy is still unchanged.
+      Expected: `list` leaves the invalid data file unchanged. Relaunching shows the warning again and creates
+      another recovery copy; both copies retain the original contents.
 
    1. Close the app. Repair a copy of the recovery file, replace `data/mediconnect.json` with it, and relaunch.<br>
       Expected: The repaired patients load normally without a recovery warning.
+
+   1. In a disposable app folder, replace the data file with malformed JSON, such as `{"persons": [`, and launch.<br>
+      Expected: The warning keeps the recovery path and asks you to check the JSON format and file permissions.
+      It does not display raw parser exceptions or claim to identify a patient entry.
 
 ### Backing up data
 
