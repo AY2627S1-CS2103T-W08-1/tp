@@ -45,9 +45,10 @@ public class EditCommandTest {
         Patient original = new PatientBuilder(DANIEL).withMedications(medication).withAllergens("Penicillin")
                 .withCareInstructions("Check blood sugar").withContacts(TypicalContacts.GP)
                 .withAppointments(CHECKUP).withArchived(true).build();
-        Model model = new ModelManager(new AddressBookBuilder().withPatient(original).build(), new UserPrefs());
+        Model model = new ModelManager(
+                new AddressBookBuilder().withPatient(original).withPatient(ALICE).build(), new UserPrefs());
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
-        model.setViewedPatient(original);
+        model.setViewedPatient(ALICE);
         Patient edited = new PatientBuilder(original).withName(VALID_NAME_BOB).withNric(VALID_NRIC_BOB)
                 .withDob(VALID_DOB_BOB).withPhone(VALID_PHONE_BOB).withAddress(VALID_ADDRESS_BOB).build();
 
@@ -89,6 +90,17 @@ public class EditCommandTest {
 
         assertCommandFailure(new EditCommand(INDEX_FIRST_PATIENT, descriptor), model,
                 EditCommand.MESSAGE_DUPLICATE_PATIENT);
+    }
+
+    @Test
+    public void execute_duplicateArchivedPatientNric_throwsArchivedCommandException() {
+        Model model = new ModelManager(new AddressBookBuilder()
+                .withPatient(ALICE).withPatient(BENSON.withArchived(true)).build(), new UserPrefs());
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withNric(BENSON.getNric().value).build();
+
+        assertCommandFailure(new EditCommand(INDEX_FIRST_PATIENT, descriptor), model,
+                EditCommand.MESSAGE_DUPLICATE_ARCHIVED_PATIENT);
     }
 
     @Test

@@ -174,7 +174,7 @@ public class EditMedCommandTest {
     @Test
     public void execute_duplicateDescriptionOfOtherMedication_failsAndLeavesModelUnchanged() {
         String message = String.format(MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION, "aspirin 100mg");
-        assertCommandFailure(descriptionOnly(FIRST_MEDICATION, "aspirin 100mg"), model, message);
+        assertCommandFailure(descriptionOnly(FIRST_MEDICATION, "aspirin   100mg"), model, message);
         assertCommandFailure(new EditMedCommand(INDEX_FIRST_PATIENT, FIRST_MEDICATION,
                 Optional.of("ASPIRIN 100MG"), Optional.of(List.of(MORNING))), model,
                 String.format(MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION, "ASPIRIN 100MG"));

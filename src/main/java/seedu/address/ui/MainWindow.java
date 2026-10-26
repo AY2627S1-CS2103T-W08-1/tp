@@ -75,7 +75,9 @@ public class MainWindow extends UiPart<Stage> {
 
         setAccelerators();
 
+        // the help window closes and minimizes with the main window, and Esc in the main window closes it
         helpWindow = new HelpWindow();
+        helpWindow.getRoot().initOwner(primaryStage);
     }
 
     public Stage getPrimaryStage() {
@@ -124,7 +126,7 @@ public class MainWindow extends UiPart<Stage> {
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
 
         PatientDetailPanel patientDetailPanel = new PatientDetailPanel(logic.getViewedPatient(),
-                logic::getAppointmentLinesAsShown);
+                logic.getFilteredPatientList(), logic::getAppointmentLinesAsShown);
         patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
@@ -162,15 +164,16 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Opens the help window or focuses on it if it's already opened.
+     * Opens the help window if it is not already open, and keeps the keyboard focus in the main window, so that the
+     * next command can be typed straight away. Esc closes the help window.
      */
     @FXML
     public void handleHelp() {
         if (!helpWindow.isShowing()) {
             helpWindow.show();
-        } else {
-            helpWindow.focus();
         }
+        // keeps typing in the command box; the help window stays in front of the main window until it is closed
+        primaryStage.requestFocus();
     }
 
     /**

@@ -104,7 +104,8 @@ public class ParserUtil {
      * Parses a {@code String date} into a {@code LocalDate}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code date} is not a real date in YYYY-MM-DD format.
+     * @throws ParseException if the given {@code date} is not a real date in YYYY-MM-DD format, or is before
+     *     {@code Appointment.EARLIEST_DATE}.
      */
     public static LocalDate parseDate(String date) throws ParseException {
         requireNonNull(date);
@@ -163,17 +164,18 @@ public class ParserUtil {
 
     /**
      * Parses a {@code String phone} into a {@code Phone}.
-     * Leading and trailing whitespaces will be trimmed.
+     * All whitespaces and hyphens will be removed.
      *
      * @throws ParseException if the given {@code phone} is invalid.
      */
     public static Phone parsePhone(String phone) throws ParseException {
         requireNonNull(phone);
-        String trimmedPhone = phone.trim();
-        if (!Phone.isValidPhone(trimmedPhone)) {
+        // Removes the spaces and hyphens often written between digits, e.g. "+65 9123-4567".
+        String compactPhone = phone.replaceAll("[\\s-]", "");
+        if (!Phone.isValidPhone(compactPhone)) {
             throw new ParseException(Phone.MESSAGE_CONSTRAINTS);
         }
-        return new Phone(trimmedPhone);
+        return new Phone(compactPhone);
     }
 
     /**
@@ -184,7 +186,8 @@ public class ParserUtil {
      */
     public static Address parseAddress(String address) throws ParseException {
         requireNonNull(address);
-        String trimmedAddress = address.trim();
+        // Trims Unicode whitespace too, as Address does not accept it at the start.
+        String trimmedAddress = address.replaceAll("(?U)^\\s+|\\s+$", "");
         if (!Address.isValidAddress(trimmedAddress)) {
             throw new ParseException(Address.MESSAGE_CONSTRAINTS);
         }
