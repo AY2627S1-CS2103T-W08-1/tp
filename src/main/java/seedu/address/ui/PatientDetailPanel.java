@@ -1,15 +1,22 @@
 package seedu.address.ui;
 
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import seedu.address.commons.core.index.Index;
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
@@ -17,11 +24,13 @@ import seedu.address.model.patient.Patient;
 /**
  * Panel showing the full details of the patient being viewed.
  */
-public class PatientDetailPanel extends UiPart<Region> {
+public class PatientDetailPanel extends UiPart<ScrollPane> {
 
     public static final String MESSAGE_NO_PATIENT =
             "Enter 'view INDEX' to see a patient's full details here.";
     public static final String MESSAGE_NONE_RECORDED = "None recorded";
+    public static final String MESSAGE_LIST_INDEX = "List index: %1$d";
+    public static final String MESSAGE_NOT_IN_LIST = "Not in the displayed list";
 
     private static final String FXML = "PatientDetailPanel.fxml";
     private static final String ENTRY_NUMBER_SUFFIX = ".";
@@ -34,6 +43,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private VBox details;
     @FXML
     private Label name;
+    @FXML
+    private Label listIndex;
     @FXML
     private Label nric;
     @FXML
@@ -53,18 +64,30 @@ public class PatientDetailPanel extends UiPart<Region> {
     @FXML
     private VBox appointments;
 
+    private final ObservableList<Patient> displayedPatients;
     private final Function<Patient, List<String>> appointmentLinesAsShown;
 
     /**
-     * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
-     * Appointments are shown as given by {@code appointmentLinesAsShown}, in the order commands also number them.
+     * The last patient shown. It is kept while no patient is shown, so that the same patient shown again, e.g.,
+     * after an edit, keeps the scroll position.
      */
-    public PatientDetailPanel(ObservableValue<Patient> viewedPatient,
+    private Patient lastShownPatient;
+
+    /**
+     * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
+     * The patient's index in {@code displayedPatients} is shown under their name, and updates whenever that list
+     * changes. Appointments are shown as given by {@code appointmentLinesAsShown}, in the order commands also
+     * number them.
+     */
+    public PatientDetailPanel(ObservableValue<Patient> viewedPatient, ObservableList<Patient> displayedPatients,
             Function<Patient, List<String>> appointmentLinesAsShown) {
         super(FXML);
+        requireAllNonNull(viewedPatient, displayedPatients, appointmentLinesAsShown);
+        this.displayedPatients = displayedPatients;
         this.appointmentLinesAsShown = appointmentLinesAsShown;
         placeholder.setText(MESSAGE_NO_PATIENT);
         viewedPatient.addListener((observable, oldPatient, newPatient) -> showPatient(newPatient));
+        displayedPatients.addListener((ListChangeListener<Patient>) change -> showListIndex(viewedPatient.getValue()));
         showPatient(viewedPatient.getValue());
     }
 
@@ -77,8 +100,39 @@ public class PatientDetailPanel extends UiPart<Region> {
         setShown(details, hasPatient);
 
         if (hasPatient) {
+            scrollToTopIfNewPatient(patient);
             fillDetails(patient);
+            showListIndex(patient);
         }
+    }
+
+    /**
+     * Scrolls the panel back to the top if {@code patient} is not the same patient, by NRIC, as the one shown last,
+     * so that a newly viewed patient is shown from their name. The same patient, e.g., redrawn after an edit, keeps
+     * the scroll position.
+     */
+    private void scrollToTopIfNewPatient(Patient patient) {
+        if (!patient.isSamePatient(lastShownPatient)) {
+            getRoot().setVvalue(getRoot().getVmin());
+        }
+        lastShownPatient = patient;
+    }
+
+    /**
+     * Shows the one-based index of {@code patient} in the displayed patient list, the number that commands use,
+     * or {@code MESSAGE_NOT_IN_LIST} if the list does not show them. Does nothing if {@code patient} is null.
+     */
+    private void showListIndex(Patient patient) {
+        if (patient == null) {
+            return;
+        }
+
+        int position = displayedPatients.indexOf(patient);
+        // Locale.ROOT writes the index with the digits 0 to 9, as the list numbers its patients, whatever the
+        // computer's language settings are
+        listIndex.setText(position < 0
+                ? MESSAGE_NOT_IN_LIST
+                : String.format(Locale.ROOT, MESSAGE_LIST_INDEX, Index.fromZeroBased(position).getOneBased()));
     }
 
     /**
