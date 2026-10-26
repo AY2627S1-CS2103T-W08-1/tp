@@ -76,6 +76,7 @@ public class EditCommand extends Command {
         }
 
         model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_EDIT_PATIENT_SUCCESS, Messages.format(editedPatient)));
     }
 
