@@ -89,7 +89,8 @@ public class RestoreCommandTest {
         writeBackup(backupData);
         Model expectedModel = new ModelManager(backupData, new UserPrefs());
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"), expectedModel);
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", ""),
+                expectedModel);
         // the automatic backup holds the data from before the restore
         assertEquals(getTypicalAddressBook(), readAddressBook(temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME)));
     }
@@ -99,7 +100,7 @@ public class RestoreCommandTest {
         AddressBook backupData = createAddressBook(HOON);
         writeBackup(backupData);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(1, "patient"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(1, "patient", ""),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -107,7 +108,7 @@ public class RestoreCommandTest {
     public void execute_emptyBackup_removesAllPatients() throws Exception {
         writeBackup(new AddressBook());
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(0, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(0, "patients", ""),
                 new ModelManager());
     }
 
@@ -116,7 +117,7 @@ public class RestoreCommandTest {
         model.updateFilteredPatientList(patient -> false);
         writeBackup(getTypicalAddressBook());
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients", ""),
                 new ModelManager(getTypicalAddressBook(), new UserPrefs()));
     }
 
@@ -125,8 +126,9 @@ public class RestoreCommandTest {
         Patient archivedHoon = new PatientBuilder(HOON).withArchived(true).build();
         AddressBook backupData = createAddressBook(ALICE, archivedHoon);
         writeBackup(backupData);
+        String archivedNote = String.format(RestoreCommand.MESSAGE_ARCHIVED_COUNT, 1);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", archivedNote),
                 new ModelManager(backupData, new UserPrefs()));
         assertEquals(List.of(ALICE), model.getFilteredPatientList());
         assertEquals(2, model.getAddressBook().getPatientList().size());
@@ -138,7 +140,7 @@ public class RestoreCommandTest {
         AddressBook backupData = createAddressBook(HOON, IDA);
         writeBackup(backupData);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients"),
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", ""),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -149,7 +151,8 @@ public class RestoreCommandTest {
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.setViewedPatient(ALICE);
 
-        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients"), expectedModel);
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(7, "patients", ""),
+                expectedModel);
     }
 
     @Test
@@ -159,7 +162,7 @@ public class RestoreCommandTest {
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
                 toPathRelativeToWorkingDir(temporaryFolder));
 
-        assertCommandSuccess(restoreCommand, model, getExpectedSuccessMessage(1, "patient"),
+        assertCommandSuccess(restoreCommand, model, getExpectedSuccessMessage(1, "patient", ""),
                 new ModelManager(backupData, new UserPrefs()));
     }
 
@@ -256,51 +259,38 @@ public class RestoreCommandTest {
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
     public void execute_currentDataCannotBeBackedUp_throwsCommandExceptionAndRestoresNothing() throws Exception {
+        // Equivalence partitioning: a backup folder that cannot be written to, so the automatic backup fails
         writeBackup(createAddressBook(HOON));
         assertTrue(temporaryFolder.toFile().setWritable(false));
         try {
             // users with admin rights (e.g., root) can still write, so the test only applies to others
             assumeFalse(Files.isWritable(temporaryFolder));
-            String expectedMessage = String.format(RestoreCommand.MESSAGE_BACKUP_FAILED, temporaryFolder,
-                    Messages.MESSAGE_NO_WRITE_PERMISSION);
-
-            // a relative folder also checks that the message shows the full path
-            RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
-                    toPathRelativeToWorkingDir(temporaryFolder));
-
-            assertCommandFailure(restoreCommand, model, expectedMessage);
-            try (Stream<Path> files = Files.list(temporaryFolder)) {
-                assertEquals(List.of(temporaryFolder.resolve(BACKUP_NAME)), files.toList());
-            }
+            assertRestoreFailsAsCurrentDataCannotBeBackedUp();
         } finally {
             temporaryFolder.toFile().setWritable(true);
         }
     }
 
     @Test
-    public void equals() {
+    public void equals_sameObjectOrSameValues_returnsTrue() {
+        // Equivalence partitioning: the two partitions that are equal, the same object and an equal copy
+        RestoreCommand restoreCommand = createRestoreCommand();
+
+        assertTrue(restoreCommand.equals(restoreCommand));
+        assertTrue(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder)));
+    }
+
+    @Test
+    public void equals_differentTypeOrValue_returnsFalse() {
+        // Equivalence partitioning: null, another type, then one field different at a time,
+        // so that each test input has no more than one invalid value
         Clock otherClock = Clock.fixed(Instant.parse("2026-10-22T09:00:00Z"), ZoneOffset.UTC);
         RestoreCommand restoreCommand = createRestoreCommand();
 
-        // same object -> returns true
-        assertTrue(restoreCommand.equals(restoreCommand));
-
-        // same values -> returns true
-        assertTrue(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder)));
-
-        // null -> returns false
         assertFalse(restoreCommand.equals(null));
-
-        // different types -> returns false
         assertFalse(restoreCommand.equals(new BackupCommand(FIXED_CLOCK, temporaryFolder)));
-
-        // different file name -> returns false
         assertFalse(restoreCommand.equals(new RestoreCommand("other.json", FIXED_CLOCK, temporaryFolder)));
-
-        // different clock -> returns false
         assertFalse(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, otherClock, temporaryFolder)));
-
-        // different backup folder -> returns false
         assertFalse(restoreCommand.equals(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
                 temporaryFolder.resolve("other"))));
     }
@@ -316,8 +306,8 @@ public class RestoreCommandTest {
         return new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder);
     }
 
-    private String getExpectedSuccessMessage(int patientCount, String patientWord) {
-        return String.format(RestoreCommand.MESSAGE_SUCCESS, patientCount, patientWord, BACKUP_NAME,
+    private String getExpectedSuccessMessage(int patientCount, String patientWord, String archivedNote) {
+        return String.format(RestoreCommand.MESSAGE_SUCCESS, patientCount, patientWord, archivedNote, BACKUP_NAME,
                 temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
     }
 
@@ -335,6 +325,22 @@ public class RestoreCommandTest {
     private void assertRestoreFailure(String expectedMessage) {
         assertCommandFailure(createRestoreCommand(), model, expectedMessage);
         assertFalse(Files.exists(temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME)));
+    }
+
+    /**
+     * Confirms that restoring from the read-only temporary folder, given as a relative path, fails because the current
+     * data cannot be backed up, shows the full folder path, and leaves only the backup file in the folder.
+     */
+    private void assertRestoreFailsAsCurrentDataCannotBeBackedUp() throws IOException {
+        String expectedMessage = String.format(RestoreCommand.MESSAGE_BACKUP_FAILED, temporaryFolder,
+                Messages.MESSAGE_NO_WRITE_PERMISSION);
+        RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
+                toPathRelativeToWorkingDir(temporaryFolder));
+
+        assertCommandFailure(restoreCommand, model, expectedMessage);
+        try (Stream<Path> files = Files.list(temporaryFolder)) {
+            assertEquals(List.of(temporaryFolder.resolve(BACKUP_NAME)), files.toList());
+        }
     }
 
     private static AddressBook createAddressBook(Patient... patients) {
