@@ -54,4 +54,4 @@ You can reach us with the email `e1591059@u.nus.edu`
 [[github](https://github.com/Gauhet)]
 
 * Role: Developer
-* Responsibilities: Completing assigned weekly tasks
+* Responsibilities: Appointments + Field validation + Data saving

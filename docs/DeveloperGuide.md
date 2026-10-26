@@ -4,7 +4,7 @@
   pageNav: 3
 ---
 
-# AB-3 Developer Guide
+# MediConnect Developer Guide
 
 <!-- * Table of Contents -->
 <page-nav-print />
@@ -13,7 +13,8 @@
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* This project is based on the [AddressBook-Level3](https://se-education.org/addressbook-level3/) project created by the [SE-EDU initiative](https://se-education.org).
+* Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit5](https://github.com/junit-team/junit5)
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -35,7 +36,7 @@ The following provides a quick overview of the main components and their interac
 
 **Main components of the architecture**
 
-**`Main`** (consisting of classes [`Main`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
+**`Main`** (consisting of classes [`Main`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
 * At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
 * At shut down, it shuts down the other components and invokes cleanup methods where necessary.
 
@@ -89,7 +90,7 @@ The `UI` component,
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
 
 Here's a (partial) class diagram of the `Logic` component:
 
@@ -186,7 +187,7 @@ date, time, provider and note.
 The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
 `JsonAdaptedPatient#toModelType()` validates patient fields and converts medications, contacts and appointments using
 their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
-an NRIC, or a patient has duplicate contacts, the whole file is rejected.
+an NRIC, or a patient has duplicate contacts or duplicate appointments, the whole file is rejected.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
 `mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
@@ -1193,6 +1194,190 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC14 - Add an appointment**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to add an appointment to a specific patient in the list, giving its date, time and who it is with, and optionally a note.
+4.  MediConnect adds the appointment, shows the patient in the detail panel with their appointments numbered, and shows the new appointment.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message that the patient index is invalid.
+
+      Use case resumes at step 2.
+
+* 3b. The date, the time or who the appointment is with is missing, or the index is not a positive integer.
+
+    * 3b1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
+
+      Use case resumes at step 2.
+
+* 3c. A given detail is invalid, e.g., a date that does not exist or is before 1900-01-01, or a blank name of who the appointment is with.
+
+    * 3c1. MediConnect shows an error message describing the invalid detail.
+
+      Use case resumes at step 2.
+
+* 3d. The patient already has an appointment at the same date and time with the same person, ignoring letter case and extra spaces.
+
+    * 3d1. MediConnect shows an error message that the appointment already exists, and adds nothing.
+
+      Use case resumes at step 2.
+
+* 4a. The appointment is in the past, e.g., because a past visit is being recorded.
+
+    * 4a1. MediConnect also notes that the appointment is in the past.
+
+      Use case ends.
+
+* 4b. The appointment is more than 2 years ahead, e.g., because the year was mistyped.
+
+    * 4b1. MediConnect also notes that the appointment is more than 2 years ahead.
+
+      Use case ends.
+
+* 4c. The patient has another appointment at the same date and time, with someone else.
+
+    * 4c1. MediConnect also warns about the other appointment and who it is with.
+
+      Use case ends.
+
+**Use case: UC15 - Edit an appointment**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7).
+2.  Caregiver requests to edit a specific appointment of the patient, giving its number in the detail panel and a new date, time, name of who it is with or note.
+3.  MediConnect changes only the given details, numbers the patient's appointments again, and shows the edited appointment with its number after the edit.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. No detail to change is given.
+
+    * 2a1. MediConnect shows an error message that at least one detail must be given.
+
+      Use case resumes at step 2.
+
+* 2b. The patient index or the appointment number is invalid.
+
+    * 2b1. MediConnect shows an error message that the index is invalid.
+
+      Use case resumes at step 2.
+
+* 2c. A given detail is invalid, e.g., a date before 1900-01-01.
+
+    * 2c1. MediConnect shows an error message describing the invalid detail.
+
+      Use case resumes at step 2.
+
+* 2d. The edited appointment would be the same as another appointment of the patient.
+
+    * 2d1. MediConnect shows an error message that the appointment already exists, and changes nothing.
+
+      Use case resumes at step 2.
+
+* 2e. The new note contains a word such as `w/o` (without) or `c/o` (care of).
+
+    * 2e1. MediConnect keeps the word as part of the note.
+
+      Use case resumes at step 3.
+
+* 3a. The edited appointment is in the past, more than 2 years ahead, or at the same date and time as another appointment of the patient.
+
+    * 3a1. MediConnect also shows the same note or warning as when adding the appointment (UC14).
+
+      Use case ends.
+
+**Use case: UC16 - Cancel an appointment**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7).
+2.  Caregiver requests to cancel a specific appointment of the patient, giving its number in the detail panel.
+3.  MediConnect removes the appointment, numbers the remaining appointments again, and shows the cancelled appointment.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The patient index or the appointment number is invalid.
+
+    * 2a1. MediConnect shows an error message that the index is invalid.
+
+      Use case resumes at step 2.
+
+* 2b. The patient index or the appointment number is missing, or is not a positive integer.
+
+    * 2b1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
+
+      Use case resumes at step 2.
+
+* 2c. An appointment has passed since the patient was shown.
+
+    * 2c1. MediConnect still uses the numbers shown in the detail panel, so the appointment cancelled is the one with the given number in the panel.
+
+      Use case resumes at step 3.
+
+**Use case: UC17 - List appointments**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list the upcoming appointments.
+2.  MediConnect lists the upcoming appointments of all active patients, soonest first, each with the patient's name and NRIC.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver requests every appointment of a specific patient in the displayed list instead, which can be an archived patient after listing archived patients.
+
+    * 1a1. MediConnect lists the patient's appointments, upcoming ones first, then past ones, with the numbers that UC15 and UC16 use, and shows the patient in the detail panel.
+
+      Use case ends.
+
+* 1b. The given index is invalid.
+
+    * 1b1. MediConnect shows an error message that the patient index is invalid.
+
+      Use case ends.
+
+* 2a. There are no upcoming appointments.
+
+    * 2a1. MediConnect shows a message that there are no upcoming appointments.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
@@ -1213,13 +1398,16 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   the name of the substance that causes it (the *allergen*), e.g., `Penicillin`.
 * **Appointment**: A scheduled visit by a patient to a healthcare provider, recorded with its date, time, and provider.
   Notes on what was discussed can be added after the visit.
+* **APPT_INDEX**: The number shown beside an appointment in the numbered appointment list of the patient's details,
+  starting from 1. Upcoming appointments come first, then past ones. `editappt` and `cancelappt` use it, together with
+  the patient's index, to refer to an appointment. It stays the same until the patient is shown again, even after an
+  appointment passes.
 * **Archive**: To remove a patient's profile from the active patient list while keeping all of its records for future
   reference. Unlike deleting, archiving does not remove any data.
 * **Care handover**: The transfer of responsibility for a patient's care from one person to another, e.g., from the
   main caregiver to a relative while the caregiver is travelling.
-* **Care information**: The care-related records in a patient's profile, i.e., medical conditions, allergies,
-  medications, care instructions, appointments, contacts, and medical notes. It does not include the patient's basic
-  details.
+* **Care information**: The care-related records in a patient's profile, i.e., allergies, medications, care
+  instructions, appointments, and contacts. It does not include the patient's basic details.
 * **Care instruction**: A routine care task that does not involve medication, e.g., "check blood sugar before
   breakfast".
 * **Caregiver**: A person who uses MediConnect to coordinate a patient's care, typically a family member of the
@@ -1250,9 +1438,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **MED_INDEX**: The number shown beside a medication in the numbered medication list of the patient's details,
   starting from 1. `editmed` and `deletemed` use it, together with the patient's index, to refer to a medication. It
   can change when a medication before it is deleted.
-* **Medical condition**: A long-term illness or diagnosis that a patient has, e.g., diabetes or hypertension.
-* **Medical note**: A free-text note about a patient's health or treatment, e.g., advice given by a doctor during an
-  appointment.
 * **Medication**: A drug prescribed to a patient, recorded with a description (e.g., `Metformin 500mg`) and its daily
   times (e.g., `08:00` and `20:00`).
 * **MSS (Main Success Scenario)**: The sequence of steps in a use case that describes the most straightforward
@@ -1587,3 +1772,72 @@ testers are expected to do more *exploratory* testing.
 
    1. Launch the app, then enter `export 1`.<br>
       Expected: No file is written. The status message shows `Could not export`, the patient's name, the path of the file and a reason.
+
+### Managing appointments
+
+1. Adding appointments
+
+   1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh, who has two upcoming appointments.
+
+   1. Test case: `addappt 1 d/2027-11-20 t/10:00 w/Dr Lim nt/Bring scans`<br>
+      Expected: `New appointment for Alex Yeoh: 2027-11-20 10:00 with Dr Lim (Bring scans)`. The panel lists it as appointment 2, between the two earlier ones.
+
+   1. Test case: `addappt 1 d/2027-11-20 t/10:00 w/dr  lim`<br>
+      Expected: `This appointment already exists for this patient.` Nothing is added.
+
+   1. Test case: `addappt 1 d/2027-11-20 t/10:00 w/Dr Ong`<br>
+      Expected: The appointment is added, and the message ends with `Warning: Alex Yeoh already has an appointment at this date and time (with Dr Lim).`
+
+   1. Test case: `addappt 1 d/2020-01-01 t/09:00 w/Dr Tan`<br>
+      Expected: The appointment is added, and the message ends with `Note: this appointment is in the past.` The panel lists it last, marked `(past)`.
+
+   1. Test case: `addappt 1 d/2207-11-05 t/09:30 w/Dr Tan`<br>
+      Expected: The appointment is added, and the message ends with `Note: this appointment is more than 2 years ahead.`
+
+   1. Incorrect commands to try: `addappt 1 d/1899-12-31 t/09:30 w/Dr Tan`, `addappt 1 d/2027-02-30 t/09:30 w/Dr Tan`, `addappt 1 d/2027-11-20 t/25:00 w/Dr Tan`, `addappt 1 d/2027-11-20 t/10:00 w/`, `addappt 1 d/2027-11-20 t/10:00`, `addappt 9 d/2027-11-20 t/10:00 w/Dr Tan`<br>
+      Expected: Nothing is added. The status message shows, in turn, the date rule (twice), the time rule, that who the appointment is with cannot be blank, the invalid command format, and that the patient index is invalid.
+
+1. Editing appointments
+
+   1. Prerequisites: The app is closed. Delete `data/mediconnect.json`, launch the app so that the sample data is loaded, then run `view 1`.
+
+   1. Test case: `editappt 1 1 t/10:00`<br>
+      Expected: `Edited appointment 1 of Alex Yeoh: 2027-11-05 10:00 with Dr Tan`. Only the time changes.
+
+   1. Test case: `editappt 1 2 d/2027-11-01`<br>
+      Expected: `Edited appointment 1 of Alex Yeoh: 2027-11-01 14:00 with Cardiology clinic (Bring BP log)`. The appointment now comes before the one with Dr Tan, so its number changes from 2 to 1 in the message and the panel.
+
+   1. Test case: `editappt 1 1 nt/MRI w/o contrast`<br>
+      Expected: The note becomes `MRI w/o contrast`, and the appointment is still with `Cardiology clinic`.
+
+   1. Incorrect commands to try: `editappt 1 1`, `editappt 1 9 t/10:00`<br>
+      Expected: Nothing is changed. The status message shows `At least one of d/, t/, w/ or nt/ must be provided.` and `The appointment index provided is invalid.` respectively.
+
+1. Cancelling appointments
+
+   1. Prerequisites: The app is closed. Delete `data/mediconnect.json`, launch the app so that the sample data is loaded, then run `view 1`.
+
+   1. Test case: `cancelappt 1 2`<br>
+      Expected: `Cancelled appointment 2 of Alex Yeoh: 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`. The panel shows only the appointment with Dr Tan.
+
+   1. Incorrect commands to try: `cancelappt 1 9`, `cancelappt 1`<br>
+      Expected: Nothing is cancelled. The status message shows `The appointment index provided is invalid.` and the invalid command format respectively.
+
+1. Listing appointments
+
+   1. Prerequisites: The app is closed. Delete `data/mediconnect.json`, then launch the app so that the sample data is loaded.
+
+   1. Test case: `listappt`<br>
+      Expected: `Upcoming appointments:`, followed by `Alex Yeoh (S0000001A): 2027-11-05 09:30 with Dr Tan` and `Alex Yeoh (S0000001A): 2027-12-10 14:00 with Cardiology clinic (Bring BP log)`. Bernice Yu's past appointment is not listed. The patient list does not change.
+
+   1. Test case: `listappt 2`<br>
+      Expected: `Appointments for Bernice Yu:`, then `Upcoming: none`, then `Past:` and `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal)`. The panel shows Bernice Yu.
+
+   1. Test case: `listappt 3`<br>
+      Expected: `Charlotte Oliveiro has no appointments.`
+
+   1. Test case: `archive 2`, then `listarchived`, then `listappt 1`<br>
+      Expected: Bernice Yu's appointment is listed as in the `listappt 2` test case above, although she is archived.
+
+   1. Incorrect commands to try: `listappt 9`, `listappt 0`<br>
+      Expected: The status message shows `The patient index provided is invalid.` and the invalid command format respectively.
