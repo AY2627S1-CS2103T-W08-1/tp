@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import seedu.address.commons.core.index.Index;
@@ -118,7 +119,9 @@ public class EditApptCommand extends Command {
 
         // The appointments are sorted again, so the message gives the appointment's number after the edit.
         int newPosition = model.getAppointmentsAsShown(editedPatient).indexOf(editedAppointment);
-        String message = String.format(MESSAGE_SUCCESS, Index.fromZeroBased(newPosition).getOneBased(),
+        assert newPosition >= 0 : "the edited appointment must be among the patient's appointments";
+        // Locale.ROOT, so that the number is in the same digits as in the panel on every computer
+        String message = String.format(Locale.ROOT, MESSAGE_SUCCESS, Index.fromZeroBased(newPosition).getOneBased(),
                 patientToEdit.getName(), editedAppointment)
                 + Messages.formatAppointmentWarnings(patientToEdit.getName(), editedAppointment,
                         otherAppointments, LocalDateTime.now(clock));

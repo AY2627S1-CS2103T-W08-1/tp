@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -43,6 +44,21 @@ public class CancelApptCommandTest {
 
         assertCommandSuccess(new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT), model,
                 String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), CARDIOLOGY), expectedModel);
+    }
+
+    @Test
+    public void execute_localeWithOtherDigits_givesNumberInPanelDigits() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // String.format writes 2 as an Arabic-Indic digit in Egyptian Arabic unless given Locale.ROOT
+            Locale.setDefault(Locale.forLanguageTag("ar-EG"));
+            assertCommandSuccess(new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT),
+                    createModelWithAppointments(CHECKUP, CARDIOLOGY),
+                    "Cancelled appointment 2 of " + ALICE.getName() + ": " + CARDIOLOGY,
+                    createViewedModelWithAppointments(CHECKUP));
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     @Test

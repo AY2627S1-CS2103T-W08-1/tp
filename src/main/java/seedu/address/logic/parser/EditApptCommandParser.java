@@ -22,7 +22,11 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class EditApptCommandParser implements Parser<EditApptCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("a/l", "a/p");
+    /*
+     * Words kept as text, as in names, and "w/o" (without). "w/o" and "d/o" are not read as the w/ and d/
+     * prefixes, e.g. in "nt/MRI w/o contrast".
+     */
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o");
 
     /**
      * Parses the given {@code String} of arguments in the context of the EditApptCommand
@@ -35,7 +39,8 @@ public class EditApptCommandParser implements Parser<EditApptCommand> {
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
         ArgumentMultimap argMultimap =
-                ArgumentTokenizer.tokenize(args, PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
+                ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
+                        PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
 
         List<Index> indexes;
         try {

@@ -131,6 +131,13 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parsePhone_spacesAndHyphensBetweenDigits_returnsPhoneWithoutThem() throws Exception {
+        Phone expectedPhone = new Phone(VALID_PHONE);
+        assertEquals(expectedPhone, ParserUtil.parsePhone("9123 4567"));
+        assertEquals(expectedPhone, ParserUtil.parsePhone("+65 9123-4567"));
+    }
+
+    @Test
     public void parseAddress_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseAddress((String) null));
     }
@@ -138,6 +145,19 @@ public class ParserUtilTest {
     @Test
     public void parseAddress_invalidValue_throwsParseException() {
         assertThrows(ParseException.class, () -> ParserUtil.parseAddress(INVALID_ADDRESS));
+    }
+
+    @Test
+    public void parseAddress_unicodeWhitespaceOnly_throwsParseException() {
+        // an em space (U+2003) and a no-break space (U+00A0), which trim() does not remove
+        assertThrows(ParseException.class, () -> ParserUtil.parseAddress(" "));
+        assertThrows(ParseException.class, () -> ParserUtil.parseAddress("  "));
+    }
+
+    @Test
+    public void parseAddress_unicodeWhitespaceAround_returnsTrimmedAddress() throws Exception {
+        Address expectedAddress = new Address(VALID_ADDRESS);
+        assertEquals(expectedAddress, ParserUtil.parseAddress(" " + VALID_ADDRESS + " "));
     }
 
     @Test

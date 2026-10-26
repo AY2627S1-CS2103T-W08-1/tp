@@ -37,6 +37,7 @@ public class Messages {
     public static final String MESSAGE_DUPLICATE_APPOINTMENT =
             "This appointment already exists for this patient.";
     public static final String MESSAGE_PAST_APPOINTMENT = "Note: this appointment is in the past.";
+    public static final String MESSAGE_FAR_FUTURE_APPOINTMENT = "Note: this appointment is more than 2 years ahead.";
     public static final String MESSAGE_CLASH =
             "Warning: %1$s already has an appointment at this date and time (with %2$s).";
     public static final String MESSAGE_NOTHING_DUE_TODAY = "No medications are due today.";
@@ -76,8 +77,9 @@ public class Messages {
     }
 
     /**
-     * Returns a note if {@code appointment} is before {@code now}, and a warning for each of the patient's
-     * {@code otherAppointments} at the same date and time, each on a new line.
+     * Returns a note if {@code appointment} is before {@code now} or on a date more than 2 years after it, which
+     * may be a typing mistake in the year, and a warning for each of the patient's {@code otherAppointments} at
+     * the same date and time, each on a new line.
      * Returns an empty string if there is nothing to warn about.
      */
     public static String formatAppointmentWarnings(Name patientName, Appointment appointment,
@@ -85,6 +87,9 @@ public class Messages {
         String warnings = "";
         if (appointment.isBefore(now)) {
             warnings += "\n" + MESSAGE_PAST_APPOINTMENT;
+        }
+        if (appointment.getDate().isAfter(now.toLocalDate().plusYears(2))) {
+            warnings += "\n" + MESSAGE_FAR_FUTURE_APPOINTMENT;
         }
         for (Appointment otherAppointment : otherAppointments) {
             if (appointment.isAtSameTimeAs(otherAppointment)) {

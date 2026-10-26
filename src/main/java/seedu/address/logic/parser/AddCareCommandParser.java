@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ALLERGEN;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CARE_INSTRUCTION;
@@ -21,6 +22,7 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
 
     @Override
     public AddCareCommand parse(String args) throws ParseException {
+        requireNonNull(args);
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS, PREFIX_MEDICATION, PREFIX_ALLERGEN,
                 PREFIX_CARE_INSTRUCTION);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
