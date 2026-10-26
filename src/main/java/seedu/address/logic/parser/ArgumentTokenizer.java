@@ -34,7 +34,15 @@ public class ArgumentTokenizer {
      * @return           ArgumentMultimap object that maps prefixes to their arguments
      */
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
-        List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
+        return tokenize(argsString, Set.of(), prefixes);
+    }
+
+    /**
+     * Tokenizes an argument string while treating exact standalone tokens in {@code ignoredSlashTokens} as text,
+     * even when one starts with a recognized prefix. Ignored tokens must be lowercase.
+     */
+    public static ArgumentMultimap tokenize(String argsString, Set<String> ignoredSlashTokens, Prefix... prefixes) {
+        List<PrefixPosition> positions = findAllPrefixPositions(argsString, ignoredSlashTokens, prefixes);
         return extractArguments(argsString, positions);
     }
 
@@ -62,13 +70,6 @@ public class ArgumentTokenizer {
                 continue;
             }
 
-            String candidate = matcher.group(1);
-
-            // Allow recognized command prefixes.
-            if (allowed.contains(candidate)) {
-                continue;
-            }
-
             // Explain how to correct an allowed slash word with trailing punctuation.
             String token = matcher.group();
             String unpunctuatedToken = removeTrailingPunctuation(token);
@@ -76,6 +77,13 @@ public class ArgumentTokenizer {
             if (allowedSlashTokens.contains(unpunctuatedToken.toLowerCase(Locale.ROOT))) {
                 throw new ParseException(String.format(
                         Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken));
+            }
+
+            String candidate = matcher.group(1);
+
+            // Allow recognized command prefixes.
+            if (allowed.contains(candidate)) {
+                continue;
             }
 
             // Report other unrecognized prefixes.
@@ -107,26 +115,40 @@ public class ArgumentTokenizer {
      * @param prefixes   Prefixes to find in the arguments string
      * @return           List of zero-based prefix positions in the given arguments string
      */
-    private static List<PrefixPosition> findAllPrefixPositions(String argsString, Prefix... prefixes) {
+    private static List<PrefixPosition> findAllPrefixPositions(String argsString, Set<String> ignoredSlashTokens,
+            Prefix... prefixes) {
         return Arrays.stream(prefixes)
-                .flatMap(prefix -> findPrefixPositions(argsString, prefix).stream())
+                .flatMap(prefix -> findPrefixPositions(argsString, prefix, ignoredSlashTokens).stream())
                 .collect(Collectors.toList());
     }
 
     /**
-     * @see #findAllPrefixPositions(String, Prefix...)
+     * @see #findAllPrefixPositions(String, Set, Prefix...)
      */
-    private static List<PrefixPosition> findPrefixPositions(String argsString, Prefix prefix) {
+    private static List<PrefixPosition> findPrefixPositions(String argsString, Prefix prefix,
+            Set<String> ignoredSlashTokens) {
         List<PrefixPosition> positions = new ArrayList<>();
 
         int prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(), 0);
         while (prefixPosition != -1) {
-            PrefixPosition extendedPrefix = new PrefixPosition(prefix, prefixPosition);
-            positions.add(extendedPrefix);
+            if (!isIgnoredSlashToken(argsString, prefixPosition, ignoredSlashTokens)) {
+                PrefixPosition extendedPrefix = new PrefixPosition(prefix, prefixPosition);
+                positions.add(extendedPrefix);
+            }
             prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(), prefixPosition);
         }
 
         return positions;
+    }
+
+    private static boolean isIgnoredSlashToken(String argsString, int prefixPosition,
+            Set<String> ignoredSlashTokens) {
+        int tokenEnd = prefixPosition;
+        while (tokenEnd < argsString.length() && !Character.isWhitespace(argsString.charAt(tokenEnd))) {
+            tokenEnd++;
+        }
+        String token = argsString.substring(prefixPosition, tokenEnd).toLowerCase(Locale.ROOT);
+        return ignoredSlashTokens.contains(token);
     }
 
     /**

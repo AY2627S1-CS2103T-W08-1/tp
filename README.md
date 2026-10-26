@@ -11,8 +11,8 @@ instead of across messaging threads, paper notes, and memory.
 
 MediConnect is designed to:
 
-* maintain patient profiles, including conditions and allergies
-* organize healthcare and emergency contacts, medical notes, medications, appointments, and care instructions
+* maintain patient profiles, including allergies and contact details
+* organize healthcare and emergency contacts, medications, appointments, and care instructions
 * provide a consolidated view of each patient's care information for daily use and emergencies
 * support local backup, restoration, and export for care handovers
 
