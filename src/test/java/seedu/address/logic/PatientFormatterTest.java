@@ -88,6 +88,34 @@ public class PatientFormatterTest {
     }
 
     @Test
+    public void formatAppointments_nullAppointmentsOrTime_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> PatientFormatter.formatAppointments(null, NOW));
+        assertThrows(NullPointerException.class, () -> PatientFormatter.formatAppointments(List.of(), null));
+    }
+
+    @Test
+    public void formatAppointments_noAppointments_returnsNoEntries() {
+        assertEquals(List.of(), PatientFormatter.formatAppointments(List.of(), NOW));
+    }
+
+    @Test
+    public void formatAppointments_pastAndUpcomingAppointments_orderKeptAndOnlyPastMarked() {
+        Appointment upcoming = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(14, 0), "Dr Lim", "");
+        Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Polyclinic", "");
+
+        assertEquals(List.of("2026-12-01 14:00 with Dr Lim", "2026-10-01 09:00 with Polyclinic (past)"),
+                PatientFormatter.formatAppointments(List.of(upcoming, past), NOW));
+    }
+
+    @Test
+    public void formatAppointments_appointmentInCurrentMinute_notMarked() {
+        Appointment atNow = new Appointment(NOW.toLocalDate(), NOW.toLocalTime(), "Dr Lim", "");
+
+        assertEquals(List.of("2026-10-20 14:30 with Dr Lim"),
+                PatientFormatter.formatAppointments(List.of(atNow), NOW.plusSeconds(59)));
+    }
+
+    @Test
     public void formatRecord_nullPatientOrTime_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> PatientFormatter.formatRecord(null, NOW));
         assertThrows(NullPointerException.class, () -> PatientFormatter.formatRecord(ALICE, null));
@@ -95,79 +123,63 @@ public class PatientFormatterTest {
 
     @Test
     public void formatRecord_patientWithCareInfo_listsEachListUnderItsHeading() {
-        List<String> expectedLines = List.of(
-                "Daniel Meier",
-                "NRIC: S0000004A",
-                "DOB: " + DANIEL.getDob(),
-                "Phone: 87652533",
-                "Address: 10th street",
-                "",
-                "Medications",
-                "1. Metformin (08:00, 20:00)",
-                "",
-                "Allergens",
-                "1. Penicillin",
-                "",
-                "Care Instructions",
-                "1. Check blood sugar",
-                "",
-                "Contacts",
-                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning",
-                "",
-                "Appointments",
-                "1. 2026-11-05 09:30 with Dr Tan (Fasting)");
+        // Equivalence partitioning: a patient with an entry in every list, the partition with the fullest record
+        List<String> expectedLines = new ArrayList<>(List.of("Daniel Meier", "NRIC: S0000004A",
+                "DOB: " + DANIEL.getDob(), "Phone: 87652533", "Address: 10th street"));
+        expectedLines.addAll(createSection("Medications", "1. Metformin (08:00, 20:00)"));
+        expectedLines.addAll(createSection("Allergens", "1. Penicillin"));
+        expectedLines.addAll(createSection("Care Instructions", "1. Check blood sugar"));
+        expectedLines.addAll(createSection("Contacts",
+                "1. Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning"));
+        expectedLines.addAll(createSection("Appointments", "1. 2026-11-05 09:30 with Dr Tan (Fasting)"));
 
         assertEquals(expectedLines, PatientFormatter.formatRecord(DANIEL, NOW));
     }
 
     @Test
     public void formatRecord_patientWithoutCareInfo_showsNoneRecordedInEachSection() {
-        List<String> expectedLines = List.of(
-                "Alice Pauline",
-                "NRIC: S0000001A",
-                "DOB: " + ALICE.getDob(),
-                "Phone: 94351253",
-                "Address: 123, Jurong West Ave 6, #08-111",
-                "",
-                "Medications",
-                "None recorded",
-                "",
-                "Allergens",
-                "None recorded",
-                "",
-                "Care Instructions",
-                "None recorded",
-                "",
-                "Contacts",
-                "None recorded",
-                "",
-                "Appointments",
-                "None recorded");
+        // Equivalence partitioning: a patient with every list empty, the partition shown as "None recorded"
+        List<String> expectedLines = new ArrayList<>(List.of("Alice Pauline", "NRIC: S0000001A",
+                "DOB: " + ALICE.getDob(), "Phone: 94351253", "Address: 123, Jurong West Ave 6, #08-111"));
+        for (String heading : List.of("Medications", "Allergens", "Care Instructions", "Contacts", "Appointments")) {
+            expectedLines.addAll(createSection(heading, "None recorded"));
+        }
 
         assertEquals(expectedLines, PatientFormatter.formatRecord(ALICE, NOW));
     }
 
     @Test
-    public void formatRecord_pastAndUpcomingAppointments_upcomingFirst() {
+    public void formatRecord_pastAndUpcomingAppointments_upcomingFirstAndPastMarked() {
         Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Polyclinic", "");
         Appointment upcoming = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(14, 0), "Dr Lim", "");
         Patient patient = new PatientBuilder(ALICE).withAppointments(past, upcoming).build();
 
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
-        assertEquals(List.of("Appointments", "1. 2026-12-01 14:00 with Dr Lim", "2. 2026-10-01 09:00 with Polyclinic"),
+        assertEquals(List.of("Appointments", "1. 2026-12-01 14:00 with Dr Lim",
+                "2. 2026-10-01 09:00 with Polyclinic (past)"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
 
     @Test
-    public void formatRecord_appointmentAtNow_listedAsUpcoming() {
+    public void formatRecord_appointmentAtNow_listedAsUpcomingAndNotMarked() {
         Appointment minuteEarlier = new Appointment(NOW.toLocalDate(), LocalTime.of(14, 29), "Polyclinic", "");
         Appointment atNow = new Appointment(NOW.toLocalDate(), NOW.toLocalTime(), "Dr Lim", "");
         Patient patient = new PatientBuilder(ALICE).withAppointments(minuteEarlier, atNow).build();
 
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
-        assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim", "2. 2026-10-20 14:29 with Polyclinic"),
+        assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim",
+                "2. 2026-10-20 14:29 with Polyclinic (past)"),
                 lines.subList(lines.size() - 3, lines.size()));
+    }
+
+    /**
+     * Returns the lines that the record shows for one list: a blank line, {@code heading}, then {@code entries}.
+     */
+    private static List<String> createSection(String heading, String... entries) {
+        List<String> lines = new ArrayList<>(List.of("", heading));
+        lines.addAll(List.of(entries));
+        return lines;
     }
 }
