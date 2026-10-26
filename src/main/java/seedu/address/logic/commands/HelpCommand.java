@@ -96,9 +96,9 @@ public class HelpCommand extends Command {
             formatGroup("Data",
                     formatEntry(BackupCommand.COMMAND_WORD,
                             "Saves a copy of all patient data to data/backups."),
-                    formatEntry(RestoreCommand.COMMAND_WORD + " FILENAME",
+                    formatEntry(RestoreCommand.COMMAND_WORD + " [FILENAME]",
                             "Replaces all patient data with the backup FILENAME from data/backups, "
-                                    + "after backing up the current data."),
+                                    + "after backing up the current data. Without FILENAME, lists the backups."),
                     formatEntry(ExportCommand.COMMAND_WORD + " INDEX",
                             "Saves the full record of the patient at INDEX to data/exports, "
                                     + "in a file named after their NRIC."),

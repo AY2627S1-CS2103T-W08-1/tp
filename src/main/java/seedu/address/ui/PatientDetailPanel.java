@@ -10,7 +10,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
@@ -54,16 +53,16 @@ public class PatientDetailPanel extends UiPart<Region> {
     @FXML
     private VBox appointments;
 
-    private final Function<Patient, List<Appointment>> appointmentsAsShown;
+    private final Function<Patient, List<String>> appointmentLinesAsShown;
 
     /**
      * Creates a {@code PatientDetailPanel} that shows {@code viewedPatient} and updates whenever it changes.
-     * Appointments are numbered in the order given by {@code appointmentsAsShown}, which commands also use.
+     * Appointments are shown as given by {@code appointmentLinesAsShown}, in the order commands also number them.
      */
     public PatientDetailPanel(ObservableValue<Patient> viewedPatient,
-            Function<Patient, List<Appointment>> appointmentsAsShown) {
+            Function<Patient, List<String>> appointmentLinesAsShown) {
         super(FXML);
-        this.appointmentsAsShown = appointmentsAsShown;
+        this.appointmentLinesAsShown = appointmentLinesAsShown;
         placeholder.setText(MESSAGE_NO_PATIENT);
         viewedPatient.addListener((observable, oldPatient, newPatient) -> showPatient(newPatient));
         showPatient(viewedPatient.getValue());
@@ -95,8 +94,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         fillEntries(allergens, patient.getAllergens());
         fillEntries(careInstructions, patient.getCareInstructions());
         fillEntries(contacts, patient.getContacts().stream().map(Contact::toString).toList());
-        fillEntries(appointments, appointmentsAsShown.apply(patient).stream()
-                .map(Appointment::toString).toList());
+        fillEntries(appointments, appointmentLinesAsShown.apply(patient));
     }
 
     /**

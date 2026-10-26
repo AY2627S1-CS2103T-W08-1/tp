@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -8,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.ListBackupsCommand;
 import seedu.address.logic.commands.RestoreCommand;
 
 public class RestoreCommandParserTest {
@@ -32,11 +32,9 @@ public class RestoreCommandParserTest {
     }
 
     @Test
-    public void parse_noFileName_throwsParseException() {
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, RestoreCommand.MESSAGE_USAGE);
-
-        assertParseFailure(parser, "", expectedMessage);
-        assertParseFailure(parser, "   ", expectedMessage);
+    public void parse_noFileName_returnsListBackupsCommand() {
+        assertParseSuccess(parser, "", new ListBackupsCommand());
+        assertParseSuccess(parser, "   ", new ListBackupsCommand());
     }
 
     @Test
