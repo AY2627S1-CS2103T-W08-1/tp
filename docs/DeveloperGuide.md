@@ -1090,6 +1090,39 @@ testers are expected to do more *exploratory* testing.
    1. Test case: Close the window using the window's close button.<br>
       Expected: The app window closes. The window size and location are retained on the next launch.
 
+### Viewing help
+
+1. Opening the help window
+
+   1. Test case: `help`<br>
+      Expected: A help window opens in front of the main window. It lists every command with its format and a one-line description, under the headings Patients, Care information, Contacts, Appointments, Data and Other, below a link to the User Guide. The status message shows `Opened help window.`
+
+   1. Test case: Click **Copy URL**, then paste into a browser's address bar.<br>
+      Expected: The User Guide opens.
+
+   1. Test case: `help add`<br>
+      Expected: Same as `help`, because any text after `help` is ignored.
+
+1. Typing while the help window is open
+
+   1. Prerequisites: The help window is open.
+
+   1. Test case: Type `list` and press Enter.<br>
+      Expected: The text goes to the main window's command box, not the help window, and the command runs. The help window stays open in front of the main window.
+
+   1. Test case: `help` again<br>
+      Expected: No second help window opens. The status message shows `Opened help window.`
+
+1. Closing the help window
+
+   1. Prerequisites: The help window has just been opened with `help`, so the main window's command box has the focus.
+
+   1. Test case: Type some text in the command box without pressing Enter, then press `Esc`.<br>
+      Expected: The help window closes. The typed text stays in the command box.
+
+   1. Test case: Press `F1`, or choose **Help** in the menu bar. Click the help window, then press `Esc`.<br>
+      Expected: `F1` and the menu open the help window as `help` does, and `Esc` in the help window closes it.
+
 ### Entering a blank command
 
 1. Test case: Leave the command box empty and press Enter.<br>
