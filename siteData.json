@@ -40,7 +40,7 @@
       "src": "DeveloperGuide.md",
       "title": "Developer Guide",
       "headings": {
-        "ab-3-developer-guide": "AB-3 Developer Guide",
+        "mediconnect-developer-guide": "MediConnect Developer Guide",
         "acknowledgements": "Acknowledgements",
         "setting-up-getting-started": "Setting up, getting started",
         "design": "Design",
@@ -80,7 +80,8 @@
         "saving-data": "Saving data",
         "backing-up-data": "Backing up data",
         "restoring-data": "Restoring data",
-        "exporting-a-patient-s-record": "Exporting a patient's record"
+        "exporting-a-patient-s-record": "Exporting a patient's record",
+        "managing-appointments": "Managing appointments"
       },
       "headingKeywords": {}
     },
