@@ -38,6 +38,17 @@ public class EditContactCommandParserTest {
     }
 
     @Test
+    public void parse_indianNameSlashWords_success() {
+        for (String token : List.of("a/l", "a/p", "A/L", "A/P")) {
+            String name = "Muthu " + token + " Ramasamy";
+
+            assertParseSuccess(parser, " 1 1 n/" + name,
+                    new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(name),
+                            Optional.empty(), Optional.empty(), Optional.empty()));
+        }
+    }
+
+    @Test
     public void parse_missingFieldsOrInvalidIndices_rejected() {
         String usage = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, EditContactCommand.MESSAGE_USAGE);
         for (String args : List.of("", " 1 nt/note", " 1 1 1 nt/note", " 0 1 nt/note", " 1 0 nt/note",
