@@ -26,6 +26,7 @@ public class EditCareCommand extends Command {
             + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 2 " + PREFIX_CARE_INSTRUCTION + "Check blood sugar after lunch";
     public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
+    public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG = Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG;
     public static final String MESSAGE_DUPLICATE_CARE_INSTRUCTION =
             "This care instruction already exists for this patient.";
     public static final String MESSAGE_SUCCESS = "Updated care instruction for %1$s: %2$s";
@@ -58,6 +59,9 @@ public class EditCareCommand extends Command {
         }
         if (careInstruction.isBlank()) {
             throw new CommandException(MESSAGE_BLANK_CARE_INSTRUCTION);
+        }
+        if (!Patient.isCareInstructionWithinMaxLength(careInstruction)) {
+            throw new CommandException(MESSAGE_CARE_INSTRUCTION_TOO_LONG);
         }
         for (int i = 0; i < careInstructions.size(); i++) {
             if (i != careInstructionIndex.getZeroBased()

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCareCommand;
+import seedu.address.model.patient.Patient;
 
 public class EditCareCommandParserTest {
 
@@ -36,6 +37,13 @@ public class EditCareCommandParserTest {
     public void parse_blankText_rejected() {
         assertParseFailure(parser, " 1 1 ci/", EditCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
         assertParseFailure(parser, " 1 1 ci/   ", EditCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+    }
+
+    @Test
+    public void parse_overlongText_rejected() {
+        assertParseFailure(parser,
+                " 1 1 ci/" + "a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1),
+                EditCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
     }
 
     @Test

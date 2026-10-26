@@ -12,10 +12,12 @@ import java.util.Set;
  */
 public class Name {
 
+    public static final int MAX_LENGTH = 100;
     public static final String MESSAGE_CONSTRAINTS =
             "Names should be words of letters, in any language, separated by single spaces. An apostrophe ('), "
             + "hyphen (-) or slash (/) can join two letters, e.g., O'Brien, Mary-Jane or s/o, and a period (.) "
-            + "can follow a letter, e.g., Jr. A name cannot start or end with s/o, d/o, c/o, a/l or a/p.";
+            + "can follow a letter, e.g., Jr. A name cannot start or end with s/o, d/o, c/o, a/l or a/p. "
+            + "Names cannot exceed " + MAX_LENGTH + " characters.";
 
     /*
      * A letter in any language, followed by any accents typed as separate marks, e.g. "e" followed by U+0308.
@@ -52,7 +54,7 @@ public class Name {
      * Returns true if a given string is a valid name.
      */
     public static boolean isValidName(String test) {
-        if (!test.matches(VALIDATION_REGEX)) {
+        if (test.codePointCount(0, test.length()) > MAX_LENGTH || !test.matches(VALIDATION_REGEX)) {
             return false;
         }
 
