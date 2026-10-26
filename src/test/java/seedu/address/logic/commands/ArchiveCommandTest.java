@@ -2,7 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
@@ -29,7 +29,7 @@ import seedu.address.testutil.AddressBookBuilder;
 public class ArchiveCommandTest {
 
     @Test
-    public void execute_validIndex_preservesAllFieldsAndRefreshesViewedPatient() throws Exception {
+    public void execute_validIndex_preservesAllFieldsAndClearsViewedPatient() throws Exception {
         Model model = new ModelManager(new AddressBookBuilder().withPatient(DANIEL).build(), new UserPrefs());
         model.setViewedPatient(DANIEL);
 
@@ -40,7 +40,7 @@ public class ArchiveCommandTest {
                 DANIEL.getName(), DANIEL.getNric()), result.getFeedbackToUser());
         assertEquals(DANIEL.withArchived(true), archivedDaniel);
         assertTrue(model.getFilteredPatientList().isEmpty());
-        assertSame(archivedDaniel, model.getViewedPatient().getValue());
+        assertNull(model.getViewedPatient().getValue());
     }
 
     @Test
@@ -54,6 +54,18 @@ public class ArchiveCommandTest {
         assertFalse(model.getAddressBook().getPatientList().get(0).isArchived());
         assertTrue(model.getAddressBook().getPatientList().get(1).isArchived());
         assertEquals(List.of(model.getAddressBook().getPatientList().get(1)), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void execute_otherPatientViewed_viewedPatientUnchanged() throws Exception {
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(ALICE).withPatient(BENSON).build(),
+                new UserPrefs());
+        model.setViewedPatient(ALICE);
+        showPatientAtIndex(model, INDEX_SECOND_PATIENT);
+
+        new ArchiveCommand(INDEX_FIRST_PATIENT).execute(model);
+
+        assertEquals(ALICE, model.getViewedPatient().getValue());
     }
 
     @Test

@@ -50,7 +50,9 @@ public class DeleteCareCommand extends Command {
             throw new CommandException(Messages.MESSAGE_INVALID_CARE_INSTRUCTION_INDEX);
         }
         String removed = careInstructions.remove(careInstructionIndex.getZeroBased());
-        model.setPatient(patient, patient.withCareInstructions(careInstructions));
+        Patient editedPatient = patient.withCareInstructions(careInstructions);
+        model.setPatient(patient, editedPatient);
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), removed));
     }
 

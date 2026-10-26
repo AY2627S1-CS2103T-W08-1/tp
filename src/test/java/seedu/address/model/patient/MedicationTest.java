@@ -34,8 +34,8 @@ public class MedicationTest {
     }
 
     @Test
-    public void constructor_descriptionTrimmed() {
-        assertEquals(DESCRIPTION, new Medication("  " + DESCRIPTION + " ").getDescription());
+    public void constructor_descriptionWhitespaceNormalized() {
+        assertEquals(DESCRIPTION, new Medication("  Metformin   500mg \t").getDescription());
     }
 
     @Test
@@ -116,7 +116,7 @@ public class MedicationTest {
         assertTrue(medication.isSameMedication(medication));
         assertFalse(medication.isSameMedication(null));
         assertTrue(medication.isSameMedication(new Medication(DESCRIPTION)));
-        assertTrue(medication.isSameMedication(new Medication("  metformin 500MG ")));
+        assertTrue(medication.isSameMedication(new Medication("  metformin   500MG ")));
         assertFalse(medication.isSameMedication(new Medication("Metformin 850mg", List.of(MORNING))));
     }
 
