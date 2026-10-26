@@ -145,11 +145,12 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
-* Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
+* Care entries are free text with leading and trailing whitespace removed and consecutive internal whitespace
+  collapsed to one space. They cannot be blank. If any entry is blank, the whole command is rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
-* Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
-  same command are still added.
+* Duplicate entries, ignoring letter case and whitespace differences, are not added again. Other unique entries in
+  the same command are still added.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
 
 Examples:
@@ -193,8 +194,9 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   (`1`, `2`, ...). It must be a positive whole number.
 * `INDEX` and `MED_INDEX` must come first, in that order, before `med/` and `t/`. `med/` and `t/` can be in any order.
 * At least one of `med/` or `t/` must be given.
-* `med/DESCRIPTION` replaces the description. It is trimmed and cannot be blank. It can be given only once.
-  A description that is the same as another medication of the same patient, ignoring letter case, is rejected.
+* `med/DESCRIPTION` replaces the description. Leading and trailing whitespace is removed, and consecutive internal
+  whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
+  same as another medication of the same patient, ignoring letter case and whitespace differences, is rejected.
   Changing only the letter case of the medication's own description is allowed.
 * `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), with two digits on each side of the colon,
   e.g., `08:30`. Leading and trailing spaces are ignored.
@@ -257,8 +259,9 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
 
 * `INDEX` is the patient's index in the displayed list. `CI_INDEX` is the care instruction's number in the detail
   panel. Both must be positive integers.
-* `NEW_TEXT` is trimmed free text and cannot be blank.
-* An edit that would duplicate another care instruction, ignoring letter case and surrounding spaces, is rejected.
+* `NEW_TEXT` is free text with leading and trailing whitespace removed and consecutive internal whitespace collapsed
+  to one space. It cannot be blank.
+* An edit that would duplicate another care instruction, ignoring letter case and whitespace differences, is rejected.
   Editing an instruction to its current text is allowed.
 * `ci/` must appear exactly once. Unrecognized prefixes are rejected.
 
