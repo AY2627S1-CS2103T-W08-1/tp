@@ -121,7 +121,9 @@ public class ModelManager implements Model {
 
         addressBook.setPatient(target, editedPatient);
 
-        if (target.equals(viewedPatient.get())) {
+        if (target.equals(viewedPatient.get()) && !target.isArchived() && editedPatient.isArchived()) {
+            viewedPatient.set(null);
+        } else if (target.equals(viewedPatient.get())) {
             viewedPatient.set(editedPatient);
         }
     }
@@ -175,6 +177,25 @@ public class ModelManager implements Model {
     public List<Appointment> getAppointmentsAsShown(Patient patient) {
         requireNonNull(patient);
         return patient.getAppointmentsUpcomingFirst(getAppointmentsOrderedAt(patient));
+    }
+
+    //=========== Snapshots ==================================================================================
+
+    @Override
+    public Snapshot takeSnapshot() {
+        return new Snapshot(new AddressBook(addressBook), filteredPatients.getPredicate(), viewedPatient.get(),
+                viewedPatientShownAt);
+    }
+
+    @Override
+    public void restoreSnapshot(Snapshot snapshot) {
+        requireNonNull(snapshot);
+        addressBook.resetData(snapshot.addressBook());
+        filteredPatients.setPredicate(snapshot.filter());
+        viewedPatientShownAt = snapshot.viewedPatientShownAt();
+        // clears first so that listeners redraw the patient even if only the order of appointments changed
+        viewedPatient.set(null);
+        viewedPatient.set(snapshot.viewedPatient());
     }
 
     @Override

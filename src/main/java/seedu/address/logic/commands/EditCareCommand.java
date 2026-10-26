@@ -41,7 +41,7 @@ public class EditCareCommand extends Command {
         requireAllNonNull(patientIndex, careInstructionIndex, careInstruction);
         this.patientIndex = patientIndex;
         this.careInstructionIndex = careInstructionIndex;
-        this.careInstruction = careInstruction.trim();
+        this.careInstruction = normalizeInstruction(careInstruction);
     }
 
     @Override
@@ -61,13 +61,19 @@ public class EditCareCommand extends Command {
         }
         for (int i = 0; i < careInstructions.size(); i++) {
             if (i != careInstructionIndex.getZeroBased()
-                    && careInstructions.get(i).trim().equalsIgnoreCase(careInstruction)) {
+                    && normalizeInstruction(careInstructions.get(i)).equalsIgnoreCase(careInstruction)) {
                 throw new CommandException(MESSAGE_DUPLICATE_CARE_INSTRUCTION);
             }
         }
         careInstructions.set(careInstructionIndex.getZeroBased(), careInstruction);
-        model.setPatient(patient, patient.withCareInstructions(careInstructions));
+        Patient editedPatient = patient.withCareInstructions(careInstructions);
+        model.setPatient(patient, editedPatient);
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), careInstruction));
+    }
+
+    private static String normalizeInstruction(String instruction) {
+        return instruction.trim().replaceAll("\\s+", " ");
     }
 
     @Override

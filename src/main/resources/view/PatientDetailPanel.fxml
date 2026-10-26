@@ -16,6 +16,7 @@
 
     <VBox fx:id="details" spacing="6">
       <Label fx:id="name" styleClass="detail-name" wrapText="true" />
+      <Label fx:id="listIndex" styleClass="label-bright" wrapText="true" />
       <Label fx:id="nric" styleClass="label-bright" wrapText="true" />
       <Label fx:id="dob" styleClass="label-bright" wrapText="true" />
       <Label fx:id="phone" styleClass="label-bright" wrapText="true" />
