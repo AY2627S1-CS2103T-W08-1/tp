@@ -67,9 +67,12 @@ public class LogicManager implements Logic {
             // Undoes the command, since it is reported as failed and its change would be lost on restart.
             model.restoreSnapshot(snapshot);
             logger.warning("Could not save the patient data, so the command was undone: " + ioe.getMessage());
-            String format = ioe instanceof AccessDeniedException ? FILE_OPS_PERMISSION_ERROR_FORMAT
-                    : FILE_OPS_ERROR_FORMAT;
-            throw new CommandException(String.format(format, ioe.getMessage()), ioe);
+            // The data file and a short reason are named, since the exception's message names the temporary file
+            // that the data was written to first.
+            String message = ioe instanceof AccessDeniedException
+                    ? String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, storage.getAddressBookFilePath())
+                    : String.format(FILE_OPS_ERROR_FORMAT, Messages.describeWriteFailure(ioe));
+            throw new CommandException(message, ioe);
         }
 
         return commandResult;
