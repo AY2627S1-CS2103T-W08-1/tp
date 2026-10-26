@@ -36,15 +36,7 @@ public class ViewCommandTest {
 
     @Test
     public void execute_validIndexUnfilteredList_success() {
-        Patient patientToView = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
-        ViewCommand viewCommand = new ViewCommand(INDEX_FIRST_PATIENT);
-
-        String expectedMessage = String.format(ViewCommand.MESSAGE_VIEW_PATIENT_SUCCESS,
-                patientToView.getName());
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setViewedPatient(patientToView);
-
-        assertCommandSuccess(viewCommand, model, expectedMessage, expectedModel);
+        assertViewSuccess(INDEX_FIRST_PATIENT, new ModelManager(model.getAddressBook(), new UserPrefs()));
     }
 
     @Test
@@ -56,15 +48,8 @@ public class ViewCommandTest {
     @Test
     public void execute_lastIndexUnfilteredList_success() {
         Index lastIndex = Index.fromOneBased(model.getFilteredPatientList().size());
-        Patient patientToView = model.getFilteredPatientList().get(lastIndex.getZeroBased());
-        ViewCommand viewCommand = new ViewCommand(lastIndex);
 
-        String expectedMessage = String.format(ViewCommand.MESSAGE_VIEW_PATIENT_SUCCESS,
-                patientToView.getName());
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setViewedPatient(patientToView);
-
-        assertCommandSuccess(viewCommand, model, expectedMessage, expectedModel);
+        assertViewSuccess(lastIndex, new ModelManager(model.getAddressBook(), new UserPrefs()));
     }
 
     @Test
@@ -78,17 +63,10 @@ public class ViewCommandTest {
     @Test
     public void execute_validIndexFilteredList_success() {
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
-
-        Patient patientToView = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
-        ViewCommand viewCommand = new ViewCommand(INDEX_FIRST_PATIENT);
-
-        String expectedMessage = String.format(ViewCommand.MESSAGE_VIEW_PATIENT_SUCCESS,
-                patientToView.getName());
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         showPatientAtIndex(expectedModel, INDEX_FIRST_PATIENT);
-        expectedModel.setViewedPatient(patientToView);
 
-        assertCommandSuccess(viewCommand, model, expectedMessage, expectedModel);
+        assertViewSuccess(INDEX_FIRST_PATIENT, expectedModel);
     }
 
     @Test
@@ -152,5 +130,21 @@ public class ViewCommandTest {
         ViewCommand viewCommand = new ViewCommand(targetIndex);
         String expected = ViewCommand.class.getCanonicalName() + "{targetIndex=" + targetIndex + "}";
         assertEquals(expected, viewCommand.toString());
+    }
+
+    /**
+     * Confirms that viewing the patient at {@code index} of {@code model}'s displayed list succeeds, and leaves
+     * {@code model} the same as {@code expectedModel} with that patient viewed.
+     *
+     * @param index Index of the patient in the displayed list of {@code model}.
+     * @param expectedModel Model with the same patients and displayed list as {@code model}, before the patient is
+     *     viewed.
+     */
+    private void assertViewSuccess(Index index, Model expectedModel) {
+        Patient patientToView = model.getFilteredPatientList().get(index.getZeroBased());
+        String expectedMessage = String.format(ViewCommand.MESSAGE_VIEW_PATIENT_SUCCESS, patientToView.getName());
+        expectedModel.setViewedPatient(patientToView);
+
+        assertCommandSuccess(new ViewCommand(index), model, expectedMessage, expectedModel);
     }
 }

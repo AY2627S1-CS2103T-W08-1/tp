@@ -160,7 +160,8 @@ public class ListBackupsCommand extends Command {
                 .map(backup -> backup.getFileName().toString())
                 .collect(Collectors.joining("\n"));
         int olderCount = backups.size() - MAX_LISTED_BACKUPS;
-        return olderCount > 0 ? names + "\n" + String.format(MESSAGE_OLDER_BACKUPS, olderCount) : names;
+        // Locale.ROOT writes the count with the digits 0 to 9 whatever the computer's language settings are
+        return olderCount > 0 ? names + "\n" + String.format(Locale.ROOT, MESSAGE_OLDER_BACKUPS, olderCount) : names;
     }
 
     /**
