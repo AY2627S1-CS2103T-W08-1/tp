@@ -117,9 +117,12 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   e.g., `Tan Ah Kow s/o Lim`, `Muthu a/l Ramasamy`, or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
   A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
+  Letters can be from any language, e.g., `Zoë Tan` or `陈大文`. A name cannot start or end with `s/o`, `d/o`,
+  `c/o`, `a/l` or `a/p`, ignoring letter case.
 * `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
-  e.g., `91234567` or `+6591234567`.
-  It is stored without the `+65`.
+  e.g., `91234567` or `+6591234567`. Spaces and hyphens are ignored, so `9123 4567` and `+65 9123-4567` are
+  also accepted.
+  It is stored as the 8 digits only, without the `+65`.
 
 Examples:
 
@@ -135,11 +138,11 @@ If a required field is missing, the command is rejected with `Invalid command fo
 
 Field   | Prefix | Format | Example
 --------|--------|--------|--------
-Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
+Name    | `n/`   | Starts with a letter. Only letters (in any language), spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Cannot start or end with `s/o`, `d/o`, `c/o`, `a/l` or `a/p`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`, `Zoë Tan`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
-Phone   | `p/`   | 8 digits with no spaces, starting with 3, 6, 8 or 9, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
-Address | `a/`   | Cannot be blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` in front. Spaces and hyphens are ignored. Stored as the 8 digits only. | `91234567`, `+65 9123-4567`
+Address | `a/`   | Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
