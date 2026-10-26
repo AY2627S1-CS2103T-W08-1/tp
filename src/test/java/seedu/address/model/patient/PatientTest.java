@@ -158,6 +158,18 @@ public class PatientTest {
     }
 
     @Test
+    public void constructor_careInstructionLength_enforced() {
+        new PatientBuilder(ALICE)
+                .withCareInstructions("a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH))
+                .build();
+
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG, () ->
+                new PatientBuilder(ALICE)
+                        .withCareInstructions("a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1))
+                        .build());
+    }
+
+    @Test
     public void constructor_unsortedAppointments_sortedByDateThenTime() {
         Appointment laterDate = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(8, 0), "Dr Lee", "");
         Appointment laterTime = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(14, 0), "Dr Lim", "");

@@ -26,6 +26,7 @@ import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Nric;
+import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.Phone;
 import seedu.address.testutil.PatientBuilder;
 
@@ -80,6 +81,13 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_overlongName_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient("A".repeat(Name.MAX_LENGTH + 1), VALID_NRIC,
+                VALID_DOB, VALID_PHONE, VALID_ADDRESS, List.of(), List.of(), List.of(), null, null, null);
+        assertThrows(IllegalValueException.class, Name.MESSAGE_CONSTRAINTS, patient::toModelType);
+    }
+
+    @Test
     public void toModelType_nullName_throwsIllegalValueException() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(null, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(), null, null, null);
@@ -131,6 +139,13 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_overlongAddress_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                "a".repeat(Address.MAX_LENGTH + 1), List.of(), List.of(), List.of(), null, null, null);
+        assertThrows(IllegalValueException.class, Address.MESSAGE_TOO_LONG, patient::toModelType);
+    }
+
+    @Test
     public void toModelType_nullAddress_throwsIllegalValueException() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB,
                 VALID_PHONE, null, List.of(), List.of(), List.of(), null, null, null);
@@ -164,6 +179,14 @@ public class JsonAdaptedPatientTest {
         JsonAdaptedPatient missingLists = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, null, null, null, null, null, null);
         assertEquals(BENSON, missingLists.toModelType());
+    }
+
+    @Test
+    public void toModelType_overlongCareInstruction_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(),
+                List.of("a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1)), null, null, null);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG, patient::toModelType);
     }
 
     @Test

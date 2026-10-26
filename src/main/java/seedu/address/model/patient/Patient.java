@@ -17,6 +17,10 @@ import seedu.address.model.appointment.Appointment;
  */
 public class Patient {
 
+    public static final int MAX_CARE_INSTRUCTION_LENGTH = 500;
+    public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG =
+            "Care instructions cannot exceed " + MAX_CARE_INSTRUCTION_LENGTH + " characters.";
+
     // Identity fields
     private final Name name;
     private final Phone phone;
@@ -85,6 +89,7 @@ public class Patient {
         this.medications = List.copyOf(medications);
         this.allergens = List.copyOf(allergens);
         this.careInstructions = List.copyOf(careInstructions);
+        verifyCareInstructionLengths(this.careInstructions);
         this.contacts = List.copyOf(contacts);
         this.archived = archived;
         verifyNoDuplicateContacts(this.contacts);
@@ -121,6 +126,21 @@ public class Patient {
             checkArgument(appointments.subList(0, i).stream().noneMatch(appointment::isSameAppointment),
                     Appointment.MESSAGE_DUPLICATE);
         }
+    }
+
+    /**
+     * Rejects care instructions that are too long to display and edit safely.
+     */
+    private static void verifyCareInstructionLengths(List<String> careInstructions) {
+        checkArgument(careInstructions.stream().allMatch(Patient::isCareInstructionWithinMaxLength),
+                MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+    }
+
+    /**
+     * Returns true if {@code careInstruction} does not exceed the maximum care-instruction length.
+     */
+    public static boolean isCareInstructionWithinMaxLength(String careInstruction) {
+        return careInstruction.codePointCount(0, careInstruction.length()) <= MAX_CARE_INSTRUCTION_LENGTH;
     }
 
     public Name getName() {
