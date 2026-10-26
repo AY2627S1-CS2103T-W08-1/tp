@@ -117,9 +117,12 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   e.g., `Tan Ah Kow s/o Lim`, `Muthu a/l Ramasamy`, or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
   A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
+  Letters can be from any language, e.g., `Zoë Tan` or `陈大文`. A name cannot start or end with `s/o`, `d/o`,
+  `c/o`, `a/l` or `a/p`, ignoring letter case.
 * `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
-  e.g., `91234567` or `+6591234567`.
-  It is stored without the `+65`.
+  e.g., `91234567` or `+6591234567`. Spaces and hyphens are ignored, so `9123 4567` and `+65 9123-4567` are
+  also accepted.
+  It is stored as the 8 digits only, without the `+65`.
 
 Examples:
 
@@ -135,11 +138,11 @@ If a required field is missing, the command is rejected with `Invalid command fo
 
 Field   | Prefix | Format | Example
 --------|--------|--------|--------
-Name    | `n/`   | Starts with a letter. Only letters, spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`
+Name    | `n/`   | Starts with a letter. Only letters (in any language), spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Cannot start or end with `s/o`, `d/o`, `c/o`, `a/l` or `a/p`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`, `Zoë Tan`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
-Phone   | `p/`   | 8 digits with no spaces, starting with 3, 6, 8 or 9, with an optional `+65` in front. Stored without the `+65`. | `91234567`, `+6591234567`
-Address | `a/`   | Cannot be blank. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` in front. Spaces and hyphens are ignored. Stored as the 8 digits only. | `91234567`, `+65 9123-4567`
+Address | `a/`   | Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
@@ -273,7 +276,7 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
   Editing an instruction to its current text is allowed.
 * `ci/` must appear exactly once. Unrecognized prefixes are rejected.
 
-Example: `editcare 1 2 ci/Check blood sugar after lunch`
+Example: `editcare 1 1 ci/Check blood sugar after lunch`
 
 For patient `Alex Yeoh`, this returns:
 `Updated care instruction for Alex Yeoh: Check blood sugar after lunch`
@@ -284,10 +287,10 @@ Removes one numbered care instruction and reports the removed text.
 
 Format: `deletecare INDEX CI_INDEX`
 
-Example: `deletecare 1 2`
+Example: `deletecare 1 1`
 
-For patient `Alex Yeoh`, deleting `Walk after lunch` returns:
-`Deleted care instruction for Alex Yeoh: Walk after lunch`
+For patient `Alex Yeoh` in the sample data, deleting `Monitor blood pressure every morning` returns:
+`Deleted care instruction for Alex Yeoh: Monitor blood pressure every morning`
 
 After either command, the detail panel shows the updated patient immediately and the remaining instructions are
 numbered from `1` again. `The patient index provided is invalid.` means `INDEX` is outside the displayed list.
@@ -307,10 +310,10 @@ Format: `deleteallergy INDEX ALLERGY_INDEX`
 * The removed allergen is reported in the success message. Remaining allergens are renumbered immediately in the
   detail panel, which shows the updated patient. All other patient details are unchanged.
 
-Example: `deleteallergy 1 2`
+Example: `deleteallergy 1 1`
 
-For patient `Alex Yeoh`, if allergen 2 is `Shellfish`, this returns
-`Deleted allergen for Alex Yeoh: Shellfish`.
+For patient `Alex Yeoh` in the sample data, allergen 1 is `Penicillin`, so this returns
+`Deleted allergen for Alex Yeoh: Penicillin`.
 
 An `INDEX` outside the displayed patient list returns `The patient index provided is invalid.` An
 `ALLERGY_INDEX` past the end of the patient's allergens, including when none are recorded, returns
@@ -373,7 +376,8 @@ Format: `deletecontact INDEX CONTACT_INDEX`
 Removes that contact and reports `Deleted contact for NAME:` followed by the removed contact's details.
 Remaining contacts are renumbered. Other patient details are unchanged.
 
-Example: `deletecontact 1 2`
+Example: `deletecontact 1 1` removes `Tan & Partners Clinic` from `Alex Yeoh` in the sample data and returns
+`Deleted contact for Alex Yeoh: Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`.
 
 For all three contact commands, `INDEX` must refer to a patient in the displayed list; otherwise the error is
 `The patient index provided is invalid.` A contact number past the end, including when there are no contacts,
@@ -387,16 +391,18 @@ Adds an appointment to the patient at the displayed index.
 Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
-* `DATE` must be a real date in `YYYY-MM-DD` format, e.g., `2026-11-05`.
+* `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`.
 * `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank. Leading and
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
-* Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`. Standalone `a/l` and
-  `a/p` are allowed, ignoring letter case.
+* Text that looks like a prefix, such as `w/` or `x/`, cannot be used inside `WITH` or `NOTE`. Standalone `s/o`,
+  `d/o`, `c/o`, `a/l`, `a/p` and `w/o` (without) are allowed and kept as text, ignoring letter case, e.g.,
+  `nt/MRI w/o contrast`.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
   which are marked `(past)`.
-  After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
+  After `addappt`, the detail panel shows the patient. Scroll down to its Appointments section to check the new
+  appointment and its number.
 
 Examples:
 
@@ -409,6 +415,8 @@ note. For example, the second example returns
 
 * An appointment in the past is still added, so past visits can be recorded. The message then ends with
   `Note: this appointment is in the past.`
+* An appointment on a date more than 2 years from today is still added, but the message ends with
+  `Note: this appointment is more than 2 years ahead.`, in case the year was mistyped.
 * An appointment at the same date and time as another appointment of the patient, but with someone else, is still
   added. The message then ends with `Warning: NAME already has an appointment at this date and time (with WITH).`
 
@@ -417,7 +425,8 @@ Other errors are reported as follows:
 * An appointment with the same date, time and `WITH` as one the patient already has, ignoring letter case and extra
   spaces, returns `This appointment already exists for this patient.` and is not added.
 * An index outside the displayed list returns `The patient index provided is invalid.`
-* An invalid date returns `Appointment date should be a real date in YYYY-MM-DD format, e.g. 2026-10-25.`
+* An invalid date, or one before `1900-01-01`, returns
+  `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`
 * An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
 * A blank `WITH` returns `Who the appointment is with should not be blank.`
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
@@ -445,8 +454,8 @@ A successful command returns `Edited appointment APPT_INDEX of NAME: APPOINTMENT
 as in the detail panel. `APPT_INDEX` is the appointment's number after the edit, which can differ from the one typed.
 For example, the first example returns `Edited appointment 2 of Alex Yeoh: 2027-12-10 10:00 with Cardiology clinic`.
 
-* As with `addappt`, an appointment moved into the past or to the same date and time as another appointment of the
-  patient is still saved, and the message ends with the same note or warning.
+* As with `addappt`, an appointment moved into the past, more than 2 years ahead, or to the same date and time as
+  another appointment of the patient is still saved, and the message ends with the same note or warning.
 
 Other errors are reported as follows:
 
@@ -497,7 +506,7 @@ Format: `listappt [INDEX]`
   patient is included, even after `find`.
 * With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
   appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`. The detail panel then
-  shows the patient, with the same numbers.
+  shows the patient, with the same numbers in its Appointments section, below the care information.
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. An archived patient
   is not listed: run `unarchive` first to see their appointments.
 * The patient list does not change.
@@ -551,6 +560,10 @@ Shows only archived patients. The displayed indices are the indices used by `una
 operate on the currently displayed list. Active patients are not shown.
 Each patient card marks the patient as `(Archived)`.
 
+Archived patients can still be updated with patient-editing commands such as `edit`, `addcare`, `editcare`,
+`deletecare`, and `deleteallergy`. These commands update the archived record without making it active again.
+Use `unarchive` when the patient should return to the active list.
+
 Format: `listarchived`
 
 Any text after `listarchived` is ignored. The command returns `Listed all archived patients.` or, if there are none,
@@ -568,7 +581,8 @@ Format: `unarchive INDEX`
   `find` command.
 * The patient's complete record is preserved.
 
-Example: `listarchived` followed by `unarchive 2` restores the second archived patient.
+Example with fresh sample data: `archive 1`, followed by `listarchived`, then `unarchive 1` archives and restores
+`Alex Yeoh`.
 
 A successful command returns `Unarchived patient: NAME; NRIC: NRIC`. An index outside the displayed list returns
 `The patient index provided is invalid.` Attempting to unarchive an active patient returns
@@ -871,7 +885,11 @@ Format: `exit`
 
 ### Saving the data
 
-MediConnect automatically saves data after every command. You do not need to save manually.
+MediConnect automatically saves data after every command that changes it. You do not need to save manually.
+
+If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
+`Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,
+`view`, `help` and `exit`, still work.
 
 ### Editing the data file
 
@@ -895,7 +913,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 ## FAQ
 
 **Q**: Where is my data saved?<br>
-**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command.
+**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command that changes the data.
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
@@ -904,8 +922,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 
 ## Known issues
 
-1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+1. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -922,13 +939,13 @@ Action            | Format, Examples
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
-**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
-**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
-**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
+**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 1`
+**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 1`
+**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 1`
 **Delete medication** | `deletemed INDEX MED_INDEX` <br> e.g., `deletemed 1 2`
 **Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Edit appointment** | `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]` <br> e.g., `editappt 1 2 t/10:00 nt/`
-**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
+**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 1 ci/Check blood sugar after lunch`
 **Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
 **Edit medication** | `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...` <br> e.g., `editmed 1 2 med/Metformin 850mg t/08:00 t/20:00`
 **Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
