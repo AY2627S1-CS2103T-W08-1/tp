@@ -28,6 +28,12 @@ public class AppointmentTest {
     }
 
     @Test
+    public void constructor_dateBeforeEarliestDate_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, Appointment.MESSAGE_DATE_CONSTRAINTS, ()
+            -> new Appointment(LocalDate.of(1899, 12, 31), TIME, "Dr Tan", ""));
+    }
+
+    @Test
     public void constructor_timeWithSeconds_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, Appointment.MESSAGE_TIME_CONSTRAINTS, ()
             -> new Appointment(DATE, LocalTime.of(9, 30, 15), "Dr Tan", ""));
@@ -51,10 +57,14 @@ public class AppointmentTest {
         assertFalse(Appointment.isValidDate("2026/11/05")); // wrong separator
         assertFalse(Appointment.isValidDate("+10000-01-01")); // year with more than 4 digits
         assertFalse(Appointment.isValidDate("-0001-01-01")); // negative year
+        assertFalse(Appointment.isValidDate("0001-01-01")); // typing mistake for a recent year
+        assertFalse(Appointment.isValidDate("1899-12-31")); // day before the earliest date
 
         // valid dates
         assertTrue(Appointment.isValidDate("2026-11-05"));
         assertTrue(Appointment.isValidDate("2020-01-01")); // past date
+        assertTrue(Appointment.isValidDate("1900-01-01")); // earliest date
+        assertTrue(Appointment.isValidDate("9999-12-31")); // latest four-digit date
     }
 
     @Test

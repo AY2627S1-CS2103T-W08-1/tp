@@ -69,8 +69,9 @@ public class MainAppTest {
                 uiStub.warningMessage);
 
         LogicManager logic = new LogicManager(model, storage);
+        // a command that changes no patient data leaves the unreadable file as it is
         logic.execute("list");
-        assertEquals(new AddressBook(), storage.readAddressBook().get());
+        assertEquals(INVALID_DATA, FileUtil.readFromFile(dataFile));
         logic.execute(PatientUtil.getAddCommand(ALICE));
         assertEquals(List.of(ALICE), storage.readAddressBook().get().getPatientList());
         assertEquals(INVALID_DATA, FileUtil.readFromFile(recoveryFile));

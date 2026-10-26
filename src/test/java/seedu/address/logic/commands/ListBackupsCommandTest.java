@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
+import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.nio.file.Files;
@@ -15,6 +17,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
@@ -123,6 +126,17 @@ public class ListBackupsCommandTest {
     }
 
     @Test
+    public void execute_computerLanguageWithOtherDigits_countsOlderWithDigitsZeroToNine() throws Exception {
+        // Equivalence partitioning: a default locale whose digits are not 0 to 9
+        createBackupsNewestFirst(ListBackupsCommand.MAX_LISTED_BACKUPS + 2);
+
+        CommandResult result = callWithDefaultLocale(NON_LATIN_DIGIT_LOCALE, () ->
+                new ListBackupsCommand(temporaryFolder).execute(model));
+
+        assertTrue(result.getFeedbackToUser().contains("\n... and 2 older\n"));
+    }
+
+    @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
     public void execute_unreadableBackupFolder_throwsCommandException() throws Exception {
         createBackup("mediconnect-20261020-083015.json", EARLIER);
@@ -195,7 +209,7 @@ public class ListBackupsCommandTest {
         int olderCount = backupCount - ListBackupsCommand.MAX_LISTED_BACKUPS;
 
         String expectedNames = String.join("\n", newestNames.subList(0, ListBackupsCommand.MAX_LISTED_BACKUPS))
-                + "\n" + String.format(ListBackupsCommand.MESSAGE_OLDER_BACKUPS, olderCount);
+                + "\n" + String.format(Locale.ROOT, ListBackupsCommand.MESSAGE_OLDER_BACKUPS, olderCount);
         assertCommandSuccess(new ListBackupsCommand(temporaryFolder), model,
                 getExpectedSuccessMessage(expectedNames), expectedModel);
     }
