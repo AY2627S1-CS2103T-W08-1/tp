@@ -121,7 +121,9 @@ public class ModelManager implements Model {
 
         addressBook.setPatient(target, editedPatient);
 
-        if (target.equals(viewedPatient.get())) {
+        if (target.equals(viewedPatient.get()) && !target.isArchived() && editedPatient.isArchived()) {
+            viewedPatient.set(null);
+        } else if (target.equals(viewedPatient.get())) {
             viewedPatient.set(editedPatient);
         }
     }

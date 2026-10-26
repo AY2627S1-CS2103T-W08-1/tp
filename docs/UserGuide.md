@@ -522,7 +522,7 @@ Format: `archive INDEX`
 
 * `INDEX` refers to the patient in the currently displayed list, including a filtered `find` result.
 * The archived patient disappears from active patient lists. Their complete record is preserved.
-* If that patient is shown in the detail panel, the panel stays up to date after the patient is archived.
+* If that patient is shown in the detail panel, the panel is cleared after the patient is archived.
 
 Example: `find Alex` followed by `archive 1` archives the first patient in those results.
 
