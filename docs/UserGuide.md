@@ -381,8 +381,9 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank. Leading and
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
-* Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`. Standalone `a/l` and
-  `a/p` are allowed, ignoring letter case.
+* Text that looks like a prefix, such as `w/` or `x/`, cannot be used inside `WITH` or `NOTE`. Standalone `s/o`,
+  `d/o`, `c/o`, `a/l`, `a/p` and `w/o` (without) are allowed and kept as text, ignoring letter case, e.g.,
+  `nt/MRI w/o contrast`.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
   which are marked `(past)`.
   After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
