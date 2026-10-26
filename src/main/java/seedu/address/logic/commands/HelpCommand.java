@@ -92,7 +92,7 @@ public class HelpCommand extends Command {
                     formatEntry(CancelApptCommand.COMMAND_WORD + " INDEX APPT_INDEX",
                             "Cancels appointment APPT_INDEX of the patient at INDEX."),
                     formatEntry(ListApptCommand.COMMAND_WORD + " [INDEX]",
-                            "Lists all upcoming appointments, or every appointment of the active patient at INDEX.")),
+                            "Lists all upcoming appointments, or every appointment of the patient at INDEX.")),
             formatGroup("Data",
                     formatEntry(BackupCommand.COMMAND_WORD,
                             "Saves a copy of all patient data to data/backups."),
