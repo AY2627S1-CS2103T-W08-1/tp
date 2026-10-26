@@ -30,8 +30,10 @@ public class DeleteAllergyCommandTest {
         Patient patient = new PatientBuilder().withMedications(medication)
                 .withAllergens("Penicillin", "Latex", "Shellfish", "Peanuts")
                 .withCareInstructions("Check blood sugar").withContacts(GP).build();
-        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
-        model.setViewedPatient(patient);
+        Patient previouslyViewed = new PatientBuilder().withNric("S1111111B").build();
+        Model model = new ModelManager(
+                new AddressBookBuilder().withPatient(patient).withPatient(previouslyViewed).build(), new UserPrefs());
+        model.setViewedPatient(previouslyViewed);
 
         CommandResult firstResult = new DeleteAllergyCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT)
                 .execute(model);
