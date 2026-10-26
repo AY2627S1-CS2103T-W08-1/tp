@@ -20,7 +20,7 @@ public class ArchiveCommand extends Command {
     public static final String COMMAND_FORMAT = COMMAND_WORD + " INDEX";
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Archives the patient at the specified INDEX.\n"
-            + "Parameters: INDEX (must be a positive integer)\n"
+            + "Format: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1";
 
     public static final String MESSAGE_ARCHIVE_PATIENT_SUCCESS = "Archived patient: %1$s; NRIC: %2$s";
