@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
+import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
 import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
@@ -21,6 +23,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -126,12 +129,23 @@ public class RestoreCommandTest {
         Patient archivedHoon = new PatientBuilder(HOON).withArchived(true).build();
         AddressBook backupData = createAddressBook(ALICE, archivedHoon);
         writeBackup(backupData);
-        String archivedNote = String.format(RestoreCommand.MESSAGE_ARCHIVED_COUNT, 1);
+        String archivedNote = String.format(Locale.ROOT, RestoreCommand.MESSAGE_ARCHIVED_COUNT, 1);
 
         assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", archivedNote),
                 new ModelManager(backupData, new UserPrefs()));
         assertEquals(List.of(ALICE), model.getFilteredPatientList());
         assertEquals(2, model.getAddressBook().getPatientList().size());
+    }
+
+    @Test
+    public void execute_computerLanguageWithOtherDigits_countsWithDigitsZeroToNine() throws Exception {
+        // Equivalence partitioning: a default locale whose digits are not 0 to 9
+        writeBackup(createAddressBook(ALICE, new PatientBuilder(HOON).withArchived(true).build()));
+
+        CommandResult result = callWithDefaultLocale(NON_LATIN_DIGIT_LOCALE, () ->
+                createRestoreCommand().execute(model));
+
+        assertTrue(result.getFeedbackToUser().startsWith("Restored 2 patients (1 archived, shown by listarchived)"));
     }
 
     @Test
@@ -307,8 +321,8 @@ public class RestoreCommandTest {
     }
 
     private String getExpectedSuccessMessage(int patientCount, String patientWord, String archivedNote) {
-        return String.format(RestoreCommand.MESSAGE_SUCCESS, patientCount, patientWord, archivedNote, BACKUP_NAME,
-                temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
+        return String.format(Locale.ROOT, RestoreCommand.MESSAGE_SUCCESS, patientCount, patientWord, archivedNote,
+                BACKUP_NAME, temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
     }
 
     /**
