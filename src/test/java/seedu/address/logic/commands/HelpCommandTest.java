@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.HelpCommand.COMMAND_SUMMARY;
 import static seedu.address.logic.commands.HelpCommand.FORMAT_DESCRIPTION_SEPARATOR;
+import static seedu.address.logic.commands.HelpCommand.GROUP_SEPARATOR;
 import static seedu.address.logic.commands.HelpCommand.SHOWING_HELP_MESSAGE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ALLERGEN;
@@ -63,19 +64,41 @@ public class HelpCommandTest {
             Map.entry("MORE_KEYWORDS", "bob"),
             Map.entry("FILENAME", "mediconnect-20261020-083015.json"));
 
+    /**
+     * Returns the command words in the order the help window lists them, group by group, mapped to their commands.
+     */
     private static Map<String, Class<? extends Command>> createExpectedCommands() {
         Map<String, Class<? extends Command>> commands = new LinkedHashMap<>();
+        putPatientCommands(commands);
+        putCareCommands(commands);
+        putContactAndAppointmentCommands(commands);
+        putDataAndOtherCommands(commands);
+        return Collections.unmodifiableMap(commands);
+    }
+
+    private static void putPatientCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(AddCommand.COMMAND_WORD, AddCommand.class);
         commands.put(EditCommand.COMMAND_WORD, EditCommand.class);
         commands.put(ListCommand.COMMAND_WORD, ListCommand.class);
-        commands.put(ListArchivedCommand.COMMAND_WORD, ListArchivedCommand.class);
+        commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
+        commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
         commands.put(ArchiveCommand.COMMAND_WORD, ArchiveCommand.class);
+        commands.put(ListArchivedCommand.COMMAND_WORD, ListArchivedCommand.class);
         commands.put(UnarchiveCommand.COMMAND_WORD, UnarchiveCommand.class);
         commands.put(DeleteCommand.COMMAND_WORD, DeleteCommand.class);
+    }
+
+    private static void putCareCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(AddCareCommand.COMMAND_WORD, AddCareCommand.class);
         commands.put(EditCareCommand.COMMAND_WORD, EditCareCommand.class);
         commands.put(DeleteCareCommand.COMMAND_WORD, DeleteCareCommand.class);
         commands.put(DeleteAllergyCommand.COMMAND_WORD, DeleteAllergyCommand.class);
+        commands.put(EditMedCommand.COMMAND_WORD, EditMedCommand.class);
+        commands.put(DeleteMedCommand.COMMAND_WORD, DeleteMedCommand.class);
+        commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
+    }
+
+    private static void putContactAndAppointmentCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(AddContactCommand.COMMAND_WORD, AddContactCommand.class);
         commands.put(EditContactCommand.COMMAND_WORD, EditContactCommand.class);
         commands.put(DeleteContactCommand.COMMAND_WORD, DeleteContactCommand.class);
@@ -83,18 +106,15 @@ public class HelpCommandTest {
         commands.put(EditApptCommand.COMMAND_WORD, EditApptCommand.class);
         commands.put(CancelApptCommand.COMMAND_WORD, CancelApptCommand.class);
         commands.put(ListApptCommand.COMMAND_WORD, ListApptCommand.class);
-        commands.put(EditMedCommand.COMMAND_WORD, EditMedCommand.class);
-        commands.put(DeleteMedCommand.COMMAND_WORD, DeleteMedCommand.class);
-        commands.put(ViewCommand.COMMAND_WORD, ViewCommand.class);
-        commands.put(DueCommand.COMMAND_WORD, DueCommand.class);
-        commands.put(FindCommand.COMMAND_WORD, FindCommand.class);
-        commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
-        commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
+    }
+
+    private static void putDataAndOtherCommands(Map<String, Class<? extends Command>> commands) {
         commands.put(BackupCommand.COMMAND_WORD, BackupCommand.class);
         commands.put(RestoreCommand.COMMAND_WORD, RestoreCommand.class);
         commands.put(ExportCommand.COMMAND_WORD, ExportCommand.class);
+        commands.put(ClearCommand.COMMAND_WORD, ClearCommand.class);
+        commands.put(HelpCommand.COMMAND_WORD, HelpCommand.class);
         commands.put(ExitCommand.COMMAND_WORD, ExitCommand.class);
-        return Collections.unmodifiableMap(commands);
     }
 
     @Test
@@ -129,6 +149,19 @@ public class HelpCommandTest {
                 .collect(Collectors.toList());
 
         assertEquals(List.copyOf(EXPECTED_COMMANDS.keySet()), commandWords);
+    }
+
+    @Test
+    public void commandSummary_groups_startWithHeadingInOrder() {
+        List<String> groups = List.of(COMMAND_SUMMARY.split(GROUP_SEPARATOR));
+        List<String> headings = groups.stream().map(group -> group.lines().findFirst().orElseThrow()).toList();
+
+        assertEquals(List.of("Patients", "Care information", "Contacts", "Appointments", "Data", "Other"), headings);
+        for (String group : groups) {
+            // every line after the heading describes a command
+            assertTrue(group.lines().skip(1).allMatch(line -> line.contains(FORMAT_DESCRIPTION_SEPARATOR)),
+                    "Unexpected line in group: " + group);
+        }
     }
 
     @Test
@@ -219,8 +252,14 @@ public class HelpCommandTest {
                 toSampleInput("addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]..."));
     }
 
+    /**
+     * Returns the lines of {@code COMMAND_SUMMARY} that describe a command, without the group headings and the blank
+     * lines between groups.
+     */
     private static List<String> getLines() {
-        return COMMAND_SUMMARY.lines().collect(Collectors.toList());
+        return COMMAND_SUMMARY.lines()
+                .filter(line -> line.contains(FORMAT_DESCRIPTION_SEPARATOR))
+                .collect(Collectors.toList());
     }
 
     /**

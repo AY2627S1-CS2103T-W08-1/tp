@@ -1,12 +1,16 @@
 package seedu.address.testutil;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import org.junit.jupiter.api.function.Executable;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.model.Model;
@@ -45,6 +49,44 @@ public class TestUtil {
         Path relativePath = workingDir.relativize(path);
         assertFalse(relativePath.isAbsolute());
         return relativePath;
+    }
+
+    /**
+     * Makes {@code path} read-only, runs {@code test}, then makes {@code path} writable again.
+     * Skips the calling test if {@code path} stays writable, e.g., for users with admin rights such as root.
+     *
+     * @param path File or folder to make read-only.
+     * @param test Steps of the test to run while {@code path} is read-only.
+     * @throws Throwable if {@code test} throws it.
+     */
+    public static void runWhileReadOnly(Path path, Executable test) throws Throwable {
+        assertTrue(path.toFile().setWritable(false));
+        try {
+            assumeFalse(Files.isWritable(path));
+            test.execute();
+        } finally {
+            path.toFile().setWritable(true);
+        }
+    }
+
+    /**
+     * Asserts that {@code message} is {@code expectedStart}, then a readable reason, then {@code expectedEnd}.
+     * The reason comes from the operating system, so only the problems that {@code Messages#describeWriteFailure}
+     * guards against are checked: it is not blank, does not end with a full stop of its own, and does not repeat
+     * {@code path}, which the start of the message already shows.
+     *
+     * @param message Error message to check.
+     * @param expectedStart Text expected before the reason.
+     * @param expectedEnd Text expected after the reason.
+     * @param path File or folder that the message is about.
+     */
+    public static void assertReadableReason(String message, String expectedStart, String expectedEnd, Path path) {
+        assertTrue(message.startsWith(expectedStart), message);
+        assertTrue(message.endsWith(expectedEnd), message);
+        String reason = message.substring(expectedStart.length(), message.length() - expectedEnd.length());
+        assertFalse(reason.isBlank(), message);
+        assertFalse(reason.endsWith("."), message);
+        assertFalse(reason.contains(path.toString()), message);
     }
 
     /**
