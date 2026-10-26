@@ -13,7 +13,7 @@ import static seedu.address.logic.commands.CommandTestUtil.NRIC_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
-import static seedu.address.testutil.TypicalPatients.AMY;
+import static seedu.address.testutil.TypicalPatients.BENSON;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -37,6 +37,9 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.FindCommand;
+import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -130,6 +133,36 @@ public class LogicManagerTest {
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
                 LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+    }
+
+    @Test
+    public void execute_commandsThatChangeNoPatientDataWithFailingStorage_succeed() throws Exception {
+        model.addPatient(ALICE);
+        logic = createLogicWithFailingStorage(DUMMY_IO_EXCEPTION);
+
+        logic.execute(ListCommand.COMMAND_WORD);
+        logic.execute(ViewCommand.COMMAND_WORD + " 1");
+        logic.execute(HelpCommand.COMMAND_WORD);
+        assertTrue(logic.execute(ExitCommand.COMMAND_WORD).isExit());
+    }
+
+    @Test
+    public void execute_storageThrowsIoException_restoresFilterAndViewedPatient() throws Exception {
+        model.addPatient(ALICE);
+        model.addPatient(BENSON);
+        logic = createLogicWithFailingStorage(DUMMY_IO_EXCEPTION);
+        logic.execute(FindCommand.COMMAND_WORD + " Alice");
+        logic.execute(ViewCommand.COMMAND_WORD + " 1");
+
+        // addcare would show the edited patient, and add would show all active patients
+        assertThrows(CommandException.class, () -> logic.execute(AddCareCommand.COMMAND_WORD + " 1 med/Metformin"));
+        assertThrows(CommandException.class, () -> logic.execute(AddCommand.COMMAND_WORD + NAME_DESC_AMY
+                + PHONE_DESC_AMY + NRIC_DESC_AMY + DOB_DESC_AMY + ADDRESS_DESC_AMY));
+
+        assertEquals(new AddressBookBuilder().withPatient(ALICE).withPatient(BENSON).build(),
+                model.getAddressBook());
+        assertEquals(List.of(ALICE), model.getFilteredPatientList());
+        assertEquals(ALICE, model.getViewedPatient().getValue());
     }
 
     @Test
@@ -232,12 +265,25 @@ public class LogicManagerTest {
     }
 
     /**
-     * Tests the Logic component's handling of an {@code IOException} thrown by the Storage component.
+     * Tests the Logic component's handling of an {@code IOException} thrown by the Storage component:
+     * the command fails and the model is left unchanged.
      *
      * @param e the exception to be thrown by the Storage component
      * @param expectedMessage the message expected inside exception thrown by the Logic component
      */
     private void assertCommandFailureForExceptionFromStorage(IOException e, String expectedMessage) {
+        logic = createLogicWithFailingStorage(e);
+
+        // Triggers the saveAddressBook method by executing an add command
+        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
+                + NRIC_DESC_AMY + DOB_DESC_AMY + ADDRESS_DESC_AMY;
+        assertCommandFailure(addCommand, CommandException.class, expectedMessage, new ModelManager());
+    }
+
+    /**
+     * Returns a {@code LogicManager} for {@code model} whose storage throws {@code e} when saving patient data.
+     */
+    private Logic createLogicWithFailingStorage(IOException e) {
         Path prefPath = temporaryFolder.resolve("ExceptionUserPrefs.json");
 
         // Inject LogicManager with a JsonAddressBookStorage that throws the IOException e when saving
@@ -252,14 +298,6 @@ public class LogicManagerTest {
                 new JsonUserPrefsStorage(temporaryFolder.resolve("ExceptionUserPrefs.json"));
         StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        logic = new LogicManager(model, storage);
-
-        // Triggers the saveAddressBook method by executing an add command
-        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
-                + NRIC_DESC_AMY + DOB_DESC_AMY + ADDRESS_DESC_AMY;
-        Patient expectedPatient = new PatientBuilder(AMY).build();
-        ModelManager expectedModel = new ModelManager();
-        expectedModel.addPatient(expectedPatient);
-        assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
+        return new LogicManager(model, storage);
     }
 }

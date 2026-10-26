@@ -876,7 +876,11 @@ Format: `exit`
 
 ### Saving the data
 
-MediConnect automatically saves data after every command. You do not need to save manually.
+MediConnect automatically saves data after every command that changes it. You do not need to save manually.
+
+If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
+`Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,
+`view`, `help` and `exit`, still work.
 
 ### Editing the data file
 
@@ -900,7 +904,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 ## FAQ
 
 **Q**: Where is my data saved?<br>
-**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command.
+**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command that changes the data.
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
