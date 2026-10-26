@@ -215,9 +215,7 @@ public class Patient {
                 .filter(appointment -> !appointment.isBefore(now));
         Stream<Appointment> past = appointments.stream()
                 .filter(appointment -> appointment.isBefore(now));
-        List<Appointment> upcomingFirst = Stream.concat(upcoming, past).toList();
-        assert upcomingFirst.size() == appointments.size() : "every appointment must be either upcoming or past";
-        return upcomingFirst;
+        return Stream.concat(upcoming, past).toList();
     }
 
     /**
