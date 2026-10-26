@@ -242,7 +242,8 @@ public class RestoreCommandTest {
         assertTrue(content.contains("\"" + ALICE.getNric().value + "\""));
         Files.writeString(backupFile, content.replace("\"" + ALICE.getNric().value + "\"", "\"BAD\""));
 
-        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_INVALID_DATA, BACKUP_NAME, Nric.MESSAGE_CONSTRAINTS));
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_INVALID_DATA, BACKUP_NAME,
+                "Patient entry 1: " + Nric.MESSAGE_CONSTRAINTS));
     }
 
     @Test
@@ -251,7 +252,7 @@ public class RestoreCommandTest {
                 "duplicatePatientAddressBook.json"), temporaryFolder.resolve(BACKUP_NAME));
 
         assertRestoreFailure(String.format(RestoreCommand.MESSAGE_INVALID_DATA, BACKUP_NAME,
-                "Patients list contains duplicate patient(s)."));
+                "Patient entry 2: Patients list contains duplicate patient(s)."));
     }
 
     @Test
