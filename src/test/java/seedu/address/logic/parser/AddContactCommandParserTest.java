@@ -29,6 +29,17 @@ public class AddContactCommandParserTest {
     }
 
     @Test
+    public void parse_indianNameSlashWords_contactCreated() {
+        for (String token : List.of("a/l", "a/p", "A/L", "A/P")) {
+            String name = "Muthu " + token + " Ramasamy";
+            Contact contact = new Contact(name, "Emergency", "123", "");
+
+            assertParseSuccess(parser, " 1 n/" + name + " r/Emergency p/123",
+                    new AddContactCommand(INDEX_FIRST_PATIENT, contact));
+        }
+    }
+
+    @Test
     public void parse_missingFieldsOrInvalidIndex_rejected() {
         String usage = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, AddContactCommand.MESSAGE_USAGE);
         for (String args : List.of("", " 1", " 0" + FIELDS, " -1" + FIELDS, " x" + FIELDS,
