@@ -228,7 +228,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 
 * `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information.
 * `deletePatient(target)` clears the viewed patient if `target` is being viewed.
-* `setAddressBook(...)`, which the `clear` command uses, clears the viewed patient if it is not in the new data.
+* `setAddressBook(...)`, which `clear confirm` uses, clears the viewed patient if it is not in the new data.
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
 
@@ -255,6 +255,17 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 * **Alternative 2:** Split the list under Upcoming and Past headings, as `listappt INDEX` does.
   * Pros: Past appointments are grouped visibly.
   * Cons: One numbered list split across two headings can be read as two lists, each starting from `1.`.
+
+### Clearing all patients
+
+`AddressBookParser` delegates `clear` arguments to `ClearCommandParser`. It accepts only the lowercase
+`confirm` token, with surrounding whitespace allowed. Missing confirmation or extra arguments produce a
+`ParseException` with the warning and command format before any data is changed.
+
+`ClearCommand#execute()` replaces the entire address book with an empty one through `Model#setAddressBook()`,
+including archived patients and patients hidden by a filter. The existing model logic clears the viewed patient.
+`LogicManager` saves the change and restores its snapshot if saving fails. No automatic backup is created;
+users can run `backup` before `clear confirm` and recover that backup with `restore`.
 
 ### Edit patient feature
 
@@ -548,7 +559,7 @@ Step 5. The user then decides to execute the command `list`. Commands that do no
 
 <puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
 
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
+Step 6. The user executes `clear confirm`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
 
 <puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
 
@@ -1581,11 +1592,27 @@ testers are expected to do more *exploratory* testing.
 
 1. Listing patients when there is no data
 
-   1. Prerequisites: Clear all data using the `clear` command.<br>
+   1. Prerequisites: Back up any needed data using `backup`, then clear all data using `clear confirm`.<br>
       Expected: The status message shows `All patients have been cleared.`
 
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No active patients found.`
+
+### Clearing all patients
+
+1. Prerequisites: Run `backup` to preserve any needed data. Have active and archived patients, and run `view 1`.
+
+1. Test cases: `clear`, `clear 1`, `clear CONFIRM`, `clear confirm extra`<br>
+   Expected: `Invalid command format!` followed by the clearing warning and `Format: clear confirm`.
+   All patients and the viewed patient remain unchanged.
+
+1. Test case: `clear confirm`<br>
+   Expected: `All patients have been cleared.` The patient list is empty, `listarchived` reports no archived
+   patients, and the detail panel shows its placeholder. Restarting the app still shows no patients.
+   No new backup is created. Use `restore` to select the backup made in the prerequisite if needed.
+
+1. Test case: `clear confirm` again<br>
+   Expected: `All patients have been cleared.` The empty address book remains unchanged.
 
 ### Deleting a patient
 
