@@ -977,6 +977,217 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC7 - View a patient's full details**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to view a specific patient in the list.
+4.  MediConnect shows the patient's details in the detail panel, with their medications, allergens, care instructions, contacts and appointments numbered, and shows the patient's name.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message that the patient index is invalid.
+
+      Use case resumes at step 2.
+
+* 3b. The index is missing, or is not a positive integer.
+
+    * 3b1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
+
+      Use case resumes at step 2.
+
+* 4a. The patient's details are changed later, e.g., care information is added.
+
+    * 4a1. MediConnect updates the detail panel to show the changed details.
+
+      Use case ends.
+
+* 4b. The patient is deleted later.
+
+    * 4b1. MediConnect clears the detail panel.
+
+      Use case ends.
+
+**Use case: UC8 - Back up all patient data**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to back up the patient data.
+2.  MediConnect saves a copy of all patient data to a new file in `data/backups`, named after the current date and time, and shows the full path of the file.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. A backup with the same name already exists, e.g., one made in the same second.
+
+    * 2a1. MediConnect adds a number to the new file's name, so that the earlier backup is kept.
+
+      Use case resumes at step 2.
+
+* 2b. The backup cannot be saved, e.g., because the folder cannot be created.
+
+    * 2b1. MediConnect shows an error message with the folder and the reason, and that the data has not been changed.
+
+      Use case ends.
+
+**Use case: UC9 - Restore patient data from a backup**
+
+**Preconditions**: Caregiver has backed up the data before (UC8).
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list the backups.
+2.  MediConnect lists the backups in `data/backups`, newest first.
+3.  Caregiver requests to restore a specific backup, giving its name.
+4.  MediConnect checks the whole backup, then backs up the current data, and replaces all patient data with the data in the backup.
+5.  MediConnect shows all active patients, how many patients were restored, and the full path of the backup of the data from before the restore.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver already knows the name of the backup.
+
+  Use case resumes at step 3.
+
+* 2a. There are no backups.
+
+    * 2a1. MediConnect shows a message that no backups were found, and how to make one.
+
+      Use case ends.
+
+* 2b. There are more than 10 backups.
+
+    * 2b1. MediConnect lists only the newest 10, followed by how many older ones there are.
+
+      Use case resumes at step 3.
+
+* 3a. A path is given instead of only the name of a file.
+
+    * 3a1. MediConnect shows an error message asking for only the name of a backup file.
+
+      Use case resumes at step 2.
+
+* 3b. There is no backup with the given name.
+
+    * 3b1. MediConnect shows an error message that no such backup was found, and that the data has not been changed.
+
+      Use case resumes at step 2.
+
+* 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, or MediConnect has no permission to read it.
+
+    * 4a1. MediConnect shows an error message that the backup could not be read, or that it has no permission to read the backup, and that the data has not been changed.
+
+      Use case ends.
+
+* 4b. The backup has invalid data, e.g., an invalid NRIC or two patients with the same NRIC.
+
+    * 4b1. MediConnect shows an error message with details of the invalid data, and that the data has not been changed.
+
+      Use case ends.
+
+* 4c. The current data cannot be backed up.
+
+    * 4c1. MediConnect shows an error message with the reason, and that nothing was restored.
+
+      Use case ends.
+
+* 5a. Some of the restored patients are archived.
+
+    * 5a1. MediConnect also shows how many of them are archived, and that `listarchived` shows them.
+
+      Use case ends.
+
+* 5b. Caregiver wants the data from before the restore back.
+
+    * 5b1. Caregiver restores the backup that MediConnect made in step 4.
+
+      Use case resumes at step 4.
+
+**Use case: UC10 - Export a patient's record**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to export the record of a specific patient in the list.
+4.  MediConnect saves the patient's full record to a text file in `data/exports`, named after their NRIC, and shows the full path of the file.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 1b. The patient is archived.
+
+    * 1b1. Caregiver requests to list archived patients instead.
+
+    * 1b2. MediConnect shows a list of archived patients.
+
+      Use case resumes at step 3.
+
+* 2a. The list is empty.
+
+  Use case ends.
+
+* 3a. The given index is invalid.
+
+    * 3a1. MediConnect shows an error message that the patient index is invalid.
+
+      Use case resumes at step 2.
+
+* 3b. The index is missing, or is not a positive integer.
+
+    * 3b1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
+
+      Use case resumes at step 2.
+
+* 4a. The patient's record was exported before.
+
+    * 4a1. MediConnect replaces the earlier file with the new record.
+
+      Use case ends.
+
+* 4b. The file cannot be saved, e.g., because the folder cannot be created.
+
+    * 4b1. MediConnect shows an error message with the path of the file and the reason, and keeps any earlier file unchanged.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
