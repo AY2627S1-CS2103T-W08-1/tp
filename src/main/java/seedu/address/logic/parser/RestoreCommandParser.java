@@ -1,33 +1,34 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.List;
 
+import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.ListBackupsCommand;
 import seedu.address.logic.commands.RestoreCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
- * Parses input arguments and creates a new RestoreCommand object.
+ * Parses input arguments and creates a new RestoreCommand object, or a ListBackupsCommand if no file name is given.
  */
-public class RestoreCommandParser implements Parser<RestoreCommand> {
+public class RestoreCommandParser implements Parser<Command> {
 
     /** Characters that let a file name point outside the backup folder on at least one operating system. */
     private static final List<String> PATH_CHARACTERS = List.of("/", "\\", ":");
 
     /**
      * Parses the given {@code String} of arguments in the context of the RestoreCommand
-     * and returns a RestoreCommand object for execution.
+     * and returns a RestoreCommand object for execution. With no file name, returns a ListBackupsCommand,
+     * so that the user can see which backups there are.
      *
      * @throws ParseException If the user input does not conform to the expected format.
      */
     @Override
-    public RestoreCommand parse(String args) throws ParseException {
+    public Command parse(String args) throws ParseException {
         String fileName = args.trim();
         if (fileName.isEmpty()) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, RestoreCommand.MESSAGE_USAGE));
+            return new ListBackupsCommand();
         }
         if (!isPlainFileName(fileName)) {
             throw new ParseException(RestoreCommand.MESSAGE_INVALID_FILE_NAME);
