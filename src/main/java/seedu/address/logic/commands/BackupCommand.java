@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -90,22 +91,24 @@ public class BackupCommand extends Command {
     /**
      * Saves {@code addressBook} to a new timestamped file in the backup folder and returns the file's path.
      * {@code RestoreCommand} also uses this, to back up the current data before replacing it.
+     * The data is written through {@code FileUtil#writeThroughTemporaryFile}, so a failed write never leaves a
+     * cut-off backup, and on macOS and Linux, only the current user can open the backup.
      *
-     * @throws IOException if the backup file cannot be written.
+     * @throws IOException if the backup folder or file cannot be written.
      */
     Path saveBackup(ReadOnlyAddressBook addressBook) throws IOException {
         requireNonNull(addressBook);
-        Path backupFile = getBackupFilePath();
-
         try {
-            new JsonAddressBookStorage(backupFile).saveAddressBook(addressBook);
+            Files.createDirectories(backupDir);
+            Path backupFile = getBackupFilePath();
+            FileUtil.writeThroughTemporaryFile(backupFile,
+                    temporaryFile -> new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
+            logger.info("Saved backup to " + backupFile);
+            return backupFile;
         } catch (IOException ioe) {
-            logger.warning("Could not save backup to " + backupFile + ": " + ioe);
+            logger.warning("Could not save a backup to " + backupDir + ": " + ioe.getClass().getSimpleName());
             throw ioe;
         }
-
-        logger.info("Saved backup to " + backupFile);
-        return backupFile;
     }
 
     /**

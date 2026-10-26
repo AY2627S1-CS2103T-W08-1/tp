@@ -1,9 +1,12 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
-import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
-import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
+import static seedu.address.logic.parser.IndexOnlyParserTestUtil.assertParsesLargestIndex;
+import static seedu.address.logic.parser.IndexOnlyParserTestUtil.assertParsesSmallestIndex;
+import static seedu.address.logic.parser.IndexOnlyParserTestUtil.assertRejectsEmptyArgs;
+import static seedu.address.logic.parser.IndexOnlyParserTestUtil.assertRejectsNonNumericArgs;
+import static seedu.address.logic.parser.IndexOnlyParserTestUtil.assertRejectsNonPositiveIndexes;
+import static seedu.address.logic.parser.IndexOnlyParserTestUtil.assertRejectsTooLargeIndex;
 
 import org.junit.jupiter.api.Test;
 
@@ -18,35 +21,40 @@ public class ExportCommandParserTest {
 
     @Test
     public void parse_validArgs_returnsExportCommand() {
-        assertParseSuccess(parser, "1", new ExportCommand(INDEX_FIRST_PATIENT));
-
-        // leading and trailing whitespace
-        assertParseSuccess(parser, "  1  ", new ExportCommand(INDEX_FIRST_PATIENT));
+        // Boundary value analysis: 1 is the smallest valid index; spaces around it are ignored
+        assertParsesSmallestIndex(parser, ExportCommand::new);
     }
 
     @Test
     public void parse_emptyArgs_throwsParseException() {
-        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "   ", MESSAGE_INVALID_FORMAT);
+        // Equivalence partitioning: no index at all, as empty and as blank input
+        assertRejectsEmptyArgs(parser, MESSAGE_INVALID_FORMAT);
     }
 
     @Test
     public void parse_nonPositiveIndex_throwsParseException() {
-        assertParseFailure(parser, "0", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "-1", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "+1", MESSAGE_INVALID_FORMAT);
+        // Boundary value analysis: 0 is the invalid index just below the smallest valid one; -1 and +1 are other
+        // signed inputs
+        assertRejectsNonPositiveIndexes(parser, MESSAGE_INVALID_FORMAT);
     }
 
     @Test
     public void parse_nonNumericArgs_throwsParseException() {
-        assertParseFailure(parser, "a", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "1.5", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "1 2", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "S0000001A", MESSAGE_INVALID_FORMAT);
+        // Equivalence partitioning: input that is not a single whole number, e.g., a word, a decimal, two numbers,
+        // a number with a prefix, or an NRIC
+        assertRejectsNonNumericArgs(parser, MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_largestIndex_returnsExportCommand() {
+        // Boundary value analysis: 2147483647 is the largest valid index, one below the 2147483648 that
+        // parse_indexTooLarge_throwsParseException rejects
+        assertParsesLargestIndex(parser, ExportCommand::new);
     }
 
     @Test
     public void parse_indexTooLarge_throwsParseException() {
-        assertParseFailure(parser, "2147483648", MESSAGE_INVALID_FORMAT);
+        // Boundary value analysis: 2147483648 is the smallest index too large to be an int
+        assertRejectsTooLargeIndex(parser, MESSAGE_INVALID_FORMAT);
     }
 }
