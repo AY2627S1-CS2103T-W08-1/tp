@@ -17,6 +17,16 @@ import seedu.address.model.appointment.Appointment;
  */
 public class Patient {
 
+    public static final int MAX_CARE_INSTRUCTION_LENGTH = 500;
+    public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG =
+            "Care instructions cannot exceed " + MAX_CARE_INSTRUCTION_LENGTH + " characters.";
+    public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
+    public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
+    public static final String MESSAGE_DUPLICATE_ALLERGEN =
+            "A patient cannot have duplicate allergens, ignoring letter case and whitespace differences.";
+    public static final String MESSAGE_DUPLICATE_CARE_INSTRUCTION =
+            "A patient cannot have duplicate care instructions, ignoring letter case and whitespace differences.";
+
     // Identity fields
     private final Name name;
     private final Phone phone;
@@ -87,6 +97,10 @@ public class Patient {
         this.careInstructions = List.copyOf(careInstructions);
         this.contacts = List.copyOf(contacts);
         this.archived = archived;
+        verifyCareEntries(this.allergens, MESSAGE_BLANK_ALLERGEN, MESSAGE_DUPLICATE_ALLERGEN);
+        verifyCareEntries(this.careInstructions, MESSAGE_BLANK_CARE_INSTRUCTION,
+                MESSAGE_DUPLICATE_CARE_INSTRUCTION);
+        verifyCareInstructionLengths(this.careInstructions);
         verifyNoDuplicateContacts(this.contacts);
         // List.copyOf rejects null appointments before they are sorted.
         this.appointments = List.copyOf(appointments).stream().sorted().toList();
@@ -112,6 +126,24 @@ public class Patient {
     }
 
     /**
+     * Rejects blank or duplicate care entries. Duplicate checks ignore letter case and whitespace differences,
+     * matching the care commands.
+     */
+    private static void verifyCareEntries(List<String> entries, String blankMessage, String duplicateMessage) {
+        for (int i = 0; i < entries.size(); i++) {
+            String normalizedEntry = normalizeCareEntry(entries.get(i));
+            checkArgument(!normalizedEntry.isEmpty(), blankMessage);
+            checkArgument(entries.subList(0, i).stream()
+                    .map(Patient::normalizeCareEntry)
+                    .noneMatch(normalizedEntry::equalsIgnoreCase), duplicateMessage);
+        }
+    }
+
+    private static String normalizeCareEntry(String entry) {
+        return entry.trim().replaceAll("\\s+", " ");
+    }
+
+    /**
      * Rejects appointments at the same date and time with the same provider, as {@code addappt} does, so that
      * a data file cannot hold them either.
      */
@@ -121,6 +153,21 @@ public class Patient {
             checkArgument(appointments.subList(0, i).stream().noneMatch(appointment::isSameAppointment),
                     Appointment.MESSAGE_DUPLICATE);
         }
+    }
+
+    /**
+     * Rejects care instructions that are too long to display and edit safely.
+     */
+    private static void verifyCareInstructionLengths(List<String> careInstructions) {
+        checkArgument(careInstructions.stream().allMatch(Patient::isCareInstructionWithinMaxLength),
+                MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+    }
+
+    /**
+     * Returns true if {@code careInstruction} does not exceed the maximum care-instruction length.
+     */
+    public static boolean isCareInstructionWithinMaxLength(String careInstruction) {
+        return careInstruction.codePointCount(0, careInstruction.length()) <= MAX_CARE_INSTRUCTION_LENGTH;
     }
 
     public Name getName() {

@@ -21,6 +21,12 @@ public class AddressTest {
     }
 
     @Test
+    public void constructor_tooLong_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, Address.MESSAGE_TOO_LONG, () ->
+                new Address("a".repeat(Address.MAX_LENGTH + 1)));
+    }
+
+    @Test
     public void isValidAddress() {
         // null address
         assertThrows(NullPointerException.class, () -> Address.isValidAddress(null));
@@ -29,11 +35,13 @@ public class AddressTest {
         assertFalse(Address.isValidAddress("")); // empty string
         assertFalse(Address.isValidAddress(" ")); // spaces only
         assertFalse(Address.isValidAddress(" ")); // Unicode whitespace only
+        assertFalse(Address.isValidAddress("a".repeat(Address.MAX_LENGTH + 1))); // too long
 
         // valid addresses
         assertTrue(Address.isValidAddress("Blk 456, Den Road, #01-355"));
         assertTrue(Address.isValidAddress("-")); // one character
         assertTrue(Address.isValidAddress("Leng Inc; 1234 Market St; San Francisco CA 2349879; USA")); // long address
+        assertTrue(Address.isValidAddress("a".repeat(Address.MAX_LENGTH))); // maximum length
     }
 
     @Test

@@ -42,6 +42,7 @@ public class NameTest {
         assertFalse(Name.isValidName("Tan s/o")); // ends with a joining word
         assertFalse(Name.isValidName("C/O Tan")); // starts with a joining word, in capitals
         assertFalse(Name.isValidName("Muthu a/l.")); // ends with a joining word and a period
+        assertFalse(Name.isValidName("A".repeat(Name.MAX_LENGTH + 1))); // too long
 
         // valid name
         assertTrue(Name.isValidName("peter jack")); // alphabets only
@@ -58,6 +59,7 @@ public class NameTest {
         assertTrue(Name.isValidName("Zoë")); // accent typed as a separate mark
         assertTrue(Name.isValidName("陈大文")); // Chinese letters
         assertTrue(Name.isValidName("Muthu a/l Ramasamy")); // joining word between two names
+        assertTrue(Name.isValidName("A".repeat(Name.MAX_LENGTH))); // maximum length
     }
 
     @Test

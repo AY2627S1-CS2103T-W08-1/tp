@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCareCommand;
+import seedu.address.model.patient.Patient;
 
 public class AddCareCommandParserTest {
 
@@ -60,6 +61,13 @@ public class AddCareCommandParserTest {
         assertParseFailure(parser, "1 al/", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         assertParseFailure(parser, "1 ci/", AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
         assertParseFailure(parser, "1 med/Metformin al/", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
+    }
+
+    @Test
+    public void parse_overlongCareInstruction_throwsParseException() {
+        assertParseFailure(parser,
+                "1 ci/" + "a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1),
+                AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
     }
 
     @Test
