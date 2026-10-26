@@ -44,19 +44,21 @@ public class AddCareCommandTest {
     @Test
     public void execute_sameTextAcrossCategories_updatesPatientAndLabelsFeedback() {
         Patient patientToEdit = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
+        model.setViewedPatient(model.getFilteredPatientList().get(INDEX_SECOND_PATIENT.getZeroBased()));
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
-                List.of("Aspirin"), List.of("Aspirin"), List.of("Aspirin"));
+                List.of(" Aspirin   daily "), List.of(" Aspirin   daily "), List.of(" Aspirin   daily "));
 
         Patient editedPatient = new PatientBuilder(patientToEdit)
-                .withMedications("Aspirin")
-                .withAllergens("Aspirin")
-                .withCareInstructions("Aspirin")
+                .withMedications("Aspirin daily")
+                .withAllergens("Aspirin daily")
+                .withCareInstructions("Aspirin daily")
                 .build();
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patientToEdit, editedPatient);
+        expectedModel.setViewedPatient(editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patientToEdit.getName(),
-                "Medication: Aspirin, Allergen: Aspirin, Care instruction: Aspirin");
+                "Medication: Aspirin daily, Allergen: Aspirin daily, Care instruction: Aspirin daily");
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
@@ -73,6 +75,7 @@ public class AddCareCommandTest {
                 .build();
         Model expectedModel = new ModelManager(actualModel.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);
+        expectedModel.setViewedPatient(editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(),
                 "Medication: Aspirin");
@@ -89,6 +92,7 @@ public class AddCareCommandTest {
         new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of("Latex"), List.of()).execute(actualModel);
 
         Patient updatedPatient = actualModel.getAddressBook().getPatientList().get(0);
+        assertEquals(updatedPatient, actualModel.getViewedPatient().getValue());
         assertTrue(updatedPatient.isArchived());
         assertEquals(List.of("Latex"), updatedPatient.getAllergens());
         assertEquals(List.of(CHECKUP), updatedPatient.getAppointments());
@@ -105,6 +109,7 @@ public class AddCareCommandTest {
                 .execute(actualModel);
 
         Patient edited = actualModel.getFilteredPatientList().get(0);
+        assertEquals(edited, actualModel.getViewedPatient().getValue());
         assertEquals(List.of(new Medication(special), new Medication(longText)), edited.getMedications());
         JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("addressbook.json"));
         storage.saveAddressBook(actualModel.getAddressBook());
@@ -124,6 +129,7 @@ public class AddCareCommandTest {
                 .build();
         Model expectedModel = new ModelManager(actualModel.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);
+        expectedModel.setViewedPatient(editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(),
                 "Medication: Atorvastatin")
@@ -144,6 +150,7 @@ public class AddCareCommandTest {
         Patient editedPatient = new PatientBuilder(patient).withAllergens("Shellfish").build();
         Model expectedModel = new ModelManager(actualModel.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);
+        expectedModel.setViewedPatient(editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patient.getName(),
                 "Allergen: Shellfish");
@@ -161,6 +168,7 @@ public class AddCareCommandTest {
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patientToEdit, editedPatient);
         showPatientAtIndex(expectedModel, INDEX_SECOND_PATIENT);
+        expectedModel.setViewedPatient(editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patientToEdit.getName(),
                 "Allergen: Shellfish");
@@ -170,19 +178,19 @@ public class AddCareCommandTest {
     @Test
     public void execute_allDuplicates_throwsCommandException() {
         Patient patient = new PatientBuilder(ALICE)
-                .withMedications("Metformin")
-                .withAllergens("Penicillin")
+                .withMedications("Metformin 500mg")
+                .withAllergens("Dust mites")
                 .withCareInstructions("Check blood sugar")
                 .build();
         Model actualModel = new ModelManager();
         actualModel.addPatient(patient);
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
-                List.of("METFORMIN"), List.of("penicillin"), List.of("check blood sugar"));
+                List.of("METFORMIN   500MG"), List.of("dust   mites"), List.of("check   blood   sugar"));
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
-                "Medication", "METFORMIN")
+                "Medication", "METFORMIN 500MG")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
-                        "Allergen", "penicillin")
+                        "Allergen", "dust mites")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
                         "Care instruction", "check blood sugar");
         assertCommandFailure(command, actualModel, expectedMessage);

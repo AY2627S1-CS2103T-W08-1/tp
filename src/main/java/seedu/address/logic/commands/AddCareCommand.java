@@ -104,6 +104,7 @@ public class AddCareCommand extends Command {
                 updatedCareInstructions, patientToEdit.getContacts(), patientToEdit.getAppointments(),
                 patientToEdit.isArchived());
         model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
         String successMessage = String.format(MESSAGE_SUCCESS, patientToEdit.getName(),
                 String.join(", ", addedEntries));
@@ -118,23 +119,27 @@ public class AddCareCommand extends Command {
         List<String> originalEntries = List.copyOf(existingEntries);
         List<String> seenInCommand = new ArrayList<>();
         for (String requestedEntry : requestedEntries) {
-            String trimmedEntry = requestedEntry.trim();
-            if (containsIgnoreCase(originalEntries, trimmedEntry)) {
-                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_EXISTING, entryType, trimmedEntry));
+            String normalizedEntry = normalizeEntry(requestedEntry);
+            if (containsIgnoreCase(originalEntries, normalizedEntry)) {
+                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_EXISTING, entryType, normalizedEntry));
                 continue;
             }
-            if (containsIgnoreCase(seenInCommand, trimmedEntry)) {
-                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_IN_COMMAND, entryType, trimmedEntry));
+            if (containsIgnoreCase(seenInCommand, normalizedEntry)) {
+                duplicateMessages.add(String.format(MESSAGE_DUPLICATE_IN_COMMAND, entryType, normalizedEntry));
                 continue;
             }
-            seenInCommand.add(trimmedEntry);
-            existingEntries.add(trimmedEntry);
-            addedEntries.add(entryType + ": " + trimmedEntry);
+            seenInCommand.add(normalizedEntry);
+            existingEntries.add(normalizedEntry);
+            addedEntries.add(entryType + ": " + normalizedEntry);
         }
     }
 
     private static boolean containsIgnoreCase(List<String> entries, String requestedEntry) {
-        return entries.stream().anyMatch(entry -> entry.trim().equalsIgnoreCase(requestedEntry));
+        return entries.stream().anyMatch(entry -> normalizeEntry(entry).equalsIgnoreCase(requestedEntry));
+    }
+
+    private static String normalizeEntry(String entry) {
+        return entry.trim().replaceAll("\\s+", " ");
     }
 
     @Override
