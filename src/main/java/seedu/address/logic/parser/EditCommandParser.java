@@ -20,14 +20,14 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class EditCommandParser implements Parser<EditCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
 
     @Override
     public EditCommand parse(String args) throws ParseException {
         requireNonNull(args);
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_NAME, PREFIX_NRIC, PREFIX_DOB, PREFIX_PHONE, PREFIX_ADDRESS);
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args,
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_NAME, PREFIX_NRIC, PREFIX_DOB, PREFIX_PHONE, PREFIX_ADDRESS);
 
         Index index;

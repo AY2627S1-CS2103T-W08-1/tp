@@ -16,6 +16,8 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailur
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
@@ -95,5 +97,15 @@ public class EditCommandParserTest {
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withAddress("21 c/o Clinic").build();
 
         assertParseSuccess(parser, "1 a/21 c/o Clinic", new EditCommand(INDEX_FIRST_PATIENT, descriptor));
+    }
+
+    @Test
+    public void parse_indianNameSlashWords_success() {
+        for (String token : List.of("a/l", "a/p", "A/L", "A/P")) {
+            String name = "Muthu " + token + " Ramasamy";
+            EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withName(name).build();
+
+            assertParseSuccess(parser, "1 n/" + name, new EditCommand(INDEX_FIRST_PATIENT, descriptor));
+        }
     }
 }

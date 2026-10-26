@@ -67,7 +67,7 @@ public interface Model {
      * Replaces the given patient {@code target} with {@code editedPatient}.
      * {@code target} must exist in the address book.
      * The patient identity of {@code editedPatient} must not be the same as another existing patient in the
- * address book.
+     * address book. If a viewed active patient is archived, the viewed patient is cleared.
      */
     void setPatient(Patient target, Patient editedPatient);
 
@@ -106,4 +106,22 @@ public interface Model {
      * passes. For any other patient, they are decided at the current time.
      */
     List<Appointment> getAppointmentsAsShown(Patient patient);
+
+    /**
+     * Returns a copy of the patient data, the patient list filter and the viewed patient, so that a change that
+     * cannot be saved can be undone with {@link #restoreSnapshot(Snapshot)}.
+     */
+    Snapshot takeSnapshot();
+
+    /**
+     * Restores the patient data, the patient list filter and the viewed patient to those in {@code snapshot}.
+     */
+    void restoreSnapshot(Snapshot snapshot);
+
+    /**
+     * The patient data, patient list filter and viewed patient of a model at one time.
+     * {@code viewedPatient} is null when no patient is being viewed.
+     */
+    record Snapshot(ReadOnlyAddressBook addressBook, Predicate<? super Patient> filter, Patient viewedPatient,
+            LocalDateTime viewedPatientShownAt) { }
 }

@@ -29,8 +29,10 @@ public class DeleteCareCommandTest {
         Medication timedMedication = new Medication("Metformin", List.of(LocalTime.of(8, 0)));
         Patient patient = new PatientBuilder().withMedications(timedMedication).withAllergens("Penicillin")
                 .withCareInstructions("First", "Remove me", "Third").withContacts(GP).build();
-        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
-        model.setViewedPatient(patient);
+        Patient previouslyViewed = new PatientBuilder().withNric("S1111111B").build();
+        Model model = new ModelManager(
+                new AddressBookBuilder().withPatient(patient).withPatient(previouslyViewed).build(), new UserPrefs());
+        model.setViewedPatient(previouslyViewed);
 
         CommandResult result = new DeleteCareCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT).execute(model);
 
