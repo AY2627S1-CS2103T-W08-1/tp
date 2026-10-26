@@ -1612,12 +1612,15 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `clear confirm`<br>
    Expected: `All patients have been cleared.` followed by `Backup saved to: PATH`. The patient list is empty,
    `listarchived` reports no archived patients, and the detail panel shows its placeholder. Restarting the app still shows no patients.
-   A new backup contains all previous active and archived patients. Run `restore`, then `restore FILENAME`
-   with that backup's name to recover them.
+   A new backup contains all previous active and archived patients. Note its file name for the recovery check below.
 
 1. Test case: `clear confirm` again<br>
    Expected: The same success message and a new backup path. The empty address book is backed up without
    overwriting the earlier backup.
+
+1. Test case: `restore FILENAME`, using the backup noted before the repeated clear<br>
+   Expected: All original active and archived patients are restored. The patient list shows the active patients;
+   `listarchived` shows the archived patients.
 
 1. Simulate a backup failure in a disposable app folder by making `data/backups` a regular file, then run
    `clear confirm`.<br>
