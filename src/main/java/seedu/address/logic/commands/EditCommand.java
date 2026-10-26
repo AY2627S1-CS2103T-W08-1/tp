@@ -39,6 +39,7 @@ public class EditCommand extends Command {
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_DUPLICATE_PATIENT = AddCommand.MESSAGE_DUPLICATE_PATIENT;
+    public static final String MESSAGE_DUPLICATE_ARCHIVED_PATIENT = AddCommand.MESSAGE_DUPLICATE_ARCHIVED_PATIENT;
 
     private final Index index;
     private final EditPatientDescriptor editPatientDescriptor;
@@ -68,7 +69,10 @@ public class EditCommand extends Command {
         Patient patientToEdit = lastShownList.get(index.getZeroBased());
         Patient editedPatient = createEditedPatient(patientToEdit, editPatientDescriptor);
         if (!patientToEdit.isSamePatient(editedPatient) && model.hasPatient(editedPatient)) {
-            throw new CommandException(MESSAGE_DUPLICATE_PATIENT);
+            String message = AddCommand.hasArchivedDuplicate(model, editedPatient)
+                    ? MESSAGE_DUPLICATE_ARCHIVED_PATIENT
+                    : MESSAGE_DUPLICATE_PATIENT;
+            throw new CommandException(message);
         }
 
         model.setPatient(patientToEdit, editedPatient);

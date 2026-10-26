@@ -226,6 +226,8 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
 
+Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
+
 The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
 
 #### Design considerations
@@ -1250,6 +1252,13 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect view commands to try: `view`, `view x`, `view 1 2`, `view y` (where y is larger than the list size)<br>
       Expected: The detail panel is unchanged. The status message shows an error.
+
+1. Filtering out the patient being viewed
+
+   1. Prerequisites: `list`, then `view 1`. The detail panel shows `List index: 1` under the name.
+
+   1. Test case: `find Bernice`<br>
+      Expected: The detail panel still shows the first patient, now with `Not in the displayed list` under the name. Running `list` shows `List index: 1` again.
 
 1. Deleting the patient being viewed
 

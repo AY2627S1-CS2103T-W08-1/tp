@@ -21,6 +21,8 @@ import seedu.address.model.appointment.Appointment;
  */
 public class AddApptCommandParser implements Parser<AddApptCommand> {
 
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("a/l", "a/p");
+
     /**
      * Parses the given {@code String} of arguments in the context of the AddApptCommand
      * and returns an AddApptCommand object for execution.
@@ -29,7 +31,7 @@ public class AddApptCommandParser implements Parser<AddApptCommand> {
      */
     @Override
     public AddApptCommand parse(String args) throws ParseException {
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(),
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
