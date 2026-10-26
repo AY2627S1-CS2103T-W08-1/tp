@@ -604,7 +604,9 @@ Format: `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]`
 * Medications and their times, allergens, care instructions, contacts, appointments, and archived state are
   preserved.
 * An edit that gives a patient an NRIC already used by another patient is rejected.
-* After a successful command, the detail panel shows the edited patient immediately.
+* After a successful command, the detail panel shows the edited patient immediately. The displayed list resets to
+  all active patients, or all archived patients if the edited patient is archived, so check the displayed indices
+  before the next command.
 
 Examples:
 * `edit 1 p/91234567` changes only the first displayed patient's phone number.
