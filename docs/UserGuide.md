@@ -381,7 +381,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
 * Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`.
-* The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones.
+* The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
+  which are marked `(past)`.
   After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
 
 Examples:
@@ -666,7 +667,10 @@ Format: `view INDEX`
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
   medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...), one
   entry per line. A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
-  Upcoming appointments are listed first, then past ones, each sorted by date, then time.
+  Upcoming appointments are listed first, then past ones, each sorted by date, then time. Each past appointment is
+  marked `(past)`, e.g., on the sample data, `view 2` shows
+  `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`. Like the numbers, the marks stay as
+  shown until the patient is shown again.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
@@ -746,6 +750,8 @@ Format: `backup`
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
 * If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
+* On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
+* A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
 
 Returns `Backup saved to: ` followed by the full path of the backup file.
 
@@ -766,8 +772,10 @@ If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows
 
 Replaces all patient data with the data in a backup file from the `data/backups` folder.
 
-Format: `restore FILENAME`
+Format: `restore [FILENAME]`
 
+* `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
+* The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
@@ -777,7 +785,9 @@ Format: `restore FILENAME`
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
 
-Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup.
+Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
+
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.`
 
 ### Exporting a patient's record: `export`
 
@@ -790,7 +800,7 @@ Format: `export INDEX`
 * The index **must be a positive integer** 1, 2, 3, ...
 * The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file. If the patient's NRIC has been changed since an earlier export, e.g., with `edit`, the new export gets a new file, and the earlier file is kept unchanged. Delete it by hand if it is no longer needed.
 * The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
-* Appointments are numbered as in the detail panel: upcoming ones first, then past ones, at the time of the export.
+* Appointments are ordered and marked the same way as in the detail panel: upcoming ones first, then past ones marked `(past)`. Upcoming and past are decided at the time of the export, so an appointment that has passed since the panel last showed the patient is listed as past, and the numbers can differ from the panel's until the patient is shown again.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
 * On macOS and Linux, only your user account can open the file, since it holds medical details.
 
@@ -907,6 +917,6 @@ Action            | Format, Examples
 **List**          | `list`
 **List appointments** | `listappt [INDEX]` <br> e.g., `listappt`, `listappt 2`
 **List archived** | `listarchived`
-**Restore**       | `restore FILENAME` <br> e.g., `restore mediconnect-20261020-083015.json`
+**Restore**       | `restore [FILENAME]` <br> e.g., `restore`, `restore mediconnect-20261020-083015.json`
 **Unarchive**     | `unarchive INDEX` <br> e.g., `unarchive 1`
 **View**          | `view INDEX` <br> e.g., `view 2`
