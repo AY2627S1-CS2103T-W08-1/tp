@@ -549,7 +549,7 @@ A successful command returns `Archived patient: NAME; NRIC: NRIC`. An index outs
 
 Shows only archived patients. The displayed indices are the indices used by `unarchive` and other commands that
 operate on the currently displayed list. Active patients are not shown.
-Each patient card, and the detail panel after `view`, marks the patient as `(Archived)`.
+Each patient card marks the patient as `(Archived)`.
 
 Format: `listarchived`
 

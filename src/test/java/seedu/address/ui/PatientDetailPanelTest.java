@@ -96,14 +96,6 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatient_archivedPatient_showsArchivedMarker() {
-        VBox content = createPanelContent();
-        viewedPatient.set(new PatientBuilder().withArchived(true).build());
-
-        assertEquals(PatientBuilder.DEFAULT_NAME + " (Archived)", ((Label) lookup(content, "#name")).getText());
-    }
-
-    @Test
     public void viewedPatient_emptyCareLists_showsNoneRecorded() {
         VBox content = createPanelContent();
         viewedPatient.set(new PatientBuilder().build());

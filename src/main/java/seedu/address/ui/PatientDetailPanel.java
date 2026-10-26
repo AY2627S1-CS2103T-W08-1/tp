@@ -33,7 +33,6 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
     public static final String MESSAGE_NOT_IN_LIST = "Not in the displayed list";
 
     private static final String FXML = "PatientDetailPanel.fxml";
-    private static final String ARCHIVED_MARKER = " (Archived)";
     private static final String ENTRY_NUMBER_SUFFIX = ".";
     private static final double ENTRY_NUMBER_GAP = 6;
     private static final String ENTRY_STYLE_CLASS = "label-bright";
@@ -140,7 +139,7 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
      * Fills the detail labels with the fields, care lists, contacts and appointments of {@code patient}.
      */
     private void fillDetails(Patient patient) {
-        name.setText(patient.getName().fullName + (patient.isArchived() ? ARCHIVED_MARKER : ""));
+        name.setText(patient.getName().fullName);
         nric.setText("NRIC: " + patient.getNric());
         dob.setText("DOB: " + patient.getDob());
         phone.setText("Phone: " + patient.getPhone());
