@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static seedu.address.logic.PatientFormatter.PAST_MARK;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalContacts.GUARDIAN;
@@ -121,13 +122,13 @@ public class PatientDetailPanelTest {
     }
 
     @Test
-    public void viewedPatient_appointments_numberedUpcomingFirst() {
+    public void viewedPatient_appointments_numberedUpcomingFirstWithPastMarked() {
         VBox content = createPanelContent();
         Appointment past = new Appointment(LocalDate.of(2000, 1, 1), LocalTime.of(9, 0), "Dr Lee", "");
         Appointment upcoming = new Appointment(LocalDate.of(2999, 1, 1), LocalTime.of(9, 0), "Dr Tan", "");
         viewedPatient.set(new PatientBuilder().withAppointments(past, upcoming).build());
 
-        assertEquals(List.of(upcoming.toString(), past.toString()), getEntryTexts(content, "#appointments"));
+        assertEquals(List.of(upcoming.toString(), past + PAST_MARK), getEntryTexts(content, "#appointments"));
         assertEquals(List.of("1.", "2."), getNumberTexts(content, "#appointments"));
     }
 
@@ -224,7 +225,7 @@ public class PatientDetailPanelTest {
     private VBox createPanelContent() {
         assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
         PatientDetailPanel panel = new PatientDetailPanel(viewedPatient,
-                patient -> patient.getAppointmentsUpcomingFirst(NOW));
+                patient -> PatientFormatter.formatAppointments(patient.getAppointmentsUpcomingFirst(NOW), NOW));
         return (VBox) ((ScrollPane) panel.getRoot()).getContent();
     }
 

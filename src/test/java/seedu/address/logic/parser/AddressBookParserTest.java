@@ -42,6 +42,7 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListApptCommand;
 import seedu.address.logic.commands.ListArchivedCommand;
+import seedu.address.logic.commands.ListBackupsCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RestoreCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
@@ -148,6 +149,7 @@ public class AddressBookParserTest {
         RestoreCommand command = (RestoreCommand) parser.parseCommand(
                 RestoreCommand.COMMAND_WORD + " mediconnect-20261020-083015.json");
         assertEquals(new RestoreCommand("mediconnect-20261020-083015.json"), command);
+        assertEquals(new ListBackupsCommand(), parser.parseCommand(RestoreCommand.COMMAND_WORD));
     }
 
     @Test

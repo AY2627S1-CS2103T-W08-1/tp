@@ -27,8 +27,12 @@ If you plan to use IntelliJ IDEA (highly recommended):
    <box type="warning" seamless>
    Note: Importing a Gradle project is slightly different from importing a normal Java project.
    </box>
+1. **Use the shared run configurations**: IDEA loads the run configurations in the `.run` folder. Use `MediConnect` to run the app and `All tests` to run the tests. Both have assertions enabled through the VM option `-ea`.
+   <box type="warning" seamless>
+   Note: Java turns assertions off by default. If you create another run configuration, add `-ea` to its VM options.
+   </box>
 1. **Verify the setup**:
-   1. Run `seedu.address.Main` and try a few commands.
+   1. Run the `MediConnect` run configuration and try a few commands.
    1. [Run the tests](Testing.md) to ensure they all pass.
 
 --------------------------------------------------------------------------------------------------------------------
