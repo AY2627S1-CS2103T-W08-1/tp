@@ -589,7 +589,7 @@ A successful command returns
 
 Finds active patients whose names contain any of the given keywords. Archived patients are not included.
 
-Format: `find KEYWORD [MORE_KEYWORDS]`
+Format: `find KEYWORD [MORE_KEYWORDS]...`
 
 * The search is case-insensitive; for example, `alex` matches `Alex`.
 * Keyword order does not matter; for example, `Alex David` matches `David Alex`.
@@ -798,7 +798,7 @@ Format: `export INDEX`
 * Exports the patient at the specified `INDEX`.
 * The index refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
-* The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file.
+* The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file. If the patient's NRIC has been changed since an earlier export, e.g., with `edit`, the new export gets a new file, and the earlier file is kept unchanged. Delete it by hand if it is no longer needed.
 * The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
 * Appointments are ordered and marked the same way as in the detail panel: upcoming ones first, then past ones marked `(past)`. Upcoming and past are decided at the time of the export, so an appointment that has passed since the panel last showed the patient is listed as past, and the numbers can differ from the panel's until the patient is shown again.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
@@ -892,24 +892,24 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 Action            | Format, Examples
 ------------------|------------------------------------------------------------------------------------------------------------------
 **Add**           | `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS` <br> e.g., `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`
-**Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
 **Add appointment** | `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]` <br> e.g., `addappt 3 d/2027-11-05 t/09:30 w/Dr Tan`
 **Add care info** | `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION]...` <br> e.g., `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`
-**Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
-**Archive**       | `archive INDEX` <br> e.g., `archive 1`
-**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
-**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
-**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
 **Add contact** | `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]` <br> e.g., `addcontact 1 n/Dr Tan r/GP p/+65 6123-4567`
-**Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
-**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
+**Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Backup**        | `backup`
+**Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
 **Clear**         | `clear`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
+**Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 2`
+**Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 2`
+**Delete contact** | `deletecontact INDEX CONTACT_INDEX` <br> e.g., `deletecontact 1 2`
 **Delete medication** | `deletemed INDEX MED_INDEX` <br> e.g., `deletemed 1 2`
 **Due**           | `due [INDEX]` <br> e.g., `due`, `due 1`
 **Edit appointment** | `editappt INDEX APPT_INDEX [d/DATE] [t/TIME] [w/WITH] [nt/NOTE]` <br> e.g., `editappt 1 2 t/10:00 nt/`
+**Edit care instruction** | `editcare INDEX CI_INDEX ci/NEW_TEXT` <br> e.g., `editcare 1 2 ci/Check blood sugar after lunch`
+**Edit contact** | `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]` <br> e.g., `editcontact 1 1 nt/Call first`
 **Edit medication** | `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...` <br> e.g., `editmed 1 2 med/Metformin 850mg t/08:00 t/20:00`
+**Edit patient**  | `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` <br> e.g., `edit 1 p/91234567`
 **Exit**          | `exit`
 **Export**        | `export INDEX` <br> e.g., `export 2`
 **Find**          | `find KEYWORD [MORE_KEYWORDS]...` <br> e.g., `find Alex Bernice`
