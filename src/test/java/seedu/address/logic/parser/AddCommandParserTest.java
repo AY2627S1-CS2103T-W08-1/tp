@@ -78,7 +78,7 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_punctuatedSlashToken_failure() {
-        for (String token : List.of("s/o,", "d/o,", "c/o,", "S/O.")) {
+        for (String token : List.of("s/o,", "d/o,", "c/o,", "a/l,", "a/p,", "S/O.")) {
             String unpunctuatedToken = token.substring(0, token.length() - 1);
             String expected = String.format(
                     Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token, unpunctuatedToken);
@@ -89,7 +89,7 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_allowedSlashTokenInName_success() {
-        for (String token : List.of("s/o", "d/o", "S/O", "D/O")) {
+        for (String token : List.of("s/o", "d/o", "a/l", "a/p", "S/O", "D/O", "A/L", "A/P")) {
             String name = "John Tan " + token + " Lim";
             AddCommand expected = new AddCommand(new PatientBuilder().withName(name).withNric("S1234567A")
                     .withDob("1950-04-12").withPhone("91234567").withAddress("21 Lorong 3, #05-10").build());

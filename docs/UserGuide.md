@@ -97,7 +97,7 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   `Multiple values specified for a single-valued field: n/`.
 * Unrecognized letters followed by `/` at the start of a word, such as `x/123`, `med/Aspirin`, or `A/B`, are
   rejected. For example, `x/123` gives `Unrecognized parameter: x/. Please check the command format.`
-* Standalone `s/o`, `d/o`, and `c/o` are allowed anywhere in the `add` arguments, ignoring letter case.
+* Standalone `s/o`, `d/o`, `c/o`, `a/l`, and `a/p` are allowed anywhere in the `add` arguments, ignoring letter case.
   Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
   For example, `s/o,` gives `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
   Addresses can include numeric slash text such as `21/3` and URLs.
@@ -107,7 +107,7 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
-  e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
+  e.g., `Tan Ah Kow s/o Lim`, `Muthu a/l Ramasamy`, or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
   A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
 * `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
@@ -326,6 +326,7 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   country codes are not inferred. The same contact can belong to different patients.
 * Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
   including standalone `s/o`, `d/o` and `c/o`, are rejected.
+  Standalone `a/l` and `a/p` are allowed in free text, ignoring letter case.
   Text matching a recognised prefix after a space starts another field, even inside a note.
 * Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
   the panel updates immediately. Existing care information is preserved.
@@ -380,7 +381,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank. Leading and
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
-* Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`.
+* Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`. Standalone `a/l` and
+  `a/p` are allowed, ignoring letter case.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
   which are marked `(past)`.
   After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
