@@ -19,9 +19,11 @@ import seedu.address.model.patient.Contact;
  */
 public class AddContactCommandParser implements Parser<AddContactCommand> {
 
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("a/l", "a/p");
+
     @Override
     public AddContactCommand parse(String args) throws ParseException {
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(),
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);
         ArgumentMultimap fields = ArgumentTokenizer.tokenize(args,
                 PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);

@@ -36,6 +36,17 @@ public class AddApptCommandParserTest {
     }
 
     @Test
+    public void parse_indianNameSlashWords_providerAccepted() {
+        for (String token : new String[] {"a/l", "a/p", "A/L", "A/P"}) {
+            String provider = "Dr Muthu " + token + " Ramasamy";
+            Appointment appointment = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), provider, "");
+
+            assertParseSuccess(parser, "1 d/2026-11-05 t/09:30 w/" + provider,
+                    new AddApptCommand(INDEX_FIRST_PATIENT, appointment));
+        }
+    }
+
+    @Test
     public void parse_missingField_throwsParseException() {
         String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddApptCommand.MESSAGE_USAGE);
         assertParseFailure(parser, "1 t/09:30 w/Dr Tan", expectedMessage);
