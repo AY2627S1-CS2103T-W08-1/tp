@@ -12,7 +12,7 @@ import seedu.address.model.Model;
 import seedu.address.model.patient.Patient;
 
 /**
- * Shows the full details of a patient identified using its displayed index from the address book.
+ * Shows the full details of a patient, identified by their index in the displayed patient list, in the detail panel.
  */
 public class ViewCommand extends Command {
 
@@ -36,6 +36,13 @@ public class ViewCommand extends Command {
         this.targetIndex = targetIndex;
     }
 
+    /**
+     * Shows the patient at the target index of the displayed patient list in the detail panel.
+     *
+     * @param model {@code Model} whose displayed patient list the target index refers to.
+     * @return a result naming the patient shown.
+     * @throws CommandException if the target index is beyond the end of the displayed patient list.
+     */
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
@@ -50,6 +57,9 @@ public class ViewCommand extends Command {
         return new CommandResult(String.format(MESSAGE_VIEW_PATIENT_SUCCESS, patientToView.getName()));
     }
 
+    /**
+     * Returns true if {@code other} is a {@code ViewCommand} with the same target index.
+     */
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -64,6 +74,9 @@ public class ViewCommand extends Command {
         return targetIndex.equals(otherViewCommand.targetIndex);
     }
 
+    /**
+     * Returns a string showing the target index of this command.
+     */
     @Override
     public String toString() {
         return new ToStringBuilder(this)

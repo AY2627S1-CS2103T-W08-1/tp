@@ -24,7 +24,7 @@ import seedu.address.model.patient.Phone;
  */
 public class AddCommandParser implements Parser<AddCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
 
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
@@ -35,7 +35,8 @@ public class AddCommandParser implements Parser<AddCommand> {
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_NAME, PREFIX_NRIC, PREFIX_DOB, PREFIX_PHONE, PREFIX_ADDRESS);
         ArgumentMultimap argMultimap =
-                ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_NRIC, PREFIX_ADDRESS, PREFIX_DOB);
+                ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
+                        PREFIX_NAME, PREFIX_PHONE, PREFIX_NRIC, PREFIX_ADDRESS, PREFIX_DOB);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_NAME, PREFIX_NRIC, PREFIX_DOB, PREFIX_PHONE, PREFIX_ADDRESS)
                 || !argMultimap.getPreamble().isEmpty()) {
