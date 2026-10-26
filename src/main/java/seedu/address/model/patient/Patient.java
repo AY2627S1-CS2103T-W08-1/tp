@@ -20,6 +20,12 @@ public class Patient {
     public static final int MAX_CARE_INSTRUCTION_LENGTH = 500;
     public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG =
             "Care instructions cannot exceed " + MAX_CARE_INSTRUCTION_LENGTH + " characters.";
+    public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
+    public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
+    public static final String MESSAGE_DUPLICATE_ALLERGEN =
+            "A patient cannot have duplicate allergens, ignoring letter case and whitespace differences.";
+    public static final String MESSAGE_DUPLICATE_CARE_INSTRUCTION =
+            "A patient cannot have duplicate care instructions, ignoring letter case and whitespace differences.";
 
     // Identity fields
     private final Name name;
@@ -89,9 +95,12 @@ public class Patient {
         this.medications = List.copyOf(medications);
         this.allergens = List.copyOf(allergens);
         this.careInstructions = List.copyOf(careInstructions);
-        verifyCareInstructionLengths(this.careInstructions);
         this.contacts = List.copyOf(contacts);
         this.archived = archived;
+        verifyCareEntries(this.allergens, MESSAGE_BLANK_ALLERGEN, MESSAGE_DUPLICATE_ALLERGEN);
+        verifyCareEntries(this.careInstructions, MESSAGE_BLANK_CARE_INSTRUCTION,
+                MESSAGE_DUPLICATE_CARE_INSTRUCTION);
+        verifyCareInstructionLengths(this.careInstructions);
         verifyNoDuplicateContacts(this.contacts);
         // List.copyOf rejects null appointments before they are sorted.
         this.appointments = List.copyOf(appointments).stream().sorted().toList();
@@ -114,6 +123,24 @@ public class Patient {
             checkArgument(contacts.subList(0, i).stream().noneMatch(contact::isSameContact),
                     Contact.MESSAGE_DUPLICATE);
         }
+    }
+
+    /**
+     * Rejects blank or duplicate care entries. Duplicate checks ignore letter case and whitespace differences,
+     * matching the care commands.
+     */
+    private static void verifyCareEntries(List<String> entries, String blankMessage, String duplicateMessage) {
+        for (int i = 0; i < entries.size(); i++) {
+            String normalizedEntry = normalizeCareEntry(entries.get(i));
+            checkArgument(!normalizedEntry.isEmpty(), blankMessage);
+            checkArgument(entries.subList(0, i).stream()
+                    .map(Patient::normalizeCareEntry)
+                    .noneMatch(normalizedEntry::equalsIgnoreCase), duplicateMessage);
+        }
+    }
+
+    private static String normalizeCareEntry(String entry) {
+        return entry.trim().replaceAll("\\s+", " ");
     }
 
     /**

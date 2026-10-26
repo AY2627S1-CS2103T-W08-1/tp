@@ -225,6 +225,32 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_blankCareEntry_throwsIllegalValueException() {
+        JsonAdaptedPatient blankAllergen = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of("  "), List.of(), null, null, null);
+        JsonAdaptedPatient blankInstruction = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(""), null, null, null);
+
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_BLANK_ALLERGEN, blankAllergen::toModelType);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_BLANK_CARE_INSTRUCTION,
+                blankInstruction::toModelType);
+    }
+
+    @Test
+    public void toModelType_duplicateCareEntry_throwsIllegalValueException() {
+        JsonAdaptedPatient duplicateAllergens = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of("Penicillin", "  penicillin "), List.of(), null, null, null);
+        JsonAdaptedPatient duplicateInstructions = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB,
+                VALID_PHONE, VALID_ADDRESS, List.of(), List.of(),
+                List.of("Check  blood sugar", "check blood sugar"), null, null, null);
+
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_DUPLICATE_ALLERGEN,
+                duplicateAllergens::toModelType);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_DUPLICATE_CARE_INSTRUCTION,
+                duplicateInstructions::toModelType);
+    }
+
+    @Test
     public void toModelType_duplicateContacts_keepsCause() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(),
