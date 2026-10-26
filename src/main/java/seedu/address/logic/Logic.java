@@ -8,7 +8,6 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -34,9 +33,10 @@ public interface Logic {
     ObservableValue<Patient> getViewedPatient();
 
     /**
-     * Returns the appointments of {@code patient} in the order the detail panel and commands number them.
+     * Returns the text of each appointment of {@code patient}, in the order the detail panel and commands number
+     * them, with past ones marked. Upcoming and past are decided at the same time as the order.
      */
-    List<Appointment> getAppointmentsAsShown(Patient patient);
+    List<String> getAppointmentLinesAsShown(Patient patient);
 
     /**
      * Returns the user prefs' GUI settings.
