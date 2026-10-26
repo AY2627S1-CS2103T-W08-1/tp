@@ -401,7 +401,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
   `nt/MRI w/o contrast`.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
   which are marked `(past)`.
-  After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
+  After `addappt`, the detail panel shows the patient. Scroll down to its Appointments section to check the new
+  appointment and its number.
 
 Examples:
 
@@ -505,7 +506,7 @@ Format: `listappt [INDEX]`
   patient is included, even after `find`.
 * With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
   appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`. The detail panel then
-  shows the patient, with the same numbers.
+  shows the patient, with the same numbers in its Appointments section, below the care information.
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. An archived patient
   is not listed: run `unarchive` first to see their appointments.
 * The patient list does not change.
@@ -920,8 +921,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 
 ## Known issues
 
-1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+1. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 
 --------------------------------------------------------------------------------------------------------------------
 
