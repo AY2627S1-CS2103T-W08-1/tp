@@ -587,13 +587,13 @@ elderly or chronically ill patients. Community nurses conducting home visits are
 user:
 
 * manages care information across multiple healthcare providers and emergency contacts
-* needs to track patient profiles, conditions, allergies, medications, appointments, and care instructions
+* needs to track patient profiles, allergies, medications, appointments, and care instructions
 * currently relies on fragmented sources such as messaging threads, paper notes, and memory
 * needs quick access to accurate information during daily care, handovers, appointments, and emergencies
 * is comfortable with everyday applications but may not be technically proficient
 * prefers a local desktop application with a fast, keyboard-first workflow
 
-**Value proposition**: MediConnect centralizes patient profiles, care contacts, medical notes, appointment history,
+**Value proposition**: MediConnect centralizes patient profiles, care contacts, allergies, appointment history,
 medication schedules, and care instructions in one local desktop application. It gives patients and caregivers a
 single, quickly accessible source of care information, reducing the risk of important details being missed and
 making day-to-day coordination and care handovers easier.
