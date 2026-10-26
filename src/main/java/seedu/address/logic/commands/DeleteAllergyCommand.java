@@ -50,7 +50,9 @@ public class DeleteAllergyCommand extends Command {
         }
         List<String> allergens = new ArrayList<>(patient.getAllergens());
         String removed = allergens.remove(allergyIndex.getZeroBased());
-        model.setPatient(patient, patient.withAllergens(allergens));
+        Patient editedPatient = patient.withAllergens(allergens);
+        model.setPatient(patient, editedPatient);
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), removed));
     }
 
