@@ -204,6 +204,14 @@ public class AddCareCommandTest {
     }
 
     @Test
+    public void execute_overlongCareInstruction_throwsCommandException() {
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(),
+                List.of("a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1)));
+
+        assertCommandFailure(command, model, AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+    }
+
+    @Test
     public void execute_invalidIndex_throwsCommandException() {
         Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPatientList().size() + 1);
         AddCareCommand command = new AddCareCommand(outOfBoundsIndex, List.of("Metformin"), List.of(), List.of());

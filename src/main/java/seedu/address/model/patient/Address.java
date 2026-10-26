@@ -9,7 +9,9 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Address {
 
+    public static final int MAX_LENGTH = 200;
     public static final String MESSAGE_CONSTRAINTS = "Addresses cannot be blank.";
+    public static final String MESSAGE_TOO_LONG = "Addresses cannot exceed " + MAX_LENGTH + " characters.";
 
     /*
      * The first character of the address must not be a whitespace, including Unicode whitespace such as
@@ -26,7 +28,8 @@ public class Address {
      */
     public Address(String address) {
         requireNonNull(address);
-        checkArgument(isValidAddress(address), MESSAGE_CONSTRAINTS);
+        checkArgument(address.matches(VALIDATION_REGEX), MESSAGE_CONSTRAINTS);
+        checkArgument(isWithinMaxLength(address), MESSAGE_TOO_LONG);
         value = address;
     }
 
@@ -34,7 +37,14 @@ public class Address {
      * Returns true if a given string is a valid address.
      */
     public static boolean isValidAddress(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return test.matches(VALIDATION_REGEX) && isWithinMaxLength(test);
+    }
+
+    /**
+     * Returns true if {@code test} does not exceed the maximum address length.
+     */
+    public static boolean isWithinMaxLength(String test) {
+        return test.codePointCount(0, test.length()) <= MAX_LENGTH;
     }
 
     @Override

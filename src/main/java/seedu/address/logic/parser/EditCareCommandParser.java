@@ -9,6 +9,7 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.EditCareCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.Patient;
 
 /**
  * Parses the patient index, care-instruction index and replacement text of an edit.
@@ -41,6 +42,10 @@ public class EditCareCommandParser implements Parser<EditCareCommand> {
                 new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCareCommand.MESSAGE_USAGE)));
         if (careInstruction.isBlank()) {
             throw new ParseException(EditCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+        }
+        String normalizedInstruction = careInstruction.trim().replaceAll("\\s+", " ");
+        if (!Patient.isCareInstructionWithinMaxLength(normalizedInstruction)) {
+            throw new ParseException(EditCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
         }
         return new EditCareCommand(patientIndex, careInstructionIndex, careInstruction);
     }

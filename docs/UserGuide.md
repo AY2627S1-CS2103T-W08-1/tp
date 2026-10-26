@@ -138,11 +138,11 @@ If a required field is missing, the command is rejected with `Invalid command fo
 
 Field   | Prefix | Format | Example
 --------|--------|--------|--------
-Name    | `n/`   | Starts with a letter. Only letters (in any language), spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Cannot start or end with `s/o`, `d/o`, `c/o`, `a/l` or `a/p`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`, `Zoë Tan`
+Name    | `n/`   | At most 100 characters. Starts with a letter. Only letters (in any language), spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Cannot start or end with `s/o`, `d/o`, `c/o`, `a/l` or `a/p`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`, `Zoë Tan`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` in front. Spaces and hyphens are ignored. Stored as the 8 digits only. | `91234567`, `+65 9123-4567`
-Address | `a/`   | Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
@@ -156,7 +156,8 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
 * Care entries are free text with leading and trailing whitespace removed and consecutive internal whitespace
-  collapsed to one space. They cannot be blank. If any entry is blank, the whole command is rejected.
+  collapsed to one space. They cannot be blank. Care instructions can contain at most 500 characters after this
+  normalization. If any entry is blank or an instruction is too long, the whole command is rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, and `a/p` are also allowed, ignoring letter case, but must not have
@@ -192,6 +193,8 @@ Other errors are reported as follows:
 * A command with no care prefix returns `Please specify at least one of med/, al/, or ci/ to add.`
 * A blank value returns `Medication entries cannot be blank.`, `Allergen entries cannot be blank.`, or
   `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
+* A care instruction longer than 500 characters after normalization returns
+  `Care instructions cannot exceed 500 characters.` The whole command is rejected.
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 
@@ -273,7 +276,7 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
 * `INDEX` is the patient's index in the displayed list. `CI_INDEX` is the care instruction's number in the detail
   panel. Both must be positive integers.
 * `NEW_TEXT` is free text with leading and trailing whitespace removed and consecutive internal whitespace collapsed
-  to one space. It cannot be blank.
+  to one space. It cannot be blank or exceed 500 characters after normalization.
 * An edit that would duplicate another care instruction, ignoring letter case and whitespace differences, is rejected.
   Editing an instruction to its current text is allowed.
 * `ci/` must appear exactly once. Unrecognized prefixes are rejected, with the same standalone slash-word
@@ -300,7 +303,8 @@ numbered from `1` again. `The patient index provided is invalid.` means `INDEX` 
 `The care instruction index provided is invalid.` means `CI_INDEX` is past the end of that patient's instruction
 list, including when the list is empty. Missing, zero, negative, nonnumeric or extra indices give the command's usage.
 Blank replacement text returns `Care instructions cannot be blank.` A duplicate edit returns
-`This care instruction already exists for this patient.` Validation failures leave patient data unchanged.
+`This care instruction already exists for this patient.` An overlong instruction returns
+`Care instructions cannot exceed 500 characters.` Validation failures leave patient data unchanged.
 
 ### Deleting an allergen: `deleteallergy`
 
