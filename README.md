@@ -23,3 +23,8 @@ clinical advice, contact healthcare providers, or book appointments.
 For more information, visit the [MediConnect product website](https://ay2627s1-cs2103t-w08-1.github.io/tp/),
 [User Guide](https://ay2627s1-cs2103t-w08-1.github.io/tp/UserGuide.html), or
 [Developer Guide](https://ay2627s1-cs2103t-w08-1.github.io/tp/DeveloperGuide.html).
+
+## Acknowledgements
+
+This project is based on the [AddressBook-Level3](https://se-education.org/addressbook-level3/) project created by the
+[SE-EDU initiative](https://se-education.org).
