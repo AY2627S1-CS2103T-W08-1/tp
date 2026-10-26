@@ -1,7 +1,10 @@
 package seedu.address.logic;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -15,7 +18,6 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
-import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.Storage;
 
@@ -73,8 +75,10 @@ public class LogicManager implements Logic {
     }
 
     @Override
-    public List<Appointment> getAppointmentsAsShown(Patient patient) {
-        return model.getAppointmentsAsShown(patient);
+    public List<String> getAppointmentLinesAsShown(Patient patient) {
+        requireNonNull(patient);
+        LocalDateTime orderedAt = model.getAppointmentsOrderedAt(patient);
+        return PatientFormatter.formatAppointments(patient.getAppointmentsUpcomingFirst(orderedAt), orderedAt);
     }
 
     @Override
