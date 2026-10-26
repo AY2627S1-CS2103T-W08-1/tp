@@ -551,6 +551,10 @@ A successful command returns `Archived patient: NAME; NRIC: NRIC`. An index outs
 Shows only archived patients. The displayed indices are the indices used by `unarchive` and other commands that
 operate on the currently displayed list. Active patients are not shown.
 
+Archived patients can still be updated with patient-editing commands such as `edit`, `addcare`, `editcare`,
+`deletecare`, and `deleteallergy`. These commands update the archived record without making it active again.
+Use `unarchive` when the patient should return to the active list.
+
 Format: `listarchived`
 
 Any text after `listarchived` is ignored. The command returns `Listed all archived patients.` or, if there are none,
