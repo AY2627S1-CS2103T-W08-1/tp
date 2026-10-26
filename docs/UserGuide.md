@@ -73,14 +73,19 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 ### Viewing help: `help`
 
-Opens a help window that lists every command with its format and a one-line description.
+Opens a help window that lists every command with its format and a one-line description, grouped as patients,
+care information, contacts, appointments, data and other commands. The top of the window links to this User Guide;
+**Copy URL** copies the link, to paste into a browser.
 
-![help message](images/helpMessage.png)
+<img src="images/helpMessage.png" alt="help window" width="560" />
 
 Format: `help`
 
 * You can also open the help window with the `Help` menu or by pressing `F1`.
 * Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
+* The help window stays in front of the main window, and you can keep typing commands in the main window while it
+  is open. When you switch to another app, such as a browser, the help window goes behind that app's windows.
+  Press `Esc` to close it.
 * If the help window is already open, no second help window is opened.
 
 The command returns `Opened help window.`
@@ -531,7 +536,7 @@ Format: `archive INDEX`
 
 * `INDEX` refers to the patient in the currently displayed list, including a filtered `find` result.
 * The archived patient disappears from active patient lists. Their complete record is preserved.
-* If that patient is shown in the detail panel, the panel stays up to date after the patient is archived.
+* If that patient is shown in the detail panel, the panel is cleared after the patient is archived.
 
 Example: `find Alex` followed by `archive 1` archives the first patient in those results.
 
@@ -685,6 +690,13 @@ Format: `view INDEX`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
   to the message above when the patient is deleted or all patients are cleared.
+* Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
+  `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
+  the list does not show the patient, e.g., after `find` hides them or they are archived, it shows
+  `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
+  `listarchived` for an archived patient.
+* When a different patient is viewed, the panel scrolls back to the top, so their name is shown first. When the same
+  patient is shown again, e.g., after `addcare`, the panel stays where it was scrolled to.
 
 Examples:
 
@@ -808,7 +820,7 @@ Format: `export INDEX`
 * The index refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
 * The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file. If the patient's NRIC has been changed since an earlier export, e.g., with `edit`, the new export gets a new file, and the earlier file is kept unchanged. Delete it by hand if it is no longer needed.
-* The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
+* The file has a title and the date and time of the export, then the patient's details, with `Status: Archived` after the address for an archived patient, and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
 * Appointments are ordered and marked the same way as in the detail panel: upcoming ones first, then past ones marked `(past)`. Upcoming and past are decided at the time of the export, so an appointment that has passed since the panel last showed the patient is listed as past, and the numbers can differ from the panel's until the patient is shown again.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
 * On macOS and Linux, only your user account can open the file, since it holds medical details.
