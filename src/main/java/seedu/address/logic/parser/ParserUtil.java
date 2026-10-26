@@ -188,8 +188,11 @@ public class ParserUtil {
         requireNonNull(address);
         // Trims Unicode whitespace too, as Address does not accept it at the start.
         String trimmedAddress = address.replaceAll("(?U)^\\s+|\\s+$", "");
-        if (!Address.isValidAddress(trimmedAddress)) {
+        if (!trimmedAddress.matches(Address.VALIDATION_REGEX)) {
             throw new ParseException(Address.MESSAGE_CONSTRAINTS);
+        }
+        if (!Address.isWithinMaxLength(trimmedAddress)) {
+            throw new ParseException(Address.MESSAGE_TOO_LONG);
         }
         return new Address(trimmedAddress);
     }
