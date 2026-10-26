@@ -81,6 +81,16 @@ public class EditCareCommandTest {
     }
 
     @Test
+    public void execute_overlongInstruction_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder().withCareInstructions("Morning walk").build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        String overlongInstruction = "a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1);
+
+        assertCommandFailure(new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, overlongInstruction),
+                model, EditCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+    }
+
+    @Test
     public void execute_invalidIndices_rejectedWithoutChanges() {
         Patient patient = new PatientBuilder().withCareInstructions("Morning walk").build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());

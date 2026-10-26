@@ -132,8 +132,11 @@ class JsonAdaptedPatient {
         if (address == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Address.class.getSimpleName()));
         }
-        if (!Address.isValidAddress(address)) {
+        if (!address.matches(Address.VALIDATION_REGEX)) {
             throw new IllegalValueException(Address.MESSAGE_CONSTRAINTS);
+        }
+        if (!Address.isWithinMaxLength(address)) {
+            throw new IllegalValueException(Address.MESSAGE_TOO_LONG);
         }
         final Address modelAddress = new Address(address);
 
