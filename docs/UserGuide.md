@@ -106,6 +106,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * `DOB` must be a valid date in `YYYY-MM-DD` format, e.g., `1950-04-12`, from `1900-01-01` to today.
 * Patients with the same NRIC, ignoring letter case, are rejected with
   `This patient (identified by NRIC) already exists in MediConnect.` Names alone do not identify duplicates.
+  If the matching patient is archived, the message instead says
+  `This NRIC belongs to an archived patient. Use listarchived and unarchive to restore them.`
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
   e.g., `Tan Ah Kow s/o Lim` or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
@@ -582,7 +584,8 @@ A successful command returns
 `Edited patient: NAME; NRIC: NRIC; DOB: DOB; Phone: PHONE; Address: ADDRESS`. An index outside the displayed list returns
 `The patient index provided is invalid.` Supplying no fields returns
 `At least one field to edit must be provided.` A duplicate NRIC returns
-`This patient (identified by NRIC) already exists in MediConnect.`
+`This patient (identified by NRIC) already exists in MediConnect.` If the matching patient is archived, it returns
+`This NRIC belongs to an archived patient. Use listarchived and unarchive to restore them.`
 
 ### Locating patients by name: `find`
 
