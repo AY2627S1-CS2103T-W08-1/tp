@@ -3,6 +3,7 @@ package seedu.address.ui;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 import javafx.beans.value.ObservableValue;
@@ -127,9 +128,11 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
         }
 
         int position = displayedPatients.indexOf(patient);
+        // Locale.ROOT writes the index with the digits 0 to 9, as the list numbers its patients, whatever the
+        // computer's language settings are
         listIndex.setText(position < 0
                 ? MESSAGE_NOT_IN_LIST
-                : String.format(MESSAGE_LIST_INDEX, Index.fromZeroBased(position).getOneBased()));
+                : String.format(Locale.ROOT, MESSAGE_LIST_INDEX, Index.fromZeroBased(position).getOneBased()));
     }
 
     /**

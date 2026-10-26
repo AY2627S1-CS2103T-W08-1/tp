@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.logic.PatientFormatter.PAST_MARK;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
+import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalContacts.GUARDIAN;
@@ -210,6 +212,18 @@ public class PatientDetailPanelTest {
         viewedPatient.set(BENSON);
 
         assertEquals(String.format(MESSAGE_LIST_INDEX, 2), ((Label) lookup(content, "#listIndex")).getText());
+    }
+
+    @Test
+    public void displayedPatients_computerLanguageWithOtherDigits_showsListIndexWithDigitsZeroToNine()
+            throws Exception {
+        // Equivalence partitioning: a default locale whose digits are not 0 to 9
+        VBox content = createPanelContent();
+        viewedPatient.set(BENSON);
+
+        callWithDefaultLocale(NON_LATIN_DIGIT_LOCALE, () -> displayedPatients.setAll(ALICE, BENSON));
+
+        assertEquals("List index: 2", ((Label) lookup(content, "#listIndex")).getText());
     }
 
     @Test
