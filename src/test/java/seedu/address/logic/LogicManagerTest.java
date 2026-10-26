@@ -36,6 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
@@ -133,6 +134,49 @@ public class LogicManagerTest {
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
                 LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+    }
+
+    @Test
+    public void execute_clearWithoutConfirmation_preservesPatientsAndViewedPatient() throws Exception {
+        model.addPatient(ALICE);
+        model.setViewedPatient(ALICE);
+
+        for (String input : List.of("clear", "clear 1", "clear confirm extra")) {
+            assertThrows(ParseException.class, () -> logic.execute(input));
+            assertEquals(List.of(ALICE), model.getAddressBook().getPatientList());
+            assertEquals(ALICE, model.getViewedPatient().getValue());
+            assertTrue(storage.readAddressBook().isEmpty());
+        }
+    }
+
+    @Test
+    public void execute_clearConfirmed_persistsEmptyData() throws Exception {
+        model.addPatient(ALICE);
+        model.addPatient(new PatientBuilder(BENSON).withArchived(true).build());
+        model.setViewedPatient(ALICE);
+        storage.saveAddressBook(model.getAddressBook());
+
+        assertEquals(ClearCommand.MESSAGE_SUCCESS, logic.execute(ClearCommand.COMMAND_FORMAT).getFeedbackToUser());
+
+        assertTrue(model.getAddressBook().getPatientList().isEmpty());
+        assertNull(model.getViewedPatient().getValue());
+        assertTrue(storage.readAddressBook().orElseThrow().getPatientList().isEmpty());
+    }
+
+    @Test
+    public void execute_clearSaveFails_restoresPatientsFilterAndViewedPatient() throws Exception {
+        Patient archivedPatient = new PatientBuilder(BENSON).withArchived(true).build();
+        model.addPatient(ALICE);
+        model.addPatient(archivedPatient);
+        model.updateFilteredPatientList(patient -> patient.equals(ALICE));
+        model.setViewedPatient(ALICE);
+        logic = createLogicWithFailingStorage(DUMMY_IO_EXCEPTION);
+
+        assertThrows(CommandException.class, () -> logic.execute(ClearCommand.COMMAND_FORMAT));
+
+        assertEquals(List.of(ALICE, archivedPatient), model.getAddressBook().getPatientList());
+        assertEquals(List.of(ALICE), model.getFilteredPatientList());
+        assertEquals(ALICE, model.getViewedPatient().getValue());
     }
 
     @Test

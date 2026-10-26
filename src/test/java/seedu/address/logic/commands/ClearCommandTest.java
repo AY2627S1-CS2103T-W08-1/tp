@@ -10,6 +10,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.testutil.PatientBuilder;
 
 public class ClearCommandTest {
 
@@ -31,6 +32,14 @@ public class ClearCommandTest {
         expectedModel.setAddressBook(new AddressBook());
 
         assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
+    }
+
+    @Test
+    public void execute_activeAndArchivedPatients_clearsAllPatients() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        model.addPatient(new PatientBuilder().withArchived(true).build());
+
+        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, new ModelManager());
     }
 
     @Test
