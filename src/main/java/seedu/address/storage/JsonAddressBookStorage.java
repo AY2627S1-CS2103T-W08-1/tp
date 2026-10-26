@@ -82,7 +82,8 @@ public class JsonAddressBookStorage {
         requireNonNull(addressBook);
         requireNonNull(filePath);
 
-        FileUtil.createIfMissing(filePath);
+        // Creates only the folder, so that a first save that fails leaves no empty data file.
+        FileUtil.createParentDirsOfFile(filePath);
         JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), filePath);
     }
 
