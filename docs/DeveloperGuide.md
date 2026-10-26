@@ -186,7 +186,7 @@ date, time, provider and note.
 The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
 `JsonAdaptedPatient#toModelType()` validates patient fields and converts medications, contacts and appointments using
 their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
-an NRIC, or a patient has duplicate contacts, the whole file is rejected.
+an NRIC, or a patient has duplicate contacts or duplicate appointments, the whole file is rejected.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
 `mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an

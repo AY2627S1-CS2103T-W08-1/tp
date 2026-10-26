@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -61,8 +62,9 @@ public class CancelApptCommand extends Command {
         Patient editedPatient = patientToEdit.withAppointments(updatedAppointments);
         model.setPatient(patientToEdit, editedPatient);
         model.setViewedPatient(editedPatient);
-        String message = String.format(MESSAGE_SUCCESS, appointmentIndex.getOneBased(), patientToEdit.getName(),
-                cancelledAppointment);
+        // Locale.ROOT, so that the number is in the same digits as in the panel on every computer
+        String message = String.format(Locale.ROOT, MESSAGE_SUCCESS, appointmentIndex.getOneBased(),
+                patientToEdit.getName(), cancelledAppointment);
         return new CommandResult(message);
     }
 

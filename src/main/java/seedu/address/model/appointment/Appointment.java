@@ -1,5 +1,6 @@
 package seedu.address.model.appointment;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
@@ -22,6 +23,8 @@ public class Appointment implements Comparable<Appointment> {
             "Appointment time should be in HH:MM 24-hour format, e.g. 14:30.";
     public static final String MESSAGE_PROVIDER_CONSTRAINTS =
             "Who the appointment is with should not be blank.";
+    public static final String MESSAGE_DUPLICATE = "A patient cannot have two appointments at the same date and "
+            + "time with the same person, ignoring letter case and extra spaces.";
 
     /*
      * Four digits for the year, so that "+10000-01-01" and "-0001-01-01" are rejected.
@@ -146,6 +149,7 @@ public class Appointment implements Comparable<Appointment> {
      * appointment at 12:00 is not before 12:00:30.
      */
     public boolean isBefore(LocalDateTime dateTime) {
+        requireNonNull(dateTime);
         return getDateTime().isBefore(dateTime.truncatedTo(ChronoUnit.MINUTES));
     }
 
