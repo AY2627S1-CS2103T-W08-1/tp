@@ -226,6 +226,8 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
 
+The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
+
 #### Design considerations
 
 **Aspect: Where the viewed patient is stored**
@@ -236,6 +238,15 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
 * **Alternative 2:** Return the patient in `CommandResult` and let `MainWindow` update the panel.
   * Pros: The `Model` stays unchanged.
   * Cons: The panel would show stale data after the patient is edited or deleted by another command.
+
+**Aspect: How past appointments are shown**
+
+* **Alternative 1 (current choice):** Keep one numbered list and add `(past)` after each past appointment.
+  * Pros: The numbers that `cancelappt` and `editappt` use stay in one list, so the panel and an exported record stay easy to read.
+  * Cons: The mark adds a little text to each past appointment.
+* **Alternative 2:** Split the list under Upcoming and Past headings, as `listappt INDEX` does.
+  * Pros: Past appointments are grouped visibly.
+  * Cons: One numbered list split across two headings can be read as two lists, each starting from `1.`.
 
 ### Edit patient feature
 
@@ -1192,6 +1203,9 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `view 1`<br>
       Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
 
+   1. Test case: `view 2` on the sample data<br>
+      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`.
+
    1. Test case: `view 0`<br>
       Expected: The detail panel is unchanged. The status message shows the invalid command format error.
 
@@ -1287,7 +1301,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `export 1`<br>
-      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, numbered as in the detail panel), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
+      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, then past ones marked `(past)`, decided at the time of the export), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
 
    1. Test case: `addcare 1 med/Paracetamol 500mg`, then `export 1` again<br>
       Expected: The same file is replaced, and now lists `Paracetamol 500mg` under Medications.

@@ -381,7 +381,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
 * Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`.
-* The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones.
+* The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
+  which are marked `(past)`.
   After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.
 
 Examples:
@@ -666,7 +667,10 @@ Format: `view INDEX`
 * The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
   medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...), one
   entry per line. A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
-  Upcoming appointments are listed first, then past ones, each sorted by date, then time.
+  Upcoming appointments are listed first, then past ones, each sorted by date, then time. Each past appointment is
+  marked `(past)`, e.g., on the sample data, `view 2` shows
+  `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`. Like the numbers, the marks stay as
+  shown until the patient is shown again.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
@@ -796,7 +800,7 @@ Format: `export INDEX`
 * The index **must be a positive integer** 1, 2, 3, ...
 * The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file.
 * The file has a title and the date and time of the export, then the patient's details and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
-* Appointments are numbered as in the detail panel: upcoming ones first, then past ones, at the time of the export.
+* Appointments are ordered and marked the same way as in the detail panel: upcoming ones first, then past ones marked `(past)`. Upcoming and past are decided at the time of the export, so an appointment that has passed since the panel last showed the patient is listed as past, and the numbers can differ from the panel's until the patient is shown again.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
 * On macOS and Linux, only your user account can open the file, since it holds medical details.
 
