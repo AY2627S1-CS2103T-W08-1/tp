@@ -34,7 +34,7 @@ public class EditCareCommandTest {
         model.setViewedPatient(patient);
 
         CommandResult result = new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
-                "  Walk before lunch  ").execute(model);
+                "  Walk   before lunch  ").execute(model);
 
         Patient expected = patient.withCareInstructions(List.of("Check blood sugar", "Walk before lunch"));
         assertEquals(String.format(EditCareCommand.MESSAGE_SUCCESS, patient.getName(), "Walk before lunch"),
@@ -54,7 +54,7 @@ public class EditCareCommandTest {
         Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
 
         EditCareCommand command = new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
-                "  CHECK BLOOD SUGAR ");
+                "  CHECK   BLOOD SUGAR ");
 
         assertCommandFailure(command, model, EditCareCommand.MESSAGE_DUPLICATE_CARE_INSTRUCTION);
     }

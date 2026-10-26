@@ -92,6 +92,17 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_duplicateArchivedPatientNric_throwsArchivedCommandException() {
+        Model model = new ModelManager(new AddressBookBuilder()
+                .withPatient(ALICE).withPatient(BENSON.withArchived(true)).build(), new UserPrefs());
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withNric(BENSON.getNric().value).build();
+
+        assertCommandFailure(new EditCommand(INDEX_FIRST_PATIENT, descriptor), model,
+                EditCommand.MESSAGE_DUPLICATE_ARCHIVED_PATIENT);
+    }
+
+    @Test
     public void execute_noFields_throwsCommandException() {
         Model model = new ModelManager(new AddressBookBuilder().withPatient(ALICE).build(), new UserPrefs());
 

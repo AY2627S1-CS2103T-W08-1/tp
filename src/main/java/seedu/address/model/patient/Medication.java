@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 
 /**
  * Represents a medication of a patient: a description and the times of day it is taken.
- * Guarantees: immutable; description is valid and trimmed; times are sorted ascending, without duplicates
- * and truncated to whole minutes.
+ * Guarantees: immutable; description is valid with normalized whitespace; times are sorted ascending,
+ * without duplicates and truncated to whole minutes.
  */
 public class Medication {
 
@@ -54,7 +54,7 @@ public class Medication {
         if (!isValidDescription(description)) {
             throw new IllegalArgumentException(MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
-        this.description = description.trim();
+        this.description = description.trim().replaceAll("\\s+", " ");
         this.times = times.stream()
                 .map(time -> time.truncatedTo(ChronoUnit.MINUTES))
                 .distinct()
