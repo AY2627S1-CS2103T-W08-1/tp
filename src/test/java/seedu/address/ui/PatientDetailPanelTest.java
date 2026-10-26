@@ -13,6 +13,7 @@ import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.ARCHIVED_ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.ui.JavaFxTestUtil.runOnFxThread;
 import static seedu.address.ui.PatientDetailPanel.COPY_MENU_TEXT;
@@ -128,6 +129,34 @@ public class PatientDetailPanelTest {
         assertEquals(PatientBuilder.DEFAULT_NAME, copyWithMenu((Label) lookup(content, "#name")));
         assertEquals("NRIC: " + PatientBuilder.DEFAULT_NRIC,
                 copyWithMenu((Label) ((VBox) lookup(content, "#basicDetails")).getChildren().get(0)));
+    }
+
+    @Test
+    public void copyMenu_viewedPatientAndCareEntryChanged_copiesNewText() throws Exception {
+        // the name label is kept for every patient, and the other lines are rebuilt, so none may copy old text
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder(ALICE).withAllergens("Penicillin").build());
+        assertEquals(ALICE.getName().fullName, copyWithMenu((Label) lookup(content, "#name")));
+
+        viewedPatient.set(new PatientBuilder(BENSON).withAllergens("Penicillin").build());
+        assertEquals(BENSON.getName().fullName, copyWithMenu((Label) lookup(content, "#name")));
+        assertEquals("NRIC: " + BENSON.getNric(),
+                copyWithMenu((Label) ((VBox) lookup(content, "#basicDetails")).getChildren().get(0)));
+
+        // e.g., after editcare on the viewed patient
+        viewedPatient.set(new PatientBuilder(BENSON).withAllergens("Latex").build());
+        HBox allergenRow = (HBox) ((VBox) lookup(content, "#allergens")).getChildren().get(0);
+        assertEquals("Latex", copyWithMenu((Label) allergenRow.getChildren().get(1)));
+    }
+
+    @Test
+    public void viewedPatient_archivedPatient_showsArchivedStatusAfterBasicDetails() {
+        VBox content = createPanelContent();
+        viewedPatient.set(ARCHIVED_ALICE);
+
+        assertEquals(List.of("NRIC: " + ALICE.getNric(), "DOB: " + ALICE.getDob(), "Phone: " + ALICE.getPhone(),
+                "Address: " + ALICE.getAddress(), PatientFormatter.ARCHIVED_STATUS),
+                getLabelTexts(content, "#basicDetails"));
     }
 
     @Test
