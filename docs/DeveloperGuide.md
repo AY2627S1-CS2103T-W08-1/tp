@@ -76,7 +76,7 @@ The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDi
 The main window shows two panels side by side:
 
 * `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed.
-* `PatientDetailPanel` shows the full details of the patient being viewed, including their medications, allergens, and care instructions. It observes `Logic#getViewedPatient()` and redraws itself whenever that value changes, showing a placeholder message when no patient is being viewed. See the [view patient feature](#view-patient-feature) for how the viewed patient is set and cleared.
+* `PatientDetailPanel` shows the full details of the patient being viewed, including their medications, allergens, care instructions, contacts and appointments. It observes `Logic#getViewedPatient()` and redraws itself whenever that value changes, showing a placeholder message when no patient is being viewed. See the [view patient feature](#view-patient-feature) for how the viewed patient is set and cleared.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
@@ -216,7 +216,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 1. `ViewCommandParser` parses the index in the same way as `DeleteCommandParser`, so `view` accepts the same `INDEX` values as `delete`.
 1. `ViewCommand#execute()` checks the index against the filtered patient list. An index beyond the list size produces the same invalid-index message as `delete`.
 1. `ViewCommand` calls `Model#setViewedPatient()` with the selected patient.
-1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, or care instruction list.
+1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, care instruction, contact or appointment list.
 
 `ModelManager` keeps the viewed patient consistent with the address book:
 
@@ -225,6 +225,8 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 * `setAddressBook(...)`, which the `clear` command uses, clears the viewed patient if it is not in the new data.
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
+
+The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
 
 #### Design considerations
 
@@ -236,6 +238,15 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
 * **Alternative 2:** Return the patient in `CommandResult` and let `MainWindow` update the panel.
   * Pros: The `Model` stays unchanged.
   * Cons: The panel would show stale data after the patient is edited or deleted by another command.
+
+**Aspect: How past appointments are shown**
+
+* **Alternative 1 (current choice):** Keep one numbered list and add `(past)` after each past appointment.
+  * Pros: The numbers that `cancelappt` and `editappt` use stay in one list, so the panel and an exported record stay easy to read.
+  * Cons: The mark adds a little text to each past appointment.
+* **Alternative 2:** Split the list under Upcoming and Past headings, as `listappt INDEX` does.
+  * Pros: Past appointments are grouped visibly.
+  * Cons: One numbered list split across two headings can be read as two lists, each starting from `1.`.
 
 ### Edit patient feature
 
@@ -322,16 +333,16 @@ The `backup` command saves a copy of all patient data to the `data/backups` fold
 
 #### Implementation
 
-`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, and returns the path of the file. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 
 The sequence diagram below shows a successful `restore old.json`.
 
 <puml src="diagrams/RestoreSequenceDiagram.puml" alt="Interactions for the `restore old.json` Command" />
 
-1. `RestoreCommandParser` checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
+1. `RestoreCommandParser` returns a `ListBackupsCommand` if no `FILENAME` is given. It lists the `.json` files in `data/backups` by the time they were last changed, newest first, so that the user can copy a name. Files changed at the same time, e.g., after being copied together, are listed by name, last first, with numbers compared by value, so that `-10` comes before `-9`. Otherwise, it checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
 1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
 1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
-1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored and the path of the automatic backup.
+1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored, how many of them are archived, since only active patients are then listed, and the path of the automatic backup.
 1. As after every command, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
@@ -733,10 +744,10 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Caregiver requests to list patients
-2.  MediConnect shows a list of patients
-3.  Caregiver requests to add care information (medications, allergens and/or care instructions) to a specific patient in the list
-4.  MediConnect adds the care information to the patient's record and shows the entries that were added
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to add care information (medications, allergens and/or care instructions) to a specific patient in the list.
+4.  MediConnect adds the care information to the patient's record and shows the entries that were added.
 
     Use case ends.
 
@@ -775,6 +786,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 3d1. MediConnect adds only the new entries and tells the caregiver which entries were not added again.
 
       Use case ends.
+
+* 3e. All the given entries already exist in the patient's record.
+
+    * 3e1. MediConnect shows an error message naming the entries, and adds nothing.
+
+      Use case resumes at step 2.
 
 **Use case: UC4 - Edit a medication of a patient**
 
@@ -1192,6 +1209,9 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `view 1`<br>
       Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
 
+   1. Test case: `view 2` on the sample data<br>
+      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`.
+
    1. Test case: `view 0`<br>
       Expected: The detail panel is unchanged. The status message shows the invalid command format error.
 
@@ -1254,6 +1274,13 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `restore FILENAME`, where `FILENAME` is the name of the automatic backup from the previous test case<br>
       Expected: The data from before the previous restore is back, i.e., the patient is deleted again.
 
+1. Listing the backups
+
+   1. Prerequisites: The test cases under "Restoring a backup" above have been run.
+
+   1. Test case: `restore`<br>
+      Expected: The data is unchanged. The status message lists the backups in `data/backups`, newest first: the automatic backups made by the two restores, then the backup you made.
+
 1. Restoring a file that cannot be restored
 
    1. Test case: `restore nosuchfile.json`<br>
@@ -1270,7 +1297,7 @@ testers are expected to do more *exploratory* testing.
       Test case: `restore invalid.json`<br>
       Expected: The data is unchanged. The status message says that the backup has invalid data, followed by the NRIC format as the details.
 
-   1. Other incorrect restore commands to try: `restore`, `restore .`, `restore data/backups/bad.json`<br>
+   1. Other incorrect restore commands to try: `restore .`, `restore data/backups/bad.json`<br>
       Expected: The data is unchanged. The status message shows an error.
 
 ### Exporting a patient's record
@@ -1280,7 +1307,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `export 1`<br>
-      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, numbered as in the detail panel), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
+      Expected: A file named after the first patient's NRIC, e.g., `S0000001A.txt`, appears in `data/exports`. It has a title, the date and time of the export, the patient's details, and their numbered medications (with their daily times, if any), allergens, care instructions, contacts and appointments (upcoming ones first, then past ones marked `(past)`, decided at the time of the export), with `None recorded` for any empty list. The status message shows `Exported`, the patient's name and the full path of the file.
 
    1. Test case: `addcare 1 med/Paracetamol 500mg`, then `export 1` again<br>
       Expected: The same file is replaced, and now lists `Paracetamol 500mg` under Medications.

@@ -194,16 +194,6 @@ public class ExportCommandTest {
     }
 
     @Test
-    public void deleteTemporaryFile_fileCannotBeDeleted_doesNotThrow() throws Exception {
-        Path nonEmptyFolder = Files.createDirectory(temporaryFolder.resolve("stuck"));
-        Path insideFile = Files.write(nonEmptyFolder.resolve("inside.txt"), List.of("inside"));
-
-        // deleting a folder that is not empty fails, which must only be logged
-        ExportCommand.deleteTemporaryFile(nonEmptyFolder);
-        assertTrue(Files.exists(insideFile));
-    }
-
-    @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Creating a link needs admin rights on Windows")
     public void execute_linkAtOldTemporaryPath_leavesLinkTargetUnchanged() throws Exception {
         Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
