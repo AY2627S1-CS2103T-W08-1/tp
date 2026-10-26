@@ -158,6 +158,22 @@ public class PatientTest {
     }
 
     @Test
+    public void constructor_blankCareEntry_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_BLANK_ALLERGEN, () ->
+                new PatientBuilder(ALICE).withAllergens("  ").build());
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_BLANK_CARE_INSTRUCTION, () ->
+                new PatientBuilder(ALICE).withCareInstructions("").build());
+    }
+
+    @Test
+    public void constructor_duplicateCareEntry_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_DUPLICATE_ALLERGEN, () ->
+                new PatientBuilder(ALICE).withAllergens("Penicillin", "  penicillin ").build());
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_DUPLICATE_CARE_INSTRUCTION, () ->
+                new PatientBuilder(ALICE).withCareInstructions("Check  blood sugar", "check blood sugar").build());
+    }
+
+    @Test
     public void constructor_unsortedAppointments_sortedByDateThenTime() {
         Appointment laterDate = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(8, 0), "Dr Lee", "");
         Appointment laterTime = new Appointment(LocalDate.of(2026, 11, 5), LocalTime.of(14, 0), "Dr Lim", "");
