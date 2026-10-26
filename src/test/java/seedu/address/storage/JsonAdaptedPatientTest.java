@@ -20,6 +20,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Medication;
@@ -243,5 +244,15 @@ public class JsonAdaptedPatientTest {
                 VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
                 Arrays.asList((JsonAdaptedAppointment) null), null);
         assertThrows(IllegalValueException.class, MESSAGE_NULL_APPOINTMENT, nullEntry::toModelType);
+    }
+
+    @Test
+    public void toModelType_sameAppointmentTwice_throwsIllegalValueException() {
+        // the same date, time and provider, apart from letter case and spaces, as addappt rejects
+        Appointment sameCheckup = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "dr  TAN", "");
+        JsonAdaptedPatient duplicates = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
+                List.of(new JsonAdaptedAppointment(CHECKUP), new JsonAdaptedAppointment(sameCheckup)), null);
+        assertThrows(IllegalValueException.class, Appointment.MESSAGE_DUPLICATE, duplicates::toModelType);
     }
 }

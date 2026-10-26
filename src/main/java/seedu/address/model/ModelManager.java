@@ -179,6 +179,25 @@ public class ModelManager implements Model {
         return patient.getAppointmentsUpcomingFirst(getAppointmentsOrderedAt(patient));
     }
 
+    //=========== Snapshots ==================================================================================
+
+    @Override
+    public Snapshot takeSnapshot() {
+        return new Snapshot(new AddressBook(addressBook), filteredPatients.getPredicate(), viewedPatient.get(),
+                viewedPatientShownAt);
+    }
+
+    @Override
+    public void restoreSnapshot(Snapshot snapshot) {
+        requireNonNull(snapshot);
+        addressBook.resetData(snapshot.addressBook());
+        filteredPatients.setPredicate(snapshot.filter());
+        viewedPatientShownAt = snapshot.viewedPatientShownAt();
+        // clears first so that listeners redraw the patient even if only the order of appointments changed
+        viewedPatient.set(null);
+        viewedPatient.set(snapshot.viewedPatient());
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
