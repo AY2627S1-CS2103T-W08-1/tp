@@ -1,8 +1,8 @@
-#helpMessage {
+#helpMessage, #userGuideMessage {
     -fx-text-fill: white;
 }
 
-#helpMessageContainer {
+#helpMessageContainer, #userGuideBox {
     -fx-background-color: derive(#1d1d1d, 20%);
 }
 

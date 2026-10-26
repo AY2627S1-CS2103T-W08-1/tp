@@ -19,6 +19,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class ArgumentTokenizerTest {
 
     private final Prefix unknownPrefix = new Prefix("--u");
+    private final Prefix nSlash = new Prefix("n/");
+    private final Prefix aSlash = new Prefix("a/");
     private final Prefix pSlash = new Prefix("p/");
     private final Prefix dashT = new Prefix("-t");
     private final Prefix hatQ = new Prefix("^Q");
@@ -143,6 +145,15 @@ public class ArgumentTokenizerTest {
         assertPreambleEmpty(argMultimap);
         assertArgumentPresent(argMultimap, pSlash, "Argument value");
 
+    }
+
+    @Test
+    public void tokenize_ignoredTokenStartsWithPrefix_tokenKeptInPreviousValue() {
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(
+                " n/Muthu a/l Ramasamy a/Blk 1", Set.of("a/l"), nSlash, aSlash);
+
+        assertArgumentPresent(argMultimap, nSlash, "Muthu a/l Ramasamy");
+        assertArgumentPresent(argMultimap, aSlash, "Blk 1");
     }
 
     @Test
