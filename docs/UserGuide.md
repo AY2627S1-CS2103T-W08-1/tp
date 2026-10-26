@@ -375,7 +375,7 @@ Adds an appointment to the patient at the displayed index.
 Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
-* `DATE` must be a real date in `YYYY-MM-DD` format, e.g., `2026-11-05`.
+* `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`.
 * `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank. Leading and
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
@@ -396,6 +396,8 @@ note. For example, the second example returns
 
 * An appointment in the past is still added, so past visits can be recorded. The message then ends with
   `Note: this appointment is in the past.`
+* An appointment on a date more than 2 years from today is still added, but the message ends with
+  `Note: this appointment is more than 2 years ahead.`, in case the year was mistyped.
 * An appointment at the same date and time as another appointment of the patient, but with someone else, is still
   added. The message then ends with `Warning: NAME already has an appointment at this date and time (with WITH).`
 
@@ -404,7 +406,8 @@ Other errors are reported as follows:
 * An appointment with the same date, time and `WITH` as one the patient already has, ignoring letter case and extra
   spaces, returns `This appointment already exists for this patient.` and is not added.
 * An index outside the displayed list returns `The patient index provided is invalid.`
-* An invalid date returns `Appointment date should be a real date in YYYY-MM-DD format, e.g. 2026-10-25.`
+* An invalid date, or one before `1900-01-01`, returns
+  `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`
 * An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
 * A blank `WITH` returns `Who the appointment is with should not be blank.`
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
@@ -432,8 +435,8 @@ A successful command returns `Edited appointment APPT_INDEX of NAME: APPOINTMENT
 as in the detail panel. `APPT_INDEX` is the appointment's number after the edit, which can differ from the one typed.
 For example, the first example returns `Edited appointment 2 of Alex Yeoh: 2027-12-10 10:00 with Cardiology clinic`.
 
-* As with `addappt`, an appointment moved into the past or to the same date and time as another appointment of the
-  patient is still saved, and the message ends with the same note or warning.
+* As with `addappt`, an appointment moved into the past, more than 2 years ahead, or to the same date and time as
+  another appointment of the patient is still saved, and the message ends with the same note or warning.
 
 Other errors are reported as follows:
 

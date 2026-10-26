@@ -104,7 +104,8 @@ public class ParserUtil {
      * Parses a {@code String date} into a {@code LocalDate}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code date} is not a real date in YYYY-MM-DD format.
+     * @throws ParseException if the given {@code date} is not a real date in YYYY-MM-DD format, or is before
+     *     {@code Appointment.EARLIEST_DATE}.
      */
     public static LocalDate parseDate(String date) throws ParseException {
         requireNonNull(date);

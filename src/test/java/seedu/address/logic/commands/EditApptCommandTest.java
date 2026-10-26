@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_CLASH;
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_APPOINTMENT;
+import static seedu.address.logic.Messages.MESSAGE_FAR_FUTURE_APPOINTMENT;
 import static seedu.address.logic.Messages.MESSAGE_PAST_APPOINTMENT;
 import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
@@ -80,6 +81,14 @@ public class EditApptCommandTest {
         assertEditSuccess(createCommand(Optional.of(today), Optional.of(oneMinuteBeforeNow), Optional.empty(),
                 Optional.empty()), new Appointment(today, oneMinuteBeforeNow, "Dr Tan", "Fasting"),
                 "\n" + MESSAGE_PAST_APPOINTMENT);
+    }
+
+    @Test
+    public void execute_dateMoreThanTwoYearsAhead_editsWithFarFutureNote() {
+        LocalDate farAhead = LocalDate.of(2028, 10, 19);
+        assertEditSuccess(createCommand(Optional.of(farAhead), Optional.empty(), Optional.empty(),
+                Optional.empty()), new Appointment(farAhead, CHECKUP.getTime(), "Dr Tan", "Fasting"),
+                "\n" + MESSAGE_FAR_FUTURE_APPOINTMENT);
     }
 
     @Test

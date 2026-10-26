@@ -17,7 +17,7 @@ import java.util.Objects;
 public class Appointment implements Comparable<Appointment> {
 
     public static final String MESSAGE_DATE_CONSTRAINTS =
-            "Appointment date should be a real date in YYYY-MM-DD format, e.g. 2026-10-25.";
+            "Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.";
     public static final String MESSAGE_TIME_CONSTRAINTS =
             "Appointment time should be in HH:MM 24-hour format, e.g. 14:30.";
     public static final String MESSAGE_PROVIDER_CONSTRAINTS =
@@ -33,6 +33,11 @@ public class Appointment implements Comparable<Appointment> {
      */
     public static final String TIME_VALIDATION_REGEX = "\\d{2}:\\d{2}";
 
+    /*
+     * The same earliest date as a date of birth, so that a typing mistake such as "0001-01-01" is rejected.
+     */
+    public static final LocalDate EARLIEST_DATE = LocalDate.of(1900, 1, 1);
+
     private final LocalDate date;
     private final LocalTime time;
     private final String provider;
@@ -40,10 +45,12 @@ public class Appointment implements Comparable<Appointment> {
 
     /**
      * Every field must be present and not null. An empty {@code note} means the appointment has no note.
+     * The date must not be before {@code EARLIEST_DATE}.
      * The time must be a whole minute, so that it is saved and loaded in HH:MM format.
      */
     public Appointment(LocalDate date, LocalTime time, String provider, String note) {
         requireAllNonNull(date, time, provider, note);
+        checkArgument(!date.isBefore(EARLIEST_DATE), MESSAGE_DATE_CONSTRAINTS);
         checkArgument(time.equals(time.truncatedTo(ChronoUnit.MINUTES)), MESSAGE_TIME_CONSTRAINTS);
         checkArgument(isValidProvider(provider), MESSAGE_PROVIDER_CONSTRAINTS);
         this.date = date;
@@ -53,7 +60,7 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
-     * Returns true if a given string is a real date in YYYY-MM-DD format.
+     * Returns true if a given string is a real date in YYYY-MM-DD format, on or after {@code EARLIEST_DATE}.
      */
     public static boolean isValidDate(String test) {
         if (!test.matches(DATE_VALIDATION_REGEX)) {
@@ -61,8 +68,7 @@ public class Appointment implements Comparable<Appointment> {
         }
 
         try {
-            LocalDate.parse(test);
-            return true;
+            return !LocalDate.parse(test).isBefore(EARLIEST_DATE);
         } catch (DateTimeParseException e) {
             return false;
         }
