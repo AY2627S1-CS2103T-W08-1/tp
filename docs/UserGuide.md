@@ -148,6 +148,8 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * Care entries are trimmed free text and cannot be blank. If any entry is blank, the whole command is rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
+  Standalone `s/o`, `d/o`, `c/o`, `a/l`, and `a/p` are also allowed, ignoring letter case, but must not have
+  punctuation attached.
 * Duplicate entries, ignoring letter case and surrounding spaces, are not added again. Other unique entries in the
   same command are still added.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
@@ -260,7 +262,8 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
 * `NEW_TEXT` is trimmed free text and cannot be blank.
 * An edit that would duplicate another care instruction, ignoring letter case and surrounding spaces, is rejected.
   Editing an instruction to its current text is allowed.
-* `ci/` must appear exactly once. Unrecognized prefixes are rejected.
+* `ci/` must appear exactly once. Unrecognized prefixes are rejected, with the same standalone slash-word
+  exceptions as `addcare`.
 
 Example: `editcare 1 2 ci/Check blood sugar after lunch`
 
@@ -381,8 +384,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank. Leading and
   trailing spaces are ignored, and multiple spaces between words are reduced to one.
 * `NOTE` is optional free text. `nt/` with nothing after it means no note.
-* Text that looks like a prefix, such as `w/` or `c/o`, cannot be used inside `WITH` or `NOTE`. Standalone `a/l` and
-  `a/p` are allowed, ignoring letter case.
+* Text that looks like a prefix, such as `w/`, cannot be used inside `WITH` or `NOTE`. Standalone `s/o`, `d/o`,
+  `c/o`, `a/l`, and `a/p` are allowed, ignoring letter case, but must not have punctuation attached.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
   which are marked `(past)`.
   After `addappt`, the detail panel shows the patient, so the new appointment and its number can be checked.

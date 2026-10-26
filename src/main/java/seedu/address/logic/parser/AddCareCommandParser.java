@@ -17,12 +17,14 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class AddCareCommandParser implements Parser<AddCareCommand> {
 
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
+
     @Override
     public AddCareCommand parse(String args) throws ParseException {
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), PREFIX_MEDICATION, PREFIX_ALLERGEN,
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS, PREFIX_MEDICATION, PREFIX_ALLERGEN,
                 PREFIX_CARE_INSTRUCTION);
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_MEDICATION, PREFIX_ALLERGEN,
-                PREFIX_CARE_INSTRUCTION);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
+                PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION);
         List<String> medications = argMultimap.getAllValues(PREFIX_MEDICATION);
         List<String> allergens = argMultimap.getAllValues(PREFIX_ALLERGEN);
         List<String> careInstructions = argMultimap.getAllValues(PREFIX_CARE_INSTRUCTION);

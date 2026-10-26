@@ -54,6 +54,17 @@ public class EditApptCommandParserTest {
     }
 
     @Test
+    public void parse_standaloneSlashWords_noteAccepted() {
+        for (String token : new String[] {"s/o", "d/o", "c/o", "S/O"}) {
+            String note = "Bring " + token + " letter";
+
+            assertParseSuccess(parser, "1 2 nt/" + note,
+                    new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.empty(),
+                            Optional.empty(), Optional.empty(), Optional.of(note)));
+        }
+    }
+
+    @Test
     public void parse_emptyNote_successWithEmptyNote() {
         assertParseSuccess(parser, "1 2 nt/", new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("")));

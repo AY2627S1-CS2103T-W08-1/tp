@@ -22,7 +22,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class EditApptCommandParser implements Parser<EditApptCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("a/l", "a/p");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
 
     /**
      * Parses the given {@code String} of arguments in the context of the EditApptCommand
@@ -34,8 +34,8 @@ public class EditApptCommandParser implements Parser<EditApptCommand> {
     public EditApptCommand parse(String args) throws ParseException {
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
-        ArgumentMultimap argMultimap =
-                ArgumentTokenizer.tokenize(args, PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
+                PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
 
         List<Index> indexes;
         try {

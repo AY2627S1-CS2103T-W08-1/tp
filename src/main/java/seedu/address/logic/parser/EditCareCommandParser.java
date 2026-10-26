@@ -14,10 +14,12 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class EditCareCommandParser implements Parser<EditCareCommand> {
 
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
+
     @Override
     public EditCareCommand parse(String args) throws ParseException {
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), PREFIX_CARE_INSTRUCTION);
-        ArgumentMultimap fields = ArgumentTokenizer.tokenize(args, PREFIX_CARE_INSTRUCTION);
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS, PREFIX_CARE_INSTRUCTION);
+        ArgumentMultimap fields = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS, PREFIX_CARE_INSTRUCTION);
         fields.verifyNoDuplicatePrefixesFor(PREFIX_CARE_INSTRUCTION);
 
         String[] indices = fields.getPreamble().split("\\s+");
