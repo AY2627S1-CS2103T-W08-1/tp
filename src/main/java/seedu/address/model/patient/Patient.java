@@ -100,6 +100,7 @@ public class Patient {
         verifyNoDuplicateContacts(this.contacts);
         // List.copyOf rejects null appointments before they are sorted.
         this.appointments = List.copyOf(appointments).stream().sorted().toList();
+        verifyNoDuplicateAppointments(this.appointments);
     }
 
     /**
@@ -136,6 +137,18 @@ public class Patient {
 
     private static String normalizeCareEntry(String entry) {
         return entry.trim().replaceAll("\\s+", " ");
+    }
+
+    /**
+     * Rejects appointments at the same date and time with the same provider, as {@code addappt} does, so that
+     * a data file cannot hold them either.
+     */
+    private static void verifyNoDuplicateAppointments(List<Appointment> appointments) {
+        for (int i = 0; i < appointments.size(); i++) {
+            Appointment appointment = appointments.get(i);
+            checkArgument(appointments.subList(0, i).stream().noneMatch(appointment::isSameAppointment),
+                    Appointment.MESSAGE_DUPLICATE);
+        }
     }
 
     public Name getName() {
