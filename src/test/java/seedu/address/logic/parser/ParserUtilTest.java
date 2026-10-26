@@ -148,6 +148,12 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseAddress_tooLong_throwsParseException() {
+        assertThrows(ParseException.class, Address.MESSAGE_TOO_LONG, () ->
+                ParserUtil.parseAddress("a".repeat(Address.MAX_LENGTH + 1)));
+    }
+
+    @Test
     public void parseAddress_unicodeWhitespaceOnly_throwsParseException() {
         // an em space (U+2003) and a no-break space (U+00A0), which trim() does not remove
         assertThrows(ParseException.class, () -> ParserUtil.parseAddress(" "));

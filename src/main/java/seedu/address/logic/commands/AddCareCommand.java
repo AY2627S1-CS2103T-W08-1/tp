@@ -37,6 +37,7 @@ public class AddCareCommand extends Command {
     public static final String MESSAGE_BLANK_MEDICATION = "Medication entries cannot be blank.";
     public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
     public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
+    public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG = Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG;
     public static final String MESSAGE_DUPLICATE_EXISTING =
             "%1$s \"%2$s\" was not added: it already exists for this patient.";
     public static final String MESSAGE_DUPLICATE_IN_COMMAND =
@@ -73,6 +74,10 @@ public class AddCareCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
+        if (careInstructions.stream().map(AddCareCommand::normalizeEntry)
+                .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
+            throw new CommandException(MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+        }
         List<String> updatedMedicationDescriptions = patientToEdit.getMedications().stream()
                 .map(Medication::getDescription)
                 .collect(Collectors.toCollection(ArrayList::new));
