@@ -45,18 +45,18 @@ public class AddCareCommandTest {
     public void execute_sameTextAcrossCategories_updatesPatientAndLabelsFeedback() {
         Patient patientToEdit = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
-                List.of("Aspirin"), List.of("Aspirin"), List.of("Aspirin"));
+                List.of(" Aspirin   daily "), List.of(" Aspirin   daily "), List.of(" Aspirin   daily "));
 
         Patient editedPatient = new PatientBuilder(patientToEdit)
-                .withMedications("Aspirin")
-                .withAllergens("Aspirin")
-                .withCareInstructions("Aspirin")
+                .withMedications("Aspirin daily")
+                .withAllergens("Aspirin daily")
+                .withCareInstructions("Aspirin daily")
                 .build();
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patientToEdit, editedPatient);
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_SUCCESS, patientToEdit.getName(),
-                "Medication: Aspirin, Allergen: Aspirin, Care instruction: Aspirin");
+                "Medication: Aspirin daily, Allergen: Aspirin daily, Care instruction: Aspirin daily");
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
@@ -170,19 +170,19 @@ public class AddCareCommandTest {
     @Test
     public void execute_allDuplicates_throwsCommandException() {
         Patient patient = new PatientBuilder(ALICE)
-                .withMedications("Metformin")
-                .withAllergens("Penicillin")
+                .withMedications("Metformin 500mg")
+                .withAllergens("Dust mites")
                 .withCareInstructions("Check blood sugar")
                 .build();
         Model actualModel = new ModelManager();
         actualModel.addPatient(patient);
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
-                List.of("METFORMIN"), List.of("penicillin"), List.of("check blood sugar"));
+                List.of("METFORMIN   500MG"), List.of("dust   mites"), List.of("check   blood   sugar"));
 
         String expectedMessage = String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
-                "Medication", "METFORMIN")
+                "Medication", "METFORMIN 500MG")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
-                        "Allergen", "penicillin")
+                        "Allergen", "dust mites")
                 + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
                         "Care instruction", "check blood sugar");
         assertCommandFailure(command, actualModel, expectedMessage);

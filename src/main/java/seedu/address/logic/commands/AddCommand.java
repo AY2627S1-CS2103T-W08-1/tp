@@ -37,6 +37,8 @@ public class AddCommand extends Command {
     public static final String MESSAGE_SUCCESS = "New patient added: %1$s;";
     public static final String MESSAGE_DUPLICATE_PATIENT =
             "This patient (identified by NRIC) already exists in MediConnect.";
+    public static final String MESSAGE_DUPLICATE_ARCHIVED_PATIENT =
+            "This NRIC belongs to an archived patient. Use listarchived and unarchive to restore them.";
 
     private final Patient toAdd;
 
@@ -53,11 +55,19 @@ public class AddCommand extends Command {
         requireNonNull(model);
 
         if (model.hasPatient(toAdd)) {
-            throw new CommandException(MESSAGE_DUPLICATE_PATIENT);
+            String message = hasArchivedDuplicate(model, toAdd)
+                    ? MESSAGE_DUPLICATE_ARCHIVED_PATIENT
+                    : MESSAGE_DUPLICATE_PATIENT;
+            throw new CommandException(message);
         }
 
         model.addPatient(toAdd);
         return new CommandResult(String.format(MESSAGE_SUCCESS, Messages.format(toAdd)));
+    }
+
+    static boolean hasArchivedDuplicate(Model model, Patient patient) {
+        return model.getAddressBook().getPatientList().stream()
+                .anyMatch(existing -> existing.isSamePatient(patient) && existing.isArchived());
     }
 
     @Override

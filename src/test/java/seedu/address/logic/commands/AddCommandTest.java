@@ -57,6 +57,15 @@ public class AddCommandTest {
     }
 
     @Test
+    public void execute_duplicateArchivedPatient_throwsArchivedCommandException() {
+        Patient validPatient = new PatientBuilder().build();
+        ModelStub modelStub = new ModelStubWithPatient(validPatient.withArchived(true));
+        String expectedMessage = AddCommand.MESSAGE_DUPLICATE_ARCHIVED_PATIENT;
+
+        assertThrows(CommandException.class, expectedMessage, () -> new AddCommand(validPatient).execute(modelStub));
+    }
+
+    @Test
     public void execute_sameNricDifferentCaseAndName_throwsCommandException() {
         Patient existing = new PatientBuilder().withNric("S1234567A").build();
         Patient duplicate = new PatientBuilder(existing).withName("Other Name").withNric("s1234567a").build();
@@ -193,16 +202,23 @@ public class AddCommandTest {
      */
     private class ModelStubWithPatient extends ModelStub {
         private final Patient patient;
+        private final AddressBook addressBook = new AddressBook();
 
         ModelStubWithPatient(Patient patient) {
             requireNonNull(patient);
             this.patient = patient;
+            addressBook.addPatient(patient);
         }
 
         @Override
         public boolean hasPatient(Patient patient) {
             requireNonNull(patient);
             return this.patient.isSamePatient(patient);
+        }
+
+        @Override
+        public ReadOnlyAddressBook getAddressBook() {
+            return addressBook;
         }
     }
 
