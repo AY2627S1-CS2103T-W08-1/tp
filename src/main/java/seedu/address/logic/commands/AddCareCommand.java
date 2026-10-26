@@ -104,6 +104,7 @@ public class AddCareCommand extends Command {
                 updatedCareInstructions, patientToEdit.getContacts(), patientToEdit.getAppointments(),
                 patientToEdit.isArchived());
         model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
         String successMessage = String.format(MESSAGE_SUCCESS, patientToEdit.getName(),
                 String.join(", ", addedEntries));

@@ -66,7 +66,9 @@ public class EditCareCommand extends Command {
             }
         }
         careInstructions.set(careInstructionIndex.getZeroBased(), careInstruction);
-        model.setPatient(patient, patient.withCareInstructions(careInstructions));
+        Patient editedPatient = patient.withCareInstructions(careInstructions);
+        model.setPatient(patient, editedPatient);
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), careInstruction));
     }
 

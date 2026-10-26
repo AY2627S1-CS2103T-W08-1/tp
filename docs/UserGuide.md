@@ -159,6 +159,7 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * Duplicate entries, ignoring letter case and whitespace differences, are not added again. Other unique entries in
   the same command are still added.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
+* After a successful command, the detail panel shows the updated patient so the new entry numbers can be checked.
 
 Examples:
 
@@ -288,8 +289,8 @@ Example: `deletecare 1 2`
 For patient `Alex Yeoh`, deleting `Walk after lunch` returns:
 `Deleted care instruction for Alex Yeoh: Walk after lunch`
 
-After either command, the detail panel updates immediately and the remaining instructions are numbered from `1`
-again. `The patient index provided is invalid.` means `INDEX` is outside the displayed list.
+After either command, the detail panel shows the updated patient immediately and the remaining instructions are
+numbered from `1` again. `The patient index provided is invalid.` means `INDEX` is outside the displayed list.
 `The care instruction index provided is invalid.` means `CI_INDEX` is past the end of that patient's instruction
 list, including when the list is empty. Missing, zero, negative, nonnumeric or extra indices give the command's usage.
 Blank replacement text returns `Care instructions cannot be blank.` A duplicate edit returns
@@ -304,7 +305,7 @@ Format: `deleteallergy INDEX ALLERGY_INDEX`
 * `ALLERGY_INDEX` is the allergen number shown in that patient's detail panel. Both indices must be positive
   integers.
 * The removed allergen is reported in the success message. Remaining allergens are renumbered immediately in the
-  detail panel. All other patient details are unchanged.
+  detail panel, which shows the updated patient. All other patient details are unchanged.
 
 Example: `deleteallergy 1 2`
 
@@ -585,7 +586,7 @@ Format: `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]`
 * Medications and their times, allergens, care instructions, contacts, appointments, and archived state are
   preserved.
 * An edit that gives a patient an NRIC already used by another patient is rejected.
-* If the patient is shown in the detail panel, the panel updates immediately.
+* After a successful command, the detail panel shows the edited patient immediately.
 
 Examples:
 * `edit 1 p/91234567` changes only the first displayed patient's phone number.
