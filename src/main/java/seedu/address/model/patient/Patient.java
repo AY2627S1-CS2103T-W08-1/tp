@@ -90,6 +90,7 @@ public class Patient {
         verifyNoDuplicateContacts(this.contacts);
         // List.copyOf rejects null appointments before they are sorted.
         this.appointments = List.copyOf(appointments).stream().sorted().toList();
+        verifyNoDuplicateAppointments(this.appointments);
     }
 
     /**
@@ -107,6 +108,18 @@ public class Patient {
             Contact contact = contacts.get(i);
             checkArgument(contacts.subList(0, i).stream().noneMatch(contact::isSameContact),
                     Contact.MESSAGE_DUPLICATE);
+        }
+    }
+
+    /**
+     * Rejects appointments at the same date and time with the same provider, as {@code addappt} does, so that
+     * a data file cannot hold them either.
+     */
+    private static void verifyNoDuplicateAppointments(List<Appointment> appointments) {
+        for (int i = 0; i < appointments.size(); i++) {
+            Appointment appointment = appointments.get(i);
+            checkArgument(appointments.subList(0, i).stream().noneMatch(appointment::isSameAppointment),
+                    Appointment.MESSAGE_DUPLICATE);
         }
     }
 
@@ -202,7 +215,9 @@ public class Patient {
                 .filter(appointment -> !appointment.isBefore(now));
         Stream<Appointment> past = appointments.stream()
                 .filter(appointment -> appointment.isBefore(now));
-        return Stream.concat(upcoming, past).toList();
+        List<Appointment> upcomingFirst = Stream.concat(upcoming, past).toList();
+        assert upcomingFirst.size() == appointments.size() : "every appointment must be either upcoming or past";
+        return upcomingFirst;
     }
 
     /**

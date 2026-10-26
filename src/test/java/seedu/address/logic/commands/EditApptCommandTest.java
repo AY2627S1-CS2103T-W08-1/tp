@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,22 @@ public class EditApptCommandTest {
     public void execute_emptyNote_clearsNote() {
         assertEditSuccess(createCommand(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.of("")), new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Dr Tan", ""), "");
+    }
+
+    @Test
+    public void execute_localeWithOtherDigits_givesNumberInPanelDigits() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // String.format writes 1 as an Arabic-Indic digit in Egyptian Arabic unless given Locale.ROOT
+            Locale.setDefault(Locale.forLanguageTag("ar-EG"));
+            Appointment editedAppointment = new Appointment(CHECKUP.getDate(), NEW_TIME, "Dr Tan", "Fasting");
+            assertCommandSuccess(createCommand(Optional.empty(), Optional.of(NEW_TIME), Optional.empty(),
+                    Optional.empty()), createModelWithAppointments(CHECKUP),
+                    "Edited appointment 1 of " + ALICE.getName() + ": " + editedAppointment,
+                    createViewedModelWithAppointments(editedAppointment));
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     @Test
