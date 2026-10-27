@@ -26,6 +26,44 @@ public class ArgumentTokenizerTest {
     private final Prefix hatQ = new Prefix("^Q");
 
     @Test
+    public void verifyNoInvalidPrefixes_freeText_allowsNonReservedSlashText() throws Exception {
+        for (String text : List.of("and/or", "mg/ml", "mg/kg", "ml/hr", "N/A", "x/123", "xyz/", "and/or,")) {
+            for (String args : List.of("a/" + text, " a/" + text, " a/Text " + text, " a/Text\t" + text)) {
+                ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), Set.of(aSlash), aSlash, pSlash);
+            }
+        }
+        ArgumentTokenizer.verifyNoInvalidPrefixes(" a/d/o", Set.of("d/o"), Set.of(aSlash), aSlash);
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_freeText_rejectsReservedPrefixes() {
+        for (Prefix prefix : CliSyntax.RESERVED_PREFIXES) {
+            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix);
+            assertThrows(ParseException.class, expected, () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(" a/" + prefix + "value",
+                            Set.of(), Set.of(aSlash), aSlash));
+            if (!prefix.equals(aSlash)) {
+                assertThrows(ParseException.class, expected, () ->
+                        ArgumentTokenizer.verifyNoInvalidPrefixes(" a/Text " + prefix + "value",
+                                Set.of(), Set.of(aSlash), aSlash));
+            }
+        }
+        assertThrows(ParseException.class,
+                String.format(Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, "d/o,", "d/o"), () ->
+                ArgumentTokenizer.verifyNoInvalidPrefixes(" a/d/o,", Set.of("d/o"), Set.of(aSlash), aSlash));
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_outsideFreeText_staysStrict() {
+        for (String args : List.of("and/or a/Text", " p/and/or a/Text", " a/Text p/and/or",
+                " a/Text p/123 and/or", " n/Patient\ta/and/or")) {
+            assertThrows(ParseException.class, String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "and/"), () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), Set.of(aSlash),
+                            aSlash, pSlash, nSlash));
+        }
+    }
+
+    @Test
     public void verifyNoInvalidPrefixes_allowedTokens_success() throws Exception {
         ArgumentTokenizer.verifyNoInvalidPrefixes("p/21/3 custom/token CUSTOM/TOKEN",
                 Set.of("custom/token"), pSlash);

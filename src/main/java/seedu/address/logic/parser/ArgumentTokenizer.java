@@ -60,11 +60,32 @@ public class ArgumentTokenizer {
      */
     public static void verifyNoInvalidPrefixes(String argsString, Set<String> allowedSlashTokens,
             Prefix... validPrefixes) throws ParseException {
+        verifyNoInvalidPrefixes(argsString, allowedSlashTokens, Set.of(), validPrefixes);
+    }
+
+    /**
+     * Checks field syntax while allowing non-reserved slash text in the given free-text fields.
+     * Known MediConnect prefixes remain reserved; existing standalone slash-word exceptions still apply.
+     *
+     * @param argsString Original command arguments to check.
+     * @param allowedSlashTokens Lowercase standalone tokens allowed as ordinary text by the command.
+     * @param freeTextPrefixes Fields that permit non-reserved slash text in their values.
+     * @param validPrefixes Prefixes allowed by the command.
+     * @throws ParseException If a prefix-like token is not allowed in its context.
+     */
+    public static void verifyNoInvalidPrefixes(String argsString, Set<String> allowedSlashTokens,
+            Set<Prefix> freeTextPrefixes, Prefix... validPrefixes) throws ParseException {
+        verifyNoInvalidPrefixes(argsString, allowedSlashTokens, freeTextPrefixes, false, validPrefixes);
+    }
+
+    private static void verifyNoInvalidPrefixes(String argsString, Set<String> allowedSlashTokens,
+            Set<Prefix> freeTextPrefixes, boolean startsInFreeText, Prefix... validPrefixes) throws ParseException {
         Matcher matcher = PREFIX_CANDIDATE_PATTERN.matcher(argsString);
 
         Set<String> allowed = Arrays.stream(validPrefixes)
                 .map(Prefix::getPrefix)
                 .collect(Collectors.toSet());
+        boolean inFreeText = startsInFreeText;
 
         while (matcher.find()) {
             if (allowedSlashTokens.contains(matcher.group().toLowerCase(Locale.ROOT))) {
@@ -84,8 +105,15 @@ public class ArgumentTokenizer {
 
             // Allow recognized command prefixes.
             if (allowed.contains(candidate)) {
-                // No command prefix is valid inside a value; omitting validPrefixes also bounds this recursion.
-                verifyNoInvalidPrefixes(token.substring(candidate.length()), allowedSlashTokens);
+                // Match tokenization's field boundary, rather than treating a tab as a new field.
+                inFreeText = freeTextPrefixes.contains(new Prefix(candidate))
+                        && (matcher.start() == 0 || argsString.charAt(matcher.start() - 1) == ' ');
+                // No field prefixes are allowed inside the attached value, so this call cannot recurse again.
+                verifyNoInvalidPrefixes(token.substring(candidate.length()), allowedSlashTokens, Set.of(), inFreeText);
+                continue;
+            }
+
+            if (inFreeText && !CliSyntax.RESERVED_PREFIXES.contains(new Prefix(candidate))) {
                 continue;
             }
 
