@@ -70,6 +70,15 @@ public class DataFileLockTest {
     }
 
     @Test
+    public void tryAcquire_rootLevelDataPath_doesNotCreatePatientData() throws Exception {
+        Path dataFile = temporaryFolder.getRoot().resolve("mediconnect-lock-test-" + temporaryFolder.getFileName());
+        try (DataFileLock lock = DataFileLock.tryAcquire(dataFile, temporaryFolder.resolve("locks")).orElseThrow()) {
+            assertFalse(Files.exists(dataFile));
+            assertTrue(DataFileLock.tryAcquire(dataFile, temporaryFolder.resolve("locks")).isEmpty());
+        }
+    }
+
+    @Test
     public void tryAcquire_invalidPaths_reportFailureWithoutChangingData() throws Exception {
         Path dataFile = Files.writeString(temporaryFolder.resolve("mediconnect.json"), "original");
         Path blockedFolder = Files.writeString(temporaryFolder.resolve("locks"), "keep this file");

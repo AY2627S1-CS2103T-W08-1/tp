@@ -2,6 +2,7 @@ package seedu.address.storage;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +18,7 @@ import java.util.UUID;
  * Prevents two application instances of the same user from opening the same patient data path.
  * The separate lock file stays in place because deleting it could let processes lock different files.
  */
-public final class DataFileLock implements AutoCloseable {
+public final class DataFileLock implements Closeable {
     private static final String LOCK_FILE_SUFFIX = ".lock";
     private static final Set<Path> HELD_LOCK_FILES = new HashSet<>();
 
@@ -68,11 +69,8 @@ public final class DataFileLock implements AutoCloseable {
         }
         Path parent = absolute.getParent();
         Path existing = parent;
-        while (existing != null && !Files.exists(existing)) {
+        while (existing.getParent() != null && !Files.exists(existing)) {
             existing = existing.getParent();
-        }
-        if (existing == null) {
-            throw new IOException("The data path has no accessible parent folder.");
         }
         // Resolve directory aliases, but not the data file: saving replaces that directory entry atomically.
         return existing.toRealPath().resolve(existing.relativize(parent)).resolve(absolute.getFileName()).normalize();

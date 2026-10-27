@@ -2,6 +2,7 @@ package seedu.address;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -9,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javafx.application.Application;
@@ -76,6 +78,8 @@ public class MainApp extends Application {
     private final Path dataFilePath;
     private final Path prefsFilePath;
     private final Path lockDirectory;
+    private final Consumer<String> startupErrorPresenter;
+    private final Runnable exitAction;
     private DataFileLock dataFileLock;
     private String dataLoadWarning = "";
     private String startupFailure = "";
@@ -91,14 +95,29 @@ public class MainApp extends Application {
      * Creates the application with the given paths and an isolated lock folder beside the preferences for tests.
      */
     MainApp(Path dataFilePath, Path prefsFilePath) {
-        this(dataFilePath, prefsFilePath, prefsFilePath.resolveSibling(".mediconnect-locks"));
+        this(dataFilePath, prefsFilePath, UiManager::showStartupError, Platform::exit);
+    }
+
+    /**
+     * Creates the application with startup actions that tests can observe without exiting JavaFX.
+     */
+    MainApp(Path dataFilePath, Path prefsFilePath, Consumer<String> startupErrorPresenter, Runnable exitAction) {
+        this(dataFilePath, prefsFilePath, prefsFilePath.resolveSibling(".mediconnect-locks"),
+                startupErrorPresenter, exitAction);
     }
 
     private MainApp(Path dataFilePath, Path prefsFilePath, Path lockDirectory) {
-        requireAllNonNull(dataFilePath, prefsFilePath, lockDirectory);
+        this(dataFilePath, prefsFilePath, lockDirectory, UiManager::showStartupError, Platform::exit);
+    }
+
+    private MainApp(Path dataFilePath, Path prefsFilePath, Path lockDirectory,
+            Consumer<String> startupErrorPresenter, Runnable exitAction) {
+        requireAllNonNull(dataFilePath, prefsFilePath, lockDirectory, startupErrorPresenter, exitAction);
         this.dataFilePath = dataFilePath;
         this.prefsFilePath = prefsFilePath;
         this.lockDirectory = lockDirectory;
+        this.startupErrorPresenter = startupErrorPresenter;
+        this.exitAction = exitAction;
     }
 
     @Override
@@ -252,8 +271,8 @@ public class MainApp extends Application {
      * Shows a startup failure on the JavaFX application thread, then exits without opening the main window.
      */
     protected void showStartupError(String message) {
-        UiManager.showStartupError(message);
-        Platform.exit();
+        startupErrorPresenter.accept(message);
+        exitAction.run();
     }
 
     @Override
@@ -270,13 +289,20 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Closes a lock without letting an I/O failure interrupt application shutdown.
+     */
+    static void closeDataFileLock(Closeable lock) {
+        try {
+            lock.close();
+        } catch (IOException e) {
+            logger.warning("Could not release the data-file lock: " + StringUtil.getDetails(e));
+        }
+    }
+
     private void releaseDataFileLock() {
         if (dataFileLock != null) {
-            try {
-                dataFileLock.close();
-            } catch (IOException e) {
-                logger.warning("Could not release the data-file lock: " + StringUtil.getDetails(e));
-            }
+            closeDataFileLock(dataFileLock);
             dataFileLock = null;
         }
     }

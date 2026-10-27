@@ -13,17 +13,24 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.StreamHandler;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.LogicManager;
 import seedu.address.model.AddressBook;
@@ -220,6 +227,44 @@ public class MainAppTest {
         Model model = new MainApp().initModelManager(storage, new UserPrefs());
 
         assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+    }
+
+    @Test
+    public void start_failedStartup_presentsErrorBeforeExit() throws Exception {
+        Path dataFile = Files.createDirectory(temporaryFolder.resolve("mediconnect.json"));
+        List<String> events = new ArrayList<>();
+        MainApp app = new MainApp(dataFile, temporaryFolder.resolve("preferences.json"),
+                message -> events.add("error: " + message), () -> events.add("exit"));
+
+        app.init();
+        app.start(null);
+        app.stop();
+
+        String expectedMessage = String.format(MainApp.MESSAGE_STARTUP_FAILURE, dataFile.toAbsolutePath(),
+                MainApp.MESSAGE_DATA_PATH_DIRECTORY);
+        assertEquals(List.of("error: " + expectedMessage, "exit"), events);
+        assertNull(app.model);
+        assertNull(app.ui);
+        assertTrue(Files.isDirectory(dataFile));
+    }
+
+    @Test
+    public void closeDataFileLock_closeFails_logsWithoutThrowing() {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        StreamHandler handler = new StreamHandler(output, new SimpleFormatter());
+        Logger logger = LogsCenter.getLogger(MainApp.class);
+        logger.addHandler(handler);
+        try {
+            MainApp.closeDataFileLock(() -> {
+                throw new IOException("lock close failed");
+            });
+            handler.flush();
+            assertTrue(output.toString(StandardCharsets.UTF_8).contains("Could not release the data-file lock:"));
+            assertTrue(output.toString(StandardCharsets.UTF_8).contains("lock close failed"));
+        } finally {
+            logger.removeHandler(handler);
+            handler.close();
+        }
     }
 
     @Test
