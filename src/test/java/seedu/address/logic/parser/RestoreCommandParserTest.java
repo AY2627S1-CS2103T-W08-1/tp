@@ -27,6 +27,18 @@ public class RestoreCommandParserTest {
     }
 
     @Test
+    public void parse_fileNameWithNoBreakSpacesAround_spacesRemoved() {
+        // Equivalence partitioning: a name pasted with no-break spaces, e.g., from a chat app
+        assertParseSuccess(parser, " " + FILE_NAME + " ", new RestoreCommand(FILE_NAME));
+    }
+
+    @Test
+    public void parse_onlyNoBreakSpaces_returnsListBackupsCommand() {
+        // Boundary value analysis: nothing is left of the name once the no-break spaces are removed
+        assertParseSuccess(parser, "   ", new ListBackupsCommand());
+    }
+
+    @Test
     public void parse_fileNameWithInnerSpace_spaceKept() {
         assertParseSuccess(parser, " my backup.json", new RestoreCommand("my backup.json"));
     }

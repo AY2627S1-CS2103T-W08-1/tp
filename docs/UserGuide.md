@@ -822,7 +822,7 @@ Saves a copy of all patient data to the `data/backups` folder, inside the folder
 Format: `backup`
 
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
-* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten.
+* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten. This also holds when two backups are made at the same moment, e.g., in two MediConnect windows, or when `restore` or `clear confirm` backs up your data while you make a backup. To let such backups take turns, MediConnect keeps an empty file named `.backup.lock` in `data/backups`; it is not a backup, and `restore` does not list it.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
@@ -850,7 +850,7 @@ Format: `restore [FILENAME]`
 
 * `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
-* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
+* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
   For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
   counting from 1, and the validation reason.
@@ -863,7 +863,7 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
 
-`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.`
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there.
 
 ### Exporting a patient's record: `export`
 
