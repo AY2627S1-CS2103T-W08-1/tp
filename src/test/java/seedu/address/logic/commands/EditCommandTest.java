@@ -134,6 +134,16 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_dobOfPatientWithoutAppointments_editsPatient() throws Exception {
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(ALICE).build(), new UserPrefs());
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withDob("2000-05-01").build();
+
+        new EditCommand(INDEX_FIRST_PATIENT, descriptor).execute(model);
+
+        assertEquals("2000-05-01", model.getAddressBook().getPatientList().get(0).getDob().toString());
+    }
+
+    @Test
     public void execute_noFields_throwsCommandException() {
         Model model = new ModelManager(new AddressBookBuilder().withPatient(ALICE).build(), new UserPrefs());
 
