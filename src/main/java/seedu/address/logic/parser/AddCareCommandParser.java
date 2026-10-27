@@ -19,7 +19,7 @@ import seedu.address.model.patient.Patient;
  */
 public class AddCareCommandParser implements Parser<AddCareCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o");
 
     @Override
     public AddCareCommand parse(String args) throws ParseException {

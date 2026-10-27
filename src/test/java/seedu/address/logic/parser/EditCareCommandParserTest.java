@@ -41,7 +41,7 @@ public class EditCareCommandParserTest {
 
     @Test
     public void parse_standaloneSlashWords_success() {
-        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "C/O")) {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o", "C/O")) {
             String instruction = "Ask " + token + " Clinic";
             assertParseSuccess(parser, "1 2 ci/" + instruction,
                     new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, instruction));

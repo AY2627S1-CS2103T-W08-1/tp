@@ -44,7 +44,7 @@ public class AddCareCommandParserTest {
 
     @Test
     public void parse_standaloneSlashWords_success() {
-        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "C/O")) {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o", "C/O")) {
             String instruction = "Bring documents " + token + " daughter";
             assertParseSuccess(parser, "1 ci/" + instruction,
                     new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of(instruction)));

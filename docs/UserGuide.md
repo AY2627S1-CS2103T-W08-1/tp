@@ -160,7 +160,7 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
   normalization. If any entry is blank or an instruction is too long, the whole command is rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
-  Standalone `s/o`, `d/o`, `c/o`, `a/l`, and `a/p` are also allowed, ignoring letter case, but must not have
+  Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
   punctuation attached.
 * Duplicate entries, ignoring letter case and whitespace differences, are not added again. Other unique entries in
   the same command are still added.
