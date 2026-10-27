@@ -54,6 +54,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Pressing Enter when the command box is empty or contains only whitespace does nothing.
   The text in the command box and the previous result remain unchanged.
 
+* Command words and field prefixes are case-sensitive and must be lowercase, e.g., `list` rather than `LIST`,
+  and `n/` rather than `N/`. Field values follow their own rules; for example, NRIC input is not case-sensitive.
+
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
 
@@ -609,7 +612,9 @@ Format: `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]`
 * Medications and their times, allergens, care instructions, contacts, appointments, and archived state are
   preserved.
 * An edit that gives a patient an NRIC already used by another patient is rejected.
-* After a successful command, the detail panel shows the edited patient immediately.
+* After a successful command, the detail panel shows the edited patient immediately. The displayed list resets to
+  all active patients, or all archived patients if the edited patient is archived, so check the displayed indices
+  before the next command.
 
 Examples:
 * `edit 1 p/91234567` changes only the first displayed patient's phone number.
@@ -836,6 +841,8 @@ Format: `restore [FILENAME]`
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
+  For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
+  counting from 1, and the validation reason.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
 * After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
@@ -916,13 +923,19 @@ If the data cannot be saved, e.g., because the data file is read-only, the comma
 ### Editing the data file
 
 MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
+Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also applies to backups in `data/backups`.
 
 <box type="warning" seamless>
 
 **Caution:**
 If the data file cannot be loaded, MediConnect first saves an unchanged recovery copy beside it, named
 `mediconnect-unreadable-<unique ID>.json`, then starts with no patients. A warning shows the recovery copy's full
-path. Commands continue to save to `data/mediconnect.json`; the recovery copy is kept separately.
+path and a `Details:` line. For an invalid patient, this gives the entry's position in the file and the validation
+reason, e.g., `Patient entry 2: Phone numbers should be 8 digits...`. Count entries in the JSON `persons` array
+starting from 1, including archived patients; this is not an index from a filtered patient list. The first invalid
+entry is reported, so another error may appear after you repair it. For malformed JSON or other read failures,
+the warning asks you to check the JSON format and file permissions; a patient position may not be available.
+Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
 If the recovery copy cannot be created, startup stops so the original file is not overwritten.
 To recover your data, close MediConnect, repair a copy of the recovery file and replace `data/mediconnect.json`
 with the repaired file before restarting. Keep the recovery copy until you have checked the recovered patients.

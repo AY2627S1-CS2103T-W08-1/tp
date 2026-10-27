@@ -120,6 +120,8 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
+* Command words are matched case-sensitively by `AddressBookParser`; field prefixes are also case-sensitive.
+  Both use lowercase spellings. For example, `LIST` produces `Unknown command.` rather than running `list`.
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
@@ -178,6 +180,8 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted.
 
+`JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It ignores a UTF-8 byte-order mark at the start of a file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
+
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
 objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
@@ -193,7 +197,12 @@ do.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
 `mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
-existing recovery file is never overwritten. The UI shows its absolute path in a startup warning, and later commands
+existing recovery file is never overwritten. The UI shows its absolute path and failure details in a startup warning.
+`JsonSerializableAddressBook#toModelType()` prefixes validation failures with the one-based entry position in the
+JSON `persons` array, including null entries and duplicate patients, while preserving the original exception as
+the cause. The first invalid entry is reported. Both startup and `restore` use these diagnostics. `MainApp` shows
+validation messages for `IllegalValueException` causes; other read failures receive a generic format/permissions
+message rather than raw parser exceptions that can include file contents. Later commands
 save normally to the original data path. If preservation fails, the exception stops initialization before commands
 can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
@@ -288,8 +297,11 @@ clarity.
    using the supplied values and the existing values for omitted fields.
 1. The replacement preserves medications and their times, allergens, care instructions, contacts, appointments,
    and archived state. A changed NRIC is rejected if another patient already has it.
-1. The command calls `Model#setPatient(patient, editedPatient)`. If the patient is currently being viewed,
-   `ModelManager#setPatient()` updates `viewedPatient`, and the `PatientDetailPanel` listener redraws the panel.
+1. The command stores the replacement with `Model#setPatient(patient, editedPatient)`, then resets the displayed
+   list to active patients, or archived patients when the edited patient is archived, with
+   `Model#updateFilteredPatientList(...)`.
+1. `Model#setViewedPatient(editedPatient)` shows the edited patient. The `PatientDetailPanel` listeners redraw its
+   details and displayed index.
 
 #### Design considerations
 
@@ -1524,7 +1536,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
-4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path.
+4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors.
 5. MediConnect must not use a database management system.
 6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
 7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
@@ -1660,6 +1672,17 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: Press `F1`, or choose **Help** in the menu bar. Click the help window, then press `Esc`.<br>
       Expected: `F1` and the menu open the help window as `help` does, and `Esc` in the help window closes it.
+
+### Command case sensitivity
+
+1. Test cases: `LIST`, `List`, `Add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
+   Expected: Each returns `Unknown command.` without changing patient data or the displayed list.
+
+1. Test case: `list`<br>
+   Expected: The lowercase command succeeds and shows all active patients.
+
+1. Test case: `add N/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
+   Expected: No patient is added. The command reports `Unrecognized parameter: N/. Please check the command format.`
 
 ### Entering a blank command
 
@@ -1885,17 +1908,23 @@ testers are expected to do more *exploratory* testing.
 
 1. Dealing with corrupted data files
 
-   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
+   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change the second patient's `phone` to `123`.
 
    1. Launch the app.<br>
-      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path.
+      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path and
+      `Details: Patient entry 2:` followed by the phone-number constraints.
       The recovery copy contains the original invalid file unchanged.
 
    1. Run `list`, then close and relaunch the app.<br>
-      Expected: The active data file contains an empty patient list, and the recovery copy is still unchanged.
+      Expected: `list` leaves the invalid data file unchanged. Relaunching shows the warning again and creates
+      another recovery copy; both copies retain the original contents.
 
    1. Close the app. Repair a copy of the recovery file, replace `data/mediconnect.json` with it, and relaunch.<br>
       Expected: The repaired patients load normally without a recovery warning.
+
+   1. In a disposable app folder, replace the data file with malformed JSON, such as `{"persons": [`, and launch.<br>
+      Expected: The warning keeps the recovery path and asks you to check the JSON format and file permissions.
+      It does not display raw parser exceptions or claim to identify a patient entry.
 
 ### Backing up data
 

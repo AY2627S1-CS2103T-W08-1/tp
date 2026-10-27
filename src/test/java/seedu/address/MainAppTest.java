@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
 import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.BENSON;
+import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,6 +27,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.Phone;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -65,7 +69,8 @@ public class MainAppTest {
         UiStub uiStub = new UiStub();
         mainApp.ui = uiStub;
         mainApp.start(null);
-        assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath()),
+        assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(),
+                MainApp.MESSAGE_UNREADABLE_DATA),
                 uiStub.warningMessage);
 
         LogicManager logic = new LogicManager(model, storage);
@@ -89,6 +94,28 @@ public class MainAppTest {
         new LogicManager(model, storage).execute("list");
 
         assertEquals(Files.readString(invalidPatientFile), Files.readString(getRecoveryFiles().get(0)));
+    }
+
+    @Test
+    public void initModelManager_invalidSecondPatient_warnsWithPositionAndReason() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        StorageManager storage = createStorage(dataFile);
+        storage.saveAddressBook(getTypicalAddressBook());
+        String invalidData = Files.readString(dataFile)
+                .replace("\"" + BENSON.getPhone().value + "\"", "\"123\"");
+        Files.writeString(dataFile, invalidData);
+        MainApp mainApp = new MainApp();
+
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+        mainApp.start(null);
+
+        assertEquals(new AddressBook(), model.getAddressBook());
+        Path recoveryFile = getRecoveryFiles().get(0);
+        assertEquals(invalidData, Files.readString(recoveryFile));
+        assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(),
+                "Patient entry 2: " + Phone.MESSAGE_CONSTRAINTS), uiStub.warningMessage);
     }
 
     @Test
@@ -116,6 +143,26 @@ public class MainAppTest {
 
         assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
         assertTrue(getRecoveryFiles().isEmpty());
+    }
+
+    @Test
+    public void initModelManager_dataFileWithByteOrderMark_loadsDataWithoutWarning() throws Exception {
+        // Equivalence partitioning: a valid data file edited by hand in an editor that adds a UTF-8
+        // byte-order mark
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        StorageManager storage = createStorage(dataFile);
+        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        addUtf8ByteOrderMark(dataFile);
+        MainApp mainApp = new MainApp();
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        mainApp.start(null);
+
+        assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+        assertTrue(getRecoveryFiles().isEmpty());
+        assertNull(uiStub.warningMessage);
     }
 
     @Test
