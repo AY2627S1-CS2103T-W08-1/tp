@@ -57,7 +57,9 @@ public class AddContactCommand extends Command {
         }
         List<Contact> contacts = new ArrayList<>(patient.getContacts());
         contacts.add(contact);
-        model.setPatient(patient, patient.withContacts(contacts));
+        Patient editedPatient = patient.withContacts(contacts);
+        model.setPatient(patient, editedPatient);
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), contact));
     }
 
