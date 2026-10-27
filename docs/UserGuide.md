@@ -159,8 +159,9 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
 * Care entries are free text with leading and trailing whitespace removed and consecutive internal whitespace
-  collapsed to one space. They cannot be blank. Care instructions can contain at most 500 characters after this
-  normalization. If any entry is blank or an instruction is too long, the whole command is rejected.
+  collapsed to one space. They cannot be blank. Medication descriptions, allergens, and care instructions can each
+  contain at most 500 characters after this normalization. If any entry is blank or too long, the whole command is
+  rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
@@ -196,8 +197,9 @@ Other errors are reported as follows:
 * A command with no care prefix returns `Please specify at least one of med/, al/, or ci/ to add.`
 * A blank value returns `Medication entries cannot be blank.`, `Allergen entries cannot be blank.`, or
   `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
-* A care instruction longer than 500 characters after normalization returns
-  `Care instructions cannot exceed 500 characters.` The whole command is rejected.
+* A medication, allergen, or care instruction longer than 500 characters after normalization returns
+  `Medication descriptions cannot exceed 500 characters.`, `Allergen entries cannot exceed 500 characters.`, or
+  `Care instructions cannot exceed 500 characters.` respectively. The whole command is rejected.
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 
@@ -713,9 +715,10 @@ Format: `view INDEX`
 
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
-* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...), one
-  entry per line. A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+* The panel shows the patient's name, NRIC, date of birth, phone number, and address, then `Status: Archived` if the
+  patient is archived, followed by their medications, allergens, care instructions, contacts and appointments. Each
+  list is numbered (`1.`, `2.`, ...), one entry per line. A medication with daily times shows them after its
+  description, e.g., `Metformin 500mg (08:00, 20:00)`.
   Upcoming appointments are listed first, then past ones, each sorted by date, then time. Each past appointment is
   marked `(past)`, e.g., on the sample data, `view 2` shows
   `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`. Like the numbers, the marks stay as
@@ -726,11 +729,12 @@ Format: `view INDEX`
   **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
-  to the message above when the patient is deleted or all patients are cleared.
+  to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
+  replaces your data with a backup that does not have this patient with the same details.
 * Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
   `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
-  the list does not show the patient, e.g., after `find` hides them or they are archived, it shows
-  `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
+  the list does not show the patient, e.g., after `find` hides them, or after `list` while an archived patient is
+  viewed, it shows `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
   `listarchived` for an archived patient.
 * When a different patient is viewed, the panel scrolls back to the top, so their name is shown first. When the same
   patient is shown again, e.g., after `addcare`, the panel stays where it was scrolled to.
@@ -931,6 +935,8 @@ If the data cannot be saved, e.g., because the data file is read-only, the comma
 
 MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
 Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also applies to backups in `data/backups`.
+A file saved in another encoding, such as "ANSI" in Windows Notepad, is not valid UTF-8 if it contains letters
+outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`.
 
 <box type="warning" seamless>
 

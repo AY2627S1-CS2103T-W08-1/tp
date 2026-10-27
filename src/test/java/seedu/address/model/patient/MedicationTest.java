@@ -80,6 +80,14 @@ public class MedicationTest {
     }
 
     @Test
+    public void isDescriptionWithinMaxLength() {
+        assertThrows(NullPointerException.class, () -> Medication.isDescriptionWithinMaxLength(null));
+        assertTrue(Medication.isDescriptionWithinMaxLength("a".repeat(Medication.MAX_DESCRIPTION_LENGTH)));
+        assertTrue(Medication.isDescriptionWithinMaxLength("\uD83D\uDE00".repeat(Medication.MAX_DESCRIPTION_LENGTH)));
+        assertFalse(Medication.isDescriptionWithinMaxLength("a".repeat(Medication.MAX_DESCRIPTION_LENGTH + 1)));
+    }
+
+    @Test
     public void isValidTime() {
         assertThrows(NullPointerException.class, () -> Medication.isValidTime(null));
         assertTrue(Medication.isValidTime("00:00"));
