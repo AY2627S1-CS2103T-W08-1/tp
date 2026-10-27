@@ -19,6 +19,7 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystemException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.MainApp;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
@@ -45,10 +47,12 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RestoreCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
@@ -64,6 +68,8 @@ import seedu.address.testutil.AdjustableClock;
 import seedu.address.testutil.PatientBuilder;
 
 public class LogicManagerTest {
+    private static final String INVALID_DATA = "invalid data";
+    private static final String EMPTY_BACKUP_FILE_NAME = "empty.json";
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     /** As thrown when the temporary file written first cannot replace the data file. */
     private static final IOException DUMMY_AD_EXCEPTION =
@@ -180,6 +186,32 @@ public class LogicManagerTest {
         assertTrue(model.getAddressBook().getPatientList().isEmpty());
         assertNull(model.getViewedPatient().getValue());
         assertTrue(storage.readAddressBook().orElseThrow().getPatientList().isEmpty());
+    }
+
+    @Test
+    public void execute_clearAfterFailedLoad_repairsFileAndPreservesRecoveryCopy() throws Exception {
+        assertEmptyReplacementRepairsRecoveredFile(ClearCommand.COMMAND_FORMAT,
+                new ClearCommand(FIXED_CLOCK, temporaryFolder.resolve("backups")));
+    }
+
+    @Test
+    public void execute_restoreEmptyBackupAfterFailedLoad_repairsFileAndPreservesRecoveryCopy() throws Exception {
+        Path backupDir = temporaryFolder.resolve("backups");
+        new JsonAddressBookStorage(backupDir.resolve(EMPTY_BACKUP_FILE_NAME)).saveAddressBook(new AddressBook());
+        assertEmptyReplacementRepairsRecoveredFile(RestoreCommand.COMMAND_WORD + " " + EMPTY_BACKUP_FILE_NAME,
+                new RestoreCommand(EMPTY_BACKUP_FILE_NAME, FIXED_CLOCK, backupDir));
+    }
+
+    @Test
+    public void execute_clearEmptySaveFails_reportsFailure() {
+        logic = createLogicWithFailingStorage(DUMMY_IO_EXCEPTION);
+
+        assertThrows(CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()), () ->
+                logic.execute(ClearCommand.COMMAND_FORMAT));
+
+        assertTrue(wasSaveAttempted);
+        assertEquals(new AddressBook(), model.getAddressBook());
     }
 
     @Test
@@ -344,6 +376,47 @@ public class LogicManagerTest {
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
                 + NRIC_DESC_AMY + DOB_DESC_AMY + ADDRESS_DESC_AMY;
         assertCommandFailure(addCommand, CommandException.class, expectedMessage, new ModelManager());
+    }
+
+    /**
+     * Checks failed startup, a read-only command, an explicit empty replacement, and a fresh startup.
+     * Only the replacement command's backup location is substituted after normal parsing.
+     */
+    private void assertEmptyReplacementRepairsRecoveredFile(String commandText, Command command) throws Exception {
+        Path dataFile = storage.getAddressBookFilePath();
+        Files.writeString(dataFile, INVALID_DATA);
+        model = new StartupApp().load(storage);
+        Path recoveryFile = getRecoveryFiles().get(0);
+        assertEquals(new AddressBook(), model.getAddressBook());
+
+        new LogicManager(model, storage).execute(ListCommand.COMMAND_WORD);
+        assertEquals(INVALID_DATA, Files.readString(dataFile));
+        AddressBookParser parser = new AddressBookParser() {
+            @Override
+            public Command parseCommand(String text) throws ParseException {
+                super.parseCommand(text);
+                return command;
+            }
+        };
+        new LogicManager(model, storage, parser).execute(commandText);
+
+        assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
+        assertEquals(new AddressBook(), new StartupApp().load(storage).getAddressBook());
+        assertEquals(List.of(recoveryFile), getRecoveryFiles());
+        assertEquals(INVALID_DATA, Files.readString(recoveryFile));
+    }
+
+    private List<Path> getRecoveryFiles() throws IOException {
+        try (var files = Files.list(temporaryFolder)) {
+            return files.filter(path -> path.getFileName().toString().startsWith("mediconnect-unreadable-")).toList();
+        }
+    }
+
+    /** Exposes startup loading so recovery can be tested with temporary files and a real LogicManager. */
+    private static class StartupApp extends MainApp {
+        Model load(Storage storage) throws IOException {
+            return initModelManager(storage, new UserPrefs());
+        }
     }
 
     /**
