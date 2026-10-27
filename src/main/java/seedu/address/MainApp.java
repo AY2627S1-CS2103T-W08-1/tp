@@ -1,5 +1,7 @@
 package seedu.address;
 
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -79,6 +81,7 @@ public class MainApp extends Application {
      * @throws IOException If an unreadable data file cannot be preserved.
      */
     protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) throws IOException {
+        requireAllNonNull(storage, userPrefs);
         Path dataFilePath = storage.getAddressBookFilePath();
         logger.info("Using data file : " + dataFilePath);
 
@@ -86,6 +89,7 @@ public class MainApp extends Application {
         ReadOnlyAddressBook initialData;
         try {
             addressBookOptional = storage.readAddressBook();
+            assert addressBookOptional != null : "Storage must return an Optional instead of null.";
             if (addressBookOptional.isEmpty()) {
                 logger.info("Creating a new data file " + dataFilePath
                         + " populated with sample data.");

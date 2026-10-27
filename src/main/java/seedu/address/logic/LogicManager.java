@@ -49,19 +49,21 @@ public class LogicManager implements Logic {
      * Constructs a manager with the given parser, allowing tests to isolate command dependencies.
      */
     LogicManager(Model model, Storage storage, AddressBookParser addressBookParser) {
-        this.model = model;
-        this.storage = storage;
-        this.addressBookParser = addressBookParser;
+        this.model = requireNonNull(model);
+        this.storage = requireNonNull(storage);
+        this.addressBookParser = requireNonNull(addressBookParser);
     }
 
     @Override
     public CommandResult execute(String commandText) throws CommandException, ParseException {
+        requireNonNull(commandText);
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
         // the command text is not logged, as it can hold patient details
         logger.info("----------------[USER COMMAND][" + command.getClass().getSimpleName() + "]");
         Model.Snapshot snapshot = model.takeSnapshot();
         commandResult = command.execute(model);
+        assert commandResult != null : "A successfully executed command must return a result.";
 
         // Saves only changed patient data, so that commands that only read it still work if the file is read-only.
         if (model.getAddressBook().equals(snapshot.addressBook())) {

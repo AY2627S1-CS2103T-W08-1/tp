@@ -89,6 +89,42 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void constructor_nullDependency_rejectedImmediately() {
+        assertThrows(NullPointerException.class, () -> new LogicManager(null, storage));
+        assertThrows(NullPointerException.class, () -> new LogicManager(model, null));
+        assertThrows(NullPointerException.class, () -> new LogicManager(model, storage, null));
+    }
+
+    @Test
+    public void execute_nullInput_rejectedBeforeCallingParser() {
+        AddressBookParser parser = new AddressBookParser() {
+            @Override
+            public Command parseCommand(String commandText) {
+                throw new AssertionError("The parser must not receive null input.");
+            }
+        };
+        LogicManager manager = new LogicManager(model, storage, parser);
+        assertThrows(NullPointerException.class, () -> manager.execute(null));
+    }
+
+    @Test
+    public void execute_commandReturnsNull_failsInternalAssertion() {
+        AddressBookParser parser = new AddressBookParser() {
+            @Override
+            public Command parseCommand(String commandText) {
+                return new Command() {
+                    @Override
+                    public CommandResult execute(Model model) {
+                        return null;
+                    }
+                };
+            }
+        };
+        LogicManager manager = new LogicManager(model, storage, parser);
+        assertThrows(AssertionError.class, () -> manager.execute(ListCommand.COMMAND_WORD));
+    }
+
+    @Test
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
         assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
