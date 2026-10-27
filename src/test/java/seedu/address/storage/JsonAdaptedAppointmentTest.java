@@ -70,6 +70,19 @@ public class JsonAdaptedAppointmentTest {
     }
 
     @Test
+    public void toModelType_lineBreakInProviderOrNote_throwsIllegalValueException() {
+        // commands cannot type a line break, which would show as a fake appointment in a list
+        JsonAdaptedAppointment providerWithLineBreak =
+                new JsonAdaptedAppointment(VALID_DATE, VALID_TIME, "Dr Tan\n2. 2099-01-01 09:00 with Dr Fake", "");
+        JsonAdaptedAppointment noteWithLineBreak = new JsonAdaptedAppointment(VALID_DATE, VALID_TIME, VALID_PROVIDER,
+                "Bring results)\n2. 2099-01-01 09:00 with Dr Fake");
+
+        assertThrows(IllegalValueException.class, Appointment.MESSAGE_PROVIDER_CONSTRAINTS,
+                providerWithLineBreak::toModelType);
+        assertThrows(IllegalValueException.class, Appointment.MESSAGE_NOTE_CONSTRAINTS, noteWithLineBreak::toModelType);
+    }
+
+    @Test
     public void toModelType_nullProvider_throwsIllegalValueException() {
         JsonAdaptedAppointment appointment = new JsonAdaptedAppointment(VALID_DATE, VALID_TIME, null, "");
         String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, "provider");

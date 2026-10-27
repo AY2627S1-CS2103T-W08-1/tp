@@ -1,11 +1,13 @@
 package seedu.address;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
+import static seedu.address.testutil.TestUtil.replaceWithInvalidUtf8Byte;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
@@ -146,12 +148,33 @@ public class MainAppTest {
     }
 
     @Test
+    public void initModelManager_unpairedSurrogateInDataFile_startsEmptyAndKeepsCopy() throws Exception {
+        // Equivalence partitioning: an address edited by hand to hold half of a surrogate pair, which must
+        // not be loaded and later saved as "?"
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        StorageManager storage = createStorageWithSampleData(dataFile);
+        String editedData = Files.readString(dataFile).replace("Geylang", "\\ud800 Geylang");
+        Files.writeString(dataFile, editedData);
+        MainApp mainApp = new MainApp();
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        mainApp.start(null);
+
+        assertEquals(new AddressBook(), model.getAddressBook());
+        Path recoveryFile = getRecoveryFiles().get(0);
+        assertEquals(editedData, Files.readString(recoveryFile));
+        assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(),
+                MainApp.MESSAGE_UNREADABLE_DATA), uiStub.warningMessage);
+    }
+
+    @Test
     public void initModelManager_dataFileWithByteOrderMark_loadsDataWithoutWarning() throws Exception {
         // Equivalence partitioning: a valid data file edited by hand in an editor that adds a UTF-8
         // byte-order mark
         Path dataFile = temporaryFolder.resolve("mediconnect.json");
-        StorageManager storage = createStorage(dataFile);
-        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        StorageManager storage = createStorageWithSampleData(dataFile);
         addUtf8ByteOrderMark(dataFile);
         MainApp mainApp = new MainApp();
         UiStub uiStub = new UiStub();
@@ -163,6 +186,28 @@ public class MainAppTest {
         assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
         assertTrue(getRecoveryFiles().isEmpty());
         assertNull(uiStub.warningMessage);
+    }
+
+    @Test
+    public void initModelManager_invalidUtf8DataFile_startsEmptyAndKeepsUnchangedCopy() throws Exception {
+        // Equivalence partitioning: a data file with a byte in an address that is not valid UTF-8, which must
+        // not be loaded, and later saved, with a replacement character in the address
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        StorageManager storage = createStorageWithInvalidUtf8Data(dataFile);
+        byte[] invalidData = Files.readAllBytes(dataFile);
+        MainApp mainApp = new MainApp();
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        mainApp.start(null);
+
+        assertEquals(new AddressBook(), model.getAddressBook());
+        Path recoveryFile = getRecoveryFiles().get(0);
+        assertArrayEquals(invalidData, Files.readAllBytes(dataFile));
+        assertArrayEquals(invalidData, Files.readAllBytes(recoveryFile));
+        assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(),
+                MainApp.MESSAGE_UNREADABLE_DATA), uiStub.warningMessage);
     }
 
     @Test
@@ -226,9 +271,29 @@ public class MainAppTest {
         assertNull(uiStub.warningMessage);
     }
 
+    /**
+     * Returns storage for {@code dataFile}, after saving the sample data there.
+     */
+    private StorageManager createStorageWithSampleData(Path dataFile) throws IOException {
+        StorageManager storage = createStorage(dataFile);
+        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        return storage;
+    }
+
     private StorageManager createStorage(Path dataFile) {
         return new StorageManager(new JsonAddressBookStorage(dataFile),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
+    }
+
+    /**
+     * Returns storage for {@code dataFile}, after saving the sample data there with a byte in an address
+     * that is not valid UTF-8.
+     */
+    private StorageManager createStorageWithInvalidUtf8Data(Path dataFile) throws IOException {
+        StorageManager storage = createStorage(dataFile);
+        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        replaceWithInvalidUtf8Byte(dataFile, "Geylang");
+        return storage;
     }
 
     private List<Path> getRecoveryFiles() throws IOException {
