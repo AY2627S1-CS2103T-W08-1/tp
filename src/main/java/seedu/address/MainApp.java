@@ -1,5 +1,7 @@
 package seedu.address;
 
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -7,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javafx.application.Application;
@@ -61,6 +64,8 @@ public class MainApp extends Application {
 
     private final Path dataFilePath;
     private final Path prefsFilePath;
+    private final Consumer<String> startupErrorPresenter;
+    private final Runnable exitAction;
     private String dataLoadWarning = "";
     private String startupFailure = "";
 
@@ -75,8 +80,18 @@ public class MainApp extends Application {
      * Creates the application with the given paths so startup can be tested in a temporary folder.
      */
     MainApp(Path dataFilePath, Path prefsFilePath) {
+        this(dataFilePath, prefsFilePath, UiManager::showStartupError, Platform::exit);
+    }
+
+    /**
+     * Creates the application with startup actions that tests can observe without exiting JavaFX.
+     */
+    MainApp(Path dataFilePath, Path prefsFilePath, Consumer<String> startupErrorPresenter, Runnable exitAction) {
+        requireAllNonNull(dataFilePath, prefsFilePath, startupErrorPresenter, exitAction);
         this.dataFilePath = dataFilePath;
         this.prefsFilePath = prefsFilePath;
+        this.startupErrorPresenter = startupErrorPresenter;
+        this.exitAction = exitAction;
     }
 
     @Override
@@ -213,8 +228,8 @@ public class MainApp extends Application {
      * Shows a startup failure on the JavaFX application thread, then exits without opening the main window.
      */
     protected void showStartupError(String message) {
-        UiManager.showStartupError(message);
-        Platform.exit();
+        startupErrorPresenter.accept(message);
+        exitAction.run();
     }
 
     @Override

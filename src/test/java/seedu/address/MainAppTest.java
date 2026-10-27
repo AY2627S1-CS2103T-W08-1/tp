@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -148,6 +149,25 @@ public class MainAppTest {
         Model model = new MainApp().initModelManager(storage, new UserPrefs());
 
         assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+    }
+
+    @Test
+    public void start_failedStartup_presentsErrorBeforeExit() throws Exception {
+        Path dataFile = Files.createDirectory(temporaryFolder.resolve("mediconnect.json"));
+        List<String> events = new ArrayList<>();
+        MainApp app = new MainApp(dataFile, temporaryFolder.resolve("preferences.json"),
+                message -> events.add("error: " + message), () -> events.add("exit"));
+
+        app.init();
+        app.start(null);
+        app.stop();
+
+        String expectedMessage = String.format(MainApp.MESSAGE_STARTUP_FAILURE, dataFile.toAbsolutePath(),
+                MainApp.MESSAGE_DATA_PATH_DIRECTORY);
+        assertEquals(List.of("error: " + expectedMessage, "exit"), events);
+        assertNull(app.model);
+        assertNull(app.ui);
+        assertTrue(Files.isDirectory(dataFile));
     }
 
     @Test
