@@ -67,21 +67,28 @@ deactivate EditCommand
 
 EditCommand -> Model : setPatient(patient, editedPatient)
 activate Model
+Model --> EditCommand
+deactivate Model
 
-opt patient is currently viewed
-Model -> PatientDetailPanel : viewedPatient listener fires
+EditCommand -> Model : updateFilteredPatientList(activeOrArchivedPredicate)
+activate Model
+Model -> PatientDetailPanel : displayed patient list changes
 activate PatientDetailPanel
-
-PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
-activate PatientDetailPanel
-
-PatientDetailPanel --> PatientDetailPanel
-deactivate PatientDetailPanel
-
 PatientDetailPanel --> Model
 deactivate PatientDetailPanel
-end
+Model --> EditCommand
+deactivate Model
 
+EditCommand -> Model : setViewedPatient(editedPatient)
+activate Model
+Model -> PatientDetailPanel : viewedPatient listener fires
+activate PatientDetailPanel
+PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
+activate PatientDetailPanel
+PatientDetailPanel --> PatientDetailPanel
+deactivate PatientDetailPanel
+PatientDetailPanel --> Model
+deactivate PatientDetailPanel
 Model --> EditCommand
 deactivate Model
 
