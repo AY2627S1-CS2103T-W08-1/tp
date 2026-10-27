@@ -38,6 +38,7 @@ import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
+import seedu.address.testutil.PatientBuilder;
 import seedu.address.testutil.PatientUtil;
 import seedu.address.ui.Ui;
 
@@ -286,6 +287,107 @@ public class MainAppTest {
         assertTrue(ui.isStarted);
         assertNull(app.startupError);
         assertEquals(SampleDataUtil.getSampleAddressBook(), app.model.getAddressBook());
+        app.stop();
+    }
+
+    @Test
+    public void init_secondInstance_showsErrorWithoutChangingData() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Path prefsFile = temporaryFolder.resolve("preferences.json");
+        createStorage(dataFile).saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        StartupAppStub first = new StartupAppStub(dataFile, prefsFile, null);
+        StartupAppStub second = new StartupAppStub(dataFile, prefsFile, null);
+        try {
+            first.init();
+            second.init();
+            second.start(null);
+            assertEquals(String.format(MainApp.MESSAGE_DATA_IN_USE, dataFile.toAbsolutePath()), second.startupError);
+            assertNull(second.model);
+            assertNull(second.logic);
+            assertNull(second.ui);
+            var addedPatient = new PatientBuilder(ALICE).withNric("S1111111A").build();
+            first.logic.execute(PatientUtil.getAddCommand(addedPatient));
+            second.stop();
+            assertTrue(createStorage(dataFile).readAddressBook().orElseThrow().getPatientList().contains(addedPatient));
+        } finally {
+            first.stop();
+            second.stop();
+        }
+    }
+
+    @Test
+    public void init_afterFirstInstanceStops_canOpenSavedData() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Path prefsFile = temporaryFolder.resolve("preferences.json");
+        StartupAppStub first = new StartupAppStub(dataFile, prefsFile, null);
+        first.init();
+        first.stop();
+        StartupAppStub second = new StartupAppStub(dataFile, prefsFile, null);
+        try {
+            second.init();
+            assertNull(second.startupError);
+            assertEquals(SampleDataUtil.getSampleAddressBook(), second.model.getAddressBook());
+        } finally {
+            second.stop();
+        }
+    }
+
+    @Test
+    public void init_recoveryFails_releasesLockBeforeShowingError() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Path prefsFile = temporaryFolder.resolve("preferences.json");
+        createStorage(dataFile).saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        StartupAppStub failed = new StartupAppStub(dataFile, prefsFile, new IOException("cannot preserve data"));
+        failed.init();
+        StartupAppStub retry = new StartupAppStub(dataFile, prefsFile, null);
+        try {
+            retry.init();
+            assertEquals(SampleDataUtil.getSampleAddressBook(), retry.model.getAddressBook());
+        } finally {
+            failed.stop();
+            retry.stop();
+        }
+    }
+
+    @Test
+    public void init_lockFolderBlocked_showsErrorWithoutChangingPatientData() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Path prefsFile = temporaryFolder.resolve("preferences.json");
+        createStorage(dataFile).saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        String originalData = Files.readString(dataFile);
+        Path lockFolder = Files.writeString(temporaryFolder.resolve(".mediconnect-locks"), "keep this file");
+        StartupAppStub app = new StartupAppStub(dataFile, prefsFile, null);
+        app.init();
+        app.start(null);
+        app.stop();
+        assertTrue(app.startupError.contains(dataFile.toAbsolutePath().toString()));
+        assertTrue(app.startupError.contains(lockFolder.toAbsolutePath().toString()));
+        assertNull(app.model);
+        assertFalse(Files.exists(prefsFile));
+        assertEquals(originalData, Files.readString(dataFile));
+        assertEquals("keep this file", Files.readString(lockFolder));
+    }
+
+    @Test
+    public void stop_preferencesSaveFails_releasesDataLock() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Path prefsFile = temporaryFolder.resolve("preferences.json");
+        StartupAppStub first = new StartupAppStub(dataFile, prefsFile, null);
+        first.init();
+        first.storage = new StorageManager(new JsonAddressBookStorage(dataFile), new JsonUserPrefsStorage(prefsFile) {
+            @Override
+            public void saveUserPrefs(ReadOnlyUserPrefs userPrefs) throws IOException {
+                throw new IOException("cannot save preferences");
+            }
+        });
+        first.stop();
+        StartupAppStub retry = new StartupAppStub(dataFile, prefsFile, null);
+        try {
+            retry.init();
+            assertEquals(SampleDataUtil.getSampleAddressBook(), retry.model.getAddressBook());
+        } finally {
+            retry.stop();
+        }
     }
 
     @Test
