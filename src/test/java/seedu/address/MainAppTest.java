@@ -357,6 +357,25 @@ public class MainAppTest {
     }
 
     @Test
+    public void init_lockFiles_createdInsideAppFolder() throws Exception {
+        Path appFolder = Files.createDirectory(temporaryFolder.resolve("app"));
+        StartupAppStub app = new StartupAppStub(appFolder.resolve("data/mediconnect.json"),
+                appFolder.resolve("preferences.json"), null);
+        try {
+            app.init();
+
+            Path lockFolder = appFolder.resolve(".mediconnect/locks");
+            assertTrue(Files.isDirectory(lockFolder));
+            try (var lockFiles = Files.list(lockFolder)) {
+                assertEquals(1, lockFiles.count());
+            }
+            assertEquals(SampleDataUtil.getSampleAddressBook(), app.model.getAddressBook());
+        } finally {
+            app.stop();
+        }
+    }
+
+    @Test
     public void init_secondInstance_showsErrorWithoutChangingData() throws Exception {
         Path dataFile = temporaryFolder.resolve("mediconnect.json");
         Path prefsFile = temporaryFolder.resolve("preferences.json");
@@ -421,7 +440,8 @@ public class MainAppTest {
         Path prefsFile = temporaryFolder.resolve("preferences.json");
         createStorage(dataFile).saveAddressBook(SampleDataUtil.getSampleAddressBook());
         String originalData = Files.readString(dataFile);
-        Path lockFolder = Files.writeString(temporaryFolder.resolve(".mediconnect-locks"), "keep this file");
+        Path metadataFolder = Files.createDirectory(temporaryFolder.resolve(".mediconnect"));
+        Path lockFolder = Files.writeString(metadataFolder.resolve("locks"), "keep this file");
         StartupAppStub app = new StartupAppStub(dataFile, prefsFile, null);
         app.init();
         app.start(null);

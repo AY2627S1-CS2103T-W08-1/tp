@@ -67,7 +67,7 @@ public class MainApp extends Application {
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
     private static final Path ADDRESS_BOOK_FILE_PATH = Paths.get("data", "mediconnect.json");
-    private static final Path LOCK_DIRECTORY = Paths.get(System.getProperty("user.home"), ".mediconnect", "locks");
+    private static final Path LOCK_DIRECTORY = Paths.get(".mediconnect", "locks");
     private static final String RECOVERY_FILE_PREFIX = "mediconnect-unreadable-";
 
     protected Ui ui;
@@ -88,11 +88,11 @@ public class MainApp extends Application {
      * Creates the application with its standard data and preferences paths.
      */
     public MainApp() {
-        this(ADDRESS_BOOK_FILE_PATH, USER_PREFS_FILE_PATH, LOCK_DIRECTORY);
+        this(ADDRESS_BOOK_FILE_PATH, USER_PREFS_FILE_PATH);
     }
 
     /**
-     * Creates the application with the given paths and an isolated lock folder beside the preferences for tests.
+     * Creates the application with the preferences file's parent as its app folder, allowing isolated startup tests.
      */
     MainApp(Path dataFilePath, Path prefsFilePath) {
         this(dataFilePath, prefsFilePath, UiManager::showStartupError, Platform::exit);
@@ -102,20 +102,10 @@ public class MainApp extends Application {
      * Creates the application with startup actions that tests can observe without exiting JavaFX.
      */
     MainApp(Path dataFilePath, Path prefsFilePath, Consumer<String> startupErrorPresenter, Runnable exitAction) {
-        this(dataFilePath, prefsFilePath, prefsFilePath.resolveSibling(".mediconnect-locks"),
-                startupErrorPresenter, exitAction);
-    }
-
-    private MainApp(Path dataFilePath, Path prefsFilePath, Path lockDirectory) {
-        this(dataFilePath, prefsFilePath, lockDirectory, UiManager::showStartupError, Platform::exit);
-    }
-
-    private MainApp(Path dataFilePath, Path prefsFilePath, Path lockDirectory,
-            Consumer<String> startupErrorPresenter, Runnable exitAction) {
-        requireAllNonNull(dataFilePath, prefsFilePath, lockDirectory, startupErrorPresenter, exitAction);
+        requireAllNonNull(dataFilePath, prefsFilePath, startupErrorPresenter, exitAction);
         this.dataFilePath = dataFilePath;
         this.prefsFilePath = prefsFilePath;
-        this.lockDirectory = lockDirectory;
+        this.lockDirectory = prefsFilePath.toAbsolutePath().resolveSibling(LOCK_DIRECTORY);
         this.startupErrorPresenter = startupErrorPresenter;
         this.exitAction = exitAction;
     }
