@@ -228,7 +228,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 
 * `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information.
 * `deletePatient(target)` clears the viewed patient if `target` is being viewed.
-* `setAddressBook(...)`, which the `clear` command uses, clears the viewed patient if it is not in the new data.
+* `setAddressBook(...)`, which `clear confirm` uses, clears the viewed patient if it is not in the new data.
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
 
@@ -255,6 +255,20 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 * **Alternative 2:** Split the list under Upcoming and Past headings, as `listappt INDEX` does.
   * Pros: Past appointments are grouped visibly.
   * Cons: One numbered list split across two headings can be read as two lists, each starting from `1.`.
+
+### Clearing all patients
+
+`AddressBookParser` delegates `clear` arguments to `ClearCommandParser`. It accepts only the lowercase
+`confirm` token, with surrounding whitespace allowed. Missing confirmation or extra arguments produce a
+`ParseException` with the warning and command format before any data is changed.
+
+`ClearCommand#execute()` first calls `BackupCommand#execute()` to save all current data using the existing
+backup implementation. A backup failure propagates as a `CommandException` before the model is changed.
+Only after the backup succeeds does it replace the entire address book with an empty one through `Model#setAddressBook()`,
+including archived patients and patients hidden by a filter. The existing model logic clears the viewed patient.
+The success message includes the backup location. `LogicManager` saves the change and restores its snapshot
+if saving fails; the automatic backup remains available. Backups include archived and filtered-out patients,
+even for an empty address book, and can be recovered with `restore`.
 
 ### Edit patient feature
 
@@ -380,7 +394,10 @@ Both commands have a second constructor that takes a `java.time.Clock` and the b
 `Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
 Names are nonblank free text because contacts can be people or organisations, such as `Tan & Partners Clinic`.
 They deliberately do not use patient `Name` constraints. Contact phones likewise have their own rules so clinic
-and international numbers work without weakening patient-phone validation.
+and international numbers work without weakening patient-phone validation. `Contact#isValidPhone()` requires
+3 to 15 digits, permits spaces and hyphens, and allows at most one leading `+` after trimming. The digit bounds
+are named constants in `Contact`. Both contact parsers and `JsonAdaptedContact` use this model validation, so
+the same limits apply to add, edit, startup loading and restore. Formatting and duplicate identity are unchanged.
 
 `Patient` keeps an immutable contact list in insertion order. `withContacts` replaces only that list; `addcare`
 copies it when rebuilding a patient. Contact identity compares names ignoring case and collapsed spaces, and
@@ -548,7 +565,7 @@ Step 5. The user then decides to execute the command `list`. Commands that do no
 
 <puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
 
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
+Step 6. The user executes `clear confirm`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
 
 <puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
 
@@ -1652,6 +1669,14 @@ testers are expected to do more *exploratory* testing.
 1. Test case: Type three spaces in the command box and press Enter.<br>
    Expected: No command executes and no error appears. The spaces and previous result remain unchanged.
 
+### Adding a patient
+
+1. Prerequisites: No patient with NRIC `S1234567A` exists in the data.
+
+1. Test case: `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`<br>
+   Expected: The patient is added. The status message begins `New patient added:` and ends
+   `Address: 21 Lorong 3, #05-10`, without an extra semicolon after the address.
+
 ### Adding a patient with punctuation after a slash word
 
 1. Test case: `add n/Ben s/o, Ng ic/S1111111B dob/1950-01-01 p/91111111 a/Blk 1`<br>
@@ -1703,6 +1728,24 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `editcontact 1 99 nt/note`, then `deletecontact 1 99`.<br>
    Expected: Both report `The contact index provided is invalid.` and change nothing.
 
+1. Validating contact phone numbers
+
+   1. Test cases: `addcontact 1 n/Short number r/Clinic p/123` and
+      `addcontact 1 n/International number r/Clinic p/+123 456-789 012-345`<br>
+      Expected: Both contacts are added; the second phone contains exactly 15 digits and retains its formatting.
+
+   1. Test cases: `addcontact 1 n/Bad number r/Clinic p/+++123+++`, then the same command with
+      `p/123+456` and `p/1234567890123456`<br>
+      Expected: Each command shows the contact-phone constraints and adds no contact.
+
+   1. Run `view 1` and note the contact number of `Short number`. Run
+      `editcontact 1 CONTACT_INDEX p/+1234567890123456`, using that contact number.<br>
+      Expected: The edit is rejected with the same constraints; the phone remains `123`.
+
+   1. In a disposable app folder, close the app and change a contact phone in `data/mediconnect.json`
+      to `+++123+++`, then relaunch.<br>
+      Expected: The file is rejected, startup shows the recovery-copy path, and the original invalid data is preserved.
+
 ### Listing active patients
 
 1. Listing patients when there is data
@@ -1719,11 +1762,36 @@ testers are expected to do more *exploratory* testing.
 
 1. Listing patients when there is no data
 
-   1. Prerequisites: Clear all data using the `clear` command.<br>
-      Expected: The status message shows `All patients have been cleared.`
+   1. Prerequisites: Clear all data using `clear confirm`; its automatic backup preserves the previous data.<br>
+      Expected: The status message shows `All patients have been cleared.` followed by the backup path.
 
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No active patients found.`
+
+### Clearing all patients
+
+1. Prerequisites: Have active and archived patients, and run `view 1`.
+
+1. Test cases: `clear`, `clear 1`, `clear CONFIRM`, `clear confirm extra`<br>
+   Expected: `Invalid command format!` followed by the clearing warning and `Format: clear confirm`.
+   All patients and the viewed patient remain unchanged, and no backup is created.
+
+1. Test case: `clear confirm`<br>
+   Expected: `All patients have been cleared.` followed by `Backup saved to: PATH`. The patient list is empty,
+   `listarchived` reports no archived patients, and the detail panel shows its placeholder. Restarting the app still shows no patients.
+   A new backup contains all previous active and archived patients. Note its file name for the recovery check below.
+
+1. Test case: `clear confirm` again<br>
+   Expected: The same success message and a new backup path. The empty address book is backed up without
+   overwriting the earlier backup.
+
+1. Test case: `restore FILENAME`, using the backup noted before the repeated clear<br>
+   Expected: All original active and archived patients are restored. The patient list shows the active patients;
+   `listarchived` shows the archived patients.
+
+1. Simulate a backup failure in a disposable app folder by making `data/backups` a regular file, then run
+   `clear confirm`.<br>
+   Expected: A backup failure message. All patients and the viewed patient remain unchanged.
 
 ### Deleting a patient
 
