@@ -3,6 +3,7 @@ package seedu.address.model.patient;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.text.Normalizer;
 import java.util.Objects;
 
 /**
@@ -93,12 +94,17 @@ public class Contact {
     }
 
     /**
-     * Compares names ignoring case, and phones ignoring spaces and hyphens.
+     * Compares names in Unicode NFC form ignoring case, and phones ignoring spaces and hyphens.
+     * Canonically equivalent name spellings identify the same contact without changing display text.
      * The plus sign is significant; no country code is inferred.
      */
     public boolean isSameContact(Contact other) {
-        return other != null && name.equalsIgnoreCase(other.name)
+        return other != null && getComparisonName().equalsIgnoreCase(other.getComparisonName())
                 && getComparisonPhone().equals(other.getComparisonPhone());
+    }
+
+    private String getComparisonName() {
+        return Normalizer.normalize(name, Normalizer.Form.NFC);
     }
 
     private String getComparisonPhone() {

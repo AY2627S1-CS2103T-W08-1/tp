@@ -45,6 +45,21 @@ public class JsonAdaptedPatientTest {
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
 
     @Test
+    public void toModelType_canonicallyEquivalentContacts_rejected() throws Exception {
+        JsonAdaptedContact composed = new JsonAdaptedContact("Caf\u00e9", "GP", "123", "");
+        JsonAdaptedContact decomposed = new JsonAdaptedContact("Cafe\u0301", "Guardian", "123", "Other note");
+        for (List<JsonAdaptedContact> contacts
+                : List.of(List.of(composed, decomposed), List.of(decomposed, composed))) {
+            JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                    VALID_ADDRESS, List.of(), List.of(), List.of(), contacts, null, null);
+            assertThrows(IllegalValueException.class, MESSAGE_DUPLICATE, patient::toModelType);
+        }
+        JsonAdaptedPatient singleContact = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(decomposed), null, null);
+        assertEquals("Cafe\u0301", singleContact.toModelType().getContacts().get(0).getName());
+    }
+
+    @Test
     public void toModelType_validPatientDetails_returnsPatient() throws Exception {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(BENSON);
         assertEquals(BENSON, patient.toModelType());
