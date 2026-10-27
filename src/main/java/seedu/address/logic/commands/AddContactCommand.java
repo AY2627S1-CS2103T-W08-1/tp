@@ -27,7 +27,7 @@ public class AddContactCommand extends Command {
     public static final String COMMAND_FORMAT = COMMAND_WORD + " INDEX " + PREFIX_NAME + "NAME " + PREFIX_ROLE + "ROLE "
             + PREFIX_PHONE + "PHONE [" + PREFIX_NOTE + "NOTE]";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds a contact to a patient.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 " + PREFIX_NAME + "Dr Tan " + PREFIX_ROLE + "GP "
             + PREFIX_PHONE + "+65 6123-4567 " + PREFIX_NOTE + "Call in the morning";
     public static final String MESSAGE_SUCCESS = "Added contact for %1$s: %2$s";

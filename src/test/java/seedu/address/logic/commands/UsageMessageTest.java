@@ -10,10 +10,11 @@ import org.junit.jupiter.api.Test;
 public class UsageMessageTest {
 
     @Test
-    public void messageUsage_indexCommandsReportedInIssue_useParametersLabel() {
+    public void messageUsage_indexCommands_useParametersLabel() {
         List<String> usageMessages = List.of(ArchiveCommand.MESSAGE_USAGE, UnarchiveCommand.MESSAGE_USAGE,
                 EditCommand.MESSAGE_USAGE, EditCareCommand.MESSAGE_USAGE, DeleteCareCommand.MESSAGE_USAGE,
-                DeleteAllergyCommand.MESSAGE_USAGE);
+                DeleteAllergyCommand.MESSAGE_USAGE, AddContactCommand.MESSAGE_USAGE,
+                DeleteContactCommand.MESSAGE_USAGE, EditContactCommand.MESSAGE_USAGE);
 
         for (String usageMessage : usageMessages) {
             assertTrue(usageMessage.contains("\nParameters: "));
