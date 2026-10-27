@@ -822,7 +822,7 @@ Saves a copy of all patient data to the `data/backups` folder, inside the folder
 Format: `backup`
 
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
-* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten.
+* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten. This also holds when two backups are made at the same moment, e.g., in two MediConnect windows, or when `restore` or `clear confirm` backs up your data while you make a backup. To let such backups take turns, MediConnect keeps an empty file named `.backup.lock` in `data/backups`; it is not a backup, and `restore` does not list it.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
