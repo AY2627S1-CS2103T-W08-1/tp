@@ -668,15 +668,29 @@ _{more aspects and alternatives to be added}_
 
 `LogicManager` rejects null model, storage and parser dependencies at construction, and null command text before
 calling the parser. `Command#execute()` must return a non-null `CommandResult`; an assertion checks this internal
-contract for every command, including add, contacts and clear. `MainApp#initModelManager()` rejects null storage
+contract for command execution generally. `MainApp#initModelManager()` rejects null storage
 or preferences before reading or creating data, and asserts that storage returns a non-null `Optional`.
 `Optional.empty()` is valid for a missing file and still starts the normal sample-data flow.
+
+The feature commands also check their own model postconditions before reporting success:
+
+* `AddCommand` asserts that the complete added patient is present in the model.
+* `AddContactCommand`, `EditContactCommand` and `DeleteContactCommand` assert that the model contains the exact
+  replacement patient passed to `setPatient`, rather than merely a patient with the same NRIC. Existing copy
+  and command tests separately verify that constructing this replacement preserves unrelated patient details.
+* `ClearCommand` asserts that the complete patient list is empty and the viewed patient is cleared. Checking
+  the complete list, rather than the filtered list, includes archived and hidden patients.
+
+These assertions diagnose a model implementation that silently drops an update or leaves a stale selection.
+They use the model's unfiltered data, so a patient being hidden by a filter does not produce a false failure.
+Regression tests deliberately supply broken models for each command and cover both clear postconditions.
 
 Assertions diagnose programming errors, not invalid user input or file-system failures. Those continue to use
 validation exceptions and recovery handling. Add/contact constructors and command entry points already check
 required inputs; contact indices and duplicates are checked before updates, and clear backs up before deletion.
 `LogicManager` logs executed command types at INFO without patient arguments, and failed saves at WARNING;
-startup load/save warnings use `LogsCenter` too. These shared checks avoid duplicating them in each command.
+startup load/save warnings use `LogsCenter` too. Input validation and logging remain separate from the feature
+postconditions; no assertion checks external files or replaces a user-facing error.
 
 Gradle's `run` and `test` tasks and the shared IntelliJ configurations enable assertions. Enable `-ea` in any custom
 development configuration, as described in the [Testing guide](Testing.md). Normal JAR launches leave assertions
