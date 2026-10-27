@@ -172,4 +172,12 @@ public class AppointmentTest {
         assertEquals("2026-11-05 09:30 with Dr Tan (Fasting)",
                 new Appointment(DATE, TIME, "Dr Tan", "Fasting").toString());
     }
+
+    @Test
+    public void getDateTimeTextAndDetailsText() {
+        Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "Fasting");
+        assertEquals("2026-11-05 09:30", appointment.getDateTimeText());
+        assertEquals("with Dr Tan (Fasting)", appointment.getDetailsText());
+        assertEquals("with Dr Tan", new Appointment(DATE, TIME, "Dr Tan", "").getDetailsText());
+    }
 }

@@ -217,11 +217,26 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
+     * Returns the date and time as shown to the user, e.g. "2026-10-25 14:30".
+     */
+    public String getDateTimeText() {
+        return date + " " + time;
+    }
+
+    /**
+     * Returns who the appointment is with and its note, if any, as shown to the user after the date and time,
+     * e.g. "with Dr Tan (Fasting)".
+     */
+    public String getDetailsText() {
+        String details = "with " + provider;
+        return note.isEmpty() ? details : details + " (" + note + ")";
+    }
+
+    /**
      * Returns the appointment as shown to the user, e.g. "2026-10-25 14:30 with Dr Tan (Fasting)".
      */
     @Override
     public String toString() {
-        String appointment = date + " " + time + " with " + provider;
-        return note.isEmpty() ? appointment : appointment + " (" + note + ")";
+        return getDateTimeText() + " " + getDetailsText();
     }
 }

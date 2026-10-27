@@ -113,13 +113,8 @@ public class PatientFormatter {
      * them, cannot look like the mark.
      */
     private static String formatAppointment(Appointment appointment, LocalDateTime now) {
-        String text = appointment.toString();
-        if (!appointment.isBefore(now)) {
-            return text;
-        }
-        String dateTime = appointment.getDate() + " " + appointment.getTime();
-        assert text.startsWith(dateTime) : "an appointment's text must start with its date and time";
-        return dateTime + PAST_MARK + text.substring(dateTime.length());
+        String mark = appointment.isBefore(now) ? PAST_MARK : "";
+        return appointment.getDateTimeText() + mark + " " + appointment.getDetailsText();
     }
 
     /**
