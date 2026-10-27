@@ -223,7 +223,7 @@ public class BackupCommandTest {
         List<Path> backupFiles = runAtSameTime(backups);
 
         assertEquals(SIMULTANEOUS_COMMANDS, new HashSet<>(backupFiles).size());
-        assertEquals(new HashSet<>(backupFiles), new HashSet<>(listFiles(temporaryFolder)));
+        assertEquals(new HashSet<>(backupFiles), new HashSet<>(listBackups()));
         for (Path backupFile : backupFiles) {
             assertEquals(data, readBackup(backupFile));
         }
@@ -243,7 +243,7 @@ public class BackupCommandTest {
 
         runAtSameTime(commands);
 
-        List<Path> backups = listFiles(temporaryFolder);
+        List<Path> backups = listBackups();
         assertEquals(SIMULTANEOUS_COMMANDS + 1, backups.size());
         for (Path backupFile : backups) {
             assertEquals(getTypicalAddressBook(), readBackup(backupFile));
@@ -251,8 +251,8 @@ public class BackupCommandTest {
     }
 
     @Test
-    public void saveBackup_writeFails_leavesNoEmptyBackup() throws Exception {
-        // Equivalence partitioning: the data cannot be written after the backup's name is taken
+    public void saveBackup_writeFails_leavesNoBackupOrTemporaryFile() throws Exception {
+        // Equivalence partitioning: the data cannot be written once the lock is held and the name chosen
         ReadOnlyAddressBook unreadableData = () -> {
             throw new IllegalStateException("the patient list cannot be read");
         };
@@ -260,7 +260,7 @@ public class BackupCommandTest {
         assertThrows(IllegalStateException.class, () ->
                 new BackupCommand(FIXED_CLOCK, temporaryFolder).saveBackup(unreadableData));
 
-        assertEquals(List.of(), listFiles(temporaryFolder));
+        assertEquals(List.of(), listBackups());
     }
 
     @Test
@@ -295,10 +295,12 @@ public class BackupCommandTest {
     }
 
     @Test
-    public void execute_success_leavesOnlyBackupFile() throws Exception {
+    public void execute_success_leavesOnlyBackupAndLockFile() throws Exception {
         new BackupCommand(FIXED_CLOCK, temporaryFolder).execute(model);
 
-        assertEquals(List.of(temporaryFolder.resolve(EXPECTED_FILE_NAME)), listFiles(temporaryFolder));
+        Set<Path> expectedFiles = Set.of(temporaryFolder.resolve(EXPECTED_FILE_NAME),
+                temporaryFolder.resolve(BackupCommand.LOCK_FILE_NAME));
+        assertEquals(expectedFiles, new HashSet<>(listFiles(temporaryFolder)));
     }
 
     @Test
@@ -401,6 +403,16 @@ public class BackupCommandTest {
         try (Stream<Path> files = Files.list(folder)) {
             return files.toList();
         }
+    }
+
+    /**
+     * Returns the files and folders in the temporary folder other than the lock file, which every backup
+     * leaves.
+     */
+    private List<Path> listBackups() throws IOException {
+        return listFiles(temporaryFolder).stream()
+                .filter(file -> !file.getFileName().toString().equals(BackupCommand.LOCK_FILE_NAME))
+                .toList();
     }
 
     /**

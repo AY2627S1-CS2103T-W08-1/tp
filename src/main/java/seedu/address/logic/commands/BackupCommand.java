@@ -3,11 +3,12 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.FileAlreadyExistsException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +38,12 @@ public class BackupCommand extends Command {
     /** Folder that backups are saved to, relative to the folder MediConnect is launched from. */
     public static final Path DEFAULT_BACKUP_DIR = Paths.get("data", "backups");
 
+    /**
+     * Empty file in the backup folder that a backup locks while it chooses its name and is saved, so that
+     * backups made at the same time take turns.
+     */
+    static final String LOCK_FILE_NAME = ".backup.lock";
+
     private static final String FILE_NAME_PREFIX = "mediconnect-";
     private static final String FILE_EXTENSION = ".json";
     private static final String SUFFIX_SEPARATOR = "-";
@@ -45,6 +52,9 @@ public class BackupCommand extends Command {
             DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss", Locale.ROOT);
 
     private static final Logger logger = LogsCenter.getLogger(BackupCommand.class);
+
+    /** Lets the threads of this MediConnect take turns to lock {@code LOCK_FILE_NAME}. */
+    private static final Object backupLock = new Object();
 
     private final Clock clock;
     private final Path backupDir;
@@ -103,8 +113,7 @@ public class BackupCommand extends Command {
         requireNonNull(addressBook);
         try {
             Files.createDirectories(backupDir);
-            Path backupFile = reserveBackupFile();
-            writeBackup(backupFile, addressBook);
+            Path backupFile = saveUnderNextFreeName(addressBook);
             logger.info("Saved backup to " + backupFile);
             return backupFile;
         } catch (IOException ioe) {
@@ -114,51 +123,41 @@ public class BackupCommand extends Command {
     }
 
     /**
-     * Creates an empty file under the next free backup name, named after the current time, and returns its
-     * path. If a file with that name already exists, a suffix such as "-1" is added so that it is not
-     * overwritten. Creating the file takes the name in one step, unlike checking first whether the name is
-     * free, so that two backups made at the same time, e.g., in two MediConnect windows, never take the same
-     * name.
+     * Saves {@code addressBook} under the next free backup name, while holding the lock on
+     * {@code LOCK_FILE_NAME} in the backup folder, and returns the file's path. Another backup made at the
+     * same time, e.g., in another MediConnect window, or by {@code restore} or {@code clear confirm}, waits
+     * until this one is saved, so that it cannot choose the same name.
      *
-     * @throws IOException if the file cannot be created, e.g., because the folder is read-only.
+     * @throws IOException if the lock file or the backup cannot be written.
      */
-    private Path reserveBackupFile() throws IOException {
-        String baseName = FILE_NAME_PREFIX + LocalDateTime.now(clock).format(TIMESTAMP_FORMAT);
-        Path backupFile = backupDir.resolve(baseName + FILE_EXTENSION);
-
-        for (int suffix = 1; ; suffix++) {
-            try {
-                return Files.createFile(backupFile);
-            } catch (FileAlreadyExistsException | AccessDeniedException e) {
-                // the name is taken if something has it, e.g., a backup made in the same second, and then the
-                // next one is tried; Windows denies access, rather than reporting the name as taken, when a
-                // folder has it, so a free name with denied access means MediConnect may not write there
-                if (!Files.exists(backupFile)) {
-                    throw e;
-                }
+    private Path saveUnderNextFreeName(ReadOnlyAddressBook addressBook) throws IOException {
+        // a FileLock keeps out other processes, but a process may hold it only once, so threads take turns
+        synchronized (backupLock) {
+            try (FileChannel lockFile = FileChannel.open(backupDir.resolve(LOCK_FILE_NAME),
+                    StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                    FileLock lock = lockFile.lock()) {
+                Path backupFile = getBackupFilePath();
+                FileUtil.writeThroughTemporaryFile(backupFile, temporaryFile ->
+                        new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
+                return backupFile;
             }
-            backupFile = backupDir.resolve(baseName + SUFFIX_SEPARATOR + suffix + FILE_EXTENSION);
         }
     }
 
     /**
-     * Writes {@code addressBook} to {@code backupFile}, the empty file reserved for it, through a temporary
-     * file. If the write fails, {@code backupFile} is deleted, so that no empty backup is left behind.
-     *
-     * @throws IOException if the backup cannot be written.
+     * Returns the path of the next backup file, named after the current time.
+     * If a file or folder with that name already exists, a suffix such as "-1" is added so that it is not
+     * overwritten.
      */
-    private static void writeBackup(Path backupFile, ReadOnlyAddressBook addressBook) throws IOException {
-        boolean isWritten = false;
-        try {
-            FileUtil.writeThroughTemporaryFile(backupFile,
-                    temporaryFile -> new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
-            isWritten = true;
-        } finally {
-            if (!isWritten) {
-                // the reserved file is left behind by the failed write, like the write's own temporary file
-                FileUtil.deleteTemporaryFile(backupFile);
-            }
+    private Path getBackupFilePath() {
+        String baseName = FILE_NAME_PREFIX + LocalDateTime.now(clock).format(TIMESTAMP_FORMAT);
+        Path backupFile = backupDir.resolve(baseName + FILE_EXTENSION);
+
+        for (int suffix = 1; Files.exists(backupFile); suffix++) {
+            backupFile = backupDir.resolve(baseName + SUFFIX_SEPARATOR + suffix + FILE_EXTENSION);
         }
+
+        return backupFile;
     }
 
     /**
