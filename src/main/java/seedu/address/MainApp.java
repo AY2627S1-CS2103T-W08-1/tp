@@ -1,6 +1,7 @@
 package seedu.address;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,6 +10,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
@@ -37,6 +39,15 @@ public class MainApp extends Application {
     public static final String VERSION = "V1.5.0";
     public static final String MESSAGE_DATA_RECOVERY =
             "The data file could not be loaded. Starting with no patients.\nRecovery copy: %s";
+    public static final String MESSAGE_STARTUP_FAILURE =
+            "MediConnect could not start safely.\nData file: %1$s\nReason: %2$s\n"
+            + "Check that this path is a file and that you can read it and write to its folder, then try again. "
+            + "Keep your original data; no patient data was changed.";
+    public static final String MESSAGE_DATA_PATH_DIRECTORY = "The data path is a folder instead of a file.";
+    public static final String MESSAGE_DATA_ACCESS_DENIED =
+            "MediConnect does not have permission to read the data file or create its recovery copy.";
+    public static final String MESSAGE_DATA_PRESERVATION_FAILED =
+            "The data file could not be read or copied for recovery. Check permissions and available disk space.";
 
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
@@ -48,23 +59,58 @@ public class MainApp extends Application {
     protected Storage storage;
     protected Model model;
 
+    private final Path dataFilePath;
+    private final Path prefsFilePath;
     private String dataLoadWarning = "";
+    private String startupFailure = "";
+
+    /**
+     * Creates the application with its standard data and preferences paths.
+     */
+    public MainApp() {
+        this(ADDRESS_BOOK_FILE_PATH, USER_PREFS_FILE_PATH);
+    }
+
+    /**
+     * Creates the application with the given paths so startup can be tested in a temporary folder.
+     */
+    MainApp(Path dataFilePath, Path prefsFilePath) {
+        this.dataFilePath = dataFilePath;
+        this.prefsFilePath = prefsFilePath;
+    }
 
     @Override
     public void init() throws Exception {
         logger.info("=============================[ Initializing MediConnect ]===========================");
         super.init();
 
-        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(USER_PREFS_FILE_PATH);
+        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(prefsFilePath);
         UserPrefs userPrefs = initPrefs(userPrefsStorage);
-        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(ADDRESS_BOOK_FILE_PATH);
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(dataFilePath);
         storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        model = initModelManager(storage, userPrefs);
+        try {
+            model = initModelManager(storage, userPrefs);
+        } catch (IOException e) {
+            startupFailure = String.format(MESSAGE_STARTUP_FAILURE, dataFilePath.toAbsolutePath(),
+                    describeDataStartupFailure(dataFilePath, e));
+            logger.warning(startupFailure);
+            return;
+        }
 
         logic = new LogicManager(model, storage);
 
         ui = new UiManager(logic, storage.getAddressBookFilePath());
+    }
+
+    private static String describeDataStartupFailure(Path path, IOException cause) {
+        if (Files.isDirectory(path)) {
+            return MESSAGE_DATA_PATH_DIRECTORY;
+        }
+        if (cause instanceof AccessDeniedException) {
+            return MESSAGE_DATA_ACCESS_DENIED;
+        }
+        return MESSAGE_DATA_PRESERVATION_FAILED;
     }
 
     /**
@@ -153,15 +199,30 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         logger.info("Starting MediConnect " + MainApp.VERSION);
+        if (!startupFailure.isEmpty()) {
+            showStartupError(startupFailure);
+            return;
+        }
         ui.start(primaryStage);
         if (!dataLoadWarning.isEmpty()) {
             ui.showWarning(dataLoadWarning);
         }
     }
 
+    /**
+     * Shows a startup failure on the JavaFX application thread, then exits without opening the main window.
+     */
+    protected void showStartupError(String message) {
+        UiManager.showStartupError(message);
+        Platform.exit();
+    }
+
     @Override
     public void stop() {
         logger.info("============================ [ Stopping MediConnect ] =============================");
+        if (model == null) {
+            return;
+        }
         try {
             storage.saveUserPrefs(model.getUserPrefs());
         } catch (IOException e) {
