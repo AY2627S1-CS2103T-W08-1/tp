@@ -12,6 +12,7 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.Patient;
 
 /**
  * Parses input arguments and creates a new {@code AddCareCommand} object.
@@ -41,13 +42,23 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         }
 
         rejectBlankEntries(medications, AddCareCommand.MESSAGE_BLANK_MEDICATION);
-        rejectBlankEntries(allergens, AddCareCommand.MESSAGE_BLANK_ALLERGEN);
-        rejectBlankEntries(careInstructions, AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+        rejectBlankCareEntries(allergens, AddCareCommand.MESSAGE_BLANK_ALLERGEN);
+        rejectBlankCareEntries(careInstructions, AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+        if (careInstructions.stream().map(Patient::normalizeCareEntry)
+                .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
+            throw new ParseException(AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+        }
         return new AddCareCommand(index, medications, allergens, careInstructions);
     }
 
     private static void rejectBlankEntries(List<String> entries, String message) throws ParseException {
         if (entries.stream().anyMatch(String::isBlank)) {
+            throw new ParseException(message);
+        }
+    }
+
+    private static void rejectBlankCareEntries(List<String> entries, String message) throws ParseException {
+        if (entries.stream().map(Patient::normalizeCareEntry).anyMatch(String::isEmpty)) {
             throw new ParseException(message);
         }
     }

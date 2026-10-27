@@ -64,8 +64,8 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`,
-  `clear` and `backup`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`
+  and `backup`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -130,7 +130,7 @@ Examples:
 * `add n/Mary Lim ic/S7654321B dob/1945-11-02 p/98765432 a/Blk 12 Ang Mo Kio Ave 4`
 
 The first example returns:
-`New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; Phone: 91234567; Address: 21 Lorong 3, #05-10;`
+`New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; Phone: 91234567; Address: 21 Lorong 3, #05-10`
 
 If a required field is missing, the command is rejected with `Invalid command format!` followed by the usage and example.
 
@@ -138,11 +138,11 @@ If a required field is missing, the command is rejected with `Invalid command fo
 
 Field   | Prefix | Format | Example
 --------|--------|--------|--------
-Name    | `n/`   | Starts with a letter. Only letters (in any language), spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Cannot start or end with `s/o`, `d/o`, `c/o`, `a/l` or `a/p`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`, `Zoë Tan`
+Name    | `n/`   | At most 100 characters. Starts with a letter. Only letters (in any language), spaces, `'`, `-`, `/` and `.`; `'`, `-` and `/` must be between letters, and `.` must come right after a letter. Cannot start or end with `s/o`, `d/o`, `c/o`, `a/l` or `a/p`. Multiple spaces between words are reduced to one. | `Mary-Jane O'Brien`, `Zoë Tan`
 NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sensitive; stored in uppercase. | `S1234567A`
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` in front. Spaces and hyphens are ignored. Stored as the 8 digits only. | `91234567`, `+65 9123-4567`
-Address | `a/`   | Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
@@ -156,7 +156,8 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
 * Care entries are free text with leading and trailing whitespace removed and consecutive internal whitespace
-  collapsed to one space. They cannot be blank. If any entry is blank, the whole command is rejected.
+  collapsed to one space. They cannot be blank. Care instructions can contain at most 500 characters after this
+  normalization. If any entry is blank or an instruction is too long, the whole command is rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
 * Duplicate entries, ignoring letter case and whitespace differences, are not added again. Other unique entries in
@@ -190,6 +191,8 @@ Other errors are reported as follows:
 * A command with no care prefix returns `Please specify at least one of med/, al/, or ci/ to add.`
 * A blank value returns `Medication entries cannot be blank.`, `Allergen entries cannot be blank.`, or
   `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
+* A care instruction longer than 500 characters after normalization returns
+  `Care instructions cannot exceed 500 characters.` The whole command is rejected.
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 
@@ -271,7 +274,7 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
 * `INDEX` is the patient's index in the displayed list. `CI_INDEX` is the care instruction's number in the detail
   panel. Both must be positive integers.
 * `NEW_TEXT` is free text with leading and trailing whitespace removed and consecutive internal whitespace collapsed
-  to one space. It cannot be blank.
+  to one space. It cannot be blank or exceed 500 characters after normalization.
 * An edit that would duplicate another care instruction, ignoring letter case and whitespace differences, is rejected.
   Editing an instruction to its current text is allowed.
 * `ci/` must appear exactly once. Unrecognized prefixes are rejected.
@@ -297,7 +300,8 @@ numbered from `1` again. `The patient index provided is invalid.` means `INDEX` 
 `The care instruction index provided is invalid.` means `CI_INDEX` is past the end of that patient's instruction
 list, including when the list is empty. Missing, zero, negative, nonnumeric or extra indices give the command's usage.
 Blank replacement text returns `Care instructions cannot be blank.` A duplicate edit returns
-`This care instruction already exists for this patient.` Validation failures leave patient data unchanged.
+`This care instruction already exists for this patient.` An overlong instruction returns
+`Care instructions cannot exceed 500 characters.` Validation failures leave patient data unchanged.
 
 ### Deleting an allergen: `deleteallergy`
 
@@ -331,8 +335,10 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   Leading/trailing whitespace is removed and repeated spaces in a name become one.
 * Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
   other roles are allowed.
-* Contact phones can contain digits, spaces, `+` and `-`, with at least three digits. They use different rules
-  from patient phones so overseas and clinic numbers are supported. Formatting is preserved after trimming.
+* Contact phones must contain 3 to 15 digits (`0`–`9`). Spaces and hyphens are allowed and do not count toward
+  this limit. At most one `+` is allowed, at the start after trimming, e.g., `+44 20 7946 0958`.
+  These differ from patient-phone rules so overseas and short clinic numbers such as `123` remain supported.
+  Formatting is preserved after trimming. Extensions and parentheses are not supported.
 * The note is optional. An omitted or empty `nt/` creates a contact without a note.
   Surrounding spaces are removed from notes entered through commands.
 * A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
@@ -351,8 +357,12 @@ For patient `Alex Yeoh`, this returns:
 `Added contact for Alex Yeoh: Lim & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`
 
 Blank names/roles return `Contact name cannot be blank.` or `Contact role cannot be blank.`
-An invalid phone returns `Contact phone must contain at least 3 digits and only digits, spaces, + and -.`
+An invalid phone returns `Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, and at most one + at the start.`
 A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure.
+
+The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
+that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
+in a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
@@ -701,6 +711,8 @@ Format: `view INDEX`
   shown until the patient is shown again.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
+  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
   to the message above when the patient is deleted or all patients are cleared.
@@ -770,11 +782,23 @@ Errors are reported as follows:
 
 ### Clearing all patients: `clear`
 
-Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
+Backs up, then clears all active and archived patients and their care information from MediConnect, and clears
+any patient details in the view panel. This includes patients hidden by `find` or the current list filter.
 
-Format: `clear`
+Format: `clear confirm`
 
-Returns `All patients have been cleared.`, including when there are no patients to clear.
+* `confirm` must be lowercase. Surrounding whitespace is allowed; additional arguments are rejected.
+* `clear` alone shows a warning and the required format without deleting anything. `clear 1` is also rejected;
+  use `delete INDEX` to delete one patient.
+* Before clearing, all patient data is saved to a new timestamped file in `data/backups`, using the same naming
+  and collision handling as `backup`. If the backup fails, no patients are cleared.
+* The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
+  using that file's name to recover the data. There is no undo command.
+* An empty address book is backed up too. Existing backups are never overwritten.
+* If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
+
+Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
+patients to clear.
 
 ### Backing up data: `backup`
 
@@ -936,7 +960,7 @@ Action            | Format, Examples
 **Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Backup**        | `backup`
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
-**Clear**         | `clear`
+**Clear**         | `clear confirm`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 1`
 **Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 1`

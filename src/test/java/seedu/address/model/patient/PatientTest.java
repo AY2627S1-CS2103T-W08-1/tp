@@ -158,19 +158,31 @@ public class PatientTest {
     }
 
     @Test
+    public void constructor_careInstructionLength_enforced() {
+        new PatientBuilder(ALICE)
+                .withCareInstructions("a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH))
+                .build();
+
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG, () ->
+                new PatientBuilder(ALICE)
+                        .withCareInstructions("a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1))
+                        .build());
+    }
+
+    @Test
     public void constructor_blankCareEntry_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, Patient.MESSAGE_BLANK_ALLERGEN, () ->
-                new PatientBuilder(ALICE).withAllergens("  ").build());
+                new PatientBuilder(ALICE).withAllergens("\u00a0").build());
         assertThrows(IllegalArgumentException.class, Patient.MESSAGE_BLANK_CARE_INSTRUCTION, () ->
-                new PatientBuilder(ALICE).withCareInstructions("").build());
+                new PatientBuilder(ALICE).withCareInstructions("\u00a0").build());
     }
 
     @Test
     public void constructor_duplicateCareEntry_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, Patient.MESSAGE_DUPLICATE_ALLERGEN, () ->
-                new PatientBuilder(ALICE).withAllergens("Penicillin", "  penicillin ").build());
+                new PatientBuilder(ALICE).withAllergens("Penicillin", "penicillin\u00a0").build());
         assertThrows(IllegalArgumentException.class, Patient.MESSAGE_DUPLICATE_CARE_INSTRUCTION, () ->
-                new PatientBuilder(ALICE).withCareInstructions("Check  blood sugar", "check blood sugar").build());
+                new PatientBuilder(ALICE).withCareInstructions("Check\u00a0blood sugar", "check blood sugar").build());
     }
 
     @Test

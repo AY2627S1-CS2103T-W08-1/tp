@@ -62,6 +62,17 @@ public class EditCareCommandTest {
     }
 
     @Test
+    public void execute_duplicateIgnoringUnicodeWhitespace_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder().withCareInstructions("Check blood sugar", "Morning walk").build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+
+        EditCareCommand command = new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
+                "Check\u00a0blood sugar");
+
+        assertCommandFailure(command, model, EditCareCommand.MESSAGE_DUPLICATE_CARE_INSTRUCTION);
+    }
+
+    @Test
     public void execute_sameInstruction_allowed() throws Exception {
         Patient patient = new PatientBuilder().withCareInstructions("Check blood sugar").build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
@@ -78,6 +89,18 @@ public class EditCareCommandTest {
 
         assertCommandFailure(new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, "   "), model,
                 EditCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+        assertCommandFailure(new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, "\u00a0"), model,
+                EditCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+    }
+
+    @Test
+    public void execute_overlongInstruction_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder().withCareInstructions("Morning walk").build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        String overlongInstruction = "a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1);
+
+        assertCommandFailure(new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, overlongInstruction),
+                model, EditCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
     }
 
     @Test

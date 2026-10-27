@@ -7,6 +7,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICATION;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
@@ -37,6 +38,7 @@ public class AddCareCommand extends Command {
     public static final String MESSAGE_BLANK_MEDICATION = "Medication entries cannot be blank.";
     public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
     public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
+    public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG = Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG;
     public static final String MESSAGE_DUPLICATE_EXISTING =
             "%1$s \"%2$s\" was not added: it already exists for this patient.";
     public static final String MESSAGE_DUPLICATE_IN_COMMAND =
@@ -73,6 +75,10 @@ public class AddCareCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
+        if (careInstructions.stream().map(Patient::normalizeCareEntry)
+                .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
+            throw new CommandException(MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+        }
         List<String> updatedMedicationDescriptions = patientToEdit.getMedications().stream()
                 .map(Medication::getDescription)
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -82,10 +88,12 @@ public class AddCareCommand extends Command {
         List<String> duplicateMessages = new ArrayList<>();
 
         int existingMedicationCount = updatedMedicationDescriptions.size();
-        appendNewEntries(updatedMedicationDescriptions, medications, "Medication", addedEntries, duplicateMessages);
-        appendNewEntries(updatedAllergens, allergens, "Allergen", addedEntries, duplicateMessages);
+        appendNewEntries(updatedMedicationDescriptions, medications, "Medication", addedEntries, duplicateMessages,
+                AddCareCommand::normalizeEntry);
+        appendNewEntries(updatedAllergens, allergens, "Allergen", addedEntries, duplicateMessages,
+                Patient::normalizeCareEntry);
         appendNewEntries(updatedCareInstructions, careInstructions, "Care instruction", addedEntries,
-                duplicateMessages);
+                duplicateMessages, Patient::normalizeCareEntry);
 
         if (addedEntries.isEmpty()) {
             String message = duplicateMessages.isEmpty()
@@ -115,16 +123,17 @@ public class AddCareCommand extends Command {
     }
 
     private static void appendNewEntries(List<String> existingEntries, List<String> requestedEntries,
-            String entryType, List<String> addedEntries, List<String> duplicateMessages) {
+            String entryType, List<String> addedEntries, List<String> duplicateMessages,
+            UnaryOperator<String> normalizer) {
         List<String> originalEntries = List.copyOf(existingEntries);
         List<String> seenInCommand = new ArrayList<>();
         for (String requestedEntry : requestedEntries) {
-            String normalizedEntry = normalizeEntry(requestedEntry);
-            if (containsIgnoreCase(originalEntries, normalizedEntry)) {
+            String normalizedEntry = normalizer.apply(requestedEntry);
+            if (containsIgnoreCase(originalEntries, normalizedEntry, normalizer)) {
                 duplicateMessages.add(String.format(MESSAGE_DUPLICATE_EXISTING, entryType, normalizedEntry));
                 continue;
             }
-            if (containsIgnoreCase(seenInCommand, normalizedEntry)) {
+            if (containsIgnoreCase(seenInCommand, normalizedEntry, normalizer)) {
                 duplicateMessages.add(String.format(MESSAGE_DUPLICATE_IN_COMMAND, entryType, normalizedEntry));
                 continue;
             }
@@ -134,8 +143,9 @@ public class AddCareCommand extends Command {
         }
     }
 
-    private static boolean containsIgnoreCase(List<String> entries, String requestedEntry) {
-        return entries.stream().anyMatch(entry -> normalizeEntry(entry).equalsIgnoreCase(requestedEntry));
+    private static boolean containsIgnoreCase(List<String> entries, String requestedEntry,
+            UnaryOperator<String> normalizer) {
+        return entries.stream().anyMatch(entry -> normalizer.apply(entry).equalsIgnoreCase(requestedEntry));
     }
 
     private static String normalizeEntry(String entry) {
