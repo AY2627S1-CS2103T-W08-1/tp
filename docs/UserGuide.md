@@ -930,13 +930,12 @@ Format: `exit`
 
 ### Saving the data
 
-MediConnect automatically saves data after every command that changes it. You do not need to save manually.
-`clear confirm` and `restore FILENAME` also save when the data already matches, so they can replace an unreadable
-data file after startup recovery. Read-only commands such as `list` do not save patient data.
+MediConnect handles saving automatically. You do not need to save manually.
+See [clear](#clearing-all-patients-clear) and [restore](#restoring-data-from-a-backup-restore) for how these commands
+replace your saved data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
-`Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,
-`view`, `help` and `exit`, still work.
+`Could not save data ...` followed by `Nothing was changed.` You can still run `list`, `view`, `help` and `exit`.
 
 ### Editing the data file
 
@@ -956,9 +955,8 @@ starting from 1, including archived patients; this is not an index from a filter
 entry is reported, so another error may appear after you repair it. For malformed JSON or other read failures,
 the warning asks you to check the JSON format and file permissions; a patient position may not be available.
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
-To discard the unreadable data, run `clear confirm`, or restore a valid backup with `restore FILENAME`, including
-an empty backup. Both commands save the replacement even when the app already shows no patients.
-Read-only commands such as `list` leave the unreadable file unchanged.
+To discard the unreadable data, use [clear confirm](#clearing-all-patients-clear). To recover from a valid backup,
+use [restore FILENAME](#restoring-data-from-a-backup-restore).
 If the recovery copy cannot be created, startup stops so the original file is not overwritten.
 To recover your data, close MediConnect, repair a copy of the recovery file and replace `data/mediconnect.json`
 with the repaired file before restarting. Keep the recovery copy until you have checked the recovered patients.
