@@ -44,9 +44,9 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         }
 
         rejectBlankEntries(medications, AddCareCommand.MESSAGE_BLANK_MEDICATION);
-        rejectBlankEntries(allergens, AddCareCommand.MESSAGE_BLANK_ALLERGEN);
-        rejectBlankEntries(careInstructions, AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
-        if (careInstructions.stream().map(AddCareCommandParser::normalizeEntry)
+        rejectBlankCareEntries(allergens, AddCareCommand.MESSAGE_BLANK_ALLERGEN);
+        rejectBlankCareEntries(careInstructions, AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+        if (careInstructions.stream().map(Patient::normalizeCareEntry)
                 .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
             throw new ParseException(AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
         }
@@ -59,7 +59,9 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         }
     }
 
-    private static String normalizeEntry(String entry) {
-        return entry.trim().replaceAll("\\s+", " ");
+    private static void rejectBlankCareEntries(List<String> entries, String message) throws ParseException {
+        if (entries.stream().map(Patient::normalizeCareEntry).anyMatch(String::isEmpty)) {
+            throw new ParseException(message);
+        }
     }
 }
