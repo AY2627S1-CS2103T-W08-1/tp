@@ -1532,6 +1532,14 @@ testers are expected to do more *exploratory* testing.
 1. Test case: Type three spaces in the command box and press Enter.<br>
    Expected: No command executes and no error appears. The spaces and previous result remain unchanged.
 
+### Adding a patient
+
+1. Prerequisites: No patient with NRIC `S1234567A` exists in the data.
+
+1. Test case: `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`<br>
+   Expected: The patient is added. The status message begins `New patient added:` and ends
+   `Address: 21 Lorong 3, #05-10`, without an extra semicolon after the address.
+
 ### Adding a patient with punctuation after a slash word
 
 1. Test case: `add n/Ben s/o, Ng ic/S1111111B dob/1950-01-01 p/91111111 a/Blk 1`<br>
