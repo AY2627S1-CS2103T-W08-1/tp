@@ -18,6 +18,19 @@ public class EditContactCommandParserTest {
     private final EditContactCommandParser parser = new EditContactCommandParser();
 
     @Test
+    public void parse_textLength_acceptsLimitsAndRejectsOverlongFields() {
+        String name = "n".repeat(Contact.MAX_NAME_LENGTH);
+        String role = "r".repeat(Contact.MAX_ROLE_LENGTH);
+        String note = "\uD83D\uDE00".repeat(Contact.MAX_NOTE_LENGTH);
+        assertParseSuccess(parser, " 1 1 n/" + name + " r/" + role + " nt/\u00a0" + note + "\u00a0",
+                new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(name),
+                        Optional.of(role), Optional.empty(), Optional.of(note)));
+        assertParseFailure(parser, " 1 1 n/" + name + "x", Contact.MESSAGE_NAME_CONSTRAINTS);
+        assertParseFailure(parser, " 1 1 r/" + role + "x", Contact.MESSAGE_ROLE_CONSTRAINTS);
+        assertParseFailure(parser, " 1 1 nt/" + note + "x", Contact.MESSAGE_NOTE_CONSTRAINTS);
+    }
+
+    @Test
     public void parse_allFieldsOrEmptyNote_preserved() {
         assertParseSuccess(parser, " 1 1 n/Clinic r/Emergency p/+44 123 nt/Call first",
                 new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of("Clinic"),
