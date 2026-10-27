@@ -351,8 +351,9 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   Surrounding spaces are removed from notes entered through commands.
 * A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
-  country codes are not inferred. Canonically equivalent Unicode names also count as the same name: for example,
-  `Café` with a single `é` and `Café` with `e` followed by a combining accent. Accents remain significant, so
+  country codes are not inferred. The same accented name counts as the same name even if the accent was typed
+  separately: for example, `Café` with a single `é` and `Café` with `e` followed by a separate accent.
+  Accents remain significant, so
   `Cafe` and `Café` are different names. The entered name spelling is preserved for display and saving.
   The same contact can belong to different patients.
 * Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
@@ -376,7 +377,8 @@ that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or
 in a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 The same duplicate-name rules apply when loading data or restoring a backup. Older files containing contacts
-with canonically equivalent names and the same phone are rejected as duplicates. Remove the duplicate contact
+with the same accented name typed in these different ways and the same phone are rejected as duplicates.
+Remove the duplicate contact
 from a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
