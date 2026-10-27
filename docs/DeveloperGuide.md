@@ -182,6 +182,8 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It ignores a UTF-8 byte-order mark at the start of a file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
 
+Before mapping the JSON to objects, `JsonUtil` also rejects a file in which a name or a text value has half of a surrogate pair on its own. Only a JSON escape of a surrogate, such as `\ud800`, in a hand-edited file can give such text. It cannot be written as UTF-8, so the next save would silently turn it into `?`.
+
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
 objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
