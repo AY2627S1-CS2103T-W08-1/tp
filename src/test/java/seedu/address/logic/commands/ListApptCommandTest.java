@@ -8,7 +8,6 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.ListApptCommand.HEADING_PAST;
 import static seedu.address.logic.commands.ListApptCommand.HEADING_UPCOMING;
-import static seedu.address.logic.commands.ListApptCommand.MESSAGE_ARCHIVED_PATIENT;
 import static seedu.address.logic.commands.ListApptCommand.MESSAGE_NO_PATIENT_APPOINTMENTS;
 import static seedu.address.logic.commands.ListApptCommand.MESSAGE_NO_UPCOMING;
 import static seedu.address.logic.commands.ListApptCommand.MESSAGE_PATIENT_APPOINTMENTS;
@@ -25,6 +24,7 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.CARL;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -64,11 +64,24 @@ public class ListApptCommandTest {
     @Test
     public void execute_noIndex_listsUpcomingAppointmentsSoonestFirst() {
         String expectedMessage = MESSAGE_UPCOMING
-                + "\n" + BENSON.getName() + ": " + NOW
-                + "\n" + ALICE.getName() + ": " + CHECKUP
-                + "\n" + BENSON.getName() + ": " + CARDIOLOGY;
+                + "\n" + formatLine(BENSON, NOW)
+                + "\n" + formatLine(ALICE, CHECKUP)
+                + "\n" + formatLine(BENSON, CARDIOLOGY);
         assertCommandSuccess(new ListApptCommand(Optional.empty(), FIXED_CLOCK), createModel(),
                 expectedMessage, createModel());
+    }
+
+    @Test
+    public void execute_noIndexSameNamePatients_showsEachNric() {
+        Patient alice = new PatientBuilder(ALICE).withAppointments(CHECKUP).build();
+        Patient otherAlice = new PatientBuilder(BENSON).withName(ALICE.getName().fullName)
+                .withAppointments(CHECKUP).build();
+        String expectedMessage = MESSAGE_UPCOMING
+                + "\n" + ALICE.getName() + " (" + ALICE.getNric() + "): " + CHECKUP
+                + "\n" + ALICE.getName() + " (" + BENSON.getNric() + "): " + CHECKUP;
+
+        assertCommandSuccess(new ListApptCommand(Optional.empty(), FIXED_CLOCK),
+                createModelWith(alice, otherAlice), expectedMessage, createModelWith(alice, otherAlice));
     }
 
     @Test
@@ -76,7 +89,7 @@ public class ListApptCommandTest {
         Patient alice = new PatientBuilder(ALICE).withAppointments(ONE_MINUTE_AGO, CHECKUP).build();
         Patient archivedBenson = new PatientBuilder(BENSON).withAppointments(NOW, CARDIOLOGY).withArchived(true)
                 .build();
-        String expectedMessage = MESSAGE_UPCOMING + "\n" + ALICE.getName() + ": " + CHECKUP;
+        String expectedMessage = MESSAGE_UPCOMING + "\n" + formatLine(ALICE, CHECKUP);
 
         assertCommandSuccess(new ListApptCommand(Optional.empty(), FIXED_CLOCK),
                 createModelWith(alice, archivedBenson), expectedMessage, createModelWith(alice, archivedBenson));
@@ -120,12 +133,19 @@ public class ListApptCommandTest {
     }
 
     @Test
-    public void execute_indexOfArchivedPatient_throwsCommandException() {
-        Model model = createModelWith(new PatientBuilder(ALICE).withArchived(true).build());
+    public void execute_indexOfArchivedPatient_listsAppointments() {
+        Patient archivedAlice = new PatientBuilder(ALICE).withAppointments(ONE_MINUTE_AGO, CHECKUP)
+                .withArchived(true).build();
+        Model model = createModelWith(archivedAlice);
         model.updateFilteredPatientList(PREDICATE_SHOW_ARCHIVED_PATIENTS);
+        Model expectedModel = createModelWith(archivedAlice);
+        expectedModel.updateFilteredPatientList(PREDICATE_SHOW_ARCHIVED_PATIENTS);
+        String expectedMessage = String.format(MESSAGE_PATIENT_APPOINTMENTS, ALICE.getName())
+                + "\n" + HEADING_UPCOMING + "\n1. " + CHECKUP
+                + "\n" + HEADING_PAST + "\n2. " + ONE_MINUTE_AGO;
 
-        assertCommandFailure(new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT), FIXED_CLOCK), model,
-                MESSAGE_ARCHIVED_PATIENT);
+        assertCommandSuccess(new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT), FIXED_CLOCK), model,
+                expectedMessage, showPatient(expectedModel, INDEX_FIRST_PATIENT));
     }
 
     @Test
@@ -143,6 +163,23 @@ public class ListApptCommandTest {
         new CancelApptCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT).execute(model);
         assertEquals(List.of(ONE_MINUTE_AGO, CHECKUP),
                 model.getFilteredPatientList().get(0).getAppointments());
+    }
+
+    @Test
+    public void execute_indexAcrossMinuteBoundary_headingsMatchPanelOrder() throws Exception {
+        Clock commandClock = Clock.fixed(Instant.parse("2026-10-18T14:59:59.999Z"), ZoneOffset.UTC);
+        Clock modelClock = Clock.fixed(Instant.parse("2026-10-18T15:00:00.001Z"), ZoneOffset.UTC);
+        Appointment justPassed = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(14, 59), "Dr Tan", "");
+        Appointment later = new Appointment(LocalDate.of(2026, 10, 18), LocalTime.of(16, 0), "Dr Tan", "");
+        Model model = new ModelManager(new AddressBook(), new UserPrefs(), modelClock);
+        model.addPatient(new PatientBuilder(ALICE).withAppointments(justPassed, later).build());
+        String expectedMessage = String.format(MESSAGE_PATIENT_APPOINTMENTS, ALICE.getName())
+                + "\n" + HEADING_UPCOMING + "\n1. " + later
+                + "\n" + HEADING_PAST + "\n2. " + justPassed;
+
+        // the panel orders the appointments at the model's time, in the minute after the command's
+        assertEquals(expectedMessage, new ListApptCommand(Optional.of(INDEX_FIRST_PATIENT), commandClock)
+                .execute(model).getFeedbackToUser());
     }
 
     @Test
@@ -188,6 +225,13 @@ public class ListApptCommandTest {
     private static Model createModel() {
         return createModelWith(new PatientBuilder(ALICE).withAppointments(ONE_MINUTE_AGO, CHECKUP).build(),
                 new PatientBuilder(BENSON).withAppointments(NOW, CARDIOLOGY).build(), CARL);
+    }
+
+    /**
+     * Returns the line that {@code listappt} without an index gives for {@code appointment} of {@code patient}.
+     */
+    private static String formatLine(Patient patient, Appointment appointment) {
+        return patient.getName() + " (" + patient.getNric() + "): " + appointment;
     }
 
     /**

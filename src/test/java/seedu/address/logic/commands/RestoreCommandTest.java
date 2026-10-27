@@ -9,6 +9,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
 import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
+import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
 import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
@@ -189,6 +190,17 @@ public class RestoreCommandTest {
         createRestoreCommand().execute(model);
 
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
+    }
+
+    @Test
+    public void execute_backupWithByteOrderMark_restoresData() throws Exception {
+        // Equivalence partitioning: a valid backup saved again by an editor that adds a UTF-8 byte-order mark
+        AddressBook backupData = createAddressBook(HOON, IDA);
+        writeBackup(backupData);
+        addUtf8ByteOrderMark(temporaryFolder.resolve(BACKUP_NAME));
+
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", ""),
+                new ModelManager(backupData, new UserPrefs()));
     }
 
     @Test

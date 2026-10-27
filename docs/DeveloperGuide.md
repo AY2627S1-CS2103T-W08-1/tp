@@ -178,6 +178,8 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted.
 
+`JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It ignores a UTF-8 byte-order mark at the start of a file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
+
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
 objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
@@ -1213,6 +1215,126 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC11 - Edit a patient's details**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to edit one or more basic details of a specific patient in the list.
+4.  MediConnect updates the patient and shows the patient's complete updated basic details.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 3a. The given patient index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 3b. No detail is given, or a given detail is invalid.
+
+    * 3b1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
+* 3c. The new NRIC is already used by another patient.
+
+    * 3c1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
+**Use case: UC12 - Archive and restore a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list active patients.
+2.  MediConnect shows the active patients.
+3.  Caregiver requests to archive a specific patient in the list.
+4.  MediConnect archives the patient and removes them from the active list.
+5.  Caregiver requests to list archived patients.
+6.  MediConnect shows the archived patients.
+7.  Caregiver requests to restore the archived patient.
+8.  MediConnect makes the patient active again and removes them from the archived list.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The active patient list is empty.
+
+  Use case ends.
+
+* 3a. The given patient index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 6a. The archived patient list is empty.
+
+  Use case ends.
+
+* 7a. The given patient index is invalid.
+
+    * 7a1. MediConnect shows an error message.
+
+      Use case resumes at step 6.
+
+**Use case: UC13 - Update a patient's care entries**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to view a patient.
+2.  MediConnect shows the patient's numbered care information.
+3.  Caregiver requests to replace a specific care instruction.
+4.  MediConnect updates the care instruction and shows the new text.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. Caregiver requests to delete a specific care instruction instead.
+
+    * 3a1. MediConnect deletes the instruction and shows the removed text.
+
+      Use case ends.
+
+* 3b. Caregiver requests to delete a specific allergen instead.
+
+    * 3b1. MediConnect deletes the allergen and shows the removed text.
+
+      Use case ends.
+
+* 3c. The patient index or care-entry number is invalid.
+
+    * 3c1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
+* 3d. The replacement care instruction is blank or duplicates another instruction.
+
+    * 3d1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
 **Use case: UC14 - Add an appointment**
 
 **System**: MediConnect<br>
@@ -1567,6 +1689,24 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
    Expected: No patient is added. The status message shows `Addresses cannot be blank.`
+
+### Adding care information
+
+1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh's existing care information.
+
+1. Test case: `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`<br>
+   Expected: All three entries are appended to Alex Yeoh's care information and appear in the detail panel. The status
+   message names each added entry with its category.
+
+1. Test case: `addcare 1 med/Paracetamol 500mg med/Vitamin D al/latex`<br>
+   Expected: Only `Vitamin D` is added. The status message says that `Paracetamol 500mg` and `latex` already exist,
+   ignoring letter case, while still reporting the newly added medication.
+
+1. Test case: `addcare 1 med/Ibuprofen al/`<br>
+   Expected: Nothing is added. The status message shows `Allergen entries cannot be blank.`
+
+1. Test case: `addcare 999 med/Ibuprofen`<br>
+   Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
 
 ### Managing patient contacts
 

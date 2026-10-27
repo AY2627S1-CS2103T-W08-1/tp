@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 import org.junit.jupiter.api.function.Executable;
 
@@ -37,6 +38,18 @@ public class TestUtil {
             throw new RuntimeException(e);
         }
         return SANDBOX_FOLDER.resolve(fileName);
+    }
+
+    /**
+     * Writes a UTF-8 byte-order mark at the start of {@code file}, before its current content,
+     * as an editor does when it saves the file as "UTF-8 with BOM".
+     */
+    public static void addUtf8ByteOrderMark(Path file) throws IOException {
+        byte[] utf8ByteOrderMark = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] content = Files.readAllBytes(file);
+
+        Files.write(file, utf8ByteOrderMark);
+        Files.write(file, content, StandardOpenOption.APPEND);
     }
 
     /**

@@ -517,14 +517,14 @@ Format: `listappt [INDEX]`
 * With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
   appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`. The detail panel then
   shows the patient, with the same numbers in its Appointments section, below the care information.
-* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. An archived patient
-  is not listed: run `unarchive` first to see their appointments.
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. After
+  `listarchived`, `listappt INDEX` lists the appointments of an archived patient.
 * The patient list does not change.
 
 Examples:
 
-* `listappt` returns `Upcoming appointments:`, followed by one line per appointment with the patient's name, e.g.,
-  `Alex Yeoh: 2027-11-05 09:30 with Dr Tan`.
+* `listappt` returns `Upcoming appointments:`, followed by one line per appointment with the patient's name and
+  NRIC, e.g., `Alex Yeoh (S0000001A): 2027-11-05 09:30 with Dr Tan`.
 * `listappt 2` returns `Appointments for Bernice Yu:`, then `Upcoming: none`, then `Past:` followed by
   `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal)`.
 
@@ -532,8 +532,6 @@ Other messages are as follows:
 
 * With no upcoming appointments, `listappt` returns `No upcoming appointments.`
 * For a patient with no appointments, `listappt INDEX` returns `NAME has no appointments.`
-* For an archived patient, e.g., after `listarchived`, `listappt INDEX` returns
-  `This patient is archived. Unarchive them to list their appointments.`
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * A zero, negative, or non-numeric index, or more than one index, returns `Invalid command format!`, followed by
   the command usage.
@@ -917,6 +915,7 @@ If the data cannot be saved, e.g., because the data file is read-only, the comma
 ### Editing the data file
 
 MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
+Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also applies to backups in `data/backups`.
 
 <box type="warning" seamless>
 

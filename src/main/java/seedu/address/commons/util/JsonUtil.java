@@ -27,6 +27,9 @@ public class JsonUtil {
 
     private static final Logger logger = LogsCenter.getLogger(JsonUtil.class);
 
+    /** Character that a UTF-8 byte-order mark at the start of a file is read as. */
+    private static final String BYTE_ORDER_MARK = "\uFEFF";
+
     private static ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -39,7 +42,19 @@ public class JsonUtil {
 
     static <T> T deserializeObjectFromJsonFile(Path jsonFile, Class<T> classOfObjectToDeserialize)
             throws IOException {
-        return fromJsonString(FileUtil.readFromFile(jsonFile), classOfObjectToDeserialize);
+        String fileContent = FileUtil.readFromFile(jsonFile);
+        return fromJsonString(removeByteOrderMark(fileContent), classOfObjectToDeserialize);
+    }
+
+    /**
+     * Returns {@code fileContent} without the byte-order mark at its start, if it has one.
+     * Some editors write one when saving a file as UTF-8, e.g., Notepad's "UTF-8 with BOM",
+     * and the JSON standard (RFC 8259) lets readers ignore it.
+     */
+    private static String removeByteOrderMark(String fileContent) {
+        return fileContent.startsWith(BYTE_ORDER_MARK)
+                ? fileContent.substring(BYTE_ORDER_MARK.length())
+                : fileContent;
     }
 
     /**
