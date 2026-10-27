@@ -68,6 +68,33 @@ public class PatientFormatterTest {
     }
 
     @Test
+    public void toSingleLine_nullEntry_throwsNullPointerException() {
+        // Equivalence partitioning: null, the invalid partition of entries, which no stored list holds
+        assertThrows(NullPointerException.class, () -> PatientFormatter.toSingleLine(null));
+    }
+
+    @Test
+    public void toSingleLine_eachKindOfLineBreak_becomesOneSpace() {
+        // Equivalence partitioning: a line feed, a carriage return with a line feed, and a Unicode line
+        // separator, each with spaces around it
+        assertEquals("Penicillin 2. Shellfish", PatientFormatter.toSingleLine("Penicillin \n 2. Shellfish"));
+        assertEquals("Penicillin 2. Shellfish", PatientFormatter.toSingleLine("Penicillin\r\n2. Shellfish"));
+        assertEquals("Penicillin 2. Shellfish", PatientFormatter.toSingleLine("Penicillin 2. Shellfish"));
+    }
+
+    @Test
+    public void toSingleLine_lineBreakAtStartOrEnd_removed() {
+        // Boundary value analysis: a line break before the first and after the last character of the entry
+        assertEquals("Penicillin", PatientFormatter.toSingleLine("\nPenicillin\n"));
+    }
+
+    @Test
+    public void toSingleLine_noLineBreak_unchanged() {
+        // Equivalence partitioning: an entry as commands create it, with its inner spaces kept
+        assertEquals("Take 2  tablets", PatientFormatter.toSingleLine("Take 2  tablets"));
+    }
+
+    @Test
     public void formatEntries_longRunOfSpacesWithoutLineBreak_spacesKept() {
         String entry = "Take" + " ".repeat(60_000) + "daily";
 
