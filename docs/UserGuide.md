@@ -22,12 +22,12 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
 
-   Only one MediConnect window can use a data file at a time. If another window already has it open, the second
-   launch shows an error naming that file and exits. Close the first window before opening it again.
-
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands.<br>
    ![Ui](images/Ui.png)
+
+   Only one MediConnect window can use a data file at a time. If another window already has it open, the second
+   launch shows an error naming that file and exits. Close the first window before opening it again.
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
@@ -827,7 +827,10 @@ Saves a copy of all patient data to the `data/backups` folder, inside the folder
 Format: `backup`
 
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
-* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten. This also holds when two backups are made at the same moment, e.g., in two MediConnect windows, or when `restore` or `clear confirm` backs up your data while you make a backup. To let such backups take turns, MediConnect keeps an empty file named `.backup.lock` in `data/backups`; it is not a backup, and `restore` does not list it.
+* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name,
+  so no backup is overwritten. Backups written to the same folder at the same time take turns, including
+  automatic backups made by `restore` and `clear confirm`. MediConnect keeps an empty file named `.backup.lock`
+  in `data/backups` for this purpose; it is not a backup, and `restore` does not list it.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
@@ -933,9 +936,10 @@ Format: `exit`
 MediConnect automatically saves data after every command that changes it. You do not need to save manually.
 
 To prevent two windows from overwriting each other's changes, MediConnect keeps a lock while a data file is
-open. Its small metadata files are in `.mediconnect/locks` under your computer user's home folder; they contain
-no patient records. They can remain after exit and do not need to be removed after a crash. Do not delete them
-while MediConnect is running. If the lock folder cannot be used, a startup error names it and the app exits.
+open. Its small metadata files are in `.mediconnect/locks` inside the folder you launch MediConnect from;
+they contain no patient records. They can remain after exit and do not need to be removed after a crash.
+Do not delete them while MediConnect is running. The app needs permission to create and write these files.
+If the lock folder cannot be used, a startup error names it and the app exits.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
 `Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,

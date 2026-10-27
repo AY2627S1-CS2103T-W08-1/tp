@@ -223,13 +223,15 @@ The lock is released immediately if recovery fails, and in `stop()` even if pref
 Lock-close I/O failures are logged without interrupting shutdown; a focused regression covers this cleanup path.
 
 `DataFileLock` hashes the data path after resolving its parent directory's aliases, including missing folders.
-Lock files live in the user's `.mediconnect/locks`, separately from patient data, so atomic data-file replacement
-does not remove the lock and read-only data folders remain usable. A synchronized registry avoids opening a
-second channel to the same held lock in one JVM, because closing that channel can release process-wide locks
+Lock files live in `.mediconnect/locks` under the app's launch folder, beside `preferences.json`, separately from
+patient data. Atomic data-file replacement therefore does not remove the lock. The lock files must be writable;
+a read-only data folder can still be viewed when the app-local lock folder is usable. A synchronized registry
+avoids opening a second channel to the same held lock in one JVM, because closing that channel can release process-wide locks
 on some systems. Closing the owner channel or terminating its JVM releases the OS lock. Metadata files remain
 in place to avoid races from deleting a lock file while another process uses it. They contain no patient data.
 This guard coordinates current MediConnect instances of the same user; external editors do not observe it and
-must only be used while the app is closed. Tests use a lock folder beside their temporary preferences file.
+must only be used while the app is closed. Path-injecting constructors use the preferences file's parent as the
+app folder, so startup tests use the same relative lock location inside their temporary app folder.
 
 ### Common classes
 
@@ -392,7 +394,7 @@ The `backup` command saves a copy of all patient data to the `data/backups` fold
 
 #### Implementation
 
-`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. Checking whether a name is free and then saving under it are two steps, so two backups made at the same moment, e.g., in two MediConnect windows, or by `restore` or `clear confirm` while a backup is made, could otherwise choose the same name, and one would replace the other. `BackupCommand#saveUnderNextFreeName()` therefore does both while it holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. Checking whether a name is free and then saving under it are two steps, so two backups targeting the same folder at the same moment could otherwise choose the same name, and one would replace the other. `BackupCommand#saveUnderNextFreeName()` therefore does both while it holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 
 The sequence diagram below shows a successful `restore old.json`.
 
@@ -2038,6 +2040,7 @@ testers are expected to do more *exploratory* testing.
 
 1. Prerequisites: Use the updated JAR in a disposable app folder. Close any older MediConnect instances first.
    Open a terminal in this folder and run `java -jar mediconnect.jar`.
+   Check that `.mediconnect/locks` is created inside this app folder and contains a lock file.
 
 1. From a second terminal in the same folder, run the same command.<br>
    Expected: The second launch shows an error saying that MediConnect is already using the data file, gives
