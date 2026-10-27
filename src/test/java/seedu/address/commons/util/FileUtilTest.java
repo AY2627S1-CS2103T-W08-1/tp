@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -62,6 +64,23 @@ public class FileUtilTest {
 
         assertEquals(Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE),
                 Files.getPosixFilePermissions(file));
+    }
+
+    @Test
+    public void writeThroughTemporaryFile_readOnlyFile_throwsAccessDeniedExceptionAndKeepsFile() throws Exception {
+        // on macOS and Linux, the temporary file could otherwise replace a read-only file in a writable folder
+        Path file = Files.write(temporaryFolder.resolve("record.txt"), List.of("earlier"));
+        file.toFile().setWritable(false);
+        assumeFalse(Files.isWritable(file), "the file cannot be made read-only, e.g., when run as root");
+
+        try {
+            assertThrows(AccessDeniedException.class, () -> FileUtil.writeThroughTemporaryFile(file,
+                    temporaryFile -> Files.write(temporaryFile, List.of("later"))));
+            assertEquals(List.of("earlier"), Files.readAllLines(file));
+            assertEquals(List.of(file), listFolder());
+        } finally {
+            file.toFile().setWritable(true);
+        }
     }
 
     @Test

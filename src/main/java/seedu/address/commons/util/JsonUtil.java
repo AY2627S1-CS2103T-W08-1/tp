@@ -16,25 +16,42 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.exceptions.IllegalValueException;
 
 /**
  * Converts a Java object instance to JSON and vice versa.
  */
 public class JsonUtil {
 
+    /** Reason given when a file read by {@code readJsonFileStrictly} has a property that its class does not have. */
+    public static final String MESSAGE_UNKNOWN_PROPERTY = "Unknown property \"%1$s\". Check its spelling.";
+
     private static final Logger logger = LogsCenter.getLogger(JsonUtil.class);
 
     /** Character that a UTF-8 byte-order mark at the start of a file is read as. */
     private static final String BYTE_ORDER_MARK = "\uFEFF";
 
-    private static ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
-            .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    private static ObjectMapper objectMapper = createObjectMapper();
+
+    /*
+     * Also rejects a property that the class does not have, e.g. a misspelled name, and a property given twice,
+     * since their values would otherwise be dropped without a warning the next time the file is saved.
+     */
+    private static ObjectMapper strictObjectMapper = createObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
+            .configure(JsonParser.Feature.STRICT_DUPLICATE_DETECTION, true);
+
+    private static ObjectMapper createObjectMapper() {
+        return new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
+                .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    }
 
     static <T> void serializeObjectToJsonFile(Path jsonFile, T objectToSerialize) throws IOException {
         FileUtil.writeToFile(jsonFile, toJsonString(objectToSerialize));
@@ -42,8 +59,13 @@ public class JsonUtil {
 
     static <T> T deserializeObjectFromJsonFile(Path jsonFile, Class<T> classOfObjectToDeserialize)
             throws IOException {
+        return deserializeObjectFromJsonFile(jsonFile, classOfObjectToDeserialize, objectMapper);
+    }
+
+    private static <T> T deserializeObjectFromJsonFile(Path jsonFile, Class<T> classOfObjectToDeserialize,
+            ObjectMapper mapper) throws IOException {
         String fileContent = FileUtil.readFromFile(jsonFile);
-        return fromJsonString(removeByteOrderMark(fileContent), classOfObjectToDeserialize);
+        return fromJsonString(removeByteOrderMark(fileContent), classOfObjectToDeserialize, mapper);
     }
 
     /**
@@ -68,6 +90,11 @@ public class JsonUtil {
      */
     public static <T> Optional<T> readJsonFile(
             Path filePath, Class<T> classOfObjectToDeserialize) throws DataLoadingException {
+        return readJsonFile(filePath, classOfObjectToDeserialize, objectMapper);
+    }
+
+    private static <T> Optional<T> readJsonFile(Path filePath, Class<T> classOfObjectToDeserialize,
+            ObjectMapper mapper) throws DataLoadingException {
         requireNonNull(filePath);
 
         if (!Files.exists(filePath)) {
@@ -75,7 +102,7 @@ public class JsonUtil {
         }
         logger.info("JSON file " + filePath + " found.");
 
-        T readObject = readObjectFromFile(filePath, classOfObjectToDeserialize);
+        T readObject = readObjectFromFile(filePath, classOfObjectToDeserialize, mapper);
         if (readObject == null) {
             logger.warning("JSON file " + filePath + " holds null instead of an object");
             throw new DataLoadingException(new IOException("The JSON file holds null instead of an object"));
@@ -85,15 +112,32 @@ public class JsonUtil {
     }
 
     /**
+     * Same as {@link #readJsonFile(Path, Class)}, but also rejects a property that
+     * {@code classOfObjectToDeserialize} does not have, e.g. a misspelled name, and a property given twice.
+     * Use it for data that is saved again after it is read, since their values would otherwise be lost.
+     *
+     * @throws DataLoadingException if loading of the JSON file failed, including when it has such a property.
+     */
+    public static <T> Optional<T> readJsonFileStrictly(
+            Path filePath, Class<T> classOfObjectToDeserialize) throws DataLoadingException {
+        return readJsonFile(filePath, classOfObjectToDeserialize, strictObjectMapper);
+    }
+
+    /**
      * Returns the object in the JSON file at {@code filePath}, which is {@code null} if the file holds only
      * {@code null}.
      *
      * @throws DataLoadingException if the file cannot be read or is not JSON data for the class.
      */
-    private static <T> T readObjectFromFile(Path filePath, Class<T> classOfObjectToDeserialize)
-            throws DataLoadingException {
+    private static <T> T readObjectFromFile(Path filePath, Class<T> classOfObjectToDeserialize,
+            ObjectMapper mapper) throws DataLoadingException {
         try {
-            return deserializeObjectFromJsonFile(filePath, classOfObjectToDeserialize);
+            return deserializeObjectFromJsonFile(filePath, classOfObjectToDeserialize, mapper);
+        } catch (UnrecognizedPropertyException e) {
+            // a property's name is not a value from the file, so it can be logged and shown, to help find a typo
+            String message = String.format(MESSAGE_UNKNOWN_PROPERTY, e.getPropertyName());
+            logger.warning("Error reading from JSON file " + filePath + ": " + message);
+            throw new DataLoadingException(new IllegalValueException(message, e));
         } catch (IOException e) {
             // the message of e can quote values from the file, so only its type is logged
             logger.warning("Error reading from JSON file " + filePath + ": " + e.getClass().getSimpleName());
@@ -129,8 +173,13 @@ public class JsonUtil {
      * @throws IOException if the string is not JSON data for the class, or has content after that data.
      */
     public static <T> T fromJsonString(String json, Class<T> instanceClass) throws IOException {
-        try (JsonParser parser = objectMapper.getFactory().createParser(json)) {
-            T instance = objectMapper.readValue(parser, instanceClass);
+        return fromJsonString(json, instanceClass, objectMapper);
+    }
+
+    private static <T> T fromJsonString(String json, Class<T> instanceClass, ObjectMapper mapper)
+            throws IOException {
+        try (JsonParser parser = mapper.getFactory().createParser(json)) {
+            T instance = mapper.readValue(parser, instanceClass);
             checkNoContentAfterValue(parser);
             return instance;
         }

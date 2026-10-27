@@ -3,6 +3,7 @@ package seedu.address.commons.util;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -52,14 +53,20 @@ public class FileUtil {
      * temporary file, which then replaces {@code file}. A write that fails partway therefore never leaves a cut-off
      * {@code file}, and the temporary file is deleted, whatever exception the failure throws. On macOS and Linux,
      * a new temporary file can be opened only by the current user, and {@code file} keeps that.
+     * An existing {@code file} that cannot be written to, e.g., because it is read-only, is not replaced, although
+     * on macOS and Linux its folder may let a new file take its place.
      *
      * @param file File to write. Its folder must exist.
      * @param writer Writes the content of {@code file} to the temporary file.
+     * @throws AccessDeniedException if {@code file} exists and cannot be written to.
      * @throws IOException if the temporary file cannot be created or written, or cannot replace {@code file}.
      */
     public static void writeThroughTemporaryFile(Path file, TemporaryFileWriter writer) throws IOException {
         requireNonNull(file);
         requireNonNull(writer);
+        if (Files.exists(file) && !Files.isWritable(file)) {
+            throw new AccessDeniedException(file.toString());
+        }
 
         Path folder = file.toAbsolutePath().getParent();
         assert folder != null : "a file to write is always inside a folder";

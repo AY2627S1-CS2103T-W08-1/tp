@@ -75,6 +75,30 @@ public class JsonUtilTest {
     }
 
     @Test
+    public void readJsonFileStrictly_unknownOrRepeatedProperty_throwsDataLoadingException() throws IOException {
+        // Equivalence partitioning: a property that the class does not have, e.g. a misspelled one, and a
+        // property given twice, whose values would otherwise be lost the next time the file is saved
+        Path unknownPropertyFile = temporaryFolder.resolve("unknownProperty.json");
+        Path repeatedPropertyFile = temporaryFolder.resolve("repeatedProperty.json");
+        FileUtil.writeToFile(unknownPropertyFile, "{ \"nmae\" : \"Misspelled\" }");
+        FileUtil.writeToFile(repeatedPropertyFile, "{ \"name\" : \"First\", \"name\" : \"Second\" }");
+
+        assertThrows(DataLoadingException.class, () ->
+                JsonUtil.readJsonFileStrictly(unknownPropertyFile, SerializableTestClass.class));
+        assertThrows(DataLoadingException.class, () ->
+                JsonUtil.readJsonFileStrictly(repeatedPropertyFile, SerializableTestClass.class));
+    }
+
+    @Test
+    public void readJsonFile_unknownProperty_ignored() throws Exception {
+        // preferences are read this way, so that a file from an older version still gives its known settings
+        Path file = temporaryFolder.resolve("unknownProperty.json");
+        FileUtil.writeToFile(file, "{ \"name\" : \"Kept\", \"nmae\" : \"Ignored\" }");
+
+        assertEquals("Kept", JsonUtil.readJsonFile(file, SerializableTestClass.class).get().getName());
+    }
+
+    @Test
     public void readJsonFile_nullContent_throwsDataLoadingException() throws IOException {
         // Equivalence partitioning: a file holding only null, which is valid JSON but no object, tested both bare
         // and with whitespace around it, as Jackson skips whitespace before reading the value
