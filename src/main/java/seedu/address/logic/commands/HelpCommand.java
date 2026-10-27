@@ -102,8 +102,8 @@ public class HelpCommand extends Command {
                     formatEntry(ExportCommand.COMMAND_WORD + " INDEX",
                             "Saves the full record of the patient at INDEX to data/exports, "
                                     + "in a file named after their NRIC."),
-                    formatEntry(ClearCommand.COMMAND_WORD,
-                            "Deletes all patients.")),
+                    formatEntry(ClearCommand.COMMAND_FORMAT,
+                            "Backs up all active and archived patients, then clears them.")),
             formatGroup("Other",
                     formatEntry(COMMAND_WORD,
                             "Shows this list of commands."),
