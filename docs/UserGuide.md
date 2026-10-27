@@ -64,8 +64,8 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`,
-  `clear` and `backup`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`
+  and `backup`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -780,11 +780,23 @@ Errors are reported as follows:
 
 ### Clearing all patients: `clear`
 
-Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
+Backs up, then clears all active and archived patients and their care information from MediConnect, and clears
+any patient details in the view panel. This includes patients hidden by `find` or the current list filter.
 
-Format: `clear`
+Format: `clear confirm`
 
-Returns `All patients have been cleared.`, including when there are no patients to clear.
+* `confirm` must be lowercase. Surrounding whitespace is allowed; additional arguments are rejected.
+* `clear` alone shows a warning and the required format without deleting anything. `clear 1` is also rejected;
+  use `delete INDEX` to delete one patient.
+* Before clearing, all patient data is saved to a new timestamped file in `data/backups`, using the same naming
+  and collision handling as `backup`. If the backup fails, no patients are cleared.
+* The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
+  using that file's name to recover the data. There is no undo command.
+* An empty address book is backed up too. Existing backups are never overwritten.
+* If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
+
+Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
+patients to clear.
 
 ### Backing up data: `backup`
 
@@ -946,7 +958,7 @@ Action            | Format, Examples
 **Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Backup**        | `backup`
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
-**Clear**         | `clear`
+**Clear**         | `clear confirm`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 1`
 **Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 1`
