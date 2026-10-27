@@ -139,8 +139,12 @@ public class Patient {
         }
     }
 
-    private static String normalizeCareEntry(String entry) {
-        return entry.trim().replaceAll("\\s+", " ");
+    /**
+     * Returns a care entry with Unicode whitespace collapsed and removed from both ends.
+     */
+    public static String normalizeCareEntry(String entry) {
+        Objects.requireNonNull(entry);
+        return entry.replaceAll("(?U)\\s+", " ").trim();
     }
 
     /**
