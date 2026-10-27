@@ -342,22 +342,20 @@ Adds one contact to the patient at `INDEX` in the displayed patient list.
 Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 
 * Name, role and phone are required. Each prefix can appear only once; fields can appear in any order.
-* Names are nonblank free text, so both people and organisations such as `Tan & Partners Clinic` are supported.
-  Leading/trailing Unicode whitespace, including copied no-break spaces, is removed. Repeated whitespace
-  inside a name becomes one ordinary space. The normalized name must contain at most 100 characters.
-* Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
-  other roles are allowed. Surrounding Unicode whitespace is removed; a whitespace-only role is rejected.
-  The trimmed role must contain at most 100 characters; internal spaces count toward this limit.
+* Names are nonblank free text of at most 100 characters after space cleanup. Both people and organisations,
+  such as `Tan & Partners Clinic`, are supported. Surrounding spaces are removed and repeated spaces become one,
+  including special spaces copied from documents.
+* Role is nonblank free text of at most 100 characters after surrounding spaces are removed. Internal spaces count.
+  Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`; other roles are allowed.
 * Contact phones must contain 3 to 15 digits (`0`–`9`). Spaces and hyphens are allowed and do not count toward
   this limit. At most one `+` is allowed, at the start after trimming, e.g., `+44 20 7946 0958`.
   These differ from patient-phone rules so overseas and short clinic numbers such as `123` remain supported.
   Formatting is preserved after trimming. Extensions and parentheses are not supported.
-* The note is optional. An omitted or empty `nt/` creates a contact without a note.
-  Surrounding Unicode whitespace is removed from notes entered through commands. A whitespace-only `nt/`
-  gives an empty note; this also clears an existing note in `editcontact`. Internal note spacing is preserved.
-  The trimmed note must contain at most 500 characters. A basic emoji such as 😀 counts as one character.
-  A letter with a separately typed accent, or an emoji made from several symbols, can count as more than one.
-* A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
+* The note is optional, with at most 500 characters after surrounding spaces are removed. Internal spacing is kept.
+  An omitted or empty `nt/` creates a contact without a note; an empty or spaces-only `nt/` clears it in `editcontact`.
+  For all three text limits, a basic emoji such as 😀 counts as one character. A letter with a separately typed
+  accent, or an emoji made from several symbols, can count as more than one.
+* A contact with the same name (ignoring case and differences in spacing) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
 * Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
@@ -372,22 +370,13 @@ Example: `addcontact 1 n/Lim & Partners Clinic r/GP p/+65 6123-4567 nt/Call in t
 For patient `Alex Yeoh`, this returns:
 `Added contact for Alex Yeoh: Lim & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`
 
-Blank or overlong names/roles return `Contact name cannot be blank and must not exceed 100 characters.` or
-`Contact role cannot be blank and must not exceed 100 characters.` An overlong note returns
-`Contact note must not exceed 500 characters.`
-An invalid phone returns `Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, and at most one + at the start.`
+Blank names/roles, overlong text and invalid phones are rejected with the affected field's requirements.
 A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure.
 
-The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
-that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
-in a copy of the file using the [data recovery instructions](#editing-the-data-file).
-
-Saved contact names and roles follow the same whitespace rules. Whitespace-only names or roles and contacts
-that become duplicates after name normalization are rejected when loaded or restored. Stored note formatting
-is preserved; Unicode trimming of notes applies only to values entered through commands.
-The text limits also apply to saved contacts, including backups. Stored note spaces count toward the 500-character
-limit because they are preserved. Older files containing overlong contact fields are rejected when loaded or
-restored; shorten these fields in a copy of the file using the [data recovery instructions](#editing-the-data-file).
+The same field and duplicate rules apply to `editcontact` and saved data, including backups. Names and roles
+follow the same space cleanup when loaded. Saved notes keep their spaces, which count toward the 500-character
+limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored; repair a copy
+using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
