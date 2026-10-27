@@ -163,6 +163,8 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
   normalization. If any entry is blank or an instruction is too long, the whole command is rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
+  Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
+  punctuation attached.
 * Duplicate entries, ignoring letter case and whitespace differences, are not added again. Other unique entries in
   the same command are still added.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
@@ -280,7 +282,8 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
   to one space. It cannot be blank or exceed 500 characters after normalization.
 * An edit that would duplicate another care instruction, ignoring letter case and whitespace differences, is rejected.
   Editing an instruction to its current text is allowed.
-* `ci/` must appear exactly once. Unrecognized prefixes are rejected.
+* `ci/` must appear exactly once. Unrecognized prefixes are rejected, with the same standalone slash-word
+  exceptions as `addcare`.
 
 Example: `editcare 1 1 ci/Check blood sugar after lunch`
 

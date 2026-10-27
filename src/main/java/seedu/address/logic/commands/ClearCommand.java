@@ -20,7 +20,7 @@ public class ClearCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Backs up and clears all active and archived patients and their care information.\n"
             + "If the backup fails, no patients are cleared.\n"
-            + "Format: " + COMMAND_FORMAT;
+            + "Parameters: " + COMMAND_FORMAT;
     public static final String MESSAGE_SUCCESS = "All patients have been cleared.";
 
     private final BackupCommand backupCommand;
