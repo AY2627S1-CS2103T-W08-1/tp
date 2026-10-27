@@ -156,6 +156,16 @@ public class BackupCommandTest {
     }
 
     @Test
+    public void execute_fileInPlaceOfBackupFolder_namesFileInError() throws Exception {
+        // Equivalence partitioning: a file with the backup folder's name, which stops the folder being made
+        Path backupDir = Files.createFile(temporaryFolder.resolve("backups"));
+        String expectedMessage = String.format(BackupCommand.MESSAGE_FAILURE, backupDir,
+                String.format(Messages.MESSAGE_FILE_IN_PLACE_OF_FOLDER, "backups"));
+
+        assertCommandFailure(new BackupCommand(FIXED_CLOCK, backupDir), model, expectedMessage);
+    }
+
+    @Test
     public void execute_missingBackupFolder_createsFolder() {
         Path backupDir = temporaryFolder.resolve("data").resolve("backups");
         assertFalse(Files.exists(backupDir));
