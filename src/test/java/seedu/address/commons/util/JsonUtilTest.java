@@ -2,6 +2,7 @@ package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -85,6 +86,45 @@ public class JsonUtilTest {
         assertThrows(DataLoadingException.class, () -> JsonUtil.readJsonFile(nullFile, SerializableTestClass.class));
         assertThrows(DataLoadingException.class, () ->
                 JsonUtil.readJsonFile(paddedNullFile, SerializableTestClass.class));
+    }
+
+    @Test
+    public void readJsonFile_byteOrderMarkBeforeData_returnsData() throws Exception {
+        // Equivalence partitioning: valid data saved by an editor that starts the file with a UTF-8
+        // byte-order mark
+        Path file = temporaryFolder.resolve("byteOrderMark.json");
+        FileUtil.writeToFile(file, SerializableTestClass.JSON_STRING_REPRESENTATION);
+        addUtf8ByteOrderMark(file);
+
+        SerializableTestClass readBack =
+                JsonUtil.readJsonFile(file, SerializableTestClass.class).orElseThrow();
+
+        assertEquals(SerializableTestClass.getNameTestValue(), readBack.getName());
+        assertEquals(SerializableTestClass.getListTestValues(), readBack.getListOfLocalDateTimes());
+    }
+
+    @Test
+    public void readJsonFile_onlyByteOrderMark_throwsDataLoadingException() throws Exception {
+        // Boundary value analysis: a byte-order mark with no data after it, which is an empty file once it is
+        // removed
+        Path file = temporaryFolder.resolve("onlyByteOrderMark.json");
+        FileUtil.writeToFile(file, "");
+        addUtf8ByteOrderMark(file);
+
+        assertThrows(DataLoadingException.class, () ->
+                JsonUtil.readJsonFile(file, SerializableTestClass.class));
+    }
+
+    @Test
+    public void readJsonFile_twoByteOrderMarks_throwsDataLoadingException() throws Exception {
+        // Boundary value analysis: only one byte-order mark is removed, so a second one is not JSON
+        Path file = temporaryFolder.resolve("twoByteOrderMarks.json");
+        FileUtil.writeToFile(file, SerializableTestClass.JSON_STRING_REPRESENTATION);
+        addUtf8ByteOrderMark(file);
+        addUtf8ByteOrderMark(file);
+
+        assertThrows(DataLoadingException.class, () ->
+                JsonUtil.readJsonFile(file, SerializableTestClass.class));
     }
 
     @Test
