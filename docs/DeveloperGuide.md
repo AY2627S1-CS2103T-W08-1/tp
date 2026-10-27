@@ -720,7 +720,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | see a list of upcoming appointments across all patients | plan my schedule |
 | `* *`    | caregiver                                  | record notes after an appointment | remember what was discussed for future reference |
 | `* *`    | caregiver                                  | view a patient's appointment history | see their past visits at a glance |
-| `* *`    | caregiver                                  | see a daily summary of everything due today across all patients | check all my responsibilities in one place |
 | `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
 | `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
 | `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
@@ -732,6 +731,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | edit or cancel an appointment | keep the schedule accurate when a visit is rescheduled |
 | `* *`    | new user                                   | see sample patient data when I first open the app | understand what a complete record looks like before entering real data |
 | `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients |
+| `*`      | caregiver                                  | see a daily summary of everything due today across all patients | check all my responsibilities in one place |
 | `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
@@ -1192,13 +1192,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
     * 3a1. MediConnect shows an error message asking for only the name of a backup file.
 
-      Use case resumes at step 2.
+      Use case resumes at step 3.
 
 * 3b. There is no backup with the given name.
 
     * 3b1. MediConnect shows an error message that no such backup was found, and that the data has not been changed.
 
-      Use case resumes at step 2.
+      Use case resumes at step 3.
 
 * 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, or MediConnect has no permission to read it.
 
