@@ -180,7 +180,7 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted.
 
-`JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It ignores a UTF-8 byte-order mark at the start of a file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
+`JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It reads the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
 
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
@@ -2036,7 +2036,7 @@ testers are expected to do more *exploratory* testing.
 
    1. Prerequisites: In `data/backups`, copy a backup to `invalid.json`, and change a patient's `nric` in it to `123`.<br>
       Test case: `restore invalid.json`<br>
-      Expected: The data is unchanged. The status message says that the backup has invalid data, followed by the NRIC format as the details.
+      Expected: The data is unchanged. The status message says that the backup has invalid data, followed by details that start with the changed patient's position in the file, counting from 1, then give the NRIC format, e.g., `Details: Patient entry 2: NRIC should be ...` if you changed the second patient.
 
    1. Other incorrect restore commands to try: `restore .`, `restore data/backups/bad.json`<br>
       Expected: The data is unchanged. The status message shows an error.

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -24,6 +25,36 @@ public class FileUtilTest {
 
     @TempDir
     private Path temporaryFolder;
+
+    @Test
+    public void readFromFile_multiByteUtf8_returnsText() throws Exception {
+        // Equivalence partitioning: valid UTF-8 with characters of two and three bytes, e.g., accented and
+        // Chinese names
+        Path file = temporaryFolder.resolve("record.txt");
+        FileUtil.writeToFile(file, "Zoë Tan 陈");
+
+        assertEquals("Zoë Tan 陈", FileUtil.readFromFile(file));
+    }
+
+    @Test
+    public void readFromFile_textSavedInAnotherEncoding_throwsCharacterCodingException() throws Exception {
+        // Equivalence partitioning: text saved by an editor in Windows-1252 ("ANSI"), which writes "é" as
+        // the single byte E9, a byte that cannot appear on its own in UTF-8
+        byte[] content = {'C', 'a', 'f', (byte) 0xE9, '!'};
+        Path file = Files.write(temporaryFolder.resolve("record.txt"), content);
+
+        assertThrows(CharacterCodingException.class, () -> FileUtil.readFromFile(file));
+    }
+
+    @Test
+    public void readFromFile_characterCutOffAtEnd_throwsCharacterCodingException() throws Exception {
+        // Boundary value analysis: the first byte of a two-byte character ("é" is C3 A9) as the file's last
+        // byte
+        byte[] content = {'C', 'a', 'f', (byte) 0xC3};
+        Path file = Files.write(temporaryFolder.resolve("record.txt"), content);
+
+        assertThrows(CharacterCodingException.class, () -> FileUtil.readFromFile(file));
+    }
 
     @Test
     public void writeThroughTemporaryFile_nullArguments_throwsNullPointerException() {
