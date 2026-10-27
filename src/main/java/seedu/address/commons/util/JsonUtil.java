@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -42,8 +43,37 @@ public class JsonUtil {
 
     static <T> T deserializeObjectFromJsonFile(Path jsonFile, Class<T> classOfObjectToDeserialize)
             throws IOException {
-        String fileContent = FileUtil.readFromFile(jsonFile);
-        return fromJsonString(removeByteOrderMark(fileContent), classOfObjectToDeserialize);
+        String json = removeByteOrderMark(FileUtil.readFromFile(jsonFile));
+        checkNoUnpairedSurrogates(json);
+        return fromJsonString(json, classOfObjectToDeserialize);
+    }
+
+    /**
+     * Throws a {@code JsonParseException} if a name or a text value in {@code json} has half of a
+     * surrogate pair on its own, which only a JSON escape of a surrogate, e.g., of U+D800, in a hand-edited
+     * file can give. Such text cannot be written as UTF-8, so the next save would silently replace it
+     * with "?".
+     *
+     * @throws IOException if {@code json} has such text, or is not JSON.
+     */
+    private static void checkNoUnpairedSurrogates(String json) throws IOException {
+        try (JsonParser parser = objectMapper.getFactory().createParser(json)) {
+            for (JsonToken token = parser.nextToken(); token != null; token = parser.nextToken()) {
+                boolean isText = token == JsonToken.FIELD_NAME || token == JsonToken.VALUE_STRING;
+                if (isText && hasUnpairedSurrogate(parser.getText())) {
+                    throw new JsonParseException(parser, "Half of a surrogate pair on its own");
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns true if {@code text} has a surrogate that is not part of a pair.
+     */
+    private static boolean hasUnpairedSurrogate(String text) {
+        // codePoints() gives each pair as one code point above U+FFFF, and an unpaired surrogate as itself
+        return text.codePoints().anyMatch(codePoint ->
+                codePoint >= Character.MIN_SURROGATE && codePoint <= Character.MAX_SURROGATE);
     }
 
     /**
