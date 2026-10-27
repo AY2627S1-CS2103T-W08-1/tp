@@ -80,7 +80,10 @@ public class EditContactCommand extends Command {
             }
         }
         contacts.set(contactIndex.getZeroBased(), edited);
-        model.setPatient(patient, patient.withContacts(contacts));
+        Patient updatedPatient = patient.withContacts(contacts);
+        model.setPatient(patient, updatedPatient);
+        assert model.getAddressBook().getPatientList().contains(updatedPatient)
+                : "The model must store the patient with the edited contact.";
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), edited));
     }
 

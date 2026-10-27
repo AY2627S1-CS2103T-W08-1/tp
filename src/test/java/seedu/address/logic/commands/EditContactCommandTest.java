@@ -35,6 +35,21 @@ public class EditContactCommandTest {
     }
 
     @Test
+    public void execute_modelIgnoresContactUpdate_failsInternalAssertion() {
+        Patient patient = new PatientBuilder().withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs()) {
+            @Override
+            public void setPatient(Patient target, Patient editedPatient) {
+                // Simulate a model implementation that silently drops the contact update.
+            }
+        };
+        assertThrows(AssertionError.class, () -> new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                Optional.empty(), Optional.of("Emergency"),
+                Optional.empty(), Optional.empty()).execute(model));
+        assertEquals(patient, model.getAddressBook().getPatientList().get(0));
+    }
+
+    @Test
     public void execute_noteChangedAndCleared_otherFieldsPreserved() throws Exception {
         Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN).withAllergens("Allergen")
                 .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0)))).build();
