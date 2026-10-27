@@ -56,6 +56,8 @@
         "edit-patient-feature": "Edit patient feature",
         "add-care-info-feature": "Add care info feature",
         "backup-and-restore-feature": "Backup and restore feature",
+        "export-feature": "Export feature",
+        "help-window": "Help window",
         "contact-management": "Contact management",
         "add-appointment-feature": "Add appointment feature",
         "due-medication-feature": "Due medication feature",
