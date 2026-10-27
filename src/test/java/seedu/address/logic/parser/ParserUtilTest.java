@@ -213,6 +213,32 @@ public class ParserUtilTest {
         assertEquals(VALID_PROVIDER, ParserUtil.parseProvider(WHITESPACE + "Dr   Tan" + WHITESPACE));
     }
 
+    @Test
+    public void parseProvider_unicodeSpaces_treatedAsSpaces() throws Exception {
+        // a no-break space, e.g. copied from a web page, which trim() and isBlank() do not treat as a space
+        assertEquals(VALID_PROVIDER, ParserUtil.parseProvider(" Dr Tan "));
+        assertThrows(ParseException.class, Appointment.MESSAGE_PROVIDER_CONSTRAINTS, ()
+            -> ParserUtil.parseProvider(" "));
+    }
+
+    @Test
+    public void parseProvider_tooLong_throwsParseException() {
+        assertThrows(ParseException.class, Appointment.MESSAGE_PROVIDER_CONSTRAINTS, ()
+            -> ParserUtil.parseProvider("a".repeat(Appointment.MAX_PROVIDER_LENGTH + 1)));
+    }
+
+    @Test
+    public void parseNote_unicodeSpacesAround_returnsTrimmedNote() throws Exception {
+        assertEquals("Bring  scans", ParserUtil.parseNote("  Bring  scans "));
+        assertEquals("", ParserUtil.parseNote(" ")); // no note
+    }
+
+    @Test
+    public void parseNote_tooLong_throwsParseException() {
+        assertThrows(ParseException.class, Appointment.MESSAGE_NOTE_CONSTRAINTS, ()
+            -> ParserUtil.parseNote("a".repeat(Appointment.MAX_NOTE_LENGTH + 1)));
+    }
+
 
 
     @Test
