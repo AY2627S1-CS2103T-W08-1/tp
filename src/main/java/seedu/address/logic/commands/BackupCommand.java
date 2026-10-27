@@ -90,7 +90,7 @@ public class BackupCommand extends Command {
 
     /**
      * Saves {@code addressBook} to a new timestamped file in the backup folder and returns the file's path.
-     * {@code RestoreCommand} also uses this, to back up the current data before replacing it.
+     * {@code RestoreCommand} and {@code ClearCommand} also use this before replacing or clearing the current data.
      * The data is written through {@code FileUtil#writeThroughTemporaryFile}, so a failed write never leaves a
      * cut-off backup, and on macOS and Linux, only the current user can open the backup.
      *

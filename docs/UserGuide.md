@@ -64,8 +64,8 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`,
-  `clear` and `backup`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`
+  and `backup`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -130,7 +130,7 @@ Examples:
 * `add n/Mary Lim ic/S7654321B dob/1945-11-02 p/98765432 a/Blk 12 Ang Mo Kio Ave 4`
 
 The first example returns:
-`New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; Phone: 91234567; Address: 21 Lorong 3, #05-10;`
+`New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; Phone: 91234567; Address: 21 Lorong 3, #05-10`
 
 If a required field is missing, the command is rejected with `Invalid command format!` followed by the usage and example.
 
@@ -335,8 +335,10 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   Leading/trailing whitespace is removed and repeated spaces in a name become one.
 * Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
   other roles are allowed.
-* Contact phones can contain digits, spaces, `+` and `-`, with at least three digits. They use different rules
-  from patient phones so overseas and clinic numbers are supported. Formatting is preserved after trimming.
+* Contact phones must contain 3 to 15 digits (`0`–`9`). Spaces and hyphens are allowed and do not count toward
+  this limit. At most one `+` is allowed, at the start after trimming, e.g., `+44 20 7946 0958`.
+  These differ from patient-phone rules so overseas and short clinic numbers such as `123` remain supported.
+  Formatting is preserved after trimming. Extensions and parentheses are not supported.
 * The note is optional. An omitted or empty `nt/` creates a contact without a note.
   Surrounding spaces are removed from notes entered through commands.
 * A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
@@ -355,8 +357,12 @@ For patient `Alex Yeoh`, this returns:
 `Added contact for Alex Yeoh: Lim & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`
 
 Blank names/roles return `Contact name cannot be blank.` or `Contact role cannot be blank.`
-An invalid phone returns `Contact phone must contain at least 3 digits and only digits, spaces, + and -.`
+An invalid phone returns `Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, and at most one + at the start.`
 A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure.
+
+The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
+that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
+in a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
@@ -511,14 +517,14 @@ Format: `listappt [INDEX]`
 * With `INDEX`, lists every appointment of the patient at `INDEX`, upcoming ones first, then past ones. Each
   appointment shows its `APPT_INDEX`, the number to use with `editappt` and `cancelappt`. The detail panel then
   shows the patient, with the same numbers in its Appointments section, below the care information.
-* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. An archived patient
-  is not listed: run `unarchive` first to see their appointments.
+* `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list. After
+  `listarchived`, `listappt INDEX` lists the appointments of an archived patient.
 * The patient list does not change.
 
 Examples:
 
-* `listappt` returns `Upcoming appointments:`, followed by one line per appointment with the patient's name, e.g.,
-  `Alex Yeoh: 2027-11-05 09:30 with Dr Tan`.
+* `listappt` returns `Upcoming appointments:`, followed by one line per appointment with the patient's name and
+  NRIC, e.g., `Alex Yeoh (S0000001A): 2027-11-05 09:30 with Dr Tan`.
 * `listappt 2` returns `Appointments for Bernice Yu:`, then `Upcoming: none`, then `Past:` followed by
   `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal)`.
 
@@ -526,8 +532,6 @@ Other messages are as follows:
 
 * With no upcoming appointments, `listappt` returns `No upcoming appointments.`
 * For a patient with no appointments, `listappt INDEX` returns `NAME has no appointments.`
-* For an archived patient, e.g., after `listarchived`, `listappt INDEX` returns
-  `This patient is archived. Unarchive them to list their appointments.`
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * A zero, negative, or non-numeric index, or more than one index, returns `Invalid command format!`, followed by
   the command usage.
@@ -707,6 +711,8 @@ Format: `view INDEX`
   shown until the patient is shown again.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
+  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
   to the message above when the patient is deleted or all patients are cleared.
@@ -776,11 +782,23 @@ Errors are reported as follows:
 
 ### Clearing all patients: `clear`
 
-Clears all patients and their care information from MediConnect, and clears any patient details in the view panel.
+Backs up, then clears all active and archived patients and their care information from MediConnect, and clears
+any patient details in the view panel. This includes patients hidden by `find` or the current list filter.
 
-Format: `clear`
+Format: `clear confirm`
 
-Returns `All patients have been cleared.`, including when there are no patients to clear.
+* `confirm` must be lowercase. Surrounding whitespace is allowed; additional arguments are rejected.
+* `clear` alone shows a warning and the required format without deleting anything. `clear 1` is also rejected;
+  use `delete INDEX` to delete one patient.
+* Before clearing, all patient data is saved to a new timestamped file in `data/backups`, using the same naming
+  and collision handling as `backup`. If the backup fails, no patients are cleared.
+* The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
+  using that file's name to recover the data. There is no undo command.
+* An empty address book is backed up too. Existing backups are never overwritten.
+* If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
+
+Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
+patients to clear.
 
 ### Backing up data: `backup`
 
@@ -942,7 +960,7 @@ Action            | Format, Examples
 **Archive**       | `archive INDEX` <br> e.g., `archive 1`
 **Backup**        | `backup`
 **Cancel appointment** | `cancelappt INDEX APPT_INDEX` <br> e.g., `cancelappt 1 2`
-**Clear**         | `clear`
+**Clear**         | `clear confirm`
 **Delete**        | `delete INDEX` <br> e.g., `delete 3`
 **Delete allergen** | `deleteallergy INDEX ALLERGY_INDEX` <br> e.g., `deleteallergy 1 1`
 **Delete care instruction** | `deletecare INDEX CI_INDEX` <br> e.g., `deletecare 1 1`
