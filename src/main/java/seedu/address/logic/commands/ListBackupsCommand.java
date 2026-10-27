@@ -37,7 +37,8 @@ public class ListBackupsCommand extends Command {
     /** Most backups listed, so that the list stays short enough to read in the result box. */
     public static final int MAX_LISTED_BACKUPS = 10;
 
-    private static final String BACKUP_EXTENSION = ".json";
+    /** Ending of the backup names that are listed, and that {@code RestoreCommand} adds if it is left out. */
+    static final String BACKUP_EXTENSION = ".json";
     private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
     /** Number of digits that every number in a backup name is padded to, more than a {@code long} has. */
     private static final int PADDING_LENGTH = 20;
