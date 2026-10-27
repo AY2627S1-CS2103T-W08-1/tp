@@ -409,9 +409,11 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`.
 * `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
-* `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank. Leading and
-  trailing spaces are ignored, and multiple spaces between words are reduced to one.
-* `NOTE` is optional free text. `nt/` with nothing after it means no note.
+* `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank and has at most
+  100 characters. Leading and trailing spaces are ignored, and multiple spaces between words are reduced to one.
+  Special spaces, such as a no-break space copied from a web page, count as spaces.
+* `NOTE` is optional free text of at most 500 characters. Leading and trailing spaces, including special spaces, are
+  ignored. `nt/` with nothing after it means no note.
 * Text that looks like a prefix, such as `w/` or `x/`, cannot be used inside `WITH` or `NOTE`. Standalone `s/o`,
   `d/o`, `c/o`, `a/l`, `a/p` and `w/o` (without) are allowed and kept as text, ignoring letter case, e.g.,
   `nt/MRI w/o contrast`.
@@ -444,7 +446,9 @@ Other errors are reported as follows:
 * An invalid date, or one before `1900-01-01`, returns
   `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`
 * An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
-* A blank `WITH` returns `Who the appointment is with should not be blank.`
+* A blank `WITH`, or one longer than 100 characters, returns
+  `Who the appointment is with should not be blank, and should be one line of at most 100 characters.`
+* A `NOTE` longer than 500 characters returns `An appointment note should be one line of at most 500 characters.`
 * A missing `d/`, `t/` or `w/`, or a missing or invalid index, returns `Invalid command format!`, followed by the
   command usage.
 
