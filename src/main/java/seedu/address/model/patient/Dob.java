@@ -40,6 +40,14 @@ public class Dob {
         }
     }
 
+    /**
+     * Returns true if this date of birth is after {@code date}, i.e. the patient was not yet born on that date.
+     */
+    public boolean isAfter(LocalDate date) {
+        requireNonNull(date);
+        return value.isAfter(date);
+    }
+
     @Override
     public String toString() {
         return value.toString();

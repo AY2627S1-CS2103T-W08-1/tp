@@ -409,7 +409,8 @@ Adds an appointment to the patient at the displayed index.
 Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
-* `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`.
+* `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`. It cannot be before the
+  patient's date of birth, but can be on it.
 * `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank and has at most
   100 characters. Leading and trailing spaces are ignored, and multiple spaces between words are reduced to one.
@@ -447,6 +448,8 @@ Other errors are reported as follows:
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * An invalid date, or one before `1900-01-01`, returns
   `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`
+* A date before the patient's date of birth returns
+  `The appointment cannot be before the patient's date of birth, DOB.`
 * An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
 * A blank `WITH`, or one longer than 100 characters, returns
   `Who the appointment is with should not be blank, and should be one line of at most 100 characters.`
@@ -483,6 +486,7 @@ Other errors are reported as follows:
 
 * An edit that makes the appointment the same as another appointment of the patient returns
   `This appointment already exists for this patient.` and changes nothing.
+* A date before the patient's date of birth returns the same message as for `addappt` and changes nothing.
 * No `d/`, `t/`, `w/` or `nt/` returns `At least one of d/, t/, w/ or nt/ must be provided.`
 * Index errors and invalid fields are reported as for `cancelappt` and `addappt`.
 
@@ -621,6 +625,8 @@ Format: `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]`
 * Medications and their times, allergens, care instructions, contacts, appointments, and archived state are
   preserved.
 * An edit that gives a patient an NRIC already used by another patient is rejected.
+* A new DOB cannot be after the date of the patient's earliest appointment, as no appointment can be before the
+  patient's date of birth.
 * After a successful command, the detail panel shows the edited patient immediately. The displayed list resets to
   all active patients, or all archived patients if the edited patient is archived, so check the displayed indices
   before the next command.
@@ -634,7 +640,8 @@ A successful command returns
 `The patient index provided is invalid.` Supplying no fields returns
 `At least one field to edit must be provided.` A duplicate NRIC returns
 `This patient (identified by NRIC) already exists in MediConnect.` If the matching patient is archived, it returns
-`This NRIC belongs to an archived patient. Use listarchived and unarchive to restore them.`
+`This NRIC belongs to an archived patient. Use listarchived and unarchive to restore them.` A DOB after the patient's
+earliest appointment returns `The date of birth cannot be after the patient's earliest appointment, on DATE.`
 
 ### Locating patients by name: `find`
 
