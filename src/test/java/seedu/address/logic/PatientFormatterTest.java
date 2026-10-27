@@ -69,6 +69,7 @@ public class PatientFormatterTest {
 
     @Test
     public void toSingleLine_nullEntry_throwsNullPointerException() {
+        // Equivalence partitioning: null, the invalid partition of entries, which no stored list holds
         assertThrows(NullPointerException.class, () -> PatientFormatter.toSingleLine(null));
     }
 
