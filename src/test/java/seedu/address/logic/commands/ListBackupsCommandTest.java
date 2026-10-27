@@ -66,6 +66,15 @@ public class ListBackupsCommandTest {
     }
 
     @Test
+    public void execute_fileInPlaceOfBackupFolder_throwsCommandException() throws Exception {
+        // Equivalence partitioning: a file where the folder should be, which backup cannot make a folder of
+        Path fileInPlaceOfFolder = Files.writeString(temporaryFolder.resolve("backups"), "not a folder");
+
+        assertCommandFailure(new ListBackupsCommand(fileInPlaceOfFolder), model,
+                String.format(ListBackupsCommand.MESSAGE_NOT_A_FOLDER, fileInPlaceOfFolder));
+    }
+
+    @Test
     public void execute_onlyOtherFilesInFolder_saysNoBackups() throws Exception {
         // temporary files of an unfinished backup, other files and folders are not backups
         Files.createFile(temporaryFolder.resolve("mediconnect-20261020-083015.json.123.tmp"));
