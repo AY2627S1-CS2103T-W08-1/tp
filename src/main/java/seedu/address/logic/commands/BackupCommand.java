@@ -129,13 +129,12 @@ public class BackupCommand extends Command {
         for (int suffix = 1; ; suffix++) {
             try {
                 return Files.createFile(backupFile);
-            } catch (FileAlreadyExistsException faee) {
-                // the name is taken, e.g., by a backup made in the same second, so the next one is tried
-            } catch (AccessDeniedException ade) {
-                // Windows also denies access when a folder has the name, so only a free name means that
-                // MediConnect may not write to the backup folder
+            } catch (FileAlreadyExistsException | AccessDeniedException e) {
+                // the name is taken if something has it, e.g., a backup made in the same second, and then the
+                // next one is tried; Windows denies access, rather than reporting the name as taken, when a
+                // folder has it, so a free name with denied access means MediConnect may not write there
                 if (!Files.exists(backupFile)) {
-                    throw ade;
+                    throw e;
                 }
             }
             backupFile = backupDir.resolve(baseName + SUFFIX_SEPARATOR + suffix + FILE_EXTENSION);
