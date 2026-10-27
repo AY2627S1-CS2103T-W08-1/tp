@@ -91,7 +91,7 @@ public class AddressBookParser {
             case DeleteMedCommand.COMMAND_WORD -> new DeleteMedCommandParser().parse(arguments);
             case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
             case EditMedCommand.COMMAND_WORD -> new EditMedCommandParser().parse(arguments);
-            case ClearCommand.COMMAND_WORD -> new ClearCommand();
+            case ClearCommand.COMMAND_WORD -> new ClearCommandParser().parse(arguments);
             case BackupCommand.COMMAND_WORD -> new BackupCommand();
             case RestoreCommand.COMMAND_WORD -> new RestoreCommandParser().parse(arguments);
             case ExportCommand.COMMAND_WORD -> new ExportCommandParser().parse(arguments);

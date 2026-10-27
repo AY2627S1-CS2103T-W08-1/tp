@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
@@ -142,6 +143,26 @@ public class MainAppTest {
 
         assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
         assertTrue(getRecoveryFiles().isEmpty());
+    }
+
+    @Test
+    public void initModelManager_dataFileWithByteOrderMark_loadsDataWithoutWarning() throws Exception {
+        // Equivalence partitioning: a valid data file edited by hand in an editor that adds a UTF-8
+        // byte-order mark
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        StorageManager storage = createStorage(dataFile);
+        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        addUtf8ByteOrderMark(dataFile);
+        MainApp mainApp = new MainApp();
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        mainApp.start(null);
+
+        assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+        assertTrue(getRecoveryFiles().isEmpty());
+        assertNull(uiStub.warningMessage);
     }
 
     @Test
