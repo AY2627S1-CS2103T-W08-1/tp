@@ -8,6 +8,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_IND
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.DOB_DESC_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.FIXED_CLOCK;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NRIC_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
@@ -17,6 +18,7 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -36,6 +38,8 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
@@ -43,6 +47,7 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -52,6 +57,7 @@ import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
+import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.AdjustableClock;
@@ -59,7 +65,11 @@ import seedu.address.testutil.PatientBuilder;
 
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
-    private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
+    /** As thrown when the temporary file written first cannot replace the data file. */
+    private static final IOException DUMMY_AD_EXCEPTION =
+            new AccessDeniedException("mediconnect.json.123.tmp", "mediconnect.json", null);
+    private static final IOException DUMMY_FS_EXCEPTION = new FileSystemException("mediconnect.json.123.tmp",
+            "mediconnect.json", "The process cannot access the file because it is being used by another process");
 
     @TempDir
     public Path temporaryFolder;
@@ -67,6 +77,7 @@ public class LogicManagerTest {
     private Model model = new ModelManager();
     private StorageManager storage;
     private Logic logic;
+    private boolean wasSaveAttempted;
 
     @BeforeEach
     public void setUp() {
@@ -74,7 +85,7 @@ public class LogicManagerTest {
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
         storage = new StorageManager(addressBookStorage, userPrefsStorage);
-        logic = new LogicManager(model, storage);
+        logic = createLogicWithTemporaryBackups(storage);
     }
 
     @Test
@@ -131,8 +142,63 @@ public class LogicManagerTest {
 
     @Test
     public void execute_storageThrowsAdException_throwsCommandException() {
+        // names the data file, not the temporary file in the exception's message
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, temporaryFolder.resolve("ExceptionUserPrefs.json")));
+    }
+
+    @Test
+    public void execute_storageThrowsFileSystemException_showsReasonOnly() {
+        assertCommandFailureForExceptionFromStorage(DUMMY_FS_EXCEPTION, String.format(
+                LogicManager.FILE_OPS_ERROR_FORMAT,
+                "The process cannot access the file because it is being used by another process"));
+    }
+
+    @Test
+    public void execute_clearWithoutConfirmation_preservesPatientsAndViewedPatient() throws Exception {
+        model.addPatient(ALICE);
+        model.setViewedPatient(ALICE);
+
+        for (String input : List.of("clear", "clear 1", "clear confirm extra")) {
+            assertThrows(ParseException.class, () -> logic.execute(input));
+            assertEquals(List.of(ALICE), model.getAddressBook().getPatientList());
+            assertEquals(ALICE, model.getViewedPatient().getValue());
+            assertTrue(storage.readAddressBook().isEmpty());
+        }
+    }
+
+    @Test
+    public void execute_clearConfirmed_persistsEmptyData() throws Exception {
+        model.addPatient(ALICE);
+        model.addPatient(new PatientBuilder(BENSON).withArchived(true).build());
+        model.setViewedPatient(ALICE);
+        storage.saveAddressBook(model.getAddressBook());
+
+        assertTrue(logic.execute(ClearCommand.COMMAND_FORMAT).getFeedbackToUser()
+                .startsWith(ClearCommand.MESSAGE_SUCCESS + "\nBackup saved to: "));
+
+        assertTrue(model.getAddressBook().getPatientList().isEmpty());
+        assertNull(model.getViewedPatient().getValue());
+        assertTrue(storage.readAddressBook().orElseThrow().getPatientList().isEmpty());
+    }
+
+    @Test
+    public void execute_clearSaveFails_restoresPatientsFilterAndViewedPatient() throws Exception {
+        Patient archivedPatient = new PatientBuilder(BENSON).withArchived(true).build();
+        model.addPatient(ALICE);
+        model.addPatient(archivedPatient);
+        model.updateFilteredPatientList(patient -> patient.equals(ALICE));
+        model.setViewedPatient(ALICE);
+        logic = createLogicWithFailingStorage(DUMMY_IO_EXCEPTION);
+
+        assertThrows(CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()), () ->
+                logic.execute(ClearCommand.COMMAND_FORMAT));
+
+        assertTrue(wasSaveAttempted);
+        assertEquals(List.of(ALICE, archivedPatient), model.getAddressBook().getPatientList());
+        assertEquals(List.of(ALICE), model.getFilteredPatientList());
+        assertEquals(ALICE, model.getViewedPatient().getValue());
     }
 
     @Test
@@ -290,6 +356,7 @@ public class LogicManagerTest {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(prefPath) {
             @Override
             public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                wasSaveAttempted = true;
                 throw e;
             }
         };
@@ -298,6 +365,21 @@ public class LogicManagerTest {
                 new JsonUserPrefsStorage(temporaryFolder.resolve("ExceptionUserPrefs.json"));
         StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        return new LogicManager(model, storage);
+        return createLogicWithTemporaryBackups(storage);
+    }
+
+    /**
+     * Returns a manager that validates command input normally but writes clear backups to a temporary folder.
+     */
+    private Logic createLogicWithTemporaryBackups(Storage storage) {
+        AddressBookParser parser = new AddressBookParser() {
+            @Override
+            public Command parseCommand(String commandText) throws ParseException {
+                Command command = super.parseCommand(commandText);
+                return command instanceof ClearCommand
+                        ? new ClearCommand(FIXED_CLOCK, temporaryFolder.resolve("backups")) : command;
+            }
+        };
+        return new LogicManager(model, storage, parser);
     }
 }

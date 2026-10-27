@@ -197,6 +197,21 @@ public class AddCareCommandTest {
     }
 
     @Test
+    public void execute_unicodeWhitespaceDuplicate_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder(ALICE).withAllergens("Dust mites")
+                .withCareInstructions("Check blood sugar").build();
+        Model actualModel = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(),
+                List.of("Dust\u00a0mites"), List.of("Check\u00a0blood sugar"));
+
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                "Allergen", "Dust mites")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                        "Care instruction", "Check blood sugar");
+        assertCommandFailure(command, actualModel, expectedMessage);
+    }
+
+    @Test
     public void execute_noCareEntries_throwsCommandException() {
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of());
 

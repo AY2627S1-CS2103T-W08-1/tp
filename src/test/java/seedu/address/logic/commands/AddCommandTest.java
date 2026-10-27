@@ -42,7 +42,7 @@ public class AddCommandTest {
         CommandResult commandResult = new AddCommand(validPatient).execute(modelStub);
 
         assertEquals("New patient added: John Tan; NRIC: S1234567A; DOB: 1950-04-12; "
-                + "Phone: 91234567; Address: 21 Lorong 3, #05-10;",
+                + "Phone: 91234567; Address: 21 Lorong 3, #05-10",
                 commandResult.getFeedbackToUser());
         assertEquals(List.of(validPatient), modelStub.patientsAdded);
     }

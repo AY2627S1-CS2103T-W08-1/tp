@@ -217,9 +217,15 @@ public class HelpCommandTest {
     }
 
     @Test
+    public void commandSummary_clear_requiresConfirmationAndWarnsAboutArchivedPatients() {
+        assertEquals("clear confirm", getFormat(ClearCommand.COMMAND_WORD));
+        assertTrue(getDescription(ClearCommand.COMMAND_WORD).contains("active and archived patients"));
+    }
+
+    @Test
     public void commandSummary_commandsWithoutParameters_showOnlyCommandWord() {
         for (String commandWord : List.of(ListCommand.COMMAND_WORD, ListArchivedCommand.COMMAND_WORD,
-                HelpCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD)) {
+                HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD)) {
             assertEquals(commandWord, getFormat(commandWord));
         }
     }

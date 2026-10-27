@@ -180,6 +180,8 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted.
 
+`JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It ignores a UTF-8 byte-order mark at the start of a file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
+
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
 objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
@@ -195,7 +197,12 @@ do.
 
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
 `mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
-existing recovery file is never overwritten. The UI shows its absolute path in a startup warning, and later commands
+existing recovery file is never overwritten. The UI shows its absolute path and failure details in a startup warning.
+`JsonSerializableAddressBook#toModelType()` prefixes validation failures with the one-based entry position in the
+JSON `persons` array, including null entries and duplicate patients, while preserving the original exception as
+the cause. The first invalid entry is reported. Both startup and `restore` use these diagnostics. `MainApp` shows
+validation messages for `IllegalValueException` causes; other read failures receive a generic format/permissions
+message rather than raw parser exceptions that can include file contents. Later commands
 save normally to the original data path. If preservation fails, the exception stops initialization before commands
 can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
@@ -230,7 +237,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 
 * `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information.
 * `deletePatient(target)` clears the viewed patient if `target` is being viewed.
-* `setAddressBook(...)`, which the `clear` command uses, clears the viewed patient if it is not in the new data.
+* `setAddressBook(...)`, which `clear confirm` uses, clears the viewed patient if it is not in the new data.
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
 
@@ -257,6 +264,20 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 * **Alternative 2:** Split the list under Upcoming and Past headings, as `listappt INDEX` does.
   * Pros: Past appointments are grouped visibly.
   * Cons: One numbered list split across two headings can be read as two lists, each starting from `1.`.
+
+### Clearing all patients
+
+`AddressBookParser` delegates `clear` arguments to `ClearCommandParser`. It accepts only the lowercase
+`confirm` token, with surrounding whitespace allowed. Missing confirmation or extra arguments produce a
+`ParseException` with the warning and command format before any data is changed.
+
+`ClearCommand#execute()` first calls `BackupCommand#execute()` to save all current data using the existing
+backup implementation. A backup failure propagates as a `CommandException` before the model is changed.
+Only after the backup succeeds does it replace the entire address book with an empty one through `Model#setAddressBook()`,
+including archived patients and patients hidden by a filter. The existing model logic clears the viewed patient.
+The success message includes the backup location. `LogicManager` saves the change and restores its snapshot
+if saving fails; the automatic backup remains available. Backups include archived and filtered-out patients,
+even for an empty address book, and can be recovered with `restore`.
 
 ### Edit patient feature
 
@@ -382,7 +403,10 @@ Both commands have a second constructor that takes a `java.time.Clock` and the b
 `Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
 Names are nonblank free text because contacts can be people or organisations, such as `Tan & Partners Clinic`.
 They deliberately do not use patient `Name` constraints. Contact phones likewise have their own rules so clinic
-and international numbers work without weakening patient-phone validation.
+and international numbers work without weakening patient-phone validation. `Contact#isValidPhone()` requires
+3 to 15 digits, permits spaces and hyphens, and allows at most one leading `+` after trimming. The digit bounds
+are named constants in `Contact`. Both contact parsers and `JsonAdaptedContact` use this model validation, so
+the same limits apply to add, edit, startup loading and restore. Formatting and duplicate identity are unchanged.
 
 `Patient` keeps an immutable contact list in insertion order. `withContacts` replaces only that list; `addcare`
 copies it when rebuilding a patient. Contact identity compares names ignoring case and collapsed spaces, and
@@ -550,7 +574,7 @@ Step 5. The user then decides to execute the command `list`. Commands that do no
 
 <puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
 
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
+Step 6. The user executes `clear confirm`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
 
 <puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
 
@@ -1198,6 +1222,126 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC11 - Edit a patient's details**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list patients.
+2.  MediConnect shows a list of patients.
+3.  Caregiver requests to edit one or more basic details of a specific patient in the list.
+4.  MediConnect updates the patient and shows the patient's complete updated basic details.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Caregiver searches for the patient by name instead.
+
+    * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 3a. The given patient index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 3b. No detail is given, or a given detail is invalid.
+
+    * 3b1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
+* 3c. The new NRIC is already used by another patient.
+
+    * 3c1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
+**Use case: UC12 - Archive and restore a patient**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to list active patients.
+2.  MediConnect shows the active patients.
+3.  Caregiver requests to archive a specific patient in the list.
+4.  MediConnect archives the patient and removes them from the active list.
+5.  Caregiver requests to list archived patients.
+6.  MediConnect shows the archived patients.
+7.  Caregiver requests to restore the archived patient.
+8.  MediConnect makes the patient active again and removes them from the archived list.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The active patient list is empty.
+
+  Use case ends.
+
+* 3a. The given patient index is invalid.
+
+    * 3a1. MediConnect shows an error message.
+
+      Use case resumes at step 2.
+
+* 6a. The archived patient list is empty.
+
+  Use case ends.
+
+* 7a. The given patient index is invalid.
+
+    * 7a1. MediConnect shows an error message.
+
+      Use case resumes at step 6.
+
+**Use case: UC13 - Update a patient's care entries**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to view a patient.
+2.  MediConnect shows the patient's numbered care information.
+3.  Caregiver requests to replace a specific care instruction.
+4.  MediConnect updates the care instruction and shows the new text.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. Caregiver requests to delete a specific care instruction instead.
+
+    * 3a1. MediConnect deletes the instruction and shows the removed text.
+
+      Use case ends.
+
+* 3b. Caregiver requests to delete a specific allergen instead.
+
+    * 3b1. MediConnect deletes the allergen and shows the removed text.
+
+      Use case ends.
+
+* 3c. The patient index or care-entry number is invalid.
+
+    * 3c1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
+* 3d. The replacement care instruction is blank or duplicates another instruction.
+
+    * 3d1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 2.
+
 **Use case: UC14 - Add an appointment**
 
 **System**: MediConnect<br>
@@ -1389,7 +1533,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
-4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path.
+4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors.
 5. MediConnect must not use a database management system.
 6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
 7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
@@ -1545,6 +1689,14 @@ testers are expected to do more *exploratory* testing.
 1. Test case: Type three spaces in the command box and press Enter.<br>
    Expected: No command executes and no error appears. The spaces and previous result remain unchanged.
 
+### Adding a patient
+
+1. Prerequisites: No patient with NRIC `S1234567A` exists in the data.
+
+1. Test case: `add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/21 Lorong 3, #05-10`<br>
+   Expected: The patient is added. The status message begins `New patient added:` and ends
+   `Address: 21 Lorong 3, #05-10`, without an extra semicolon after the address.
+
 ### Adding a patient with punctuation after a slash word
 
 1. Test case: `add n/Ben s/o, Ng ic/S1111111B dob/1950-01-01 p/91111111 a/Blk 1`<br>
@@ -1555,6 +1707,24 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
    Expected: No patient is added. The status message shows `Addresses cannot be blank.`
+
+### Adding care information
+
+1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh's existing care information.
+
+1. Test case: `addcare 1 med/Paracetamol 500mg al/Latex ci/Turn every 2 hours`<br>
+   Expected: All three entries are appended to Alex Yeoh's care information and appear in the detail panel. The status
+   message names each added entry with its category.
+
+1. Test case: `addcare 1 med/Paracetamol 500mg med/Vitamin D al/latex`<br>
+   Expected: Only `Vitamin D` is added. The status message says that `Paracetamol 500mg` and `latex` already exist,
+   ignoring letter case, while still reporting the newly added medication.
+
+1. Test case: `addcare 1 med/Ibuprofen al/`<br>
+   Expected: Nothing is added. The status message shows `Allergen entries cannot be blank.`
+
+1. Test case: `addcare 999 med/Ibuprofen`<br>
+   Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
 
 ### Managing patient contacts
 
@@ -1578,6 +1748,24 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `editcontact 1 99 nt/note`, then `deletecontact 1 99`.<br>
    Expected: Both report `The contact index provided is invalid.` and change nothing.
 
+1. Validating contact phone numbers
+
+   1. Test cases: `addcontact 1 n/Short number r/Clinic p/123` and
+      `addcontact 1 n/International number r/Clinic p/+123 456-789 012-345`<br>
+      Expected: Both contacts are added; the second phone contains exactly 15 digits and retains its formatting.
+
+   1. Test cases: `addcontact 1 n/Bad number r/Clinic p/+++123+++`, then the same command with
+      `p/123+456` and `p/1234567890123456`<br>
+      Expected: Each command shows the contact-phone constraints and adds no contact.
+
+   1. Run `view 1` and note the contact number of `Short number`. Run
+      `editcontact 1 CONTACT_INDEX p/+1234567890123456`, using that contact number.<br>
+      Expected: The edit is rejected with the same constraints; the phone remains `123`.
+
+   1. In a disposable app folder, close the app and change a contact phone in `data/mediconnect.json`
+      to `+++123+++`, then relaunch.<br>
+      Expected: The file is rejected, startup shows the recovery-copy path, and the original invalid data is preserved.
+
 ### Listing active patients
 
 1. Listing patients when there is data
@@ -1594,11 +1782,36 @@ testers are expected to do more *exploratory* testing.
 
 1. Listing patients when there is no data
 
-   1. Prerequisites: Clear all data using the `clear` command.<br>
-      Expected: The status message shows `All patients have been cleared.`
+   1. Prerequisites: Clear all data using `clear confirm`; its automatic backup preserves the previous data.<br>
+      Expected: The status message shows `All patients have been cleared.` followed by the backup path.
 
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No active patients found.`
+
+### Clearing all patients
+
+1. Prerequisites: Have active and archived patients, and run `view 1`.
+
+1. Test cases: `clear`, `clear 1`, `clear CONFIRM`, `clear confirm extra`<br>
+   Expected: `Invalid command format!` followed by the clearing warning and `Format: clear confirm`.
+   All patients and the viewed patient remain unchanged, and no backup is created.
+
+1. Test case: `clear confirm`<br>
+   Expected: `All patients have been cleared.` followed by `Backup saved to: PATH`. The patient list is empty,
+   `listarchived` reports no archived patients, and the detail panel shows its placeholder. Restarting the app still shows no patients.
+   A new backup contains all previous active and archived patients. Note its file name for the recovery check below.
+
+1. Test case: `clear confirm` again<br>
+   Expected: The same success message and a new backup path. The empty address book is backed up without
+   overwriting the earlier backup.
+
+1. Test case: `restore FILENAME`, using the backup noted before the repeated clear<br>
+   Expected: All original active and archived patients are restored. The patient list shows the active patients;
+   `listarchived` shows the archived patients.
+
+1. Simulate a backup failure in a disposable app folder by making `data/backups` a regular file, then run
+   `clear confirm`.<br>
+   Expected: A backup failure message. All patients and the viewed patient remain unchanged.
 
 ### Deleting a patient
 
@@ -1692,17 +1905,23 @@ testers are expected to do more *exploratory* testing.
 
 1. Dealing with corrupted data files
 
-   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change a patient's `nric` to `123`.
+   1. Prerequisites: The app is closed. In `data/mediconnect.json`, change the second patient's `phone` to `123`.
 
    1. Launch the app.<br>
-      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path.
+      Expected: The app starts with no patients and shows a warning containing the recovery copy's full path and
+      `Details: Patient entry 2:` followed by the phone-number constraints.
       The recovery copy contains the original invalid file unchanged.
 
    1. Run `list`, then close and relaunch the app.<br>
-      Expected: The active data file contains an empty patient list, and the recovery copy is still unchanged.
+      Expected: `list` leaves the invalid data file unchanged. Relaunching shows the warning again and creates
+      another recovery copy; both copies retain the original contents.
 
    1. Close the app. Repair a copy of the recovery file, replace `data/mediconnect.json` with it, and relaunch.<br>
       Expected: The repaired patients load normally without a recovery warning.
+
+   1. In a disposable app folder, replace the data file with malformed JSON, such as `{"persons": [`, and launch.<br>
+      Expected: The warning keeps the recovery path and asks you to check the JSON format and file permissions.
+      It does not display raw parser exceptions or claim to identify a patient entry.
 
 ### Backing up data
 

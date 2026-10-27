@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalContacts.GP;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
@@ -40,4 +42,12 @@ public class JsonAdaptedContactTest {
         assertThrows(IllegalValueException.class, Contact.MESSAGE_PHONE_CONSTRAINTS, () ->
                 new JsonAdaptedContact("Clinic", "GP", "12", "").toModelType());
     }
+    @Test
+    public void toModelType_malformedOrOverlongPhone_throwsIllegalValueException() {
+        for (String phone : List.of("+++123+++", "123+456", "1234567890123456")) {
+            assertThrows(IllegalValueException.class, Contact.MESSAGE_PHONE_CONSTRAINTS, () ->
+                    new JsonAdaptedContact("Clinic", "GP", phone, "").toModelType());
+        }
+    }
+
 }

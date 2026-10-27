@@ -9,6 +9,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
 import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
+import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
 import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
@@ -192,6 +193,17 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_backupWithByteOrderMark_restoresData() throws Exception {
+        // Equivalence partitioning: a valid backup saved again by an editor that adds a UTF-8 byte-order mark
+        AddressBook backupData = createAddressBook(HOON, IDA);
+        writeBackup(backupData);
+        addUtf8ByteOrderMark(temporaryFolder.resolve(BACKUP_NAME));
+
+        assertCommandSuccess(createRestoreCommand(), model, getExpectedSuccessMessage(2, "patients", ""),
+                new ModelManager(backupData, new UserPrefs()));
+    }
+
+    @Test
     public void execute_automaticBackupRestored_undoesEarlierRestore() throws Exception {
         writeBackup(createAddressBook(HOON));
         createRestoreCommand().execute(model);
@@ -242,7 +254,8 @@ public class RestoreCommandTest {
         assertTrue(content.contains("\"" + ALICE.getNric().value + "\""));
         Files.writeString(backupFile, content.replace("\"" + ALICE.getNric().value + "\"", "\"BAD\""));
 
-        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_INVALID_DATA, BACKUP_NAME, Nric.MESSAGE_CONSTRAINTS));
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_INVALID_DATA, BACKUP_NAME,
+                "Patient entry 1: " + Nric.MESSAGE_CONSTRAINTS));
     }
 
     @Test
@@ -251,7 +264,7 @@ public class RestoreCommandTest {
                 "duplicatePatientAddressBook.json"), temporaryFolder.resolve(BACKUP_NAME));
 
         assertRestoreFailure(String.format(RestoreCommand.MESSAGE_INVALID_DATA, BACKUP_NAME,
-                "Patients list contains duplicate patient(s)."));
+                "Patient entry 2: Patients list contains duplicate patient(s)."));
     }
 
     @Test
