@@ -124,12 +124,16 @@ How the parsing works:
   Both use lowercase spellings. For example, `LIST` produces `Unknown command.` rather than running `list`.
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
-* Field parsers use `ArgumentTokenizer#verifyNoInvalidPrefixes` before tokenization. For each recognized field
-  prefix, the validator also checks its attached first value word with no valid field prefixes. This admits the
-  command's standalone slash-word exceptions, numeric slash text and URLs, but rejects prefix-like value text
-  such as `a/x/123` and gives the usual correction for punctuated slash words such as `a/s/o,`.
-  The nested validation cannot recurse again because its set of valid prefixes is empty. Tokenization still
-  requires a space before an actual field prefix; it does not turn an embedded prefix into a new field.
+* Field parsers use `ArgumentTokenizer#verifyNoInvalidPrefixes` before tokenization, declaring their free-text
+  prefixes separately from their supported prefixes. Non-reserved slash text such as `and/or`, `mg/ml`, and
+  `x/123` is allowed within those fields. Preambles and structured fields retain strict unknown-prefix checks.
+  `CliSyntax#RESERVED_PREFIXES` contains all field prefixes, including ones unsupported by the current command;
+  update this set when adding a prefix. Reserved prefixes remain syntax, subject to each command's existing
+  standalone slash-word exceptions and their punctuation corrections.
+  The validator also checks the first value word attached to a recognized prefix, carrying its free-text context
+  but allowing no nested field prefixes: `a/x/123` is text, whereas `a/p/123` is rejected. This nested validation
+  cannot recurse again because its set of valid prefixes is empty. Context switches follow tokenization's space
+  boundary, so a tab does not create a free-text field. Tokenization itself is unchanged.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
@@ -298,7 +302,7 @@ clarity.
 <puml src="diagrams/EditSequenceDiagram.puml" alt="Interactions for the `edit` Command" />
 
 1. `EditCommandParser` parses a positive patient index and the supplied fields. It requires at least one field,
-   rejects repeated or unknown prefixes, and uses the same field parsers as `add`.
+   rejects repeated or unsupported reserved prefixes, and uses the same field and slash-text rules as `add`.
 1. `EditCommand#execute()` resolves the index against the filtered patient list and creates an immutable replacement
    using the supplied values and the existing values for omitted fields.
 1. The replacement preserves medications and their times, allergens, care instructions, contacts, appointments,
@@ -476,8 +480,9 @@ the same limits apply to add, edit, startup loading and restore. Formatting and 
 copies it when rebuilding a patient. Contact identity compares names ignoring case and collapsed spaces, and
 phones ignoring spaces and hyphens, while retaining `+`. The model rejects duplicate identities within a patient.
 
-The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit reject unknown and repeated
-prefixes without slash-word exceptions. Notes from commands use `trim()`; stored notes are
+The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit declare names, roles and notes
+as free text for slash validation; phones remain structured. Repeated and unsupported reserved prefixes are
+rejected. Standalone `a/l` and `a/p` remain explicit exceptions. Notes from commands use `trim()`; stored notes are
 preserved when loading. Edit uses `Optional<String>` to distinguish
 an omitted note (preserve) from a present empty note (clear). Commands use displayed patient indices and
 contact indices from the detail panel. They validate indices and duplicates before calling `Model#setPatient`.
@@ -502,8 +507,8 @@ are omitted for clarity.
 
 <puml src="diagrams/AddApptSequenceDiagram.puml" alt="Interactions for the `addappt` Command" />
 
-1. `AddApptCommandParser` requires `d/`, `t/` and `w/` once each and rejects unknown prefixes. It parses the index,
-   the date, the time (with `ParserUtil#parseTime`, as for medication times) and who the appointment is with, and
+1. `AddApptCommandParser` requires `d/`, `t/` and `w/` once each, with `w/` and `nt/` declared as free text for
+   slash validation. It parses the index, the date, the time (with `ParserUtil#parseTime`, as for medication times) and who the appointment is with, and
    creates the `Appointment` `toAdd`, with an empty note if `nt/` is not given.
 1. `AddApptCommand#execute()` resolves the index against the filtered patient list. It rejects `toAdd` if the patient
    already has an appointment at the same date and time with the same person, ignoring case and extra spaces.
@@ -1775,22 +1780,35 @@ testers are expected to do more *exploratory* testing.
    Expected: No patient is added. The status message shows
    `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
 
-### Checking the first word of a field value
+### Checking slash text and field boundaries
 
-1. Prerequisites: Use sample data in a disposable app folder.
+1. Prerequisites: Use sample data in a disposable app folder. Run `view 1`.
 
-1. Test case: `add n/First Value Test ic/S1111111A dob/1950-04-12 p/91234567 a/x/123`<br>
-   Expected: `Unrecognized parameter: x/. Please check the command format.` No patient is added.
+1. Test cases: `addcare 1 ci/Use cane and/or walker`, `addcare 1 med/Insulin 10 units/day`, and
+   `addcare 1 al/N/A`.<br>
+   Expected: Each command succeeds and its complete text appears in the appropriate care list.
 
-1. Replace `a/x/123` with `a/s/o,` in the previous command.<br>
-   Expected: `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.` No patient is added.
+1. Test case: `editmed 1 1 med/Amoxicillin 250 mg/ml t/08:00`.<br>
+   Expected: The first medication has that description and the time `08:00`.
 
-1. Test cases: `addcare 1 ci/x/123` and `addcare 1 med/p/9`.<br>
-   Expected: Unrecognized-parameter errors naming `x/` and `p/` respectively. No care entries are added.
+1. Test case: `addcontact 1 n/Clinic A/B r/GP nt/Ask clinic and/or GP p/123`.<br>
+   Expected: The contact is added with its complete name and note, and phone `123`.
 
-1. Replace `a/x/123` with `a/21/3` in the first command and run it. Then change its NRIC to `S1111112A`
-   and its address to `a/https://example.com` and run it again.<br>
-   Expected: Both patients are added; numeric slash text and URLs can still be the first address word.
+1. Test case: `addappt 1 d/2027-01-02 t/10:00 w/Dr Tan nt/dose 2 mg/ml`.<br>
+   Expected: The appointment is added with note `dose 2 mg/ml`.
+
+1. Test case: `add n/First Value Test ic/S1111111A dob/1950-04-12 p/91234567 a/x/123`.<br>
+   Expected: The patient is added with address `x/123`. Change the NRIC to `S1111112A` and the address to
+   `a/https://example.com`, then run again; the URL is also accepted.
+
+1. Test cases: `edit 1 a/p/123`, `addcare 1 med/p/9`, `editcontact 1 1 nt/p/123`.<br>
+   Expected: Each reports `Unrecognized parameter: p/. Please check the command format.` Nothing changes.
+
+1. Test cases: `addcare 1 x/123 ci/Text`, `edit 1 n/and/or`, and `editmed 1 1 med/Text t/mg/ml`.<br>
+   Expected: Unrecognized-parameter errors naming `x/`, `and/`, and `mg/`, respectively. Nothing changes.
+
+1. Test case: `edit 1 a/s/o,`.<br>
+   Expected: `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.` Nothing changes.
 
 ### Adding a patient with a blank address
 
