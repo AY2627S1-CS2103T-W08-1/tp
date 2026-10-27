@@ -70,6 +70,7 @@
         "appendix-instructions-for-manual-testing": "Appendix: Instructions for manual testing",
         "launch-and-shutdown": "Launch and shutdown",
         "viewing-help": "Viewing help",
+        "command-case-sensitivity": "Command case sensitivity",
         "entering-a-blank-command": "Entering a blank command",
         "adding-a-patient": "Adding a patient",
         "adding-a-patient-with-punctuation-after-a-slash-word": "Adding a patient with punctuation after a slash word",
