@@ -211,6 +211,20 @@ directory path, denied access, and other preservation failures without displayin
 No model, logic or main window is created after a preservation failure, and `stop()` skips preference saving
 when there is no model. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
+`MainApp#init()` acquires a `DataFileLock` before reading preferences or patient data. Its exclusive OS file lock
+is held until shutdown, so a second instance of the same user cannot load a stale copy of the same data path.
+An in-use file or a failure to acquire the lock produces a startup error without creating a model or main window.
+The lock is released immediately if recovery fails, and in `stop()` even if preference saving fails.
+
+`DataFileLock` hashes the data path after resolving its parent directory's aliases, including missing folders.
+Lock files live in the user's `.mediconnect/locks`, separately from patient data, so atomic data-file replacement
+does not remove the lock and read-only data folders remain usable. A synchronized registry avoids opening a
+second channel to the same held lock in one JVM, because closing that channel can release process-wide locks
+on some systems. Closing the owner channel or terminating its JVM releases the OS lock. Metadata files remain
+in place to avoid races from deleting a lock file while another process uses it. They contain no patient data.
+This guard coordinates current MediConnect instances of the same user; external editors do not observe it and
+must only be used while the app is closed. Tests use a lock folder beside their temporary preferences file.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -1601,7 +1615,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Non-Functional Requirements
 
-1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
+1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation. Only one running instance of that user's MediConnect may open a given data path at a time.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
 4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors. If the recovery copy cannot be created, it must instead show a startup error and exit without changing patient data.
@@ -2013,6 +2027,23 @@ testers are expected to do more *exploratory* testing.
 1. Alternatively, use malformed JSON in a readable test data file and deny write access to its containing folder.<br>
    Expected: Failure to create a recovery copy produces the same startup error instead of opening an empty model.
    Restore permissions and repair or replace the test file before relaunching.
+
+### Preventing concurrent access to patient data
+
+1. Prerequisites: Use the updated JAR in a disposable app folder. Close any older MediConnect instances first.
+   Open a terminal in this folder and run `java -jar mediconnect.jar`.
+
+1. From a second terminal in the same folder, run the same command.<br>
+   Expected: The second launch shows an error saying that MediConnect is already using the data file, gives
+   its full path, and asks you to close the other window. No second main window opens.
+
+1. In the first window, run `add n/Lock Test ic/S1111111A dob/1950-04-12 p/91234567 a/Blk 1`, then close it.
+   Relaunch from the same folder.<br>
+   Expected: The app opens normally and the new patient is present; rejecting the second launch lost no changes.
+
+1. In this disposable folder only, terminate the running process without a normal exit, then relaunch.<br>
+   Expected: The app opens normally with the last successfully saved data. Remaining lock metadata does not
+   block startup; do not delete it while another instance is running.
 
 ### Backing up data
 
