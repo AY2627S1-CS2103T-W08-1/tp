@@ -217,7 +217,7 @@ when there is no model. JSON validation stays in storage; startup recovery stays
 
 The storage diagram also shows the standalone `DataFileLock` helper held by `MainApp`; it is not owned by
 `StorageManager`. `MainApp#init()` acquires it before reading preferences or patient data. Its exclusive OS file lock
-is held until shutdown, so a second instance of the same user cannot load a stale copy of the same data path.
+is held until shutdown, so a second instance using that app folder cannot load a stale copy of its data.
 An in-use file or a failure to acquire the lock produces a startup error without creating a model or main window.
 The lock is released immediately if recovery fails, and in `stop()` even if preference saving fails.
 Lock-close I/O failures are logged without interrupting shutdown; a focused regression covers this cleanup path.
@@ -229,8 +229,10 @@ a read-only data folder can still be viewed when the app-local lock folder is us
 avoids opening a second channel to the same held lock in one JVM, because closing that channel can release process-wide locks
 on some systems. Closing the owner channel or terminating its JVM releases the OS lock. Metadata files remain
 in place to avoid races from deleting a lock file while another process uses it. They contain no patient data.
-This guard coordinates current MediConnect instances of the same user; external editors do not observe it and
-must only be used while the app is closed. Path-injecting constructors use the preferences file's parent as the
+This guard coordinates instances using the same app-local lock directory. Sharing a data folder between different
+app folders through symlinks or junctions is unsupported: their separate lock directories allow both instances to
+open the data and can permit stale writes. Canonicalizing the data path does not make separate lock files coordinate.
+External editors do not observe the lock and must only be used while the app is closed. Path-injecting constructors use the preferences file's parent as the
 app folder, so startup tests use the same relative lock location inside their temporary app folder.
 
 ### Common classes
@@ -1623,7 +1625,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Non-Functional Requirements
 
-1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation. Only one running instance of that user's MediConnect may open a given data path at a time.
+1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation. Only one running instance may use a given app folder's data at a time. Sharing data between different app folders is unsupported.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
 4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors. If the recovery copy cannot be created, it must instead show a startup error and exit without changing patient data.

@@ -26,8 +26,8 @@ MediConnect is a **desktop application for managing patient records and care inf
    A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands.<br>
    ![Ui](images/Ui.png)
 
-   Only one MediConnect window can use a data file at a time. If another window already has it open, the second
-   launch shows an error naming that file and exits. Close the first window before opening it again.
+   Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
+   naming the data file and exits. Close the first window before opening it again.
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
@@ -935,11 +935,15 @@ Format: `exit`
 
 MediConnect automatically saves data after every command that changes it. You do not need to save manually.
 
-To prevent two windows from overwriting each other's changes, MediConnect keeps a lock while a data file is
-open. Its small metadata files are in `.mediconnect/locks` inside the folder you launch MediConnect from;
+MediConnect prevents two windows launched from the same app folder from using its data together.
+Its small lock files are in `.mediconnect/locks` inside the folder you launch MediConnect from;
 they contain no patient records. They can remain after exit and do not need to be removed after a crash.
 Do not delete them while MediConnect is running. The app needs permission to create and write these files.
-If the lock folder cannot be used, a startup error names it and the app exits.
+If the lock folder cannot be used, a startup error names it and the app exits; see the [FAQ](#faq) for recovery steps.
+
+Do not make different app folders share the same `data` folder, including through linked folders. This setup
+is unsupported: each app folder has its own lock files, so one app can overwrite the other's changes.
+Use one app folder for each set of patient data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
 `Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,
@@ -983,6 +987,12 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 
 **Q**: Where is my data saved?<br>
 **A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command that changes the data.
+
+**Q**: Why does startup say it could not protect the data file?<br>
+**A**: MediConnect could not create or open its lock files in `.mediconnect/locks`.
+Close all MediConnect windows. Check that `.mediconnect` and `.mediconnect/locks` are folders and that you can
+write to them; move aside any file occupying either folder's path. If needed, move the entire app folder,
+including `data`, to a writable location, then launch MediConnect from there.
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.

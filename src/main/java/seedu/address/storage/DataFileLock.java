@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Prevents two application instances of the same user from opening the same patient data path.
+ * Coordinates access to a patient data path among instances using the same lock directory.
  * The separate lock file stays in place because deleting it could let processes lock different files.
  */
 public final class DataFileLock implements Closeable {
@@ -33,6 +33,7 @@ public final class DataFileLock implements Closeable {
     /**
      * Attempts to lock {@code dataFile} using a metadata file in {@code lockDirectory}.
      * Returns empty if another instance already holds the lock. Does not create or change patient data.
+     * Callers coordinating access to the same data path must use the same lock directory.
      *
      * @throws IOException if the paths cannot be resolved or the lock cannot be opened or acquired.
      */
