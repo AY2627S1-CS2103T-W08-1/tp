@@ -519,7 +519,7 @@ Errors are reported as follows:
 
 ### Listing appointments: `listappt`
 
-Lists the upcoming appointments of all patients, or every appointment of one patient.
+Lists the upcoming appointments of all active patients, or every appointment of one patient.
 
 Format: `listappt [INDEX]`
 
