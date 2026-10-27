@@ -58,6 +58,13 @@ public class AddContactCommandParserTest {
     }
 
     @Test
+    public void parse_malformedOrOverlongPhone_rejected() {
+        for (String phone : List.of("+++123+++", "123+456", "1234567890123456")) {
+            assertParseFailure(parser, " 1 n/Clinic r/GP p/" + phone, Contact.MESSAGE_PHONE_CONSTRAINTS);
+        }
+    }
+
+    @Test
     public void parse_duplicateAndUnknownPrefixes_rejected() {
         for (Prefix prefix : List.of(CliSyntax.PREFIX_NAME, CliSyntax.PREFIX_ROLE,
                 CliSyntax.PREFIX_PHONE, CliSyntax.PREFIX_NOTE)) {
