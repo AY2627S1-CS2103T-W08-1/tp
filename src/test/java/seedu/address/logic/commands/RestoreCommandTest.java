@@ -10,6 +10,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
 import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
 import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
+import static seedu.address.testutil.TestUtil.replaceWithInvalidUtf8Byte;
 import static seedu.address.testutil.TestUtil.toPathRelativeToWorkingDir;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
@@ -193,6 +194,16 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_backupWithInvalidUtf8_throwsCommandException() throws Exception {
+        // Equivalence partitioning: a backup with a byte in a patient's name that is not valid UTF-8, which
+        // must not be restored with a replacement character in the name
+        writeBackup(createAddressBook(HOON, IDA));
+        replaceWithInvalidUtf8Byte(temporaryFolder.resolve(BACKUP_NAME), HOON.getName().fullName);
+
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_UNREADABLE, BACKUP_NAME));
+    }
+
+    @Test
     public void execute_backupWithByteOrderMark_restoresData() throws Exception {
         // Equivalence partitioning: a valid backup saved again by an editor that adds a UTF-8 byte-order mark
         AddressBook backupData = createAddressBook(HOON, IDA);
@@ -227,6 +238,18 @@ public class RestoreCommandTest {
 
         assertCommandFailure(restoreCommand, model,
                 String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, temporaryFolder));
+    }
+
+    @Test
+    public void execute_backupWithUnpairedSurrogateEscape_throwsCommandException() throws Exception {
+        // Equivalence partitioning: a backup edited by hand to hold half of a surrogate pair in a name, which
+        // must not be restored and then saved as "?"
+        writeBackup(createAddressBook(HOON, IDA));
+        Path backupFile = temporaryFolder.resolve(BACKUP_NAME);
+        String name = HOON.getName().fullName;
+        Files.writeString(backupFile, Files.readString(backupFile).replace(name, "\\ud800" + name));
+
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_UNREADABLE, BACKUP_NAME));
     }
 
     @Test

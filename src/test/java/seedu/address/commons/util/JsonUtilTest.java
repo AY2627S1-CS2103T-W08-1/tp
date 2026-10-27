@@ -1,6 +1,7 @@
 package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
 
@@ -23,6 +24,9 @@ import seedu.address.testutil.TestUtil;
 public class JsonUtilTest {
 
     private static final Path SERIALIZATION_FILE = TestUtil.getFilePathInSandboxFolder("serialize.json");
+
+    /** The name in {@code SerializableTestClass.JSON_STRING_REPRESENTATION}, with its quotes. */
+    private static final String NAME_IN_JSON = "\"This is a test class\"";
 
     @TempDir
     private Path temporaryFolder;
@@ -128,6 +132,34 @@ public class JsonUtilTest {
     }
 
     @Test
+    public void readJsonFile_unpairedSurrogateEscapeInValue_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: each way of escaping half of a surrogate pair on its own, i.e., the high
+        // half, the low half, and both halves in the wrong order
+        for (String escapes : List.of("\\ud800", "\\udc00", "\\udc00\\ud800")) {
+            String editedName = "\"This is a " + escapes + " test class\"";
+            assertReadRejected(writeWithReplacement(NAME_IN_JSON, editedName));
+        }
+    }
+
+    @Test
+    public void readJsonFile_unpairedSurrogateEscapeInName_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: the escape in a field name, which would otherwise be ignored as an
+        // unknown field
+        assertReadRejected(writeWithReplacement("\"name\"", "\"na\\ud800me\""));
+    }
+
+    @Test
+    public void readJsonFile_surrogatePairEscape_returnsValue() throws Exception {
+        // Boundary value analysis: both halves of a pair in the right order make one character, here an emoji
+        Path file = writeWithReplacement(NAME_IN_JSON, "\"This is a \\ud83d\\ude00 test class\"");
+
+        SerializableTestClass readBack =
+                JsonUtil.readJsonFile(file, SerializableTestClass.class).orElseThrow();
+
+        assertEquals("This is a 😀 test class", readBack.getName());
+    }
+
+    @Test
     public void fromJsonString_whitespaceAfterValue_returnsValue() throws IOException {
         // Boundary value analysis: whitespace is the most that can follow the JSON value and still be accepted
         SerializableTestClass readBack = JsonUtil.fromJsonString(
@@ -170,5 +202,22 @@ public class JsonUtilTest {
         try (Stream<Path> files = Files.list(folder)) {
             return files.toList();
         }
+    }
+
+    /**
+     * Writes the JSON of {@code SerializableTestClass} to a new file, with {@code target} replaced by
+     * {@code replacement}, as if edited by hand, and returns the file.
+     */
+    private Path writeWithReplacement(String target, String replacement) throws IOException {
+        String json = SerializableTestClass.JSON_STRING_REPRESENTATION;
+        assertTrue(json.contains(target));
+        Path file = Files.createTempFile(temporaryFolder, "edited", ".json");
+        FileUtil.writeToFile(file, json.replace(target, replacement));
+        return file;
+    }
+
+    private static void assertReadRejected(Path file) {
+        assertThrows(DataLoadingException.class, () ->
+                JsonUtil.readJsonFile(file, SerializableTestClass.class));
     }
 }
