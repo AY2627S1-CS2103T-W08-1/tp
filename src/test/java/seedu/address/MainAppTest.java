@@ -2,6 +2,8 @@ package seedu.address;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,9 +53,14 @@ public class MainAppTest {
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
         StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        new MainApp().initModelManager(storage, new UserPrefs());
+        MainApp mainApp = new MainApp();
+        mainApp.initModelManager(storage, new UserPrefs());
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+        mainApp.start(null);
 
         assertEquals(SampleDataUtil.getSampleAddressBook(), storage.readAddressBook().get());
+        assertNull(uiStub.warningMessage);
     }
 
     @Test
@@ -201,9 +208,10 @@ public class MainAppTest {
     }
 
     @Test
-    public void initModelManager_saveFails_startsWithSampleData() throws Exception {
+    public void initModelManager_saveFails_warnsAfterStartingWithSampleData() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
         JsonAddressBookStorage addressBookStorage =
-                new JsonAddressBookStorage(temporaryFolder.resolve("mediconnect.json")) {
+                new JsonAddressBookStorage(dataFile) {
                     @Override
                     public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
                         throw new IOException("dummy IO exception");
@@ -212,9 +220,37 @@ public class MainAppTest {
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
         StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        Model model = new MainApp().initModelManager(storage, new UserPrefs());
+        MainApp mainApp = new MainApp();
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+        mainApp.start(null);
 
         assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+        assertNotNull(uiStub.warningMessage);
+        assertTrue(uiStub.warningMessage.contains("The sample patients are not saved."));
+        assertTrue(uiStub.warningMessage.contains(dataFile.toAbsolutePath().toString()));
+        assertTrue(uiStub.warningMessage.contains("dummy IO exception"));
+        assertFalse(Files.exists(dataFile));
+    }
+
+    @Test
+    public void initModelManager_dataFolderIsFile_warnsAndPreservesBlockingFile() throws Exception {
+        Path dataFolder = temporaryFolder.resolve("data");
+        Files.writeString(dataFolder, "keep this file");
+        Path dataFile = dataFolder.resolve("mediconnect.json");
+        MainApp mainApp = new MainApp();
+        Model model = mainApp.initModelManager(createStorage(dataFile), new UserPrefs());
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+        mainApp.start(null);
+
+        assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+        assertNotNull(uiStub.warningMessage);
+        assertTrue(uiStub.warningMessage.contains("The sample patients are not saved."));
+        assertTrue(uiStub.warningMessage.contains(dataFile.toAbsolutePath().toString()));
+        assertEquals("keep this file", Files.readString(dataFolder));
+        assertFalse(Files.exists(dataFile));
     }
 
     @Test
@@ -288,6 +324,7 @@ public class MainAppTest {
 
         @Override
         public void showWarning(String message) {
+            assertTrue(isStarted, "The UI must start before a warning is shown.");
             warningMessage = message;
         }
     }
