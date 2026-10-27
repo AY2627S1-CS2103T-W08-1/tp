@@ -1973,7 +1973,7 @@ testers are expected to do more *exploratory* testing.
 
    1. Prerequisites: In `data/backups`, copy a backup to `invalid.json`, and change a patient's `nric` in it to `123`.<br>
       Test case: `restore invalid.json`<br>
-      Expected: The data is unchanged. The status message says that the backup has invalid data, followed by the NRIC format as the details.
+      Expected: The data is unchanged. The status message says that the backup has invalid data, followed by details that start with the changed patient's position in the file, counting from 1, then give the NRIC format, e.g., `Details: Patient entry 2: NRIC should be ...` if you changed the second patient.
 
    1. Other incorrect restore commands to try: `restore .`, `restore data/backups/bad.json`<br>
       Expected: The data is unchanged. The status message shows an error.
