@@ -354,8 +354,9 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   including standalone `s/o`, `d/o` and `c/o`, are rejected.
   Standalone `a/l` and `a/p` are allowed in free text, ignoring letter case.
   Text matching a recognised prefix after a space starts another field, even inside a note.
-* Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
-  the panel updates immediately. Existing care information is preserved.
+* Contacts appear in insertion order, numbered in the detail panel. After a successful add, the panel shows
+  the patient whose contact was added, even if another patient was previously viewed. Scroll to Contacts to
+  check the new contact and its number. The patient list and existing care information are unchanged.
 
 Example: `addcontact 1 n/Lim & Partners Clinic r/GP p/+65 6123-4567 nt/Call in the morning`
 
@@ -364,7 +365,8 @@ For patient `Alex Yeoh`, this returns:
 
 Blank names/roles return `Contact name cannot be blank.` or `Contact role cannot be blank.`
 An invalid phone returns `Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, and at most one + at the start.`
-A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure.
+A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure,
+and the previously viewed patient is unchanged.
 
 The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
 that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
@@ -379,6 +381,8 @@ Format: `editcontact INDEX CONTACT_INDEX [n/NAME] [r/ROLE] [p/PHONE] [nt/NOTE]`
 * Supply at least one field. Omitted fields keep their values; `nt/` with no value clears the note.
 * The same field and duplicate rules as `addcontact` apply. An edit that creates a duplicate is rejected.
   Editing a contact to its existing values is allowed. Its list position stays the same.
+* After a successful edit, the detail panel shows that patient with the updated contact. The patient list is
+  unchanged. A rejected edit leaves the previously viewed patient unchanged.
 * With no fields, the error is `Specify at least one contact field to edit.`
 
 Example: `editcontact 1 1 nt/Call after lunch`
@@ -391,6 +395,8 @@ Format: `deletecontact INDEX CONTACT_INDEX`
 
 Removes that contact and reports `Deleted contact for NAME:` followed by the removed contact's details.
 Remaining contacts are renumbered. Other patient details are unchanged.
+After a successful deletion, the detail panel shows that patient and the remaining contacts, or `None recorded`
+if none remain. The patient list is unchanged. A rejected deletion leaves the previously viewed patient unchanged.
 
 Example: `deletecontact 1 1` removes `Tan & Partners Clinic` from `Alex Yeoh` in the sample data and returns
 `Deleted contact for Alex Yeoh: Tan & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`.
