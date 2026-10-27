@@ -3,6 +3,9 @@ package seedu.address.commons.util;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +19,7 @@ import seedu.address.commons.core.LogsCenter;
  */
 public class FileUtil {
 
-    private static final String CHARSET = "UTF-8";
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String TEMPORARY_FILE_SUFFIX = ".tmp";
 
     private static final Logger logger = LogsCenter.getLogger(FileUtil.class);
@@ -34,10 +37,17 @@ public class FileUtil {
     }
 
     /**
-     * Assumes file exists
+     * Returns the content of {@code file}, which must exist, read as UTF-8 text.
+     * Bytes that are not valid UTF-8 make the read fail rather than being replaced by the replacement
+     * character, so that text in a file saved in another encoding or damaged is never silently changed.
+     *
+     * @param file File to read.
+     * @return the text in the file.
+     * @throws CharacterCodingException if the file is not valid UTF-8.
+     * @throws IOException if the file cannot be read.
      */
     public static String readFromFile(Path file) throws IOException {
-        return new String(Files.readAllBytes(file), CHARSET);
+        return Files.readString(file, CHARSET);
     }
 
     /**

@@ -19,7 +19,10 @@ import java.util.stream.Collectors;
  */
 public class Medication {
 
+    public static final int MAX_DESCRIPTION_LENGTH = 500;
     public static final String MESSAGE_DESCRIPTION_CONSTRAINTS = "Medication description cannot be blank.";
+    public static final String MESSAGE_DESCRIPTION_TOO_LONG =
+            "Medication descriptions cannot exceed " + MAX_DESCRIPTION_LENGTH + " characters.";
     public static final String MESSAGE_TIME_CONSTRAINTS = "Time must be in HH:MM (24-hour), e.g. 08:30.";
 
     private static final String TIME_PATTERN = "HH:mm";
@@ -68,6 +71,14 @@ public class Medication {
     public static boolean isValidDescription(String description) {
         requireNonNull(description);
         return !description.isBlank();
+    }
+
+    /**
+     * Returns true if {@code description} does not exceed the maximum medication-description length.
+     */
+    public static boolean isDescriptionWithinMaxLength(String description) {
+        requireNonNull(description);
+        return description.codePointCount(0, description.length()) <= MAX_DESCRIPTION_LENGTH;
     }
 
     /**
