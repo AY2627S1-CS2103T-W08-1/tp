@@ -36,7 +36,7 @@ public class EditCommand extends Command {
             + PREFIX_NRIC + "NRIC] [" + PREFIX_DOB + "DOB] [" + PREFIX_PHONE + "PHONE] ["
             + PREFIX_ADDRESS + "ADDRESS]";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits a patient's details.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 " + PREFIX_PHONE + "91234567";
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";

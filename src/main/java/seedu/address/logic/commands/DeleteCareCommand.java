@@ -21,7 +21,7 @@ public class DeleteCareCommand extends Command {
     public static final String COMMAND_WORD = "deletecare";
     public static final String COMMAND_FORMAT = COMMAND_WORD + " INDEX CI_INDEX";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Deletes a patient's care instruction.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 2";
     public static final String MESSAGE_SUCCESS = "Deleted care instruction for %1$s: %2$s";
 
