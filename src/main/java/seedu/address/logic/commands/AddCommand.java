@@ -62,6 +62,7 @@ public class AddCommand extends Command {
         }
 
         model.addPatient(toAdd);
+        assert model.getAddressBook().getPatientList().contains(toAdd) : "The model must store the added patient.";
         return new CommandResult(String.format(MESSAGE_SUCCESS, Messages.format(toAdd)));
     }
 
