@@ -159,8 +159,9 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * At least one `med/`, `al/`, or `ci/` prefix is required. Each prefix can be repeated.
 * Care entries are free text with leading and trailing whitespace removed and consecutive internal whitespace
-  collapsed to one space. They cannot be blank. Care instructions can contain at most 500 characters after this
-  normalization. If any entry is blank or an instruction is too long, the whole command is rejected.
+  collapsed to one space. They cannot be blank. Medication descriptions, allergens, and care instructions can each
+  contain at most 500 characters after this normalization. If any entry is blank or too long, the whole command is
+  rejected.
 * A word that looks like an unrecognized prefix is rejected. For example, `p/91234567` returns
   `Unrecognized parameter: p/. Please check the command format.` Numeric slash text and URLs are allowed.
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
@@ -196,8 +197,9 @@ Other errors are reported as follows:
 * A command with no care prefix returns `Please specify at least one of med/, al/, or ci/ to add.`
 * A blank value returns `Medication entries cannot be blank.`, `Allergen entries cannot be blank.`, or
   `Care instructions cannot be blank.` for the affected category. The whole command is rejected.
-* A care instruction longer than 500 characters after normalization returns
-  `Care instructions cannot exceed 500 characters.` The whole command is rejected.
+* A medication, allergen, or care instruction longer than 500 characters after normalization returns
+  `Medication descriptions cannot exceed 500 characters.`, `Allergen entries cannot exceed 500 characters.`, or
+  `Care instructions cannot exceed 500 characters.` respectively. The whole command is rejected.
 * A missing, zero, negative, non-numeric, or excessively large index returns `Invalid command format!`, followed by
   the command usage.
 

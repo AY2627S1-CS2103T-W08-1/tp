@@ -170,6 +170,18 @@ public class PatientTest {
     }
 
     @Test
+    public void constructor_allergenLength_enforced() {
+        new PatientBuilder(ALICE)
+                .withAllergens("a".repeat(Patient.MAX_ALLERGEN_LENGTH))
+                .build();
+
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_ALLERGEN_TOO_LONG, () ->
+                new PatientBuilder(ALICE)
+                        .withAllergens("a".repeat(Patient.MAX_ALLERGEN_LENGTH + 1))
+                        .build());
+    }
+
+    @Test
     public void constructor_blankCareEntry_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, Patient.MESSAGE_BLANK_ALLERGEN, () ->
                 new PatientBuilder(ALICE).withAllergens("\u00a0").build());
