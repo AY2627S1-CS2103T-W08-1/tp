@@ -274,8 +274,11 @@ clarity.
    using the supplied values and the existing values for omitted fields.
 1. The replacement preserves medications and their times, allergens, care instructions, contacts, appointments,
    and archived state. A changed NRIC is rejected if another patient already has it.
-1. The command calls `Model#setPatient(patient, editedPatient)`. If the patient is currently being viewed,
-   `ModelManager#setPatient()` updates `viewedPatient`, and the `PatientDetailPanel` listener redraws the panel.
+1. The command stores the replacement with `Model#setPatient(patient, editedPatient)`, then resets the displayed
+   list to active patients, or archived patients when the edited patient is archived, with
+   `Model#updateFilteredPatientList(...)`.
+1. `Model#setViewedPatient(editedPatient)` shows the edited patient. The `PatientDetailPanel` listeners redraw its
+   details and displayed index.
 
 #### Design considerations
 
