@@ -3,6 +3,7 @@ package seedu.address.storage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -96,6 +97,18 @@ public class JsonUserPrefsStorageTest {
         } catch (IOException ioe) {
             throw new AssertionError("There should not be an error writing to the file", ioe);
         }
+    }
+
+    @Test
+    public void readUserPrefs_byteOrderMarkBeforeSavedPrefs_readsPrefs() throws Exception {
+        // Equivalence partitioning: a saved preferences file edited by hand and saved again as
+        // "UTF-8 with BOM"
+        Path prefsFilePath = testFolder.resolve("ByteOrderMarkPrefs.json");
+        JsonUserPrefsStorage storage = new JsonUserPrefsStorage(prefsFilePath);
+        storage.saveUserPrefs(getTypicalUserPrefs());
+        addUtf8ByteOrderMark(prefsFilePath);
+
+        assertEquals(getTypicalUserPrefs(), storage.readUserPrefs().orElseThrow());
     }
 
     @Test
