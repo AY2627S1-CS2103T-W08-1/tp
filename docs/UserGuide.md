@@ -54,6 +54,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Pressing Enter when the command box is empty or contains only whitespace does nothing.
   The text in the command box and the previous result remain unchanged.
 
+* Command words and field prefixes are case-sensitive and must be lowercase, e.g., `list` rather than `LIST`,
+  and `n/` rather than `N/`. Field values follow their own rules; for example, NRIC input is not case-sensitive.
+
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
 
@@ -611,7 +614,9 @@ Format: `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]`
 * Medications and their times, allergens, care instructions, contacts, appointments, and archived state are
   preserved.
 * An edit that gives a patient an NRIC already used by another patient is rejected.
-* After a successful command, the detail panel shows the edited patient immediately.
+* After a successful command, the detail panel shows the edited patient immediately. The displayed list resets to
+  all active patients, or all archived patients if the edited patient is archived, so check the displayed indices
+  before the next command.
 
 Examples:
 * `edit 1 p/91234567` changes only the first displayed patient's phone number.

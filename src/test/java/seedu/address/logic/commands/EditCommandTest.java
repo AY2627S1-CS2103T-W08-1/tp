@@ -65,20 +65,23 @@ public class EditCommandTest {
         assertEquals(original.getContacts(), stored.getContacts());
         assertEquals(List.of(CHECKUP), stored.getAppointments());
         assertTrue(stored.isArchived());
+        assertEquals(List.of(stored), model.getFilteredPatientList());
         assertSame(stored, model.getViewedPatient().getValue());
     }
 
     @Test
-    public void execute_filteredList_editsDisplayedPatient() throws Exception {
+    public void execute_filteredListNameEdit_editsDisplayedPatientAndResetsActiveList() throws Exception {
         Model model = new ModelManager(new AddressBookBuilder().withPatient(ALICE).withPatient(BENSON).build(),
                 new UserPrefs());
         showPatientAtIndex(model, INDEX_SECOND_PATIENT);
-        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withPhone(VALID_PHONE_BOB).build();
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withName(VALID_NAME_BOB).build();
 
         new EditCommand(INDEX_FIRST_PATIENT, descriptor).execute(model);
 
         assertEquals(ALICE, model.getAddressBook().getPatientList().get(0));
-        assertEquals(VALID_PHONE_BOB, model.getAddressBook().getPatientList().get(1).getPhone().value);
+        Patient editedPatient = model.getAddressBook().getPatientList().get(1);
+        assertEquals(VALID_NAME_BOB, editedPatient.getName().fullName);
+        assertEquals(List.of(ALICE, editedPatient), model.getFilteredPatientList());
     }
 
     @Test

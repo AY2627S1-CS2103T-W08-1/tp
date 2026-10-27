@@ -6,6 +6,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
+import static seedu.address.model.Model.PREDICATE_SHOW_ARCHIVED_PATIENTS;
 
 import java.util.List;
 import java.util.Objects;
@@ -76,6 +78,8 @@ public class EditCommand extends Command {
         }
 
         model.setPatient(patientToEdit, editedPatient);
+        model.updateFilteredPatientList(editedPatient.isArchived()
+                ? PREDICATE_SHOW_ARCHIVED_PATIENTS : PREDICATE_SHOW_ACTIVE_PATIENTS);
         model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_EDIT_PATIENT_SUCCESS, Messages.format(editedPatient)));
     }

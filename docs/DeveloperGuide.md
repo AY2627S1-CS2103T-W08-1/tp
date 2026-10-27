@@ -120,6 +120,8 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
+* Command words are matched case-sensitively by `AddressBookParser`; field prefixes are also case-sensitive.
+  Both use lowercase spellings. For example, `LIST` produces `Unknown command.` rather than running `list`.
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
@@ -295,8 +297,11 @@ clarity.
    using the supplied values and the existing values for omitted fields.
 1. The replacement preserves medications and their times, allergens, care instructions, contacts, appointments,
    and archived state. A changed NRIC is rejected if another patient already has it.
-1. The command calls `Model#setPatient(patient, editedPatient)`. If the patient is currently being viewed,
-   `ModelManager#setPatient()` updates `viewedPatient`, and the `PatientDetailPanel` listener redraws the panel.
+1. The command stores the replacement with `Model#setPatient(patient, editedPatient)`, then resets the displayed
+   list to active patients, or archived patients when the edited patient is archived, with
+   `Model#updateFilteredPatientList(...)`.
+1. `Model#setViewedPatient(editedPatient)` shows the edited patient. The `PatientDetailPanel` listeners redraw its
+   details and displayed index.
 
 #### Design considerations
 
@@ -1667,6 +1672,17 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: Press `F1`, or choose **Help** in the menu bar. Click the help window, then press `Esc`.<br>
       Expected: `F1` and the menu open the help window as `help` does, and `Esc` in the help window closes it.
+
+### Command case sensitivity
+
+1. Test cases: `LIST`, `List`, `Add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
+   Expected: Each returns `Unknown command.` without changing patient data or the displayed list.
+
+1. Test case: `list`<br>
+   Expected: The lowercase command succeeds and shows all active patients.
+
+1. Test case: `add N/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
+   Expected: No patient is added. The command reports `Unrecognized parameter: N/. Please check the command format.`
 
 ### Entering a blank command
 
