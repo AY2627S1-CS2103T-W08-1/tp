@@ -149,17 +149,33 @@ public class ParserUtil {
 
     /**
      * Parses a {@code String provider}, who an appointment is with.
-     * Leading and trailing whitespaces will be trimmed, and multiple spaces between words reduced to one.
+     * Whitespaces between words, including Unicode ones such as a no-break space, are reduced to one space, and
+     * leading and trailing ones are trimmed.
      *
-     * @throws ParseException if the given {@code provider} is blank.
+     * @throws ParseException if the given {@code provider} is blank or too long.
      */
     public static String parseProvider(String provider) throws ParseException {
         requireNonNull(provider);
-        String trimmedProvider = provider.trim().replaceAll("\\s+", " ");
+        String trimmedProvider = provider.replaceAll("(?U)\\s+", " ").trim();
         if (!Appointment.isValidProvider(trimmedProvider)) {
             throw new ParseException(Appointment.MESSAGE_PROVIDER_CONSTRAINTS);
         }
         return trimmedProvider;
+    }
+
+    /**
+     * Parses a {@code String note} of an appointment, where an empty note means no note.
+     * Leading and trailing whitespaces, including Unicode ones such as a no-break space, will be trimmed.
+     *
+     * @throws ParseException if the given {@code note} is too long.
+     */
+    public static String parseNote(String note) throws ParseException {
+        requireNonNull(note);
+        String trimmedNote = note.replaceAll("(?U)^\\s+|\\s+$", "");
+        if (!Appointment.isValidNote(trimmedNote)) {
+            throw new ParseException(Appointment.MESSAGE_NOTE_CONSTRAINTS);
+        }
+        return trimmedNote;
     }
 
     /**
