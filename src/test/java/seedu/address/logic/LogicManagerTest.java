@@ -262,7 +262,7 @@ public class LogicManagerTest {
                 clockedLogic.getAppointmentLinesAsShown(patient));
 
         clockedModel.setViewedPatient(patient);
-        assertEquals(List.of("2026-10-18 14:00 with Dr Lim", "2026-10-18 12:01 with Dr Tan (past)"),
+        assertEquals(List.of("2026-10-18 14:00 with Dr Lim", "2026-10-18 12:01 (past) with Dr Tan"),
                 clockedLogic.getAppointmentLinesAsShown(patient));
     }
 
