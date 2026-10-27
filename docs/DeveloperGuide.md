@@ -208,8 +208,8 @@ message rather than raw parser exceptions that can include file contents. Later 
 save normally to the original data path. If preservation fails, the exception stops initialization before commands
 can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
-If the data file is missing, `MainApp` starts with sample patients and attempts to save them once through
-`createDataFileIfMissing`. If that save throws `IOException`, startup continues and the existing startup warning
+When startup reaches `initModelManager` and the data file is missing, `MainApp` uses sample patients and attempts
+to save them once through `createDataFileIfMissing`. If that save throws `IOException`, startup continues and the existing startup warning
 dialog explains that the samples are unsaved, giving the absolute data path and a reason formatted by
 `Messages#describeWriteFailure`. `MainApp#start` shows the warning after `Ui#start`; no new UI is needed.
 Successful initial saves produce no warning. Command-time save failures still roll back through `LogicManager`.

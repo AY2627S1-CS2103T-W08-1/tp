@@ -963,11 +963,13 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 ## FAQ
 
 **Q**: Where is my data saved?<br>
-**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command that changes the data.
-If the initial file cannot be created, the app opens with sample patients and a warning that they are not saved.
+**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. On first launch, MediConnect tries
+to create this file with sample patients. After startup, it saves after commands that change patient data.
+If the app opens with a warning that sample patients are not saved, the initial data file could not be created.
 The warning names the data file and a failure reason. Close the app, check that the parent path is a writable
 folder with enough free disk space, then restart. Move the app to a writable folder if needed. Until the problem
 is fixed, commands that cannot save their changes fail and are undone; closing the app does not save the samples.
+Other startup errors may prevent the main window from opening at all.
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
