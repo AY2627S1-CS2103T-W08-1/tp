@@ -208,13 +208,17 @@ can overwrite the file. `MainApp#init()` records this `IOException` instead of l
 `MainApp#start()` then uses `UiManager#showStartupError()` to show an error dialog without a main-window owner,
 on the JavaFX application thread, before exiting. The dialog names the data-file path and distinguishes a
 directory path, denied access, and other preservation failures without displaying raw parser exceptions.
+The dialog and exit actions can be supplied through a package-private constructor for tests. A regression runs
+the real startup-error method and checks that the error is presented before exit; the UI tests cover the dialog.
 No model, logic or main window is created after a preservation failure, and `stop()` skips preference saving
 when there is no model. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
-`MainApp#init()` acquires a `DataFileLock` before reading preferences or patient data. Its exclusive OS file lock
+The storage diagram also shows the standalone `DataFileLock` helper held by `MainApp`; it is not owned by
+`StorageManager`. `MainApp#init()` acquires it before reading preferences or patient data. Its exclusive OS file lock
 is held until shutdown, so a second instance of the same user cannot load a stale copy of the same data path.
 An in-use file or a failure to acquire the lock produces a startup error without creating a model or main window.
 The lock is released immediately if recovery fails, and in `stop()` even if preference saving fails.
+Lock-close I/O failures are logged without interrupting shutdown; a focused regression covers this cleanup path.
 
 `DataFileLock` hashes the data path after resolving its parent directory's aliases, including missing folders.
 Lock files live in the user's `.mediconnect/locks`, separately from patient data, so atomic data-file replacement
