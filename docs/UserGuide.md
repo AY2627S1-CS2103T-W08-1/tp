@@ -150,7 +150,7 @@ Address | `a/`   | At most 200 characters. Cannot be blank, including blank with
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
 
 For [contact fields](#adding-a-contact-addcontact), names and roles have a limit of 100 characters each, and notes
-have a limit of 500. These limits count Unicode code points after the whitespace handling described in that section.
+have a limit of 500. These limits apply after the whitespace handling described in that section.
 
 ### Adding care information: `addcare`
 
@@ -353,8 +353,8 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 * The note is optional. An omitted or empty `nt/` creates a contact without a note.
   Surrounding Unicode whitespace is removed from notes entered through commands. A whitespace-only `nt/`
   gives an empty note; this also clears an existing note in `editcontact`. Internal note spacing is preserved.
-  The trimmed note must contain at most 500 characters. All three text limits count Unicode code points;
-  a supplementary character, such as an emoji, counts as one.
+  The trimmed note must contain at most 500 characters. A basic emoji such as 😀 counts as one character.
+  A letter with a separately typed accent, or an emoji made from several symbols, can count as more than one.
 * A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
