@@ -172,7 +172,9 @@ public class Patient {
     }
 
     private static void verifyCareEntryLengths(List<String> entries, int maxLength, String message) {
-        checkArgument(entries.stream().allMatch(entry -> isWithinMaxLength(entry, maxLength)), message);
+        checkArgument(entries.stream()
+                .map(Patient::normalizeCareEntry)
+                .allMatch(entry -> isWithinMaxLength(entry, maxLength)), message);
     }
 
     /**

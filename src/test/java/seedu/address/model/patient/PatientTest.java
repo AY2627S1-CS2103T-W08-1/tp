@@ -174,6 +174,9 @@ public class PatientTest {
         new PatientBuilder(ALICE)
                 .withAllergens("a".repeat(Patient.MAX_ALLERGEN_LENGTH))
                 .build();
+        new PatientBuilder(ALICE)
+                .withAllergens("Dust" + " ".repeat(Patient.MAX_ALLERGEN_LENGTH) + "mites")
+                .build();
 
         assertThrows(IllegalArgumentException.class, Patient.MESSAGE_ALLERGEN_TOO_LONG, () ->
                 new PatientBuilder(ALICE)
