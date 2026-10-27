@@ -668,37 +668,23 @@ _{more aspects and alternatives to be added}_
 
 ### Defensive programming
 
-`LogicManager` rejects null model, storage and parser dependencies at construction, and null command text before
-calling the parser. `Command#execute()` must return a non-null `CommandResult`; an assertion checks this internal
-contract for command execution generally. `MainApp#initModelManager()` rejects null storage
-or preferences before reading or creating data, and asserts that storage returns a non-null `Optional`.
-`Optional.empty()` is valid for a missing file and still starts the normal sample-data flow.
+`LogicManager` rejects null dependencies and command text, and asserts that commands return a non-null result.
+`MainApp#initModelManager()` rejects null storage or preferences before file access and asserts that storage
+returns a non-null `Optional`. An empty `Optional` is valid for a missing data file.
 
-The feature commands also check their own model postconditions before reporting success:
+The feature commands check their model postconditions before reporting success:
 
-* `AddCommand` asserts that the complete added patient is present in the model.
-* `AddContactCommand`, `EditContactCommand` and `DeleteContactCommand` assert that the model contains the exact
-  replacement patient passed to `setPatient`, rather than merely a patient with the same NRIC. Existing copy
-  and command tests separately verify that constructing this replacement preserves unrelated patient details.
-* `ClearCommand` asserts that the complete patient list is empty and the viewed patient is cleared. Checking
-  the complete list, rather than the filtered list, includes archived and hidden patients.
+* `AddCommand` asserts that the complete added patient is stored.
+* The contact commands assert that the exact replacement patient, including the updated contacts, is stored.
+* `ClearCommand` asserts that the complete patient list is empty and no patient remains viewed.
 
-These assertions diagnose a model implementation that silently drops an update or leaves a stale selection.
-They use the model's unfiltered data, so a patient being hidden by a filter does not produce a false failure.
-Regression tests deliberately supply broken models for each command and cover both clear postconditions.
+These checks use unfiltered patient data, including archived patients, so filters do not cause false failures.
+Tests supply broken model, storage and command implementations to verify the contracts. Existing copy and command
+tests check that replacing a patient preserves unrelated details.
 
-Assertions diagnose programming errors, not invalid user input or file-system failures. Those continue to use
-validation exceptions and recovery handling. Add/contact constructors and command entry points already check
-required inputs; contact indices and duplicates are checked before updates, and clear backs up before deletion.
-`LogicManager` logs executed command types at INFO without patient arguments, and failed saves at WARNING;
-startup load/save warnings use `LogsCenter` too. Input validation and logging remain separate from the feature
-postconditions; no assertion checks external files or replaces a user-facing error.
-
-Gradle's `run` and `test` tasks and the shared IntelliJ configurations enable assertions. Enable `-ea` in any custom
-development configuration, as described in the [Testing guide](Testing.md). Normal JAR launches leave assertions
-disabled; user-input and file-error handling must therefore never rely on them. Regression tests deliberately
-break the command/storage return contracts to verify the assertions, and check that null startup preferences
-cannot create a data file.
+Assertions diagnose programming errors; user-input and file failures use exceptions. See the
+[Testing guide](Testing.md) for assertion-enabled run configurations and the [Logging guide](Logging.md) for
+`LogsCenter` usage. Normal JAR launches leave assertions disabled, so runtime validation does not rely on them.
 
 --------------------------------------------------------------------------------------------------------------------
 
