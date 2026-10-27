@@ -235,9 +235,9 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 
 `ModelManager` keeps the viewed patient consistent with the address book:
 
-* `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information.
+* `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information. If the change archives the viewed patient, as `archive` does, it clears the viewed patient instead.
 * `deletePatient(target)` clears the viewed patient if `target` is being viewed.
-* `setAddressBook(...)`, which `clear confirm` uses, clears the viewed patient if it is not in the new data.
+* `setAddressBook(...)`, which `clear confirm` and `restore` use, clears the viewed patient unless the new data has the same patient with the same details.
 
 Filtering the patient list (e.g., with `find`) does not change the viewed patient.
 
@@ -400,6 +400,61 @@ Both commands have a second constructor that takes a `java.time.Clock` and the b
 * **Alternative 2:** Copy `data/mediconnect.json` byte for byte.
   * Pros: An unreadable data file is kept, for repair by hand, although the startup recovery copy already does this.
   * Cons: The path of the data file would have to be passed from `Storage` through `LogicManager` to the command, and a backup could hold data that `restore` then rejects.
+
+### Export feature
+
+The `export INDEX` command saves the full record of a patient in the displayed list to a text file in `data/exports`, for printing or for handing over, e.g., during a hospital visit.
+
+#### Implementation
+
+1. `ExportCommandParser` parses the index in the same way as `ViewCommandParser`. `ExportCommand#execute()` checks it against the filtered patient list, so `export` exports an active patient after `list` or `find`, and an archived patient after `listarchived`.
+1. `ExportCommand#createRecord()` builds the lines of the record: a title, `Exported on` with the date and time from the command's `Clock`, a blank line, then the lines from `PatientFormatter#formatRecord()`. These are the patient's name, the details from `PatientFormatter#formatDetails()`, with `Status: Archived` for an archived patient, and each list under its heading, numbered by `PatientFormatter#formatEntries()`. Appointments are ordered and marked `(past)` at the time of the export, through the same `PatientFormatter#formatAppointments()` that the detail panel uses.
+1. The file is named after the patient's NRIC, e.g., `S1234567A.txt`. Before writing, `ExportCommand#writeRecord()` creates the folder if it does not exist, and throws an `AccessDeniedException` if an earlier export of the patient is read-only, since the new record would otherwise replace it although the user made it read-only.
+1. The record is written through `FileUtil#writeThroughTemporaryFile()`, as backups are, so a failed write never leaves a partial record in place of an earlier one, and on macOS and Linux, only the current user can open the file. If writing fails, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+1. The command does not change the `Model`. It logs only the export folder, not the file, since the file name is the patient's NRIC. The date is formatted with `Locale.ROOT`, so that it uses the digits 0 to 9 whatever the computer's language settings are.
+
+Like `BackupCommand`, `ExportCommand` has a second constructor that takes a `java.time.Clock` and the export folder, which tests use to get a predictable date and folder.
+
+#### Design considerations
+
+**Aspect: How the exported file is named**
+
+* **Alternative 1 (current choice):** After the patient's NRIC, e.g., `S1234567A.txt`.
+  * Pros: NRICs are unique, and only use letters and digits, which every operating system allows in file names. Exporting the same patient again replaces their earlier record, so the folder holds one up-to-date record per patient.
+  * Cons: The file name shows the NRIC. If the NRIC is changed, e.g., with `edit`, the earlier file is left behind under the old NRIC.
+* **Alternative 2:** After the patient's name and the time of the export.
+  * Pros: The name is easier to recognize, and earlier records are kept.
+  * Cons: Names can contain `/`, e.g., in `s/o`, which file names cannot, and two patients can have the same name. Every export adds another file.
+
+**Aspect: How the record is worded**
+
+* **Alternative 1 (current choice):** Reuse `PatientFormatter`, which also words the detail panel.
+  * Pros: The wording is defined in one place, so an exported record always reads the same as the panel.
+  * Cons: A wording change meant for one of them also changes the other.
+* **Alternative 2:** Format the record separately in `ExportCommand`.
+  * Pros: The record can be worded differently from the panel.
+  * Cons: The same wording is written twice, and the two can drift apart.
+
+### Help window
+
+The `help` command, `F1` and the **Help** menu open the `HelpWindow`, which lists every command with its format and a one-line description under group headings, below a link to the User Guide.
+
+#### Implementation
+
+1. `HelpCommand#execute()` returns a `CommandResult` that asks the UI to show help, and `MainWindow#handleHelp()` shows the help window if it is not already shown. The **Help** menu item, whose shortcut is `F1`, calls `handleHelp()` directly. It then calls `requestFocus()` on the main window, so that the user can keep typing commands while the help window is open.
+1. The list is `HelpCommand#COMMAND_SUMMARY`, built once from each command's `COMMAND_WORD` or `COMMAND_FORMAT` and the prefixes in `CliSyntax`, which the parsers also use. A renamed command word or prefix therefore also changes the help text. `HelpCommandTest` checks that every command is listed once, in order, and that `AddressBookParser` parses every listed format, filled in with sample values, into that command.
+1. `MainWindow` makes the main window the owner of the help window, so that the help window closes and minimizes with it. An event handler on the help window's own stage hides it on `Esc`, and each time the help window is shown, it adds the same handler to its owner as an event filter. A filter is used because it sees `Esc` before the focused command box does. It also keeps itself in front of other windows only while it or its owner has the focus, through a `BooleanBinding` on both windows' `focusedProperty()`. The binding is kept in a field, since the properties it observes refer to it only weakly. When the help window is hidden, the filter is removed and the owner's focus is no longer followed.
+
+#### Design considerations
+
+**Aspect: Keeping the help window in view while typing commands**
+
+* **Alternative 1 (current choice):** Keep the help window in front only while MediConnect has the focus.
+  * Pros: The list stays above the main window while the user types commands, but goes behind other apps, e.g., a browser with the User Guide open.
+  * Cons: Needs a binding on the focus of both windows, and an `Esc` filter on the main window.
+* **Alternative 2:** Keep the help window always in front.
+  * Pros: Needs only one call to `setAlwaysOnTop(true)`.
+  * Cons: The help window also covers other apps until it is closed.
 
 ### Contact management
 
@@ -686,7 +741,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | caregiver                                  | log a symptom observation for a patient | track changes in their health over time |
 | `*`      | caregiver                                  | view a timeline of a patient's past symptom observations | identify patterns to raise with a doctor |
 | `*`      | caregiver with many patients               | filter patients by a medical condition | see everyone affected by a particular condition at once |
-| `*`      | caregiver with many patients               | sort patients by their next appointment or medication due | prioritise the patients who need attention soonest |
+| `*`      | caregiver with many patients               | sort patients by their next appointment or medication due | prioritize the patients who need attention soonest |
 | `*`      | caregiver                                  | pin the contacts I reach most often to the top of the list | find them faster |
 | `*`      | caregiver                                  | attach a photo of a document, such as a referral letter, to a patient's record | stop keeping track of the paper copy |
 | `*`      | caregiver                                  | see when a contact's details were last updated | tell at a glance whether they may be out of date |
@@ -1024,7 +1079,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1.  Caregiver requests to list patients.
 2.  MediConnect shows a list of patients.
 3.  Caregiver requests to view a specific patient in the list.
-4.  MediConnect shows the patient's details in the detail panel, with their medications, allergens, care instructions, contacts and appointments numbered, and shows the patient's name.
+4.  MediConnect shows the patient's details in the detail panel, with their medications, allergens, care instructions, contacts and appointments numbered, and a message with the patient's name.
 
     Use case ends.
 
@@ -1033,6 +1088,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * 1a. Caregiver searches for the patient by name instead.
 
     * 1a1. MediConnect shows the patients whose names match.
+
+      Use case resumes at step 3.
+
+* 1b. The patient is archived.
+
+    * 1b1. Caregiver requests to list archived patients instead.
+
+    * 1b2. MediConnect shows a list of archived patients.
 
       Use case resumes at step 3.
 
@@ -1058,7 +1121,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
-* 4b. The patient is deleted later.
+* 4b. The patient is deleted or archived later.
 
     * 4b1. MediConnect clears the detail panel.
 
@@ -1080,9 +1143,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. A backup with the same name already exists, e.g., one made in the same second.
 
-    * 2a1. MediConnect adds a number to the new file's name, so that the earlier backup is kept.
+    * 2a1. MediConnect saves the backup with a number added to its name, e.g., `-1`, so that the earlier backup is kept, and shows the full path of the file.
 
-      Use case resumes at step 2.
+      Use case ends.
 
 * 2b. The backup cannot be saved, e.g., because the folder cannot be created.
 

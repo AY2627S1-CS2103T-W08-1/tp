@@ -709,9 +709,10 @@ Format: `view INDEX`
 
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
-* The panel shows the patient's name, NRIC, date of birth, phone number, and address, followed by their
-  medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...), one
-  entry per line. A medication with daily times shows them after its description, e.g., `Metformin 500mg (08:00, 20:00)`.
+* The panel shows the patient's name, NRIC, date of birth, phone number, and address, then `Status: Archived` if the
+  patient is archived, followed by their medications, allergens, care instructions, contacts and appointments. Each
+  list is numbered (`1.`, `2.`, ...), one entry per line. A medication with daily times shows them after its
+  description, e.g., `Metformin 500mg (08:00, 20:00)`.
   Upcoming appointments are listed first, then past ones, each sorted by date, then time. Each past appointment is
   marked `(past)`, e.g., on the sample data, `view 2` shows
   `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`. Like the numbers, the marks stay as
@@ -722,11 +723,12 @@ Format: `view INDEX`
   **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
-  to the message above when the patient is deleted or all patients are cleared.
+  to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
+  replaces your data with a backup that does not have this patient with the same details.
 * Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
   `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
-  the list does not show the patient, e.g., after `find` hides them or they are archived, it shows
-  `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
+  the list does not show the patient, e.g., after `find` hides them, or after `list` while an archived patient is
+  viewed, it shows `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
   `listarchived` for an archived patient.
 * When a different patient is viewed, the panel scrolls back to the top, so their name is shown first. When the same
   patient is shown again, e.g., after `addcare`, the panel stays where it was scrolled to.
