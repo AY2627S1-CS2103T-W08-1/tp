@@ -201,7 +201,7 @@ public class RestoreCommandTest {
         writeBackup(createAddressBook(HOON, IDA));
         replaceWithInvalidUtf8Byte(temporaryFolder.resolve(BACKUP_NAME), HOON.getName().fullName);
 
-        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_UNREADABLE, BACKUP_NAME));
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NOT_UTF8, BACKUP_NAME));
     }
 
     @Test
