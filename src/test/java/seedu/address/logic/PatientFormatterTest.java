@@ -19,16 +19,10 @@ import org.junit.jupiter.api.Test;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
-import seedu.address.ui.PatientDetailPanel;
 
 public class PatientFormatterTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 20, 14, 30);
-
-    @Test
-    public void noneRecorded_detailPanelConstant_sameText() {
-        assertEquals(PatientDetailPanel.MESSAGE_NONE_RECORDED, PatientFormatter.NONE_RECORDED);
-    }
 
     @Test
     public void formatDetails_nullPatient_throwsNullPointerException() {

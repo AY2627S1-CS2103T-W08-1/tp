@@ -19,15 +19,15 @@ import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
- * Lists the upcoming appointments of all active (not archived) patients, or every appointment of an active
- * patient identified by their displayed index.
+ * Lists the upcoming appointments of all active (not archived) patients, or every appointment of a patient
+ * identified by their displayed index.
  */
 public class ListApptCommand extends Command {
 
     public static final String COMMAND_WORD = "listappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists the upcoming appointments of all "
-            + "active patients, soonest first. With an INDEX, lists every appointment of the active patient "
+            + "active patients, soonest first. With an INDEX, lists every appointment of the patient "
             + "identified by the index number used in the displayed patient list, and shows them in the panel.\n"
             + "Parameters: [INDEX] (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
@@ -36,8 +36,6 @@ public class ListApptCommand extends Command {
     public static final String MESSAGE_NO_UPCOMING = "No upcoming appointments.";
     public static final String MESSAGE_PATIENT_APPOINTMENTS = "Appointments for %1$s:";
     public static final String MESSAGE_NO_PATIENT_APPOINTMENTS = "%1$s has no appointments.";
-    public static final String MESSAGE_ARCHIVED_PATIENT =
-            "This patient is archived. Unarchive them to list their appointments.";
     public static final String HEADING_UPCOMING = "Upcoming:";
     public static final String HEADING_PAST = "Past:";
     public static final String NO_ENTRIES = " none";
@@ -55,7 +53,8 @@ public class ListApptCommand extends Command {
     }
 
     /**
-     * Creates a {@code ListApptCommand} that uses {@code clock} for the current date and time.
+     * Creates a {@code ListApptCommand} that uses {@code clock} for the current date and time when listing the
+     * upcoming appointments of all patients. With an index, the model decides which appointments are upcoming.
      */
     public ListApptCommand(Optional<Index> targetIndex, Clock clock) {
         requireNonNull(targetIndex);
@@ -67,11 +66,10 @@ public class ListApptCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        LocalDateTime now = LocalDateTime.now(clock);
         if (targetIndex.isEmpty()) {
             List<Patient> activePatients = model.getAddressBook().getPatientList().stream()
                     .filter(PREDICATE_SHOW_ACTIVE_PATIENTS).toList();
-            return new CommandResult(listUpcomingAppointments(activePatients, now));
+            return new CommandResult(listUpcomingAppointments(activePatients, LocalDateTime.now(clock)));
         }
 
         List<Patient> lastShownList = model.getFilteredPatientList();
@@ -79,18 +77,18 @@ public class ListApptCommand extends Command {
             throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
         }
         Patient patient = lastShownList.get(targetIndex.get().getZeroBased());
-        if (patient.isArchived()) {
-            throw new CommandException(MESSAGE_ARCHIVED_PATIENT);
-        }
 
         // Shows the patient, so that the numbers listed stay the ones that later commands use.
         model.setViewedPatient(patient);
-        return new CommandResult(listAppointmentsOf(patient, model.getAppointmentsAsShown(patient), now));
+        // Splits them at the time the panel orders them, so each is under the heading the panel gives it.
+        return new CommandResult(listAppointmentsOf(patient, model.getAppointmentsAsShown(patient),
+                model.getAppointmentsOrderedAt(patient)));
     }
 
     /**
      * Returns the upcoming appointments of {@code patients}, soonest first, one per line after the
-     * patient's name. Appointments at the same date and time keep the order of {@code patients}.
+     * patient's name and NRIC, since two patients can have the same name.
+     * Appointments at the same date and time keep the order of {@code patients}.
      */
     private static String listUpcomingAppointments(List<Patient> patients, LocalDateTime now) {
         List<Map.Entry<Appointment, Patient>> upcomingAppointments = new ArrayList<>();
@@ -109,17 +107,18 @@ public class ListApptCommand extends Command {
         List<String> lines = new ArrayList<>();
         lines.add(MESSAGE_UPCOMING);
         for (Map.Entry<Appointment, Patient> entry : upcomingAppointments) {
-            lines.add(entry.getValue().getName() + ": " + entry.getKey());
+            Patient patient = entry.getValue();
+            lines.add(patient.getName() + " (" + patient.getNric() + "): " + entry.getKey());
         }
         return String.join("\n", lines);
     }
 
     /**
      * Returns the {@code appointments} of {@code patient}, in the order and with the numbers of the patient's
-     * detail panel, under an upcoming and a past heading.
+     * detail panel, under an upcoming and a past heading decided at {@code orderedAt}.
      */
     private static String listAppointmentsOf(Patient patient, List<Appointment> appointments,
-            LocalDateTime now) {
+            LocalDateTime orderedAt) {
         if (appointments.isEmpty()) {
             return String.format(MESSAGE_NO_PATIENT_APPOINTMENTS, patient.getName());
         }
@@ -129,7 +128,7 @@ public class ListApptCommand extends Command {
         for (int i = 0; i < appointments.size(); i++) {
             Appointment appointment = appointments.get(i);
             String line = Index.fromZeroBased(i).getOneBased() + ". " + appointment;
-            if (appointment.isBefore(now)) {
+            if (appointment.isBefore(orderedAt)) {
                 pastLines.add(line);
             } else {
                 upcomingLines.add(line);
