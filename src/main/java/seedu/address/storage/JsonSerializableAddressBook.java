@@ -2,6 +2,7 @@ package seedu.address.storage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -21,6 +22,7 @@ class JsonSerializableAddressBook {
 
     public static final String MESSAGE_DUPLICATE_PATIENT = "Patients list contains duplicate patient(s).";
     public static final String MESSAGE_NULL_PATIENT = "Patients list contains an empty patient entry.";
+    private static final String MESSAGE_INVALID_PATIENT = "Patient entry %1$d: %2$s";
 
     @JsonProperty("persons")
     private final List<JsonAdaptedPatient> patients = new ArrayList<>();
@@ -49,15 +51,21 @@ class JsonSerializableAddressBook {
      */
     public AddressBook toModelType() throws IllegalValueException {
         AddressBook addressBook = new AddressBook();
-        for (JsonAdaptedPatient jsonAdaptedPatient : patients) {
-            if (jsonAdaptedPatient == null) {
-                throw new IllegalValueException(MESSAGE_NULL_PATIENT);
+        for (int i = 0; i < patients.size(); i++) {
+            try {
+                JsonAdaptedPatient jsonAdaptedPatient = patients.get(i);
+                if (jsonAdaptedPatient == null) {
+                    throw new IllegalValueException(MESSAGE_NULL_PATIENT);
+                }
+                Patient patient = jsonAdaptedPatient.toModelType();
+                if (addressBook.hasPatient(patient)) {
+                    throw new IllegalValueException(MESSAGE_DUPLICATE_PATIENT);
+                }
+                addressBook.addPatient(patient);
+            } catch (IllegalValueException e) {
+                throw new IllegalValueException(
+                        String.format(Locale.ROOT, MESSAGE_INVALID_PATIENT, i + 1, e.getMessage()), e);
             }
-            Patient patient = jsonAdaptedPatient.toModelType();
-            if (addressBook.hasPatient(patient)) {
-                throw new IllegalValueException(MESSAGE_DUPLICATE_PATIENT);
-            }
-            addressBook.addPatient(patient);
         }
         return addressBook;
     }

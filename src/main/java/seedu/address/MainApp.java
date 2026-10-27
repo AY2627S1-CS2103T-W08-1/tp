@@ -12,6 +12,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
@@ -36,7 +37,9 @@ public class MainApp extends Application {
 
     public static final String VERSION = "V1.5.0";
     public static final String MESSAGE_DATA_RECOVERY =
-            "The data file could not be loaded. Starting with no patients.\nRecovery copy: %s";
+            "The data file could not be loaded. Starting with no patients.\nRecovery copy: %1$s\nDetails: %2$s";
+    public static final String MESSAGE_UNREADABLE_DATA =
+            "The file could not be read as MediConnect patient data. Check its JSON format and file permissions.";
 
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
@@ -94,7 +97,9 @@ public class MainApp extends Application {
             }
             Path recoveryFile = dataFilePath.resolveSibling(RECOVERY_FILE_PREFIX + UUID.randomUUID() + ".json");
             Files.copy(dataFilePath, recoveryFile);
-            dataLoadWarning = String.format(MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath());
+            String reason = e.getCause() instanceof IllegalValueException
+                    ? e.getCause().getMessage() : MESSAGE_UNREADABLE_DATA;
+            dataLoadWarning = String.format(MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(), reason);
             logger.warning(dataLoadWarning);
             initialData = new AddressBook();
         }
