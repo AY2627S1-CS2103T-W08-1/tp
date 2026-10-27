@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -275,7 +276,7 @@ public class PatientDetailPanelTest {
         displayedPatients.setAll(ALICE, BENSON);
         viewedPatient.set(BENSON);
 
-        assertEquals(String.format(MESSAGE_LIST_INDEX, 2), ((Label) lookup(content, "#listIndex")).getText());
+        assertEquals(expectedListIndex(2), ((Label) lookup(content, "#listIndex")).getText());
     }
 
     @Test
@@ -296,7 +297,7 @@ public class PatientDetailPanelTest {
         Label listIndex = (Label) lookup(content, "#listIndex");
         displayedPatients.setAll(ALICE, BENSON);
         viewedPatient.set(ALICE);
-        assertEquals(String.format(MESSAGE_LIST_INDEX, 1), listIndex.getText());
+        assertEquals(expectedListIndex(1), listIndex.getText());
 
         // e.g., after find hides the viewed patient
         displayedPatients.setAll(BENSON);
@@ -304,7 +305,7 @@ public class PatientDetailPanelTest {
 
         // e.g., after list shows the viewed patient again, at another index
         displayedPatients.setAll(BENSON, ALICE);
-        assertEquals(String.format(MESSAGE_LIST_INDEX, 2), listIndex.getText());
+        assertEquals(expectedListIndex(2), listIndex.getText());
     }
 
     @Test
@@ -363,6 +364,14 @@ public class PatientDetailPanelTest {
 
     private static Node lookup(VBox content, String selector) {
         return content.lookup(selector);
+    }
+
+    /**
+     * Returns the list index line that the panel shows for {@code oneBasedIndex}, written with the digits
+     * 0 to 9, as the panel writes it, whatever the computer's language settings are.
+     */
+    private static String expectedListIndex(int oneBasedIndex) {
+        return String.format(Locale.ROOT, MESSAGE_LIST_INDEX, oneBasedIndex);
     }
 
     /**
