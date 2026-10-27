@@ -148,6 +148,10 @@ Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` 
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
+This also applies to the first word immediately after a field prefix: `a/x/123` is rejected just like
+`a/Blk 1 x/123`. A prefix cannot be embedded there as text, even if it is valid elsewhere in that command.
+Each command's supported standalone slash words remain allowed; keep them separate from punctuation.
+Addresses can still begin with numeric slash text such as `a/21/3` or a URL such as `a/https://example.com`.
 
 ### Adding care information: `addcare`
 
