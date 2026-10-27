@@ -443,7 +443,8 @@ note. For example, the second example returns
 Other errors are reported as follows:
 
 * An appointment with the same date, time and `WITH` as one the patient already has, ignoring letter case and extra
-  spaces, returns `This appointment already exists for this patient.` and is not added.
+  spaces, returns `This appointment already exists for this patient.` and is not added. An accented letter counts
+  as the same whether it was typed as one character, e.g. `é`, or as a letter followed by an accent.
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * An invalid date, or one before `1900-01-01`, returns
   `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`

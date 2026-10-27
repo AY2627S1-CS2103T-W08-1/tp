@@ -139,6 +139,21 @@ public class AppointmentTest {
     }
 
     @Test
+    public void isSameAppointment_canonicallyEquivalentProviders_returnsTrue() {
+        // "é" as one character, and as "e" followed by a combining accent, look the same
+        Appointment composed = new Appointment(DATE, TIME, "Caf\u00e9 clinic", "");
+        Appointment decomposed = new Appointment(DATE, TIME, "CAFE\u0301 clinic", "");
+        assertTrue(composed.isSameAppointment(decomposed));
+        assertTrue(decomposed.isSameAppointment(composed));
+        assertEquals("CAFE\u0301 clinic", decomposed.getProvider()); // the spelling typed is kept
+
+        // accents still count, and fullwidth letters are not canonically equivalent, as for contact names
+        assertFalse(composed.isSameAppointment(new Appointment(DATE, TIME, "Cafe clinic", "")));
+        assertFalse(new Appointment(DATE, TIME, "Clinic", "")
+                .isSameAppointment(new Appointment(DATE, TIME, "\uff23linic", "")));
+    }
+
+    @Test
     public void getDateTime() {
         assertEquals(LocalDateTime.of(DATE, TIME), new Appointment(DATE, TIME, "Dr Tan", "").getDateTime());
     }
