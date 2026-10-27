@@ -112,7 +112,11 @@ How the `Logic` component works:
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
 1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
-1. If the command changed the patient data, `LogicManager` saves it through `Storage`. Before executing the command, it takes a `Model.Snapshot` of the patient data, the patient list filter and the viewed patient. If the save fails, it restores the `Model` from the snapshot and reports the failure, so a command reported as failed leaves no change that would be lost on restart. Commands that change no patient data, such as `list` or `exit`, are not saved, so they still work when the data file is read-only.
+1. `LogicManager` saves through `Storage` if patient data changed or the command's
+   `requiresSaveWhenUnchanged()` returns `true` (`clear confirm` and `restore FILENAME`). Before executing the
+   command, it takes a `Model.Snapshot` of the patient data, filter and viewed patient. If saving fails, it restores
+   that snapshot and reports the failure. Other commands that change no patient data, such as `list` or `exit`,
+   skip saving, so they still work when the data file is read-only.
 1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
@@ -279,6 +283,11 @@ The success message includes the backup location. `LogicManager` saves the chang
 if saving fails; the automatic backup remains available. Backups include archived and filtered-out patients,
 even for an empty address book, and can be recovered with `restore`.
 
+`Command#requiresSaveWhenUnchanged()` defaults to `false`. `ClearCommand` and `RestoreCommand` override it to
+return `true`, so `LogicManager` saves after their successful execution even when the address book equals its
+snapshot. This repairs the original file after startup recovery has produced an empty model, while retaining
+the recovery copy. Other unchanged commands skip saving. Save failures use the existing snapshot rollback.
+
 ### Edit patient feature
 
 The `edit INDEX [n/NAME] [ic/NRIC] [dob/DOB] [p/PHONE] [a/ADDRESS]` command replaces one or more core details
@@ -377,7 +386,9 @@ The sequence diagram below shows a successful `restore old.json`.
 1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
 1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
 1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored, how many of them are archived, since only active patients are then listed, and the path of the automatic backup.
-1. As after every command that changes the patient data, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
+1. `LogicManager` then saves the `Model`, replacing `data/mediconnect.json` even when the restored data equals
+   the previous model, including an empty backup after startup recovery. A save failure restores the model's
+   previous data, filter and viewed patient; the automatic backup is kept.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
@@ -1878,6 +1889,25 @@ testers are expected to do more *exploratory* testing.
 1. Simulate a backup failure in a disposable app folder by making `data/backups` a regular file, then run
    `clear confirm`.<br>
    Expected: A backup failure message. All patients and the viewed patient remain unchanged.
+
+1. Replacing unreadable data with an empty address book
+
+   1. Prerequisites: Use a disposable app folder. Run `clear confirm`, then `backup` and note that empty backup's
+      name. Close the app and replace `data/mediconnect.json` with malformed JSON, such as `{"persons": [`. Keep
+      the backup folder. Launch the app from that disposable folder.
+
+   1. Test case: After the recovery warning, run `list`, then inspect the data file.<br>
+      Expected: The list is empty and the malformed data file remains unchanged. The warning's recovery copy
+      contains the original malformed file.
+
+   1. Test case: Run `clear confirm`, then close and relaunch.<br>
+      Expected: The data file contains valid empty data. No new recovery warning or recovery copy appears.
+      The earlier recovery copy remains unchanged.
+
+   1. Close the app, put malformed JSON in the data file again, and relaunch. Run `restore FILENAME`, using the
+      empty backup noted above, then close and relaunch again.<br>
+      Expected: Restore succeeds and the data file contains valid empty data. The next launch has no recovery
+      warning and creates no further recovery copy. Existing recovery copies are unchanged.
 
 ### Deleting a patient
 
