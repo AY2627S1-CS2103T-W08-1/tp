@@ -168,7 +168,9 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
     /**
      * Replaces the contents of {@code container} with one numbered row ("1.", "2.", ...) per entry in
      * {@code entries}, or a single {@code PatientFormatter.NONE_RECORDED} label if {@code entries} is empty.
-     * Each entry is a separate row so that a long entry wraps beside its own number.
+     * Each entry is a separate row so that a long entry wraps beside its own number, and is shown on one line
+     * by {@code PatientFormatter#toSingleLine}, as in exported records, so that a line break stored in it
+     * cannot look like another numbered entry.
      */
     private static void fillEntries(VBox container, List<String> entries) {
         container.getChildren().clear();
@@ -181,7 +183,7 @@ public class PatientDetailPanel extends UiPart<ScrollPane> {
         for (int i = 0; i < entries.size(); i++) {
             Label numberLabel = createLabel((i + 1) + ENTRY_NUMBER_SUFFIX);
             numberLabel.setMinWidth(Region.USE_PREF_SIZE);
-            Label entryLabel = addCopyMenu(createLabel(entries.get(i)));
+            Label entryLabel = addCopyMenu(createLabel(PatientFormatter.toSingleLine(entries.get(i))));
             entryLabel.setMinWidth(0);
             HBox.setHgrow(entryLabel, Priority.ALWAYS);
             container.getChildren().add(new HBox(ENTRY_NUMBER_GAP, numberLabel, entryLabel));
