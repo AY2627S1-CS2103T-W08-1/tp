@@ -18,6 +18,7 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -64,7 +65,11 @@ import seedu.address.testutil.PatientBuilder;
 
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
-    private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
+    /** As thrown when the temporary file written first cannot replace the data file. */
+    private static final IOException DUMMY_AD_EXCEPTION =
+            new AccessDeniedException("mediconnect.json.123.tmp", "mediconnect.json", null);
+    private static final IOException DUMMY_FS_EXCEPTION = new FileSystemException("mediconnect.json.123.tmp",
+            "mediconnect.json", "The process cannot access the file because it is being used by another process");
 
     @TempDir
     public Path temporaryFolder;
@@ -137,8 +142,16 @@ public class LogicManagerTest {
 
     @Test
     public void execute_storageThrowsAdException_throwsCommandException() {
+        // names the data file, not the temporary file in the exception's message
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, temporaryFolder.resolve("ExceptionUserPrefs.json")));
+    }
+
+    @Test
+    public void execute_storageThrowsFileSystemException_showsReasonOnly() {
+        assertCommandFailureForExceptionFromStorage(DUMMY_FS_EXCEPTION, String.format(
+                LogicManager.FILE_OPS_ERROR_FORMAT,
+                "The process cannot access the file because it is being used by another process"));
     }
 
     @Test
