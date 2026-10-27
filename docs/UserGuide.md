@@ -335,8 +335,10 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   Leading/trailing whitespace is removed and repeated spaces in a name become one.
 * Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
   other roles are allowed.
-* Contact phones can contain digits, spaces, `+` and `-`, with at least three digits. They use different rules
-  from patient phones so overseas and clinic numbers are supported. Formatting is preserved after trimming.
+* Contact phones must contain 3 to 15 digits (`0`–`9`). Spaces and hyphens are allowed and do not count toward
+  this limit. At most one `+` is allowed, at the start after trimming, e.g., `+44 20 7946 0958`.
+  These differ from patient-phone rules so overseas and short clinic numbers such as `123` remain supported.
+  Formatting is preserved after trimming. Extensions and parentheses are not supported.
 * The note is optional. An omitted or empty `nt/` creates a contact without a note.
   Surrounding spaces are removed from notes entered through commands.
 * A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
@@ -355,8 +357,12 @@ For patient `Alex Yeoh`, this returns:
 `Added contact for Alex Yeoh: Lim & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`
 
 Blank names/roles return `Contact name cannot be blank.` or `Contact role cannot be blank.`
-An invalid phone returns `Contact phone must contain at least 3 digits and only digits, spaces, + and -.`
+An invalid phone returns `Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, and at most one + at the start.`
 A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure.
+
+The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
+that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
+in a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
