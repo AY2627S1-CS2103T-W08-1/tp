@@ -296,6 +296,8 @@ public class BackupCommandTest {
 
     @Test
     public void execute_success_leavesOnlyBackupAndLockFile() throws Exception {
+        // Equivalence partitioning: a successful backup, which leaves no temporary file behind, only the backup
+        // and the empty lock file that backups take turns on
         new BackupCommand(FIXED_CLOCK, temporaryFolder).execute(model);
 
         Set<Path> expectedFiles = Set.of(temporaryFolder.resolve(EXPECTED_FILE_NAME),
