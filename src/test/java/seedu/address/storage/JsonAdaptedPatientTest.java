@@ -280,7 +280,8 @@ public class JsonAdaptedPatientTest {
         assertThrows(IllegalValueException.class, "Contact entry must not be null.", nullEntry::toModelType);
         JsonAdaptedPatient duplicates = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(),
-                List.of(new JsonAdaptedContact(contact), new JsonAdaptedContact(contact)), null, null);
+                List.of(new JsonAdaptedContact(contact), new JsonAdaptedContact("Tan\u00a0&\u202fPartners\u2007Clinic",
+                        contact.getRole(), contact.getPhone(), contact.getNote())), null, null);
         assertThrows(IllegalValueException.class, MESSAGE_DUPLICATE,
                 duplicates::toModelType);
     }
