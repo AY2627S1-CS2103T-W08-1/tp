@@ -47,9 +47,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 ## Features
 
-<box type="info" seamless>
+### Command format
 
-**Notes about the command format:**<br>
+<box type="info" seamless>
 
 * Pressing Enter when the command box is empty or contains only whitespace does nothing.
   The text in the command box and the previous result remain unchanged.
@@ -73,6 +73,24 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </box>
+
+#### Slash text in field values
+
+Addresses, medication descriptions, allergens, care instructions, contact names/roles/notes, and appointment
+providers/notes are free-text fields. They allow non-reserved slash text such as `and/or`, `mg/ml`, `units/day`,
+`mg/kg`, `ml/hr`, `N/A`, and `x/123`, including the first word immediately after the field prefix.
+For example, `addcare 1 ci/Use cane and/or walker` and `editmed 1 1 med/Insulin 10 units/day` are allowed.
+Numeric slash text such as `21/3` and URLs remain allowed. Existing blank-value and length limits still apply.
+
+Patient names, NRICs, dates of birth, patient/contact phones, appointment dates/times, and medication times
+have specific formats; they do not gain this free-text allowance. Unknown slash prefixes before any field
+are also rejected. Indices and backup filenames keep their existing rules.
+
+MediConnect reserves `n/`, `ic/`, `dob/`, `p/`, `a/`, `med/`, `al/`, `ci/`, `r/`, `d/`, `t/`, `w/`, and `nt/`.
+After a space, a supported prefix starts another field; other reserved prefixes are rejected.
+A reserved prefix cannot be embedded at the start of a field value: `a/p/123` is rejected.
+Each command's existing standalone slash-word exceptions still apply; keep those words separate from punctuation.
+Prefixes are case-sensitive: `T/08:00` inside a medication description is text, and does not set a time.
 
 ### Viewing help: `help`
 
@@ -104,7 +122,7 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * Each prefix must appear only once. Repeated prefixes are rejected, e.g.,
   `Multiple values specified for a single-valued field: n/`.
 * Unknown slash prefixes outside the address, such as `x/123` before the first field, are rejected with
-  `Unrecognized parameter: x/. Please check the command format.` The address follows the free-text rules below;
+  `Unrecognized parameter: x/. Please check the command format.` The address follows the [slash-text rules](#slash-text-in-field-values);
   for example, `a/Block A/B` is allowed, but `a/med/Aspirin` is rejected because `med/` is reserved.
 * Standalone `s/o`, `d/o`, `c/o`, `a/l`, and `a/p` are allowed anywhere in the `add` arguments, ignoring letter case.
   Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
@@ -150,24 +168,6 @@ Address | `a/`   | At most 200 characters. Cannot be blank, including blank with
 
 Leading and trailing spaces in every field are ignored.
 
-#### Slash text in field values
-
-Addresses, medication descriptions, allergens, care instructions, contact names/roles/notes, and appointment
-providers/notes are free-text fields. They allow non-reserved slash text such as `and/or`, `mg/ml`, `units/day`,
-`mg/kg`, `ml/hr`, `N/A`, and `x/123`, including the first word immediately after the field prefix.
-For example, `addcare 1 ci/Use cane and/or walker` and `editmed 1 1 med/Insulin 10 units/day` are allowed.
-Numeric slash text such as `21/3` and URLs remain allowed. Existing blank-value and length limits still apply.
-
-Patient names, NRICs, dates of birth, patient/contact phones, appointment dates/times, and medication times
-have specific formats; they do not gain this free-text allowance. Unknown slash prefixes before any field
-are also rejected. Indices and backup filenames keep their existing rules.
-
-MediConnect reserves `n/`, `ic/`, `dob/`, `p/`, `a/`, `med/`, `al/`, `ci/`, `r/`, `d/`, `t/`, `w/`, and `nt/`.
-After a space, a supported prefix starts another field; other reserved prefixes are rejected.
-A reserved prefix cannot be embedded at the start of a field value: `a/p/123` is rejected.
-Each command's existing standalone slash-word exceptions still apply; keep those words separate from punctuation.
-Prefixes are case-sensitive: `T/08:00` inside a medication description is text, and does not set a time.
-
 ### Adding care information: `addcare`
 
 Appends medications, allergens, or care instructions to the patient at the displayed index.
@@ -181,7 +181,7 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
   collapsed to one space. They cannot be blank. Medication descriptions, allergens, and care instructions can each
   contain at most 500 characters after this normalization. If any entry is blank or too long, the whole command is
   rejected.
-* Care entries follow the free-text slash rules above, so `and/or`, `units/day`, `mg/ml`, and `N/A` are allowed.
+* Care entries follow the [slash-text rules](#slash-text-in-field-values), so `and/or`, `units/day`, `mg/ml`, and `N/A` are allowed.
   Reserved prefixes outside this command, such as `p/91234567`, return
   `Unrecognized parameter: p/. Please check the command format.`
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
@@ -249,7 +249,7 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
 * The patient's other details and other medications are not changed. If the patient is shown in the details panel,
   the panel updates.
-* The description follows the free-text slash rules above: `mg/ml` and `units/day` are allowed.
+* The description follows the [slash-text rules](#slash-text-in-field-values): `mg/ml` and `units/day` are allowed.
   Reserved prefixes outside this command, such as `p/`, are rejected. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` keeps `T/08:00` in the description and leaves the times unchanged.
 
@@ -304,7 +304,7 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
   to one space. It cannot be blank or exceed 500 characters after normalization.
 * An edit that would duplicate another care instruction, ignoring letter case and whitespace differences, is rejected.
   Editing an instruction to its current text is allowed.
-* `ci/` must appear exactly once. Its value follows the free-text slash rules above, with the same standalone
+* `ci/` must appear exactly once. Its value follows the [slash-text rules](#slash-text-in-field-values), with the same standalone
   slash-word exceptions as `addcare`. Other reserved prefixes and unknown prefixes before `ci/` are rejected.
 
 Example: `editcare 1 1 ci/Check blood sugar after lunch`
@@ -372,7 +372,7 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 * A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
-* Name, role and note follow the free-text slash rules above; `and/or`, `mg/ml`, `s/o`, and `c/o` are allowed.
+* Name, role and note follow the [slash-text rules](#slash-text-in-field-values); `and/or`, `mg/ml`, `s/o`, and `c/o` are allowed.
   Standalone `a/l` and `a/p` are allowed, ignoring letter case. `d/o` still starts with the reserved `d/` prefix
   and is rejected. Repeated prefixes and unknown prefixes before any field are rejected.
   Text matching a supported prefix after a space starts another field, even inside a note.
@@ -436,7 +436,7 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
   Special spaces, such as a no-break space copied from a web page, count as spaces.
 * `NOTE` is optional free text of at most 500 characters. Leading and trailing spaces, including special spaces, are
   ignored. `nt/` with nothing after it means no note.
-* `WITH` and `NOTE` follow the free-text slash rules above, so `and/or`, `mg/ml`, and `x/123` are allowed.
+* `WITH` and `NOTE` follow the [slash-text rules](#slash-text-in-field-values), so `and/or`, `mg/ml`, and `x/123` are allowed.
   Reserved prefixes such as `w/` still act as syntax. Standalone `s/o`,
   `d/o`, `c/o`, `a/l`, `a/p` and `w/o` (without) are allowed and kept as text, ignoring letter case, e.g.,
   `nt/MRI w/o contrast`.
