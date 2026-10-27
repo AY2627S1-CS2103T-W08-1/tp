@@ -71,18 +71,25 @@ public class AddContactCommandParserTest {
             String args = " 1" + FIELDS + " nt/note " + prefix + "again";
             assertParseFailure(parser, args, Messages.getErrorMessageForDuplicatePrefixes(prefix));
         }
-        assertParseFailure(parser, " 1" + FIELDS + " x/value",
+        assertParseFailure(parser, " 1 x/value" + FIELDS,
                 String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/"));
     }
 
     @Test
-    public void parse_slashWords_rejected() {
-        for (String token : List.of("s/o", "d/o", "c/o", "S/O")) {
-            String prefix = token.substring(0, token.indexOf('/') + 1);
-            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix);
-            assertParseFailure(parser, " 1 n/Ali " + token + " Abu r/Emergency p/123", expected);
-            assertParseFailure(parser, " 1" + FIELDS + " nt/Ask " + token + " Clinic", expected);
+    public void parse_nonReservedSlashWords_preserved() {
+        for (String token : List.of("s/o", "c/o", "S/O")) {
+            String name = "Ali " + token + " Abu";
+            String note = "Ask " + token + " Clinic";
+            assertParseSuccess(parser, " 1 n/" + name + " r/Emergency p/123 nt/" + note,
+                    new AddContactCommand(INDEX_FIRST_PATIENT, new Contact(name, "Emergency", "123", note)));
         }
+    }
+
+    @Test
+    public void parse_reservedSlashWord_rejected() {
+        String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "d/");
+        assertParseFailure(parser, " 1 n/Ali d/o Abu r/Emergency p/123", expected);
+        assertParseFailure(parser, " 1" + FIELDS + " nt/Ask d/o Clinic", expected);
     }
 
     @Test

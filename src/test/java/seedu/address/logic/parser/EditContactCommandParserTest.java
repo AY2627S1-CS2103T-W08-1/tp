@@ -81,10 +81,7 @@ public class EditContactCommandParserTest {
                     Messages.getErrorMessageForDuplicatePrefixes(prefix));
         }
         assertParseFailure(parser, " 1 1 x/value", String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/"));
-        for (String token : List.of("s/o", "d/o", "c/o", "S/O")) {
-            String prefix = token.substring(0, token.indexOf('/') + 1);
-            assertParseFailure(parser, " 1 1 nt/Ask " + token + " Clinic",
-                    String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix));
-        }
+        assertParseFailure(parser, " 1 1 nt/Ask d/o Clinic",
+                String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "d/"));
     }
 }

@@ -24,6 +24,7 @@ public class AddContactCommandParser implements Parser<AddContactCommand> {
     @Override
     public AddContactCommand parse(String args) throws ParseException {
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_NAME, PREFIX_ROLE, PREFIX_NOTE),
                 PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);
         ArgumentMultimap fields = ArgumentTokenizer.tokenize(args,
                 PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);
