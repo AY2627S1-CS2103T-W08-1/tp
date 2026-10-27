@@ -380,7 +380,10 @@ Both commands have a second constructor that takes a `java.time.Clock` and the b
 `Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
 Names are nonblank free text because contacts can be people or organisations, such as `Tan & Partners Clinic`.
 They deliberately do not use patient `Name` constraints. Contact phones likewise have their own rules so clinic
-and international numbers work without weakening patient-phone validation.
+and international numbers work without weakening patient-phone validation. `Contact#isValidPhone()` requires
+3 to 15 digits, permits spaces and hyphens, and allows at most one leading `+` after trimming. The digit bounds
+are named constants in `Contact`. Both contact parsers and `JsonAdaptedContact` use this model validation, so
+the same limits apply to add, edit, startup loading and restore. Formatting and duplicate identity are unchanged.
 
 `Patient` keeps an immutable contact list in insertion order. `withContacts` replaces only that list; `addcare`
 copies it when rebuilding a patient. Contact identity compares names ignoring case and collapsed spaces, and
@@ -1564,6 +1567,24 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `editcontact 1 99 nt/note`, then `deletecontact 1 99`.<br>
    Expected: Both report `The contact index provided is invalid.` and change nothing.
+
+1. Validating contact phone numbers
+
+   1. Test cases: `addcontact 1 n/Short number r/Clinic p/123` and
+      `addcontact 1 n/International number r/Clinic p/+123 456-789 012-345`<br>
+      Expected: Both contacts are added; the second phone contains exactly 15 digits and retains its formatting.
+
+   1. Test cases: `addcontact 1 n/Bad number r/Clinic p/+++123+++`, then the same command with
+      `p/123+456` and `p/1234567890123456`<br>
+      Expected: Each command shows the contact-phone constraints and adds no contact.
+
+   1. Run `view 1` and note the contact number of `Short number`. Run
+      `editcontact 1 CONTACT_INDEX p/+1234567890123456`, using that contact number.<br>
+      Expected: The edit is rejected with the same constraints; the phone remains `123`.
+
+   1. In a disposable app folder, close the app and change a contact phone in `data/mediconnect.json`
+      to `+++123+++`, then relaunch.<br>
+      Expected: The file is rejected, startup shows the recovery-copy path, and the original invalid data is preserved.
 
 ### Listing active patients
 
