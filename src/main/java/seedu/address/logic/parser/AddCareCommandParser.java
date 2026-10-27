@@ -12,6 +12,7 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -46,6 +47,14 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         rejectBlankEntries(medications, AddCareCommand.MESSAGE_BLANK_MEDICATION);
         rejectBlankCareEntries(allergens, AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         rejectBlankCareEntries(careInstructions, AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+        if (medications.stream().map(AddCareCommandParser::normalizeMedicationEntry)
+                .anyMatch(entry -> !Medication.isDescriptionWithinMaxLength(entry))) {
+            throw new ParseException(AddCareCommand.MESSAGE_MEDICATION_TOO_LONG);
+        }
+        if (allergens.stream().map(Patient::normalizeCareEntry)
+                .anyMatch(entry -> !Patient.isAllergenWithinMaxLength(entry))) {
+            throw new ParseException(AddCareCommand.MESSAGE_ALLERGEN_TOO_LONG);
+        }
         if (careInstructions.stream().map(Patient::normalizeCareEntry)
                 .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
             throw new ParseException(AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
@@ -63,5 +72,9 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         if (entries.stream().map(Patient::normalizeCareEntry).anyMatch(String::isEmpty)) {
             throw new ParseException(message);
         }
+    }
+
+    private static String normalizeMedicationEntry(String entry) {
+        return entry.trim().replaceAll("\\s+", " ");
     }
 }
