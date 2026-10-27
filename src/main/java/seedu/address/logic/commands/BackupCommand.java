@@ -3,6 +3,8 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,6 +95,7 @@ public class BackupCommand extends Command {
      * {@code RestoreCommand} and {@code ClearCommand} also use this before replacing or clearing the current data.
      * The data is written through {@code FileUtil#writeThroughTemporaryFile}, so a failed write never leaves a
      * cut-off backup, and on macOS and Linux, only the current user can open the backup.
+     * No backup is overwritten, even by another backup made at the same time.
      *
      * @throws IOException if the backup folder or file cannot be written.
      */
@@ -100,9 +103,8 @@ public class BackupCommand extends Command {
         requireNonNull(addressBook);
         try {
             Files.createDirectories(backupDir);
-            Path backupFile = getBackupFilePath();
-            FileUtil.writeThroughTemporaryFile(backupFile,
-                    temporaryFile -> new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
+            Path backupFile = reserveBackupFile();
+            writeBackup(backupFile, addressBook);
             logger.info("Saved backup to " + backupFile);
             return backupFile;
         } catch (IOException ioe) {
@@ -112,18 +114,52 @@ public class BackupCommand extends Command {
     }
 
     /**
-     * Returns the path of the next backup file, named after the current time.
-     * If a backup with that name already exists, a suffix such as "-1" is added so it is not overwritten.
+     * Creates an empty file under the next free backup name, named after the current time, and returns its
+     * path. If a file with that name already exists, a suffix such as "-1" is added so that it is not
+     * overwritten. Creating the file takes the name in one step, unlike checking first whether the name is
+     * free, so that two backups made at the same time, e.g., in two MediConnect windows, never take the same
+     * name.
+     *
+     * @throws IOException if the file cannot be created, e.g., because the folder is read-only.
      */
-    private Path getBackupFilePath() {
+    private Path reserveBackupFile() throws IOException {
         String baseName = FILE_NAME_PREFIX + LocalDateTime.now(clock).format(TIMESTAMP_FORMAT);
         Path backupFile = backupDir.resolve(baseName + FILE_EXTENSION);
 
-        for (int suffix = 1; Files.exists(backupFile); suffix++) {
+        for (int suffix = 1; ; suffix++) {
+            try {
+                return Files.createFile(backupFile);
+            } catch (FileAlreadyExistsException faee) {
+                // the name is taken, e.g., by a backup made in the same second, so the next one is tried
+            } catch (AccessDeniedException ade) {
+                // Windows also denies access when a folder has the name, so only a free name means that
+                // MediConnect may not write to the backup folder
+                if (!Files.exists(backupFile)) {
+                    throw ade;
+                }
+            }
             backupFile = backupDir.resolve(baseName + SUFFIX_SEPARATOR + suffix + FILE_EXTENSION);
         }
+    }
 
-        return backupFile;
+    /**
+     * Writes {@code addressBook} to {@code backupFile}, the empty file reserved for it, through a temporary
+     * file. If the write fails, {@code backupFile} is deleted, so that no empty backup is left behind.
+     *
+     * @throws IOException if the backup cannot be written.
+     */
+    private static void writeBackup(Path backupFile, ReadOnlyAddressBook addressBook) throws IOException {
+        boolean isWritten = false;
+        try {
+            FileUtil.writeThroughTemporaryFile(backupFile,
+                    temporaryFile -> new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
+            isWritten = true;
+        } finally {
+            if (!isWritten) {
+                // the reserved file is left behind by the failed write, like the write's own temporary file
+                FileUtil.deleteTemporaryFile(backupFile);
+            }
+        }
     }
 
     /**
