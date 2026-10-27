@@ -49,10 +49,12 @@ public class ContactTest {
 
     @Test
     public void isValidPhone_internationalAndClinicFormats_checked() {
-        for (String phone : List.of("123", "+65 6123-4567", "+44 20 7946 0958", "1800-123-4567")) {
+        for (String phone : List.of("123", "+123", "+65 6123-4567", "+44 20 7946 0958", "1800-123-4567",
+                "123456789012345", " +123 456-789 012-345 ")) {
             assertTrue(Contact.isValidPhone(phone));
         }
-        for (String phone : List.of("", "  ", "+--", "12", "123 ext 4", "(123)", "１２３")) {
+        for (String phone : List.of("", "  ", "+--", "12", "123 ext 4", "(123)", "１２３", "+++123+++", "123+456",
+                "++123", "123+", "-+123", "1234567890123456", "+123 456-789 012-3456")) {
             assertFalse(Contact.isValidPhone(phone));
             assertThrows(IllegalArgumentException.class, Contact.MESSAGE_PHONE_CONSTRAINTS, () ->
                     new Contact("Clinic", "GP", phone, ""));
