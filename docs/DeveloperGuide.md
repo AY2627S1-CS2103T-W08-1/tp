@@ -664,6 +664,26 @@ _{more aspects and alternatives to be added}_
 * [Logging guide](Logging.md)
 * [DevOps guide](DevOps.md)
 
+### Defensive programming
+
+`LogicManager` rejects null model, storage and parser dependencies at construction, and null command text before
+calling the parser. `Command#execute()` must return a non-null `CommandResult`; an assertion checks this internal
+contract for every command, including add, contacts and clear. `MainApp#initModelManager()` rejects null storage
+or preferences before reading or creating data, and asserts that storage returns a non-null `Optional`.
+`Optional.empty()` is valid for a missing file and still starts the normal sample-data flow.
+
+Assertions diagnose programming errors, not invalid user input or file-system failures. Those continue to use
+validation exceptions and recovery handling. Add/contact constructors and command entry points already check
+required inputs; contact indices and duplicates are checked before updates, and clear backs up before deletion.
+`LogicManager` logs executed command types at INFO without patient arguments, and failed saves at WARNING;
+startup load/save warnings use `LogsCenter` too. These shared checks avoid duplicating them in each command.
+
+Gradle's `run` and `test` tasks and the shared IntelliJ configurations enable assertions. Enable `-ea` in any custom
+development configuration, as described in the [Testing guide](Testing.md). Normal JAR launches leave assertions
+disabled; user-input and file-error handling must therefore never rely on them. Regression tests deliberately
+break the command/storage return contracts to verify the assertions, and check that null startup preferences
+cannot create a data file.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Appendix: Requirements**
