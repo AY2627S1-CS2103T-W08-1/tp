@@ -1010,6 +1010,8 @@ If the data cannot be saved, e.g., because the data file is read-only, the comma
 ### Editing the data file
 
 MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
+The patients are in the file's `persons` list. The name is kept from earlier versions, so that their data files still
+load. Do not rename it, or MediConnect cannot load the file.
 Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also applies to backups in `data/backups`.
 A file saved in another encoding, such as "ANSI" in Windows Notepad, is not valid UTF-8 if it contains letters
 outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`. For such
