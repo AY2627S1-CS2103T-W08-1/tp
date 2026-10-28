@@ -23,7 +23,7 @@ MediConnect is a **desktop application for managing patient records and care inf
 1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
-   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands.<br>
+   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details on the right.<br>
    ![Ui](images/Ui.png)
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
