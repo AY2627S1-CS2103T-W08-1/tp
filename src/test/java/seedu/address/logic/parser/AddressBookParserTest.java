@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
+import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
@@ -48,6 +49,8 @@ import seedu.address.logic.commands.RestoreCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.EditPatientDescriptorBuilder;
@@ -57,6 +60,84 @@ import seedu.address.testutil.PatientUtil;
 public class AddressBookParserTest {
 
     private final AddressBookParser parser = new AddressBookParser();
+
+    @Test
+    public void parseCommand_reservedPrefixInFirstValueWord_rejectedAcrossCommands() {
+        for (String input : List.of(
+                "add n/A ic/S1111111A dob/1950-04-12 p/91234567 a/p/123",
+                "edit 1 a/p/123", "addcare 1 ci/p/123", "editcare 1 1 ci/p/1", "editmed 1 1 med/p/1",
+                "addcontact 1 n/p/1 r/GP p/123", "editcontact 1 1 nt/p/1",
+                "addappt 1 d/2027-01-01 t/10:00 w/p/1", "editappt 1 1 nt/p/1")) {
+            assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "p/"), () ->
+                    parser.parseCommand(input));
+        }
+        assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "p/"), () ->
+                parser.parseCommand("addcare 1 med/p/9"));
+    }
+
+    @Test
+    public void parseCommand_slashTextInFreeTextFields_preservedAcrossCommands() throws Exception {
+        for (String text : List.of("and/or", "mg/ml", "units/day", "N/A", "N/A,", "x/123", "and/or, mg/ml")) {
+            Patient patient = new PatientBuilder().withAddress(text).build();
+            assertEquals(new AddCommand(patient), parser.parseCommand(PatientUtil.getAddCommand(patient)));
+            assertEquals(new EditCommand(INDEX_FIRST_PATIENT,
+                    new EditPatientDescriptorBuilder().withAddress(text).build()),
+                    parser.parseCommand("edit 1 a/" + text));
+            assertEquals(new AddCareCommand(INDEX_FIRST_PATIENT, List.of(text), List.of(text), List.of(text)),
+                    parser.parseCommand("addcare 1 med/" + text + " al/" + text + " ci/" + text));
+            assertEquals(new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, text),
+                    parser.parseCommand("editcare 1 1 ci/" + text));
+            assertEquals(new EditMedCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                    Optional.of(text), Optional.of(List.of(LocalTime.of(8, 0)))),
+                    parser.parseCommand("editmed 1 1 med/" + text + " t/08:00"));
+            assertEquals(new AddContactCommand(INDEX_FIRST_PATIENT, new Contact(text, text, "123", text)),
+                    parser.parseCommand("addcontact 1 n/" + text + " r/" + text + " p/123 nt/" + text));
+            assertEquals(new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(text),
+                    Optional.of(text), Optional.empty(), Optional.of(text)),
+                    parser.parseCommand("editcontact 1 1 n/" + text + " r/" + text + " nt/" + text));
+            Appointment appointment = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), text, text);
+            assertEquals(new AddApptCommand(INDEX_FIRST_PATIENT, appointment),
+                    parser.parseCommand("addappt 1 d/2026-11-05 t/09:30 w/" + text + " nt/" + text));
+            assertEquals(new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.empty(),
+                    Optional.empty(), Optional.of(text), Optional.of(text)),
+                    parser.parseCommand("editappt 1 1 w/" + text + " nt/" + text));
+        }
+    }
+
+    @Test
+    public void parseCommand_wrongCaseNotePrefix_rejectedAcrossFreeTextCommands() {
+        for (String input : List.of(
+                "add n/Alex ic/S1111111A dob/1950-04-12 p/91234567 a/Block 1 NT/bring scans",
+                "edit 1 a/Block 1 NT/bring scans", "addcare 1 ci/Use cane NT/bring scans",
+                "editcare 1 1 ci/Use cane NT/bring scans", "editmed 1 1 med/Aspirin NT/bring scans",
+                "addcontact 1 n/Clinic r/GP p/123 nt/Call first NT/bring scans",
+                "editcontact 1 1 nt/Call first NT/bring scans",
+                "addappt 1 d/2027-01-01 t/10:00 w/Dr Tan NT/bring scans",
+                "editappt 1 1 w/Dr Tan NT/bring scans")) {
+            assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "NT/"), () ->
+                    parser.parseCommand(input));
+        }
+    }
+
+    @Test
+    public void parseCommand_wrongCaseTimePrefix_rejectedInMedicationDescription() {
+        assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "T/"), () ->
+                parser.parseCommand("editmed 1 1 med/Aspirin T/08:00"));
+    }
+
+    @Test
+    public void parseCommand_slashTextInStructuredFieldsOrPreamble_rejected() {
+        for (String input : List.of(
+                "add n/and/or ic/S1111111A dob/1950-04-12 p/91234567 a/Blk 1",
+                "edit 1 n/and/or", "edit 1 a/Free text ic/and/or", "edit 1 a/Free text dob/and/or",
+                "edit 1 a/Free text p/and/or", "addcare 1 and/or ci/Text", "editcare 1 1 and/or ci/Text",
+                "editmed 1 1 med/Text t/and/or", "addcontact 1 n/Free text r/GP p/and/or",
+                "editcontact 1 1 nt/Free text p/and/or", "addappt 1 w/Free text d/and/or t/10:00",
+                "editappt 1 1 nt/Free text d/and/or", "editappt 1 1 nt/Free text t/and/or")) {
+            assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "and/"), () ->
+                    parser.parseCommand(input));
+        }
+    }
 
     @Test
     public void parseCommand_add() throws Exception {
