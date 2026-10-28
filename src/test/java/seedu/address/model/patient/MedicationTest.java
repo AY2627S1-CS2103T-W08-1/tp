@@ -46,6 +46,17 @@ public class MedicationTest {
     }
 
     @Test
+    public void constructor_noBreakSpaceDescription_throwsIllegalArgumentException() {
+        String message = Medication.MESSAGE_DESCRIPTION_CONSTRAINTS;
+        assertThrows(IllegalArgumentException.class, message, () -> new Medication("\u00a0"));
+    }
+
+    @Test
+    public void constructor_noBreakSpaceInDescription_normalizedToSpace() {
+        assertEquals(DESCRIPTION, new Medication("\u00a0Metformin\u00a0\u00a0500mg\u00a0").getDescription());
+    }
+
+    @Test
     public void constructor_noTimes_emptyTimes() {
         assertTrue(new Medication(DESCRIPTION).getTimes().isEmpty());
     }
@@ -82,6 +93,7 @@ public class MedicationTest {
         assertThrows(NullPointerException.class, () -> Medication.isValidDescription(null));
         assertFalse(Medication.isValidDescription(""));
         assertFalse(Medication.isValidDescription("  \t"));
+        assertFalse(Medication.isValidDescription("\u00a0 \u2007"));
         assertTrue(Medication.isValidDescription("a"));
         assertTrue(Medication.isValidDescription(DESCRIPTION));
     }
@@ -132,6 +144,7 @@ public class MedicationTest {
         assertFalse(medication.isSameMedication(null));
         assertTrue(medication.isSameMedication(new Medication(DESCRIPTION)));
         assertTrue(medication.isSameMedication(new Medication("  metformin   500MG ")));
+        assertTrue(medication.isSameMedication(new Medication("Metformin\u00a0500mg")));
         assertFalse(medication.isSameMedication(new Medication("Metformin 850mg", List.of(MORNING))));
     }
 

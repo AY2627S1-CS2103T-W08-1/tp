@@ -71,6 +71,7 @@ public class AddCareCommandParserTest {
         assertParseFailure(parser, "1 al/", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         assertParseFailure(parser, "1 ci/", AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
         assertParseFailure(parser, "1 med/Metformin al/", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
+        assertParseFailure(parser, "1 med/\u00a0", AddCareCommand.MESSAGE_BLANK_MEDICATION);
         assertParseFailure(parser, "1 al/\u00a0", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         assertParseFailure(parser, "1 ci/\u00a0", AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
     }
