@@ -182,6 +182,8 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It reads the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
 
+Before mapping the JSON to objects, `JsonUtil` also rejects a file in which a name or a text value has half of a surrogate pair on its own. Only a JSON escape of a surrogate, such as `\ud800`, in a hand-edited file can give such text. It cannot be written as UTF-8, so the next save would silently turn it into `?`.
+
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
 objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
@@ -231,7 +233,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 1. `ViewCommandParser` parses the index in the same way as `DeleteCommandParser`, so `view` accepts the same `INDEX` values as `delete`.
 1. `ViewCommand#execute()` checks the index against the filtered patient list. An index beyond the list size produces the same invalid-index message as `delete`.
 1. `ViewCommand` calls `Model#setViewedPatient()` with the selected patient.
-1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, care instruction, contact or appointment list.
+1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, care instruction, contact or appointment list. Each entry is shown on one line by `PatientFormatter#toSingleLine()`, which exported records also use, so that a line break stored in a hand-edited entry cannot look like another numbered entry.
 
 `ModelManager` keeps the viewed patient consistent with the address book:
 
@@ -367,7 +369,7 @@ The `backup` command saves a copy of all patient data to the `data/backups` fold
 
 #### Implementation
 
-`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. Checking whether a name is free and then saving under it are two steps, so two backups made at the same moment, e.g., in two MediConnect windows, or by `restore` or `clear confirm` while a backup is made, could otherwise choose the same name, and one would replace the other. `BackupCommand#saveUnderNextFreeName()` therefore does both while it holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 
 The sequence diagram below shows a successful `restore old.json`.
 
@@ -467,11 +469,15 @@ are named constants in `Contact`. Both contact parsers and `JsonAdaptedContact` 
 the same limits apply to add, edit, startup loading and restore. Formatting and duplicate identity are unchanged.
 
 `Patient` keeps an immutable contact list in insertion order. `withContacts` replaces only that list; `addcare`
-copies it when rebuilding a patient. Contact identity compares names ignoring case and collapsed spaces, and
-phones ignoring spaces and hyphens, while retaining `+`. The model rejects duplicate identities within a patient.
+copies it when rebuilding a patient. `Contact` rejects Unicode-whitespace-only names and roles, normalizes
+name whitespace to single ordinary spaces, and trims role boundaries. Contact identity compares names ignoring
+case and normalized whitespace, and phones ignoring spaces and hyphens, while retaining `+`.
+The model rejects duplicate identities within a patient.
 
 The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit reject unknown and repeated
-prefixes without slash-word exceptions. Notes from commands use `trim()`; stored notes are
+prefixes without slash-word exceptions. Contact validation and the add/edit parsers use
+`StringUtil#stripUnicodeWhitespace()` to trim Unicode boundaries, including no-break spaces. The helper scans
+non-whitespace runs and preserves internal text. Notes from commands use this helper; stored notes are
 preserved when loading. Edit uses `Optional<String>` to distinguish
 an omitted note (preserve) from a present empty note (clear). Commands use displayed patient indices and
 contact indices from the detail panel. They validate indices and duplicates before calling `Model#setPatient`.
@@ -1831,6 +1837,24 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, close the app and change a contact phone in `data/mediconnect.json`
       to `+++123+++`, then relaunch.<br>
       Expected: The file is rejected, startup shows the recovery-copy path, and the original invalid data is preserved.
+
+1. Copied no-break spaces in contact fields
+
+   1. Prerequisites: Use sample data. The gaps in `Whitespace Contact` and the blank values below are
+      no-break spaces (U+00A0); copy and paste them when testing.
+
+   1. Test case: `addcontact 1 n/Whitespace Contact r/Guardian p/91234567 nt/Call first`<br>
+      Expected: The contact is added. Run `view 1` and note its contact number.
+
+   1. Test case: `addcontact 1 n/Whitespace Contact r/Guardian p/91234567`<br>
+      Expected: The duplicate-contact error; no second contact is added.
+
+   1. Test cases: `addcontact 1 n/  r/Guardian p/91234567` and
+      `addcontact 1 n/Whitespace Contact r/  p/91234567`<br>
+      Expected: Blank-name and blank-role errors respectively, without adding contacts.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX nt/ `, using the noted contact number.<br>
+      Expected: The note is cleared, as with an ordinary-space-only note. Other fields are unchanged.
 
 ### Listing active patients
 

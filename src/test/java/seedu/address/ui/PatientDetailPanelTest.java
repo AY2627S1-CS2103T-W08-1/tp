@@ -41,6 +41,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import seedu.address.logic.PatientFormatter;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
@@ -215,6 +216,24 @@ public class PatientDetailPanelTest {
                 .build());
 
         assertEquals(List.of("Metformin 500mg (08:00, 20:00)", "Aspirin"), getEntryTexts(content, "#medications"));
+    }
+
+    @Test
+    public void viewedPatient_entriesWithLineBreaks_showsEachEntryOnOneNumberedLine() {
+        // Equivalence partitioning: a line break stored in each kind of entry that can hold one, which only a
+        // hand-edited data file can give, must not look like a second numbered entry
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("Penicillin\n2. Shellfish")
+                .withCareInstructions("Walk daily\r\n2. Rest in bed")
+                .withContacts(new Contact("Dr Tan", "GP", "91234567", "Call first\n2. Fax")).build());
+
+        assertEquals(List.of("Penicillin 2. Shellfish"), getEntryTexts(content, "#allergens"));
+        assertEquals(List.of("Walk daily 2. Rest in bed"), getEntryTexts(content, "#careInstructions"));
+        assertEquals(List.of("Dr Tan (GP); Phone: 91234567; Note: Call first 2. Fax"),
+                getEntryTexts(content, "#contacts"));
+        for (String id : List.of("#allergens", "#careInstructions", "#contacts")) {
+            assertEquals(List.of("1."), getNumberTexts(content, id));
+        }
     }
 
     @Test

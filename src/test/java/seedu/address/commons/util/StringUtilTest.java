@@ -1,5 +1,6 @@
 package seedu.address.commons.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -9,6 +10,17 @@ import java.io.FileNotFoundException;
 import org.junit.jupiter.api.Test;
 
 public class StringUtilTest {
+
+    @Test
+    public void stripUnicodeWhitespace_trimsEndsAndPreservesInternalText() {
+        assertEquals("", StringUtil.stripUnicodeWhitespace(""));
+        assertEquals("", StringUtil.stripUnicodeWhitespace("\u0000\u001c"));
+        assertEquals("", StringUtil.stripUnicodeWhitespace(" \u00a0\u202f\u2007\u2003\u0085\t\n"));
+        assertEquals("Call\u00a0first", StringUtil.stripUnicodeWhitespace("\u00a0Call\u00a0first\u202f"));
+        assertEquals("Call  first", StringUtil.stripUnicodeWhitespace("Call  first"));
+        assertEquals("☎", StringUtil.stripUnicodeWhitespace("\u0085☎\u2007"));
+        assertThrows(NullPointerException.class, () -> StringUtil.stripUnicodeWhitespace(null));
+    }
 
     //---------------- Tests for isNonZeroUnsignedInteger --------------------------------------
 
