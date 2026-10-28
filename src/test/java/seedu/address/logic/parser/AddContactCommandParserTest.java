@@ -42,6 +42,16 @@ public class AddContactCommandParserTest {
     }
 
     @Test
+    public void parse_unicodeWhitespace_rejectsBlankNamesAndRolesAndTrimsNotes() {
+        for (String space : List.of("\u00a0", "\u202f", "\u2007")) {
+            assertParseFailure(parser, " 1 n/" + space + " r/GP p/123", Contact.MESSAGE_NAME_CONSTRAINTS);
+            assertParseFailure(parser, " 1 n/Clinic r/" + space + " p/123", Contact.MESSAGE_ROLE_CONSTRAINTS);
+            assertParseSuccess(parser, " 1 n/Clinic r/GP p/123 nt/" + space,
+                    new AddContactCommand(INDEX_FIRST_PATIENT, new Contact("Clinic", "GP", "123", "")));
+        }
+    }
+
+    @Test
     public void parse_missingFieldsOrInvalidIndex_rejected() {
         String usage = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, AddContactCommand.MESSAGE_USAGE);
         for (String args : List.of("", " 1", " 0" + FIELDS, " -1" + FIELDS, " x" + FIELDS,
@@ -57,6 +67,13 @@ public class AddContactCommandParserTest {
         assertParseFailure(parser, " 1 n/Clinic r/ p/123", Contact.MESSAGE_ROLE_CONSTRAINTS);
         assertParseFailure(parser, " 1 n/Clinic r/GP p/12", Contact.MESSAGE_PHONE_CONSTRAINTS);
         assertParseFailure(parser, " 1 n/Clinic r/GP p/", Contact.MESSAGE_PHONE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_malformedOrOverlongPhone_rejected() {
+        for (String phone : List.of("+++123+++", "123+456", "1234567890123456")) {
+            assertParseFailure(parser, " 1 n/Clinic r/GP p/" + phone, Contact.MESSAGE_PHONE_CONSTRAINTS);
+        }
     }
 
     @Test
@@ -80,10 +97,10 @@ public class AddContactCommandParserTest {
     }
 
     @Test
-    public void parse_note_trimmedLikeAppointmentNotes() {
+    public void parse_note_trimsUnicodeWhitespace() {
         assertParseSuccess(parser, " 1" + FIELDS + " nt/  Call in the morning  ",
                 new AddContactCommand(INDEX_FIRST_PATIENT, GP));
-        Contact contact = new Contact(GP.getName(), GP.getRole(), GP.getPhone(), "\u2003Call first\u2003");
+        Contact contact = new Contact(GP.getName(), GP.getRole(), GP.getPhone(), "Call first");
         assertParseSuccess(parser, " 1" + FIELDS + " nt/\u2003Call first\u2003",
                 new AddContactCommand(INDEX_FIRST_PATIENT, contact));
     }

@@ -48,11 +48,28 @@ public class ContactTest {
     }
 
     @Test
+    public void constructor_unicodeWhitespace_normalizesNamesAndRolesAndRejectsBlanks() {
+        for (String space : List.of("\u00a0", "\u202f", "\u2007", "\u2003", "\u0085")) {
+            Contact contact = new Contact(space + "Tan" + space + " " + space + "Lim" + space,
+                    space + "Guardian" + space, "123", space + "Call first" + space);
+            assertEquals("Tan Lim", contact.getName());
+            assertEquals("Guardian", contact.getRole());
+            assertEquals(space + "Call first" + space, contact.getNote());
+            assertThrows(IllegalArgumentException.class, Contact.MESSAGE_NAME_CONSTRAINTS, () ->
+                    new Contact(space, "GP", "123", ""));
+            assertThrows(IllegalArgumentException.class, Contact.MESSAGE_ROLE_CONSTRAINTS, () ->
+                    new Contact("Clinic", space, "123", ""));
+        }
+    }
+
+    @Test
     public void isValidPhone_internationalAndClinicFormats_checked() {
-        for (String phone : List.of("123", "+65 6123-4567", "+44 20 7946 0958", "1800-123-4567")) {
+        for (String phone : List.of("123", "+123", "+65 6123-4567", "+44 20 7946 0958", "1800-123-4567",
+                "123456789012345", " +123 456-789 012-345 ")) {
             assertTrue(Contact.isValidPhone(phone));
         }
-        for (String phone : List.of("", "  ", "+--", "12", "123 ext 4", "(123)", "１２３")) {
+        for (String phone : List.of("", "  ", "+--", "12", "123 ext 4", "(123)", "１２３", "+++123+++", "123+456",
+                "++123", "123+", "-+123", "1234567890123456", "+123 456-789 012-3456")) {
             assertFalse(Contact.isValidPhone(phone));
             assertThrows(IllegalArgumentException.class, Contact.MESSAGE_PHONE_CONSTRAINTS, () ->
                     new Contact("Clinic", "GP", phone, ""));
@@ -65,6 +82,7 @@ public class ContactTest {
         assertFalse(GP.isSameContact(new Contact(GP.getName(), "GP", "6561234567", "")));
         assertFalse(GP.isSameContact(GUARDIAN));
         assertFalse(GP.isSameContact(null));
+        assertTrue(GP.isSameContact(new Contact("Tan\u00a0&\u202fPartners\u2007Clinic", "GP", "+6561234567", "")));
     }
 
     @Test

@@ -5,6 +5,8 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Objects;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * An immutable person or organization to contact about a patient.
  */
@@ -13,11 +15,14 @@ public class Contact {
     public static final String MESSAGE_NAME_CONSTRAINTS = "Contact name cannot be blank.";
     public static final String MESSAGE_ROLE_CONSTRAINTS = "Contact role cannot be blank.";
     public static final String MESSAGE_PHONE_CONSTRAINTS =
-            "Contact phone must contain at least 3 digits and only digits, spaces, + and -.";
+            "Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, "
+            + "and at most one + at the start.";
     public static final String MESSAGE_DUPLICATE = "This contact (identified by name and phone) already exists.";
 
     private static final int MIN_PHONE_DIGITS = 3;
-    private static final String PHONE_REGEX = "[0-9 +\\-]+";
+    private static final int MAX_PHONE_DIGITS = 15;
+    private static final String PHONE_REGEX = "\\+?[0-9 -]+";
+    private static final String WHITESPACE_REGEX = "(?U)\\s+";
 
     private final String name;
     private final String role;
@@ -33,8 +38,8 @@ public class Contact {
         checkArgument(isValidName(name), MESSAGE_NAME_CONSTRAINTS);
         checkArgument(isValidRole(role), MESSAGE_ROLE_CONSTRAINTS);
         checkArgument(isValidPhone(phone), MESSAGE_PHONE_CONSTRAINTS);
-        this.name = name.strip().replaceAll("\\s+", " ");
-        this.role = role.strip();
+        this.name = name.replaceAll(WHITESPACE_REGEX, " ").strip();
+        this.role = StringUtil.stripUnicodeWhitespace(role);
         this.phone = phone.strip();
         this.note = note;
     }
@@ -71,22 +76,23 @@ public class Contact {
      * Returns whether a contact name is nonblank.
      */
     public static boolean isValidName(String name) {
-        return !name.isBlank();
+        return !StringUtil.stripUnicodeWhitespace(name).isEmpty();
     }
 
     /**
      * Returns whether a contact role is nonblank.
      */
     public static boolean isValidRole(String role) {
-        return !role.isBlank();
+        return !StringUtil.stripUnicodeWhitespace(role).isEmpty();
     }
 
     /**
-     * Returns whether a phone uses the supported characters and has enough digits.
+     * Returns whether a phone has 3 to 15 digits, optional separators, and at most one leading plus sign.
      */
     public static boolean isValidPhone(String phone) {
+        long digitCount = phone.chars().filter(Character::isDigit).count();
         return phone.strip().matches(PHONE_REGEX)
-                && phone.chars().filter(Character::isDigit).count() >= MIN_PHONE_DIGITS;
+                && digitCount >= MIN_PHONE_DIGITS && digitCount <= MAX_PHONE_DIGITS;
     }
 
     /**

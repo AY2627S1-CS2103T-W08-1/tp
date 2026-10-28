@@ -190,6 +190,14 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_overlongAllergen_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of("a".repeat(Patient.MAX_ALLERGEN_LENGTH + 1)),
+                List.of(), null, null, null);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_ALLERGEN_TOO_LONG, patient::toModelType);
+    }
+
+    @Test
     public void toModelType_medicationWithTimes_roundTrips() throws Exception {
         Medication medication = new Medication("Metformin 500mg", List.of(LocalTime.of(20, 0), LocalTime.of(8, 0)));
         var patient = new PatientBuilder(BENSON).withMedications(medication).build();
@@ -280,7 +288,8 @@ public class JsonAdaptedPatientTest {
         assertThrows(IllegalValueException.class, "Contact entry must not be null.", nullEntry::toModelType);
         JsonAdaptedPatient duplicates = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(),
-                List.of(new JsonAdaptedContact(contact), new JsonAdaptedContact(contact)), null, null);
+                List.of(new JsonAdaptedContact(contact), new JsonAdaptedContact("Tan\u00a0&\u202fPartners\u2007Clinic",
+                        contact.getRole(), contact.getPhone(), contact.getNote())), null, null);
         assertThrows(IllegalValueException.class, MESSAGE_DUPLICATE,
                 duplicates::toModelType);
     }

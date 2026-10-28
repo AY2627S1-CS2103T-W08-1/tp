@@ -18,6 +18,9 @@ import seedu.address.model.appointment.Appointment;
 public class Patient {
 
     public static final int MAX_CARE_INSTRUCTION_LENGTH = 500;
+    public static final int MAX_ALLERGEN_LENGTH = 500;
+    public static final String MESSAGE_ALLERGEN_TOO_LONG =
+            "Allergen entries cannot exceed " + MAX_ALLERGEN_LENGTH + " characters.";
     public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG =
             "Care instructions cannot exceed " + MAX_CARE_INSTRUCTION_LENGTH + " characters.";
     public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
@@ -100,6 +103,7 @@ public class Patient {
         verifyCareEntries(this.allergens, MESSAGE_BLANK_ALLERGEN, MESSAGE_DUPLICATE_ALLERGEN);
         verifyCareEntries(this.careInstructions, MESSAGE_BLANK_CARE_INSTRUCTION,
                 MESSAGE_DUPLICATE_CARE_INSTRUCTION);
+        verifyCareEntryLengths(this.allergens, MAX_ALLERGEN_LENGTH, MESSAGE_ALLERGEN_TOO_LONG);
         verifyCareInstructionLengths(this.careInstructions);
         verifyNoDuplicateContacts(this.contacts);
         // List.copyOf rejects null appointments before they are sorted.
@@ -139,8 +143,12 @@ public class Patient {
         }
     }
 
-    private static String normalizeCareEntry(String entry) {
-        return entry.trim().replaceAll("\\s+", " ");
+    /**
+     * Returns a care entry with Unicode whitespace collapsed and removed from both ends.
+     */
+    public static String normalizeCareEntry(String entry) {
+        Objects.requireNonNull(entry);
+        return entry.replaceAll("(?U)\\s+", " ").trim();
     }
 
     /**
@@ -159,15 +167,32 @@ public class Patient {
      * Rejects care instructions that are too long to display and edit safely.
      */
     private static void verifyCareInstructionLengths(List<String> careInstructions) {
-        checkArgument(careInstructions.stream().allMatch(Patient::isCareInstructionWithinMaxLength),
+        verifyCareEntryLengths(careInstructions, MAX_CARE_INSTRUCTION_LENGTH,
                 MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+    }
+
+    private static void verifyCareEntryLengths(List<String> entries, int maxLength, String message) {
+        checkArgument(entries.stream()
+                .map(Patient::normalizeCareEntry)
+                .allMatch(entry -> isWithinMaxLength(entry, maxLength)), message);
     }
 
     /**
      * Returns true if {@code careInstruction} does not exceed the maximum care-instruction length.
      */
     public static boolean isCareInstructionWithinMaxLength(String careInstruction) {
-        return careInstruction.codePointCount(0, careInstruction.length()) <= MAX_CARE_INSTRUCTION_LENGTH;
+        return isWithinMaxLength(careInstruction, MAX_CARE_INSTRUCTION_LENGTH);
+    }
+
+    /**
+     * Returns true if {@code allergen} does not exceed the maximum allergen length.
+     */
+    public static boolean isAllergenWithinMaxLength(String allergen) {
+        return isWithinMaxLength(allergen, MAX_ALLERGEN_LENGTH);
+    }
+
+    private static boolean isWithinMaxLength(String entry, int maxLength) {
+        return entry.codePointCount(0, entry.length()) <= maxLength;
     }
 
     public Name getName() {

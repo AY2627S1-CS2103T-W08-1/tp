@@ -28,13 +28,13 @@ public class EditContactCommandParserTest {
     }
 
     @Test
-    public void parse_note_trimmedLikeAppointmentNotes() {
+    public void parse_note_trimsUnicodeWhitespace() {
         assertParseSuccess(parser, " 1 1 nt/  Call first  ",
                 new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
                         Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("Call first")));
         assertParseSuccess(parser, " 1 1 nt/\u2003Call first\u2003",
                 new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.empty(), Optional.empty(),
-                        Optional.empty(), Optional.of("\u2003Call first\u2003")));
+                        Optional.empty(), Optional.of("Call first")));
     }
 
     @Test
@@ -47,6 +47,17 @@ public class EditContactCommandParserTest {
             assertParseSuccess(parser, " 1 1 n/" + name + " r/" + role + " nt/" + note,
                     new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(name),
                             Optional.of(role), Optional.empty(), Optional.of(note)));
+        }
+    }
+
+    @Test
+    public void parse_unicodeWhitespace_rejectsBlankNamesAndRolesAndClearsNotes() {
+        for (String space : List.of("\u00a0", "\u202f", "\u2007")) {
+            assertParseFailure(parser, " 1 1 n/" + space, Contact.MESSAGE_NAME_CONSTRAINTS);
+            assertParseFailure(parser, " 1 1 r/" + space, Contact.MESSAGE_ROLE_CONSTRAINTS);
+            assertParseSuccess(parser, " 1 1 nt/" + space,
+                    new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                            Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("")));
         }
     }
 
@@ -66,6 +77,13 @@ public class EditContactCommandParserTest {
         assertParseFailure(parser, " 1 1 r/", Contact.MESSAGE_ROLE_CONSTRAINTS);
         assertParseFailure(parser, " 1 1 p/12", Contact.MESSAGE_PHONE_CONSTRAINTS);
         assertParseFailure(parser, " 1 1 p/", Contact.MESSAGE_PHONE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_malformedOrOverlongPhone_rejected() {
+        for (String phone : List.of("+++123+++", "123+456", "1234567890123456")) {
+            assertParseFailure(parser, " 1 1 p/" + phone, Contact.MESSAGE_PHONE_CONSTRAINTS);
+        }
     }
 
     @Test

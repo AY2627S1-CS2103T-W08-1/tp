@@ -6,6 +6,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NRIC;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
+import static seedu.address.model.Model.PREDICATE_SHOW_ARCHIVED_PATIENTS;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +36,7 @@ public class EditCommand extends Command {
             + PREFIX_NRIC + "NRIC] [" + PREFIX_DOB + "DOB] [" + PREFIX_PHONE + "PHONE] ["
             + PREFIX_ADDRESS + "ADDRESS]";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits a patient's details.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 " + PREFIX_PHONE + "91234567";
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
@@ -76,6 +78,8 @@ public class EditCommand extends Command {
         }
 
         model.setPatient(patientToEdit, editedPatient);
+        model.updateFilteredPatientList(editedPatient.isArchived()
+                ? PREDICATE_SHOW_ARCHIVED_PATIENTS : PREDICATE_SHOW_ACTIVE_PATIENTS);
         model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_EDIT_PATIENT_SUCCESS, Messages.format(editedPatient)));
     }

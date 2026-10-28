@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.logic.PatientFormatter.PAST_MARK;
@@ -12,9 +13,11 @@ import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalContacts.GUARDIAN;
 import static seedu.address.testutil.TypicalPatients.ALICE;
+import static seedu.address.testutil.TypicalPatients.ARCHIVED_ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
+import static seedu.address.ui.JavaFxTestUtil.runOnFxThread;
+import static seedu.address.ui.PatientDetailPanel.COPY_MENU_TEXT;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_LIST_INDEX;
-import static seedu.address.ui.PatientDetailPanel.MESSAGE_NONE_RECORDED;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NOT_IN_LIST;
 import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 
@@ -33,10 +36,12 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.Clipboard;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import seedu.address.logic.PatientFormatter;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
@@ -88,11 +93,71 @@ public class PatientDetailPanelTest {
         assertFalse(lookup(content, "#placeholder").isVisible());
         assertTrue(lookup(content, "#details").isVisible());
         assertEquals(PatientBuilder.DEFAULT_NAME, ((Label) lookup(content, "#name")).getText());
-        assertEquals("NRIC: " + PatientBuilder.DEFAULT_NRIC, ((Label) lookup(content, "#nric")).getText());
-        assertEquals("DOB: " + PatientBuilder.DEFAULT_DOB, ((Label) lookup(content, "#dob")).getText());
-        assertEquals("Phone: " + PatientBuilder.DEFAULT_PHONE, ((Label) lookup(content, "#phone")).getText());
-        Label address = (Label) lookup(content, "#address");
-        assertEquals("Address: " + PatientBuilder.DEFAULT_ADDRESS, address.getText());
+        assertEquals(List.of("NRIC: " + PatientBuilder.DEFAULT_NRIC, "DOB: " + PatientBuilder.DEFAULT_DOB,
+                "Phone: " + PatientBuilder.DEFAULT_PHONE, "Address: " + PatientBuilder.DEFAULT_ADDRESS),
+                getLabelTexts(content, "#basicDetails"));
+    }
+
+    @Test
+    public void constructor_headings_wordedAsExportedRecords() {
+        VBox content = createPanelContent();
+
+        assertEquals(PatientFormatter.HEADING_MEDICATIONS, getLabelText(content, "#medicationsHeading"));
+        assertEquals(PatientFormatter.HEADING_ALLERGENS, getLabelText(content, "#allergensHeading"));
+        assertEquals(PatientFormatter.HEADING_CARE_INSTRUCTIONS, getLabelText(content, "#careInstructionsHeading"));
+        assertEquals(PatientFormatter.HEADING_CONTACTS, getLabelText(content, "#contactsHeading"));
+        assertEquals(PatientFormatter.HEADING_APPOINTMENTS, getLabelText(content, "#appointmentsHeading"));
+    }
+
+    @Test
+    public void copyMenu_numbersAndNoneRecorded_notGivenMenu() {
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("Penicillin").build());
+        HBox allergenRow = (HBox) ((VBox) lookup(content, "#allergens")).getChildren().get(0);
+        Label noMedications = (Label) ((VBox) lookup(content, "#medications")).getChildren().get(0);
+
+        assertNull(((Label) allergenRow.getChildren().get(0)).getContextMenu());
+        assertNull(noMedications.getContextMenu());
+    }
+
+    @Test
+    public void copyMenu_entryAndName_copiesTheirText() throws Exception {
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("Penicillin").build());
+        HBox allergenRow = (HBox) ((VBox) lookup(content, "#allergens")).getChildren().get(0);
+
+        assertEquals("Penicillin", copyWithMenu((Label) allergenRow.getChildren().get(1)));
+        assertEquals(PatientBuilder.DEFAULT_NAME, copyWithMenu((Label) lookup(content, "#name")));
+        assertEquals("NRIC: " + PatientBuilder.DEFAULT_NRIC,
+                copyWithMenu((Label) ((VBox) lookup(content, "#basicDetails")).getChildren().get(0)));
+    }
+
+    @Test
+    public void copyMenu_viewedPatientAndCareEntryChanged_copiesNewText() throws Exception {
+        // the name label is kept for every patient, and the other lines are rebuilt, so none may copy old text
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder(ALICE).withAllergens("Penicillin").build());
+        assertEquals(ALICE.getName().fullName, copyWithMenu((Label) lookup(content, "#name")));
+
+        viewedPatient.set(new PatientBuilder(BENSON).withAllergens("Penicillin").build());
+        assertEquals(BENSON.getName().fullName, copyWithMenu((Label) lookup(content, "#name")));
+        assertEquals("NRIC: " + BENSON.getNric(),
+                copyWithMenu((Label) ((VBox) lookup(content, "#basicDetails")).getChildren().get(0)));
+
+        // e.g., after editcare on the viewed patient
+        viewedPatient.set(new PatientBuilder(BENSON).withAllergens("Latex").build());
+        HBox allergenRow = (HBox) ((VBox) lookup(content, "#allergens")).getChildren().get(0);
+        assertEquals("Latex", copyWithMenu((Label) allergenRow.getChildren().get(1)));
+    }
+
+    @Test
+    public void viewedPatient_archivedPatient_showsArchivedStatusAfterBasicDetails() {
+        VBox content = createPanelContent();
+        viewedPatient.set(ARCHIVED_ALICE);
+
+        assertEquals(List.of("NRIC: " + ALICE.getNric(), "DOB: " + ALICE.getDob(), "Phone: " + ALICE.getPhone(),
+                "Address: " + ALICE.getAddress(), PatientFormatter.ARCHIVED_STATUS),
+                getLabelTexts(content, "#basicDetails"));
     }
 
     @Test
@@ -103,7 +168,7 @@ public class PatientDetailPanelTest {
         for (String id : List.of("#medications", "#allergens", "#careInstructions", "#appointments")) {
             VBox entries = (VBox) lookup(content, id);
             assertEquals(1, entries.getChildren().size());
-            assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
+            assertEquals(PatientFormatter.NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
         }
     }
 
@@ -150,6 +215,24 @@ public class PatientDetailPanelTest {
                 .build());
 
         assertEquals(List.of("Metformin 500mg (08:00, 20:00)", "Aspirin"), getEntryTexts(content, "#medications"));
+    }
+
+    @Test
+    public void viewedPatient_entriesWithLineBreaks_showsEachEntryOnOneNumberedLine() {
+        // Equivalence partitioning: a line break stored in each kind of entry that can hold one, which only a
+        // hand-edited data file can give, must not look like a second numbered entry
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("Penicillin\n2. Shellfish")
+                .withCareInstructions("Walk daily\r\n2. Rest in bed")
+                .withContacts(new Contact("Dr Tan", "GP", "91234567", "Call first\n2. Fax")).build());
+
+        assertEquals(List.of("Penicillin 2. Shellfish"), getEntryTexts(content, "#allergens"));
+        assertEquals(List.of("Walk daily 2. Rest in bed"), getEntryTexts(content, "#careInstructions"));
+        assertEquals(List.of("Dr Tan (GP); Phone: 91234567; Note: Call first 2. Fax"),
+                getEntryTexts(content, "#contacts"));
+        for (String id : List.of("#allergens", "#careInstructions", "#contacts")) {
+            assertEquals(List.of("1."), getNumberTexts(content, id));
+        }
     }
 
     @Test
@@ -202,7 +285,7 @@ public class PatientDetailPanelTest {
         assertEquals("1.", ((Label) remainingRow.getChildren().get(0)).getText());
         viewedPatient.set(new PatientBuilder().build());
         assertEquals(1, entries.getChildren().size());
-        assertEquals(MESSAGE_NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
+        assertEquals(PatientFormatter.NONE_RECORDED, ((Label) entries.getChildren().get(0)).getText());
     }
 
     @Test
@@ -317,5 +400,29 @@ public class PatientDetailPanelTest {
         return ((VBox) lookup(content, selector)).getChildren().stream()
                 .map(row -> ((Label) ((HBox) row).getChildren().get(1)).getText())
                 .collect(Collectors.toList());
+    }
+
+    private static String getLabelText(VBox content, String selector) {
+        return ((Label) lookup(content, selector)).getText();
+    }
+
+    /**
+     * Returns the texts of the labels in the box with the given {@code selector}.
+     */
+    private static List<String> getLabelTexts(VBox content, String selector) {
+        return ((VBox) lookup(content, selector)).getChildren().stream()
+                .map(label -> ((Label) label).getText())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Clicks the Copy item of the right-click menu of {@code label}, and returns the text then on the clipboard.
+     */
+    private static String copyWithMenu(Label label) throws Exception {
+        assertEquals(COPY_MENU_TEXT, label.getContextMenu().getItems().get(0).getText());
+        return runOnFxThread(() -> {
+            label.getContextMenu().getItems().get(0).fire();
+            return Clipboard.getSystemClipboard().getString();
+        });
     }
 }

@@ -34,7 +34,6 @@ import seedu.address.testutil.PatientBuilder;
 
 public class AddCareCommandTest {
 
-    private static final int LONG_TEXT_LENGTH = 5000;
 
     @TempDir
     public Path testFolder;
@@ -99,9 +98,9 @@ public class AddCareCommandTest {
     }
 
     @Test
-    public void execute_specialCharactersAndLongText_addedAndSurvivesStorageRoundTrip() throws Exception {
+    public void execute_specialCharactersAndMaxLengthText_addedAndSurvivesStorageRoundTrip() throws Exception {
         String special = "<b>\"';DROP TABLE--&\u00e9\u4e2d\u6587/x";
-        String longText = "x".repeat(LONG_TEXT_LENGTH);
+        String longText = "x".repeat(Medication.MAX_DESCRIPTION_LENGTH);
         Patient patient = new PatientBuilder(ALICE).build();
         Model actualModel = new ModelManager();
         actualModel.addPatient(patient);
@@ -197,6 +196,21 @@ public class AddCareCommandTest {
     }
 
     @Test
+    public void execute_unicodeWhitespaceDuplicate_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder(ALICE).withAllergens("Dust mites")
+                .withCareInstructions("Check blood sugar").build();
+        Model actualModel = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(),
+                List.of("Dust\u00a0mites"), List.of("Check\u00a0blood sugar"));
+
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                "Allergen", "Dust mites")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                        "Care instruction", "Check blood sugar");
+        assertCommandFailure(command, actualModel, expectedMessage);
+    }
+
+    @Test
     public void execute_noCareEntries_throwsCommandException() {
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of());
 
@@ -209,6 +223,22 @@ public class AddCareCommandTest {
                 List.of("a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1)));
 
         assertCommandFailure(command, model, AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+    }
+
+    @Test
+    public void execute_overlongMedication_throwsCommandException() {
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT,
+                List.of("m".repeat(Medication.MAX_DESCRIPTION_LENGTH + 1)), List.of(), List.of());
+
+        assertCommandFailure(command, model, AddCareCommand.MESSAGE_MEDICATION_TOO_LONG);
+    }
+
+    @Test
+    public void execute_overlongAllergen_throwsCommandException() {
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(),
+                List.of("a".repeat(Patient.MAX_ALLERGEN_LENGTH + 1)), List.of());
+
+        assertCommandFailure(command, model, AddCareCommand.MESSAGE_ALLERGEN_TOO_LONG);
     }
 
     @Test
