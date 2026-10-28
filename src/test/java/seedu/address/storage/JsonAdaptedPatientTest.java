@@ -327,4 +327,15 @@ public class JsonAdaptedPatientTest {
                 List.of(new JsonAdaptedAppointment(CHECKUP), new JsonAdaptedAppointment(sameCheckup)), null);
         assertThrows(IllegalValueException.class, Appointment.MESSAGE_DUPLICATE, duplicates::toModelType);
     }
+
+    @Test
+    public void toModelType_appointmentBeforeDob_throwsIllegalValueException() {
+        // addappt, editappt and edit reject it, so a hand-edited data file or backup cannot hold it either
+        Appointment beforeBirth = new Appointment(BENSON.getDob().value.minusDays(1), LocalTime.of(10, 0),
+                "Dr Tan", "");
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
+                List.of(new JsonAdaptedAppointment(beforeBirth)), null);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_APPOINTMENT_BEFORE_DOB, patient::toModelType);
+    }
 }

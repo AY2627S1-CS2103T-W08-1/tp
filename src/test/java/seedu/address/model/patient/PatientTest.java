@@ -269,6 +269,20 @@ public class PatientTest {
     }
 
     @Test
+    public void constructor_appointmentBeforeDob_throwsIllegalArgumentException() {
+        Appointment dayBeforeBirth = new Appointment(LocalDate.of(1949, 12, 31), LocalTime.of(9, 0), "Dr Tan", "");
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_APPOINTMENT_BEFORE_DOB, () ->
+                new PatientBuilder(ALICE).withDob("1950-01-01").withAppointments(CHECKUP, dayBeforeBirth).build());
+    }
+
+    @Test
+    public void constructor_appointmentOnDob_keepsAppointment() {
+        Appointment onBirthday = new Appointment(LocalDate.of(1950, 1, 1), LocalTime.of(9, 0), "Dr Tan", "");
+        Patient patient = new PatientBuilder(ALICE).withDob("1950-01-01").withAppointments(onBirthday).build();
+        assertEquals(List.of(onBirthday), patient.getAppointments());
+    }
+
+    @Test
     public void equals() {
         Patient copy = new PatientBuilder(ALICE).build();
         assertEquals(ALICE, copy);
