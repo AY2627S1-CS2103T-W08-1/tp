@@ -2069,7 +2069,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app is closed. In the `data` folder, delete the `backups` folder if there is one, and create an empty file named `backups` (with no extension) in its place.
 
    1. Launch the app, then enter `backup`.<br>
-      Expected: No backup is saved. The status message shows `Could not save the backup to` followed by the folder and a reason, and says that your data has not been changed.
+      Expected: No backup is saved. The status message shows `Could not save the backup to` followed by the folder, says that there is a file named `backups` where that folder should be, and says that your data has not been changed.
 
 ### Restoring data
 
@@ -2142,7 +2142,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app is closed. In the `data` folder, delete the `exports` folder if there is one, and create an empty file named `exports` (with no extension) in its place.
 
    1. Launch the app, then enter `export 1`.<br>
-      Expected: No file is written. The status message shows `Could not export`, the patient's name, the path of the file and a reason.
+      Expected: No file is written. The status message shows `Could not export`, the patient's name and the path of the file, and says that there is a file named `exports` where that folder should be.
 
 ### Managing appointments
 
