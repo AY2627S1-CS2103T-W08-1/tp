@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.AddContactCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Contact;
@@ -19,7 +20,7 @@ import seedu.address.model.patient.Contact;
  */
 public class AddContactCommandParser implements Parser<AddContactCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("a/l", "a/p");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
 
     @Override
     public AddContactCommand parse(String args) throws ParseException {
@@ -39,7 +40,8 @@ public class AddContactCommandParser implements Parser<AddContactCommand> {
         }
         try {
             Contact contact = new Contact(fields.getValue(PREFIX_NAME).get(), fields.getValue(PREFIX_ROLE).get(),
-                    fields.getValue(PREFIX_PHONE).get(), fields.getValue(PREFIX_NOTE).orElse("").trim());
+                    fields.getValue(PREFIX_PHONE).get(),
+                    StringUtil.stripUnicodeWhitespace(fields.getValue(PREFIX_NOTE).orElse("")));
             return new AddContactCommand(index, contact);
         } catch (IllegalArgumentException e) {
             throw new ParseException(e.getMessage(), e);

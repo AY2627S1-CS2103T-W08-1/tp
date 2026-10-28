@@ -12,6 +12,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.EditContactCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Contact;
@@ -21,7 +22,7 @@ import seedu.address.model.patient.Contact;
  */
 public class EditContactCommandParser implements Parser<EditContactCommand> {
 
-    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("a/l", "a/p");
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p");
 
     @Override
     public EditContactCommand parse(String args) throws ParseException {
@@ -52,7 +53,7 @@ public class EditContactCommandParser implements Parser<EditContactCommand> {
         validateField(fields.getValue(PREFIX_PHONE), Contact::isValidPhone, Contact.MESSAGE_PHONE_CONSTRAINTS);
         return new EditContactCommand(patientIndex, contactIndex, fields.getValue(PREFIX_NAME),
                 fields.getValue(PREFIX_ROLE), fields.getValue(PREFIX_PHONE),
-                fields.getValue(PREFIX_NOTE).map(String::trim));
+                fields.getValue(PREFIX_NOTE).map(StringUtil::stripUnicodeWhitespace));
     }
 
     private static void validateField(Optional<String> value, Predicate<String> validator, String message)
