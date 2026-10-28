@@ -886,7 +886,7 @@ Format: `clear confirm`
   and collision handling as `backup`. If the backup fails, no patients are cleared.
 * The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
   using that file's name to recover the data. There is no undo command.
-* An empty address book is backed up too. Existing backups are never overwritten.
+* The backup is made even when there are no patients. Existing backups are never overwritten.
 * If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
 
 Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
