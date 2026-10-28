@@ -41,6 +41,13 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseIndex_nonAsciiDigits_throwsParseException() {
+        for (String index : new String[] {"\uff12", "\u0662", "\uff10\uff11", "1\uff12"}) {
+            assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, () -> ParserUtil.parseIndex(index));
+        }
+    }
+
+    @Test
     public void parseIndex_outOfRangeInput_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, ()
             -> ParserUtil.parseIndex(Long.toString(Integer.MAX_VALUE + 1)));
