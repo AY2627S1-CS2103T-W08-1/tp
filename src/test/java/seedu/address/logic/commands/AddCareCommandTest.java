@@ -226,6 +226,18 @@ public class AddCareCommandTest {
     }
 
     @Test
+    public void execute_unicodeWhitespaceDuplicateMedication_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder(ALICE).withMedications("Aspirin 100mg").build();
+        Model actualModel = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Aspirin\u00a0100mg"),
+                List.of(), List.of());
+
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                "Medication", "Aspirin 100mg");
+        assertCommandFailure(command, actualModel, expectedMessage);
+    }
+
+    @Test
     public void execute_noCareEntries_throwsCommandException() {
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of());
 
