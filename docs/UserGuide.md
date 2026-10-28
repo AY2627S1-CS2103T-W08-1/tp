@@ -813,6 +813,9 @@ Format: `due [INDEX]`
   `This patient is archived. Unarchive them to list their medication times.`
 * Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
   with several times has one line for each time.
+* If two or more patients in the result have the same name, ignoring letter case, their lines also show the NRIC,
+  as `HH:MM PATIENT_NAME (NRIC): DESCRIPTION`, so that you can tell them apart. A name that belongs to only one
+  patient in the result is shown without the NRIC.
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
   patient at the same time are listed in the order of the patient's medications.
 * A time that is earlier than the current time of your computer (in its time zone) is followed by
@@ -833,6 +836,10 @@ Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh
 * `due 2` returns `No medications are due today for Bernice Yu.`
 
 Run before 08:00, the same `due` returns the three lines without ` (earlier today)`.
+
+If two patients named Amy Tan, with NRICs S1111111A and S2222222B, both take Aspirin at 08:00, `due` returns<br>
+`08:00 Amy Tan (S1111111A): Aspirin`<br>
+`08:00 Amy Tan (S2222222B): Aspirin`
 
 If there is nothing to list, `due` returns `No medications are due today.` and `due INDEX` returns
 `No medications are due today for PATIENT_NAME.`
