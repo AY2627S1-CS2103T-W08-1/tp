@@ -54,7 +54,7 @@ public class AddCareCommandParserTest {
 
     @Test
     public void parse_unknownPrefix_throwsParseException() {
-        for (String prefix : List.of("p/", "dob/", "xyz/")) {
+        for (String prefix : List.of("p/", "dob/")) {
             assertParseFailure(parser, "1 med/Aspirin " + prefix + "value",
                     String.format(MESSAGE_UNKNOWN_PREFIX, prefix));
         }
@@ -71,6 +71,7 @@ public class AddCareCommandParserTest {
         assertParseFailure(parser, "1 al/", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         assertParseFailure(parser, "1 ci/", AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
         assertParseFailure(parser, "1 med/Metformin al/", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
+        assertParseFailure(parser, "1 med/\u00a0", AddCareCommand.MESSAGE_BLANK_MEDICATION);
         assertParseFailure(parser, "1 al/\u00a0", AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         assertParseFailure(parser, "1 ci/\u00a0", AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
     }

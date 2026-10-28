@@ -73,6 +73,17 @@ public class EditCareCommandTest {
     }
 
     @Test
+    public void execute_canonicallyEquivalentDuplicate_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder().withCareInstructions("R\u00e9sum\u00e9", "Morning walk").build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+
+        EditCareCommand command = new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
+                "Re\u0301sume\u0301");
+
+        assertCommandFailure(command, model, EditCareCommand.MESSAGE_DUPLICATE_CARE_INSTRUCTION);
+    }
+
+    @Test
     public void execute_sameInstruction_allowed() throws Exception {
         Patient patient = new PatientBuilder().withCareInstructions("Check blood sugar").build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());

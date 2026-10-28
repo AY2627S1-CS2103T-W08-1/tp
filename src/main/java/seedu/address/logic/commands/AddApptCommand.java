@@ -72,6 +72,10 @@ public class AddApptCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
+        if (patientToEdit.getDob().isAfter(toAdd.getDate())) {
+            throw new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_BEFORE_DOB,
+                    patientToEdit.getDob()));
+        }
         if (patientToEdit.getAppointments().stream().anyMatch(toAdd::isSameAppointment)) {
             throw new CommandException(Messages.MESSAGE_DUPLICATE_APPOINTMENT);
         }

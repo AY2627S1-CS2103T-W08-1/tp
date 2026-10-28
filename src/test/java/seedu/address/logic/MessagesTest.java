@@ -34,7 +34,24 @@ public class MessagesTest {
 
     @Test
     public void describeWriteFailure_fileSystemExceptionWithoutReason_returnsGenericReasonWithoutPath() {
+        IOException exception = new FileSystemException("/data/backups");
+
+        assertEquals(Messages.MESSAGE_FILE_SYSTEM_ERROR, Messages.describeWriteFailure(exception));
+    }
+
+    @Test
+    public void describeWriteFailure_fileInPlaceOfFolder_namesFile() {
+        // Equivalence partitioning: the exception that creating a folder throws when a file has its name
         IOException exception = new FileAlreadyExistsException("/data/backups");
+
+        assertEquals(String.format(Messages.MESSAGE_FILE_IN_PLACE_OF_FOLDER, "backups"),
+                Messages.describeWriteFailure(exception));
+    }
+
+    @Test
+    public void describeWriteFailure_fileAlreadyExistsWithoutFile_returnsGenericReason() {
+        // Boundary value: no file is given, so there is no name to show
+        IOException exception = new FileAlreadyExistsException(null);
 
         assertEquals(Messages.MESSAGE_FILE_SYSTEM_ERROR, Messages.describeWriteFailure(exception));
     }
