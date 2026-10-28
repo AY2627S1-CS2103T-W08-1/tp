@@ -59,6 +59,7 @@ public class DeleteMedCommand extends Command {
         Medication deletedMedication = medications.remove(medicationIndex.getZeroBased());
         Patient editedPatient = patientToEdit.withMedications(medications);
         model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
         return new CommandResult(String.format(Messages.MESSAGE_DELETE_MEDICATION_SUCCESS,
                 medicationIndex.getOneBased(), patientToEdit.getName(), deletedMedication));

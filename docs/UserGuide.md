@@ -171,6 +171,7 @@ Address | `a/`   | At most 200 characters. Cannot be blank, including blank with
 Medication description | `med/` | At most 500 characters after leading and trailing spaces are removed and repeated spaces are reduced to one. Cannot be blank. | `Metformin 500mg`
 
 Leading and trailing spaces in every field are ignored.
+Any kind of space, including no-break spaces copied from other apps, is treated as a normal space.
 
 For [contact fields](#adding-a-contact-addcontact), names and roles have a limit of 100 characters each, and notes
 have a limit of 500. These limits apply after the whitespace handling described in that section.
@@ -244,7 +245,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * At least one of `med/` or `t/` must be given.
 * `med/DESCRIPTION` replaces the description. Leading and trailing whitespace is removed, and consecutive internal
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
-  same as another medication of the same patient, ignoring letter case and whitespace differences, is rejected.
+  same as another medication of the same patient, ignoring letter case, whitespace differences, and equivalent
+  Unicode forms that look the same, is rejected.
   Changing only the letter case of the medication's own description is allowed.
   A description longer than 500 characters, after the spaces are tidied, returns
   `Medication descriptions cannot exceed 500 characters.`
@@ -256,8 +258,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`: for example,
     `t/08:00 t/` is rejected.
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
-* The patient's other details and other medications are not changed. If the patient is shown in the details panel,
-  the panel updates.
+* The patient's other details and other medications are not changed. After a successful command, the detail panel
+  shows this patient with the updated medication, even if it showed another patient before.
 * The description follows the [slash-text rules](#slash-text-in-field-values): `mg/ml` and `units/day` are allowed.
   Reserved prefixes outside this command, such as `p/`, are rejected. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
@@ -384,7 +386,11 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   accent, or an emoji made from several symbols, can count as more than one.
 * A contact with the same name (ignoring case and differences in spacing) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
-  country codes are not inferred. The same contact can belong to different patients.
+  country codes are not inferred. The same accented name counts as the same name even if the accent was typed
+  separately: for example, `Café` with a single `é` and `Café` with `e` followed by a separate accent.
+  Accents remain significant, so
+  `Cafe` and `Café` are different names. The entered name spelling is preserved for display and saving.
+  The same contact can belong to different patients.
 * Name, role and note follow the [slash-text rules](#slash-text-in-field-values); `and/or` and `mg/ml` are allowed.
   Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are allowed, ignoring letter case, e.g., `n/Tan s/o Lim`.
   Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
@@ -407,6 +413,11 @@ The same field and duplicate rules apply to `editcontact` and saved data, includ
 follow the same space cleanup when loaded. Saved notes keep their spaces, which count toward the 500-character
 limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored; repair a copy
 using the [data recovery instructions](#editing-the-data-file).
+
+The same duplicate-name rules apply when loading data or restoring a backup. Older files containing contacts
+with the same accented name typed in these different ways and the same phone are rejected as duplicates.
+Remove the duplicate contact
+from a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
@@ -729,8 +740,9 @@ Format: `deletemed INDEX MED_INDEX`
 * `INDEX` and `MED_INDEX` must both be given, in that order, and nothing else may follow them.
 * The other medications, allergens, care instructions, and details of the patient are not changed. The
   medications after the deleted one move up by one number, e.g., deleting medication 1 makes the old medication 2
-  the new medication 1. If the patient is shown in the details panel, the panel updates and renumbers its list.
-  When the last medication is deleted, the panel shows `None recorded`.
+  the new medication 1. After a successful command, the detail panel shows this patient, even if it showed another
+  patient before, with the medications renumbered. When the last medication is deleted, the panel shows
+  `None recorded`.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):
@@ -813,9 +825,13 @@ Format: `due [INDEX]`
   them from the patient list. Archived patients are not included.
 * With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
   the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
-  number (1, 2, 3, ...).
+  number (1, 2, 3, ...). If that patient is archived, `due` returns
+  `This patient is archived. Unarchive them to list their medication times.`
 * Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
   with several times has one line for each time.
+* If two or more patients in the result have the same name, ignoring letter case, their lines also show the NRIC,
+  as `HH:MM PATIENT_NAME (NRIC): DESCRIPTION`, so that you can tell them apart. A name that belongs to only one
+  patient in the result is shown without the NRIC.
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
   patient at the same time are listed in the order of the patient's medications.
 * A time that is earlier than the current time of your computer (in its time zone) is followed by
@@ -836,6 +852,10 @@ Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh
 * `due 2` returns `No medications are due today for Bernice Yu.`
 
 Run before 08:00, the same `due` returns the three lines without ` (earlier today)`.
+
+If two patients named Amy Tan, with NRICs S1111111A and S2222222B, both take Aspirin at 08:00, `due` returns<br>
+`08:00 Amy Tan (S1111111A): Aspirin`<br>
+`08:00 Amy Tan (S2222222B): Aspirin`
 
 If there is nothing to list, `due` returns `No medications are due today.` and `due INDEX` returns
 `No medications are due today for PATIENT_NAME.`

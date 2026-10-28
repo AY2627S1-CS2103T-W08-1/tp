@@ -81,6 +81,7 @@ public class EditMedCommand extends Command {
 
         Patient editedPatient = patientToEdit.withMedications(medications);
         model.setPatient(patientToEdit, editedPatient);
+        model.setViewedPatient(editedPatient);
 
         return new CommandResult(String.format(Messages.MESSAGE_EDIT_MEDICATION_SUCCESS,
                 medicationIndex.getOneBased(), patientToEdit.getName(), editedMedication));
