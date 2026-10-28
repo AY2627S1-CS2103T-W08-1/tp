@@ -144,6 +144,8 @@ public class HelpWindow extends UiPart<Stage> {
      */
     public void show() {
         logger.fine("Showing help page about the application.");
+        // a window hidden while minimized, e.g., by Esc in the main window, would be shown minimized again
+        getRoot().setIconified(false);
         getRoot().show();
         getRoot().centerOnScreen();
     }
@@ -153,6 +155,13 @@ public class HelpWindow extends UiPart<Stage> {
      */
     public boolean isShowing() {
         return getRoot().isShowing();
+    }
+
+    /**
+     * Returns true if the help window is shown, but minimized, e.g., to the Dock or the taskbar.
+     */
+    public boolean isMinimized() {
+        return getRoot().isShowing() && getRoot().isIconified();
     }
 
     /**

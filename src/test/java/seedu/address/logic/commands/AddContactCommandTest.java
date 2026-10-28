@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalContacts.GP;
@@ -51,6 +52,7 @@ public class AddContactCommandTest {
         assertThrows(CommandException.class, Contact.MESSAGE_DUPLICATE, () ->
                 new AddContactCommand(INDEX_FIRST_PATIENT, duplicate).execute(model));
         assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertNull(model.getViewedPatient().getValue());
     }
 
     @Test
@@ -63,8 +65,24 @@ public class AddContactCommandTest {
         new AddContactCommand(INDEX_FIRST_PATIENT, GP).execute(model);
         assertEquals(second.withContacts(List.of(GP)), model.getFilteredPatientList().get(0));
         assertEquals(first, model.getAddressBook().getPatientList().get(0));
+        assertEquals(second.withContacts(List.of(GP)), model.getViewedPatient().getValue());
         assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX, () ->
                 new AddContactCommand(INDEX_SECOND_PATIENT, GUARDIAN).execute(model));
+    }
+
+    @Test
+    public void execute_otherPatientViewed_showsChangedPatient() throws Exception {
+        Patient first = new PatientBuilder().build();
+        Patient second = new PatientBuilder().withNric("S1111111B").withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(first).withPatient(second).build(),
+                new UserPrefs());
+        model.setViewedPatient(first);
+
+        new AddContactCommand(INDEX_SECOND_PATIENT, GUARDIAN).execute(model);
+
+        assertEquals(second.withContacts(List.of(GP, GUARDIAN)), model.getViewedPatient().getValue());
+        assertEquals(first, model.getAddressBook().getPatientList().get(0));
+        assertEquals(2, model.getFilteredPatientList().size());
     }
 
     @Test
