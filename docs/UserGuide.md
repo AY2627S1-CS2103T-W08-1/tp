@@ -170,6 +170,7 @@ Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` 
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored.
+Any kind of space, including no-break spaces copied from other apps, is treated as a normal space.
 
 For [contact fields](#adding-a-contact-addcontact), names and roles have a limit of 100 characters each, and notes
 have a limit of 500. These limits apply after the whitespace handling described in that section.
@@ -243,7 +244,7 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * At least one of `med/` or `t/` must be given.
 * `med/DESCRIPTION` replaces the description. Leading and trailing whitespace is removed, and consecutive internal
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
-  same as another medication of the same patient, ignoring letter case and whitespace differences, is rejected.
+  same as another medication of the same patient, ignoring letter case and spacing, is rejected.
   Changing only the letter case of the medication's own description is allowed.
 * `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), with two digits on each side of the colon,
   e.g., `08:30`. Leading and trailing spaces are ignored.
