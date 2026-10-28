@@ -706,6 +706,10 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
 * Keyword order does not matter; for example, `Alex David` matches `David Alex`.
 * The search considers only names.
 * Only full words match; for example, `Ale` does not match `Alex`.
+* A name is split into words at spaces, hyphens (`-`), apostrophes (`'`) and dots (`.`). For example, `Mary`, `Jane`
+  and `Mary-Jane` all match `Mary-Jane Tan`, `Brien` and `O'Brien` match `Mary O'Brien`, and `Jr` matches
+  `Tan Ah Kow Jr.`. A keyword is split in the same way, and all its words must be next to each other in the name,
+  so `Mary-Jane` does not match `Mary Lim`.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
