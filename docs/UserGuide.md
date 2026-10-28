@@ -90,7 +90,9 @@ MediConnect reserves `n/`, `ic/`, `dob/`, `p/`, `a/`, `med/`, `al/`, `ci/`, `r/`
 After a space, a supported prefix starts another field; other reserved prefixes are rejected.
 A reserved prefix cannot be embedded at the start of a field value: `a/p/123` is rejected.
 Each command's existing standalone slash-word exceptions still apply; keep those words separate from punctuation.
-Prefixes are case-sensitive: `T/08:00` inside a medication description is text, and does not set a time.
+Write field prefixes in lowercase. Incorrect capitalisation such as `NT/bring scans`, `Nt/bring scans`, or
+`T/08:00` is rejected even inside free text; use `nt/bring scans` or `t/08:00` instead.
+The literal `N/A` remains allowed in free text, including when followed by punctuation.
 
 ### Viewing help: `help`
 
@@ -251,7 +253,7 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   the panel updates.
 * The description follows the [slash-text rules](#slash-text-in-field-values): `mg/ml` and `units/day` are allowed.
   Reserved prefixes outside this command, such as `p/`, are rejected. Only lowercase `med/` and `t/` start fields;
-  `editmed 1 1 med/Aspirin T/08:00` keeps `T/08:00` in the description and leaves the times unchanged.
+  `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):

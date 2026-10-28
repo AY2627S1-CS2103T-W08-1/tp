@@ -128,8 +128,10 @@ How the parsing works:
   prefixes separately from their supported prefixes. Non-reserved slash text such as `and/or`, `mg/ml`, and
   `x/123` is allowed within those fields. Preambles and structured fields retain strict unknown-prefix checks.
   `CliSyntax#RESERVED_PREFIXES` contains all field prefixes, including ones unsupported by the current command;
-  update this set when adding a prefix. Reserved prefixes remain syntax, subject to each command's existing
-  standalone slash-word exceptions and their punctuation corrections.
+  update this set when adding a prefix. Reservation checks lowercase candidates with `Locale.ROOT`, so
+  wrong-case reserved prefixes are rejected with the existing unrecognized-parameter message. Tokenization
+  still recognizes only the exact lowercase prefix. Literal `N/A` (optionally followed by punctuation) remains
+  allowed in free text. Existing standalone slash-word exceptions and their punctuation corrections still apply.
   The validator also checks the first value word attached to a recognized prefix, carrying its free-text context
   but allowing no nested field prefixes: `a/x/123` is text, whereas `a/p/123` is rejected. This nested validation
   cannot recurse again because its set of valid prefixes is empty. Context switches follow tokenization's space
@@ -1813,6 +1815,15 @@ testers are expected to do more *exploratory* testing.
 
 1. Test cases: `addcare 1 x/123 ci/Text`, `edit 1 n/and/or`, and `editmed 1 1 med/Text t/mg/ml`.<br>
    Expected: Unrecognized-parameter errors naming `x/`, `and/`, and `mg/`, respectively. Nothing changes.
+
+1. Test cases: `addappt 1 d/2027-01-01 t/10:00 w/Dr Tan NT/bring scans`,
+   `editmed 1 1 med/Aspirin T/08:00`, and `editcontact 1 1 nt/Nt/Call first`.<br>
+   Expected: Unrecognized-parameter errors naming `NT/`, `T/`, and `Nt/`, respectively. Nothing changes.
+   Change `NT/` to `nt/` and `T/` to `t/` in the first two commands and retry; the note or time is parsed as a field.
+   For the contact command, use `editcontact 1 1 nt/Call first` instead of nesting two note prefixes.
+
+1. Test case: `editcontact 1 1 nt/N/A, call first`.<br>
+   Expected: The note becomes `N/A, call first`. `N/A` remains text despite the reserved `n/` prefix.
 
 1. Test case: `edit 1 a/s/o,`.<br>
    Expected: `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.` Nothing changes.
