@@ -276,6 +276,8 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
 
 Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
 
+The panel's root is an `UnfocusableScrollPane`, whose `requestFocus()` does nothing. A plain `ScrollPane` takes the focus on every mouse press, even though `Tab` cannot reach it, so a click, or a right-click to copy a line, would leave the user typing into nothing until they clicked the command box. As a trade-off, the panel cannot be scrolled with the keyboard. The mouse wheel and its scroll bar still work.
+
 The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. The mark goes right after the date and time, which only the app writes, so a note or `WITH` text ending in `(past)` cannot look like it. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
 
 #### Design considerations
@@ -2268,6 +2270,13 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `delete 1`<br>
       Expected: The detail panel returns to the placeholder message.
+
+1. Copying a line of the detail panel
+
+   1. Prerequisites: `view 1` has been run. The command box is empty.
+
+   1. Test case: right-click the NRIC line of the detail panel, choose **Copy**, then paste with `Ctrl`+`V` (`Cmd`+`V` on macOS) without clicking anywhere else<br>
+      Expected: The copied line, e.g., `NRIC: S0000001A`, appears in the command box.
 
 ### Saving data
 

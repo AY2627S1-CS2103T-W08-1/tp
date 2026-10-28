@@ -791,7 +791,9 @@ Format: `view INDEX`
 * A line break inside an entry, which only editing the data file by hand can add, is shown as a space, as in an
   exported record, so that each entry stays on its own numbered line.
 * To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
-  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
+  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`. Clicking or right-clicking the
+  panel does not move the cursor out of the command box, so you can paste the copied text into a command straight
+  away.
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
   patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
   to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
@@ -803,6 +805,8 @@ Format: `view INDEX`
   `listarchived` for an archived patient.
 * When a different patient is viewed, the panel scrolls back to the top, so their name is shown first. When the same
   patient is shown again, e.g., after `addcare`, the panel stays where it was scrolled to.
+* The panel can be scrolled with the mouse wheel, a trackpad or its scroll bar, but not with the keyboard, since the
+  cursor stays in the command box.
 
 Examples:
 
