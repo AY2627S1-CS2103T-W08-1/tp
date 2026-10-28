@@ -887,6 +887,8 @@ Format: `clear confirm`
 * The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
   using that file's name to recover the data. There is no undo command.
 * An empty address book is backed up too. Existing backups are never overwritten.
+* A successful clear writes an empty data file even if the app already shows no patients. After an unreadable-file
+  startup warning, this lets you discard the unreadable data and start empty; the recovery copy is kept.
 * If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
 
 Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
@@ -936,6 +938,9 @@ Format: `restore [FILENAME]`
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
 * After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+* A successful `restore FILENAME` writes the selected data even if it matches the data already shown. Restoring
+  an empty backup after an unreadable-file startup warning replaces the data file with valid empty data.
+  If the replacement cannot be saved, the restore fails and the app returns to its previous state.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
@@ -1005,11 +1010,12 @@ Format: `exit`
 
 ### Saving the data
 
-MediConnect automatically saves data after every command that changes it. You do not need to save manually.
+MediConnect handles saving automatically. You do not need to save manually.
+See [clear](#clearing-all-patients-clear) and [restore](#restoring-data-from-a-backup-restore) for how these commands
+replace your saved data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
-`Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,
-`view`, `help` and `exit`, still work.
+`Could not save data ...` followed by `Nothing was changed.` You can still run `list`, `view`, `help` and `exit`.
 
 ### Editing the data file
 
@@ -1033,6 +1039,8 @@ A misspelled property name, e.g., `careInstructons`, or a property given twice i
 file invalid, so that its value is not lost the next time the data is saved. The `Details:` line names a misspelled
 property, e.g., `Unknown property "careInstructons". Check its spelling.`
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
+To discard the unreadable data, use [clear confirm](#clearing-all-patients-clear). To recover from a valid backup,
+use [restore FILENAME](#restoring-data-from-a-backup-restore).
 If the recovery copy cannot be created, the main window does not open. An error dialog headed
 `MediConnect could not start` shows the data-file path, a reason, and what to check. Closing the dialog exits
 the app without changing patient data. This also happens if `data/mediconnect.json` is a folder rather than a file.
