@@ -172,6 +172,23 @@ public class EditMedCommandTest {
     }
 
     @Test
+    public void execute_otherPatientViewed_detailPanelShowsEditedPatient() throws Exception {
+        model.addPatient(BENSON);
+        model.setViewedPatient(BENSON);
+
+        descriptionOnly(FIRST_MEDICATION, "Metformin 850mg").execute(model);
+
+        assertEquals(model.getFilteredPatientList().get(0), model.getViewedPatient().getValue());
+    }
+
+    @Test
+    public void execute_noPatientViewed_detailPanelShowsEditedPatient() throws Exception {
+        descriptionOnly(FIRST_MEDICATION, "Metformin 850mg").execute(model);
+
+        assertEquals(model.getFilteredPatientList().get(0), model.getViewedPatient().getValue());
+    }
+
+    @Test
     public void execute_duplicateDescriptionOfOtherMedication_failsAndLeavesModelUnchanged() {
         String message = String.format(MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION, "aspirin 100mg");
         assertCommandFailure(descriptionOnly(FIRST_MEDICATION, "aspirin   100mg"), model, message);
@@ -240,6 +257,7 @@ public class EditMedCommandTest {
                 .withMedications(new Medication("Metformin 850mg", List.of(MORNING, EVENING)), ASPIRIN).build();
         Model expectedModel = new ModelManager(filteredModel.getAddressBook(), new UserPrefs());
         expectedModel.setPatient(patient, expected);
+        expectedModel.setViewedPatient(expected);
         showPatientAtIndex(expectedModel, INDEX_SECOND_PATIENT);
 
         assertCommandSuccess(command, filteredModel, String.format(MESSAGE_EDIT_MEDICATION_SUCCESS, 1,
@@ -295,6 +313,7 @@ public class EditMedCommandTest {
         Patient expectedPatient = new PatientBuilder(patient)
                 .withMedications(expectedMedications.toArray(new Medication[0])).build();
         Model expectedModel = createModel(expectedPatient);
+        expectedModel.setViewedPatient(expectedPatient);
 
         String expectedMessage = String.format(MESSAGE_EDIT_MEDICATION_SUCCESS, medicationIndex.getOneBased(),
                 patient.getName(), edited);
