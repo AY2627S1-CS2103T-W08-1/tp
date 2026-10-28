@@ -21,7 +21,8 @@ public class EditCareCommandParser implements Parser<EditCareCommand> {
     @Override
     public EditCareCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS, PREFIX_CARE_INSTRUCTION);
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_CARE_INSTRUCTION), PREFIX_CARE_INSTRUCTION);
         ArgumentMultimap fields = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS, PREFIX_CARE_INSTRUCTION);
         fields.verifyNoDuplicatePrefixesFor(PREFIX_CARE_INSTRUCTION);
 

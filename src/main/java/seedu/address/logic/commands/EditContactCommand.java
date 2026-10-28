@@ -80,7 +80,9 @@ public class EditContactCommand extends Command {
             }
         }
         contacts.set(contactIndex.getZeroBased(), edited);
-        model.setPatient(patient, patient.withContacts(contacts));
+        Patient editedPatient = patient.withContacts(contacts);
+        model.setPatient(patient, editedPatient);
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), edited));
     }
 

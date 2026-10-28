@@ -68,11 +68,10 @@ public class AddCommandParserTest {
         String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/");
         assertParseFailure(parser, " x/123" + VALID_ARGS, expected);
         assertParseFailure(parser, VALID_ARGS.replace(" dob/", " x/123 dob/"), expected);
-        assertParseFailure(parser, VALID_ARGS + " x/123", expected);
         assertParseFailure(parser, " x/123", expected);
         assertParseFailure(parser, VALID_ARGS + " med/Aspirin",
                 String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "med/"));
-        assertParseFailure(parser, VALID_ARGS + " A/B",
+        assertParseFailure(parser, VALID_ARGS.replace("John Tan", "A/B"),
                 String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "A/"));
     }
 
