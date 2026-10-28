@@ -8,8 +8,11 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -79,15 +82,16 @@ public class DueCommand extends Command {
         if (doses.isEmpty()) {
             return new CommandResult(createNothingDueMessage(candidates));
         }
+        Set<String> sharedNames = findSharedNames(doses);
         return new CommandResult(doses.stream()
-                .map(dose -> formatDose(dose, now))
+                .map(dose -> formatDose(dose, now, sharedNames))
                 .collect(Collectors.joining(LINE_SEPARATOR)));
     }
 
     /**
      * Returns the patients to list: all patients, or only the patient at the index of this command.
      *
-     * @throws CommandException if the index is not in the displayed patient list.
+     * @throws CommandException if the index is not in the displayed patient list, or the patient is archived.
      */
     private List<Patient> getCandidatePatients(Model model) throws CommandException {
         if (patientIndex.isEmpty()) {
@@ -98,7 +102,11 @@ public class DueCommand extends Command {
         if (patientIndex.get().getZeroBased() >= lastShownList.size()) {
             throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
         }
-        return List.of(lastShownList.get(patientIndex.get().getZeroBased()));
+        Patient patient = lastShownList.get(patientIndex.get().getZeroBased());
+        if (patient.isArchived()) {
+            throw new CommandException(Messages.MESSAGE_DUE_PATIENT_ARCHIVED);
+        }
+        return List.of(patient);
     }
 
     /**
@@ -115,10 +123,38 @@ public class DueCommand extends Command {
                         .map(time -> new Dose(time, patient, medication)));
     }
 
-    private static String formatDose(Dose dose, LocalTime now) {
+    /**
+     * Returns the names, in lower case, that belong to more than one of the patients of {@code doses}.
+     */
+    private static Set<String> findSharedNames(List<Dose> doses) {
+        Set<String> sharedNames = new HashSet<>();
+        Set<String> seenNames = new HashSet<>();
+        doses.stream()
+                .map(Dose::patient)
+                .distinct()
+                .map(DueCommand::toNameKey)
+                .forEach(name -> {
+                    if (!seenNames.add(name)) {
+                        sharedNames.add(name);
+                    }
+                });
+        return sharedNames;
+    }
+
+    private static String toNameKey(Patient patient) {
+        return patient.getName().fullName.toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Returns the line of {@code dose}, which shows the NRIC of the patient if the name is in {@code sharedNames}.
+     */
+    private static String formatDose(Dose dose, LocalTime now, Set<String> sharedNames) {
         String suffix = dose.time().isBefore(now) ? Messages.MESSAGE_DUE_EARLIER_TODAY_SUFFIX : "";
-        return String.format(Messages.MESSAGE_DUE_ENTRY, Medication.formatTime(dose.time()),
-                dose.patient().getName(), dose.medication().getDescription()) + suffix;
+        String format = sharedNames.contains(toNameKey(dose.patient()))
+                ? Messages.MESSAGE_DUE_ENTRY_WITH_NRIC
+                : Messages.MESSAGE_DUE_ENTRY;
+        return String.format(format, Medication.formatTime(dose.time()), dose.patient().getName(),
+                dose.medication().getDescription(), dose.patient().getNric()) + suffix;
     }
 
     private String createNothingDueMessage(List<Patient> candidates) {

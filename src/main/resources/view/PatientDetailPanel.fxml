@@ -2,11 +2,11 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
+<?import seedu.address.ui.UnfocusableScrollPane?>
 
-<ScrollPane fx:id="patientDetailPanel" fitToWidth="true" xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1">
+<UnfocusableScrollPane fx:id="patientDetailPanel" fitToWidth="true" xmlns="http://javafx.com/javafx/17"
+                       xmlns:fx="http://javafx.com/fxml/1">
   <VBox spacing="6">
     <padding>
       <Insets top="10" right="10" bottom="10" left="10" />
@@ -35,4 +35,4 @@
       <VBox fx:id="appointments" spacing="2" />
     </VBox>
   </VBox>
-</ScrollPane>
+</UnfocusableScrollPane>

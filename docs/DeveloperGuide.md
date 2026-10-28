@@ -76,7 +76,7 @@ The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDi
 
 The main window shows two panels side by side:
 
-* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed.
+* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed. Its list cannot take the focus, and `DarkTheme.css` has no style for a selected card, so a click neither takes the focus from the command box nor highlights a patient that the detail panel, which only `view` changes, may not show. The click still selects the card inside the list, but nothing reads that selection. As a trade-off, `Tab` skips the list, so it cannot be scrolled with the keyboard. Before, the arrow keys scrolled it by selecting patients, which showed the same misleading highlight. The mouse wheel, the list's scroll bar and `find` still reach every patient.
 * `PatientDetailPanel` shows the full details of the patient being viewed, including their medications, allergens, care instructions, contacts and appointments. It observes `Logic#getViewedPatient()` and redraws itself whenever that value changes, showing a placeholder message when no patient is being viewed. See the [view patient feature](#view-patient-feature) for how the viewed patient is set and cleared.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
@@ -276,7 +276,9 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
 
 Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
 
-The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
+The panel's root is an `UnfocusableScrollPane`, whose `requestFocus()` does nothing. A plain `ScrollPane` takes the focus on every mouse press, even though `Tab` cannot reach it, so a click, or a right-click to copy a line, would leave the user typing into nothing until they clicked the command box. As a trade-off, the panel cannot be scrolled with the keyboard. The mouse wheel and its scroll bar still work.
+
+The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. The mark goes right after the date and time, which only the app writes, so a note or `WITH` text ending in `(past)` cannot look like it. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
 
 #### Design considerations
 
@@ -291,7 +293,7 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 
 **Aspect: How past appointments are shown**
 
-* **Alternative 1 (current choice):** Keep one numbered list and add `(past)` after each past appointment.
+* **Alternative 1 (current choice):** Keep one numbered list and add `(past)` after the date and time of each past appointment.
   * Pros: The numbers that `cancelappt` and `editappt` use stay in one list, so the panel and an exported record stay easy to read.
   * Cons: The mark adds a little text to each past appointment.
 * **Alternative 2:** Split the list under Upcoming and Past headings, as `listappt INDEX` does.
@@ -2241,13 +2243,19 @@ testers are expected to do more *exploratory* testing.
       Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
 
    1. Test case: `view 2` on the sample data<br>
-      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`.
+      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`.
 
    1. Test case: `view 0`<br>
       Expected: The detail panel is unchanged. The status message shows the invalid command format error.
 
    1. Other incorrect view commands to try: `view`, `view x`, `view 1 2`, `view y` (where y is larger than the list size)<br>
       Expected: The detail panel is unchanged. The status message shows an error.
+
+   1. Test case: `view 2`, then click the first patient in the patient list, then type `list` and press Enter<br>
+      Expected: The click does not highlight the first patient, and the detail panel still shows the second patient. The typed `list` goes into the command box and lists all active patients.
+
+   1. Test case: click the command box, then press `Tab` repeatedly<br>
+      Expected: The focus moves between the command box and the status message, and never reaches the patient list.
 
 1. Filtering out the patient being viewed
 
@@ -2262,6 +2270,13 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `delete 1`<br>
       Expected: The detail panel returns to the placeholder message.
+
+1. Copying a line of the detail panel
+
+   1. Prerequisites: `view 1` has been run. The command box is empty.
+
+   1. Test case: right-click the NRIC line of the detail panel, choose **Copy**, then paste with `Ctrl`+`V` (`Cmd`+`V` on macOS) without clicking anywhere else<br>
+      Expected: The copied line, e.g., `NRIC: S0000001A`, appears in the command box.
 
 ### Saving data
 
@@ -2427,7 +2442,7 @@ testers are expected to do more *exploratory* testing.
       Expected: The appointment is added, and the message ends with `Warning: Alex Yeoh already has an appointment at this date and time (with Dr Lim).`
 
    1. Test case: `addappt 1 d/2020-01-01 t/09:00 w/Dr Tan`<br>
-      Expected: The appointment is added, and the message ends with `Note: this appointment is in the past.` The panel lists it last, marked `(past)`.
+      Expected: The appointment is added, and the message ends with `Note: this appointment is in the past.` The panel lists it last, marked `(past)` after its date and time.
 
    1. Test case: `addappt 1 d/2207-11-05 t/09:30 w/Dr Tan`<br>
       Expected: The appointment is added, and the message ends with `Note: this appointment is more than 2 years ahead.`
