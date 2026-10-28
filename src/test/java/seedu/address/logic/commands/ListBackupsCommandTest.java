@@ -89,6 +89,17 @@ public class ListBackupsCommandTest {
     }
 
     @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "making a link on Windows needs administrator rights")
+    public void execute_linkToDeletedBackup_saysNoBackups() throws Exception {
+        // the file of such a link is known not to exist, so it is not taken for an unopenable folder
+        Files.createSymbolicLink(temporaryFolder.resolve("mediconnect-20261020-083015.json"),
+                temporaryFolder.resolve("deleted.json"));
+
+        assertCommandSuccess(new ListBackupsCommand(temporaryFolder), model,
+                String.format(ListBackupsCommand.MESSAGE_NO_BACKUPS, temporaryFolder), expectedModel);
+    }
+
+    @Test
     public void execute_backupsChangedAtDifferentTimes_listsNewestFirst() throws Exception {
         createBackup("mediconnect-20261021-090000.json", LATER);
         createBackup("older.JSON", EARLIER);
