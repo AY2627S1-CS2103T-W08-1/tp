@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -61,7 +62,8 @@ public class DeleteMedCommand extends Command {
         model.setPatient(patientToEdit, editedPatient);
         model.setViewedPatient(editedPatient);
 
-        return new CommandResult(String.format(Messages.MESSAGE_DELETE_MEDICATION_SUCCESS,
+        // Locale.ROOT, so that the number is in the same digits as in the panel on every computer
+        return new CommandResult(String.format(Locale.ROOT, Messages.MESSAGE_DELETE_MEDICATION_SUCCESS,
                 medicationIndex.getOneBased(), patientToEdit.getName(), deletedMedication));
     }
 

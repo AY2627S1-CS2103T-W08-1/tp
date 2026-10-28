@@ -7,6 +7,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TIME;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import seedu.address.commons.core.index.Index;
@@ -83,7 +84,8 @@ public class EditMedCommand extends Command {
         model.setPatient(patientToEdit, editedPatient);
         model.setViewedPatient(editedPatient);
 
-        return new CommandResult(String.format(Messages.MESSAGE_EDIT_MEDICATION_SUCCESS,
+        // Locale.ROOT, so that the number is in the same digits as in the panel on every computer
+        return new CommandResult(String.format(Locale.ROOT, Messages.MESSAGE_EDIT_MEDICATION_SUCCESS,
                 medicationIndex.getOneBased(), patientToEdit.getName(), editedMedication));
     }
 
