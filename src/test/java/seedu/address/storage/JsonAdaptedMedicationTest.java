@@ -57,6 +57,15 @@ public class JsonAdaptedMedicationTest {
     }
 
     @Test
+    public void toModelType_descriptionAtAndOverMaxLength_loadedAndRejected() throws Exception {
+        String atLimit = "m".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        assertEquals(new Medication(atLimit), new JsonAdaptedMedication(atLimit, List.of()).toModelType());
+
+        JsonAdaptedMedication overlong = new JsonAdaptedMedication(atLimit + "m", List.of());
+        assertThrows(IllegalValueException.class, Medication.MESSAGE_DESCRIPTION_TOO_LONG, overlong::toModelType);
+    }
+
+    @Test
     public void toModelType_invalidTime_throwsIllegalValueException() {
         for (String invalidTime : new String[] {"", "24:00", "08:60", "8:30", "noon"}) {
             JsonAdaptedMedication adapted = new JsonAdaptedMedication(VALID_DESCRIPTION, List.of(invalidTime));

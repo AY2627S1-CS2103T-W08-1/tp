@@ -168,6 +168,7 @@ NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sens
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` in front. Spaces and hyphens are ignored. Stored as the 8 digits only. | `91234567`, `+65 9123-4567`
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Medication description | `med/` | At most 500 characters after leading and trailing spaces are removed and repeated spaces are reduced to one. Cannot be blank. | `Metformin 500mg`
 
 Leading and trailing spaces in every field are ignored.
 
@@ -245,6 +246,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
   same as another medication of the same patient, ignoring letter case and whitespace differences, is rejected.
   Changing only the letter case of the medication's own description is allowed.
+  A description longer than 500 characters, after the spaces are tidied, returns
+  `Medication descriptions cannot exceed 500 characters.`
 * `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), e.g., `08:30`. An hour of one digit is also
   accepted and read with a leading 0, so `8:30` means `08:30`. Leading and trailing spaces are ignored.
   * Giving `t/` **replaces all** the existing times of the medication, so the new times are the only ones left.

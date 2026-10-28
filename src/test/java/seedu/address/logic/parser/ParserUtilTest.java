@@ -301,6 +301,15 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseMedicationDescription_overlongDescription_throwsParseException() throws Exception {
+        String atLimit = "m".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        assertEquals(atLimit, ParserUtil.parseMedicationDescription(atLimit));
+        String overLimit = atLimit + "m";
+        String message = Medication.MESSAGE_DESCRIPTION_TOO_LONG;
+        assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(overLimit));
+    }
+
+    @Test
     public void parseMedicationDescription_valid_returnsTrimmedDescription() throws Exception {
         assertEquals("Metformin 500mg", ParserUtil.parseMedicationDescription("  Metformin 500mg" + WHITESPACE));
     }

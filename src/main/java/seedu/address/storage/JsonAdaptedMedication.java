@@ -57,6 +57,9 @@ class JsonAdaptedMedication {
         if (!Medication.isValidDescription(description)) {
             throw new IllegalValueException(Medication.MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
+        if (!Medication.isDescriptionWithinMaxLength(description.trim().replaceAll("\\s+", " "))) {
+            throw new IllegalValueException(Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+        }
 
         List<LocalTime> modelTimes = new ArrayList<>();
         for (String time : times) {

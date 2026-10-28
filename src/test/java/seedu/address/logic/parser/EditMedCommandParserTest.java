@@ -193,8 +193,22 @@ public class EditMedCommandParserTest {
     public void parse_specialCharactersAndLongDescription_success() {
         String special = "<b>\"';DROP TABLE--&é中文";
         assertParseSuccess(parser, " 1 2 med/" + special, edit(Optional.of(special), Optional.empty()));
-        String longText = "x".repeat(5000);
+        String longText = "x".repeat(Medication.MAX_DESCRIPTION_LENGTH);
         assertParseSuccess(parser, " 1 2 med/" + longText, edit(Optional.of(longText), Optional.empty()));
+    }
+
+    @Test
+    public void parse_overlongDescription_throwsParseException() {
+        String overlongText = "x".repeat(Medication.MAX_DESCRIPTION_LENGTH + 1);
+        assertParseFailure(parser, " 1 2 med/" + overlongText, Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+        assertParseFailure(parser, " 1 2 med/" + overlongText + " t/08:00",
+                Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+    }
+
+    @Test
+    public void parse_descriptionLongOnlyBeforeWhitespaceIsRemoved_success() {
+        String text = "x".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        assertParseSuccess(parser, " 1 2 med/  " + text + "   ", edit(Optional.of(text), Optional.empty()));
     }
 
     private static EditMedCommand edit(Optional<String> description, Optional<List<LocalTime>> times) {

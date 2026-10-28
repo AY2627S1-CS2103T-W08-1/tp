@@ -120,13 +120,16 @@ public class ParserUtil {
      * Parses a {@code String description} into a medication description.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code description} is blank.
+     * @throws ParseException if the given {@code description} is blank or longer than the maximum length.
      */
     public static String parseMedicationDescription(String description) throws ParseException {
         requireNonNull(description);
         String trimmedDescription = description.trim();
         if (!Medication.isValidDescription(trimmedDescription)) {
             throw new ParseException(Medication.MESSAGE_DESCRIPTION_CONSTRAINTS);
+        }
+        if (!Medication.isDescriptionWithinMaxLength(trimmedDescription.replaceAll("\\s+", " "))) {
+            throw new ParseException(Medication.MESSAGE_DESCRIPTION_TOO_LONG);
         }
         return trimmedDescription;
     }
