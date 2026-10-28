@@ -165,6 +165,23 @@ public class ListBackupsCommandTest {
     }
 
     @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
+    public void execute_backupFolderListedButNotOpened_throwsCommandExceptionNamingFolder() throws Exception {
+        // e.g., after chmod 444 on the folder: its names can be listed, but not one of its files checked
+        createBackup("mediconnect-20261020-083015.json", EARLIER);
+        assertTrue(temporaryFolder.toFile().setExecutable(false));
+        try {
+            // users with admin rights (e.g., root) can still open it, so the test only applies to others
+            assumeFalse(Files.exists(temporaryFolder.resolve("mediconnect-20261020-083015.json")));
+
+            assertCommandFailure(new ListBackupsCommand(temporaryFolder), model,
+                    String.format(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION, temporaryFolder));
+        } finally {
+            temporaryFolder.toFile().setExecutable(true);
+        }
+    }
+
+    @Test
     public void describeListingFailure_eachKindOfFailure_namesPermissionOnlyWhenAccessIsDenied() {
         AccessDeniedException accessDenied = new AccessDeniedException("data/backups");
 

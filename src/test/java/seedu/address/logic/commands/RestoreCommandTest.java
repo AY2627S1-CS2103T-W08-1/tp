@@ -377,6 +377,24 @@ public class RestoreCommandTest {
     }
 
     @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
+    public void execute_backupFolderListedButNotOpened_throwsCommandExceptionNamingFolder() throws Exception {
+        // e.g., after chmod 444 on the folder, which a user may do to make it read-only
+        writeBackup(createAddressBook(HOON));
+        File folder = temporaryFolder.toFile();
+        assertTrue(folder.setExecutable(false));
+        try {
+            // users with admin rights (e.g., root) can still open it, so the test only applies to others
+            assumeFalse(Files.exists(temporaryFolder.resolve(BACKUP_NAME)));
+
+            assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NO_FOLDER_READ_PERMISSION,
+                    temporaryFolder.toAbsolutePath().normalize()));
+        } finally {
+            folder.setExecutable(true);
+        }
+    }
+
+    @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flag on folders")
     public void execute_currentDataCannotBeBackedUp_throwsCommandExceptionAndRestoresNothing() throws Exception {
         // Equivalence partitioning: a backup folder that cannot be written to, so the automatic backup fails

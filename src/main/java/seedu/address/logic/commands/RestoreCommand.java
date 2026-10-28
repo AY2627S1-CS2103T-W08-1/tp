@@ -133,7 +133,7 @@ public class RestoreCommand extends Command {
         Path backupFile = backupDir.resolve(backupName);
         String notFoundMessage = String.format(MESSAGE_NOT_FOUND, fileName, backupDir.toAbsolutePath().normalize());
         if (!Files.isRegularFile(backupFile)) {
-            throw new CommandException(describeMissingBackup(notFoundMessage));
+            throw new CommandException(describeMissingBackup(backupFile, notFoundMessage));
         }
 
         try {
@@ -148,11 +148,13 @@ public class RestoreCommand extends Command {
     }
 
     /**
-     * Returns the reason to give when the backup to restore is not found: that MediConnect may not read the
-     * backup folder, since a backup in such a folder looks missing, or else {@code notFoundMessage}.
+     * Returns the reason to give when {@code backupFile}, the backup to restore, is not found: that
+     * MediConnect may not read the backup folder, if it cannot even tell whether the file exists, or else
+     * {@code notFoundMessage}.
      */
-    private String describeMissingBackup(String notFoundMessage) {
-        boolean isFolderUnreadable = Files.isDirectory(backupDir) && !Files.isReadable(backupDir);
+    private String describeMissingBackup(Path backupFile, String notFoundMessage) {
+        // neither holds if the folder may not be opened, e.g., after chmod 000 or chmod 444 on it
+        boolean isFolderUnreadable = !Files.exists(backupFile) && !Files.notExists(backupFile);
         return isFolderUnreadable
                 ? String.format(MESSAGE_NO_FOLDER_READ_PERMISSION, backupDir.toAbsolutePath().normalize())
                 : notFoundMessage;

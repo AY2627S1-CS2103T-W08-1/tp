@@ -129,8 +129,14 @@ public class ListBackupsCommand extends Command {
 
     /**
      * Returns true if {@code file} is a JSON file, which {@code restore} can restore if its data is valid.
+     *
+     * @throws UncheckedIOException if MediConnect cannot tell whether {@code file} exists, e.g., in a folder
+     *     that it may list but not open, where every backup would otherwise look missing.
      */
     private static boolean isBackupFile(Path file) {
+        if (!Files.exists(file) && !Files.notExists(file)) {
+            throw new UncheckedIOException(new AccessDeniedException(file.toString()));
+        }
         return Files.isRegularFile(file)
                 && file.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(BACKUP_EXTENSION);
     }
