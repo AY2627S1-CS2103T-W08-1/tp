@@ -12,6 +12,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.patient.Medication;
 
 public class JsonAdaptedMedicationTest {
@@ -68,5 +69,22 @@ public class JsonAdaptedMedicationTest {
     public void toModelType_nullTime_throwsIllegalValueException() {
         JsonAdaptedMedication adapted = new JsonAdaptedMedication(VALID_DESCRIPTION, Arrays.asList("08:00", null));
         assertThrows(IllegalValueException.class, NULL_TIME_MESSAGE, adapted::toModelType);
+    }
+
+    @Test
+    public void toModelType_v13PlainStringMedication_loadsWithNoTimes() throws Exception {
+        JsonAdaptedMedication adapted = JsonUtil.fromJsonString("\"" + VALID_DESCRIPTION + "\"",
+                JsonAdaptedMedication.class);
+        assertEquals(new Medication(VALID_DESCRIPTION), adapted.toModelType());
+    }
+
+    @Test
+    public void toModelType_v13PatientWithStringMedications_loadsMedicationsWithNoTimes() throws Exception {
+        String v13Patient = "{\"name\": \"Alex Yeoh\", \"nric\": \"S1234567A\", \"dob\": \"1950-04-12\", "
+                + "\"phone\": \"87438807\", \"address\": \"Blk 30 Geylang Street 29, #06-40\", "
+                + "\"medications\": [\"Aspirin 100mg once daily\", \"Amlodipine 5mg once daily\"]}";
+        JsonAdaptedPatient adapted = JsonUtil.fromJsonString(v13Patient, JsonAdaptedPatient.class);
+        assertEquals(List.of(new Medication("Aspirin 100mg once daily"),
+                new Medication("Amlodipine 5mg once daily")), adapted.toModelType().getMedications());
     }
 }
