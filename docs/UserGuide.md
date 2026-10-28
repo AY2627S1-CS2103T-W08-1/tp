@@ -965,6 +965,9 @@ reason, e.g., `Patient entry 2: Phone numbers should be 8 digits...`. Count entr
 starting from 1, including archived patients; this is not an index from a filtered patient list. The first invalid
 entry is reported, so another error may appear after you repair it. For malformed JSON or other read failures,
 the warning asks you to check the JSON format and file permissions; a patient position may not be available.
+A misspelled property name, e.g., `careInstructons`, or a property given twice in the same entry also makes the
+file invalid, so that its value is not lost the next time the data is saved. The `Details:` line names a misspelled
+property, e.g., `Unknown property "careInstructons". Check its spelling.`
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
 If the recovery copy cannot be created, the main window does not open. An error dialog headed
 `MediConnect could not start` shows the data-file path, a reason, and what to check. Closing the dialog exits
