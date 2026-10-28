@@ -1006,6 +1006,8 @@ the warning asks you to check the JSON format and file permissions; a patient po
 A misspelled property name, e.g., `careInstructons`, or a property given twice in the same entry also makes the
 file invalid, so that its value is not lost the next time the data is saved. The `Details:` line names a misspelled
 property, e.g., `Unknown property "careInstructons". Check its spelling.`
+A time in the file must be written as `HH:MM` with two digits, e.g., `08:30`, even though commands also accept
+`8:30`.
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
 If the recovery copy cannot be created, the main window does not open. An error dialog headed
 `MediConnect could not start` shows the data-file path, a reason, and what to check. Closing the dialog exits

@@ -69,8 +69,16 @@ public class JsonAdaptedMedicationTest {
     public void toModelType_invalidTime_throwsIllegalValueException() {
         for (String invalidTime : new String[] {"", "24:00", "08:60", "8:30", "noon"}) {
             JsonAdaptedMedication adapted = new JsonAdaptedMedication(VALID_DESCRIPTION, List.of(invalidTime));
-            assertThrows(IllegalValueException.class, Medication.MESSAGE_TIME_CONSTRAINTS, adapted::toModelType);
+            assertThrows(IllegalValueException.class, Medication.MESSAGE_DATA_FILE_TIME_CONSTRAINTS,
+                    adapted::toModelType);
         }
+    }
+
+    @Test
+    public void toModelType_oneDigitHour_requiresTwoDigits() {
+        JsonAdaptedMedication adapted = new JsonAdaptedMedication(VALID_DESCRIPTION, List.of("8:30"));
+        assertThrows(IllegalValueException.class, "Time must be in HH:MM (24-hour), e.g. 08:30.",
+                adapted::toModelType);
     }
 
     @Test

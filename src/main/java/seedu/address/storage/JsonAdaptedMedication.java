@@ -67,7 +67,7 @@ class JsonAdaptedMedication {
                 throw new IllegalValueException(NULL_TIME_MESSAGE);
             }
             if (!Medication.isValidTime(time)) {
-                throw new IllegalValueException(Medication.MESSAGE_TIME_CONSTRAINTS);
+                throw new IllegalValueException(Medication.MESSAGE_DATA_FILE_TIME_CONSTRAINTS);
             }
             modelTimes.add(Medication.toTime(time));
         }
