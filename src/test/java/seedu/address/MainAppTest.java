@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.util.FileUtil;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.logic.LogicManager;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
@@ -59,6 +60,28 @@ public class MainAppTest {
         new MainApp().initModelManager(storage, new UserPrefs());
 
         assertEquals(SampleDataUtil.getSampleAddressBook(), storage.readAddressBook().get());
+    }
+
+    @Test
+    public void initModelManager_misspelledProperty_dataFilePreserved() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        StorageManager storage = createStorage(dataFile);
+        storage.saveAddressBook(getTypicalAddressBook());
+        String misspelledData = FileUtil.readFromFile(dataFile)
+                .replace("\"careInstructions\"", "\"careInstructons\"");
+        FileUtil.writeToFile(dataFile, misspelledData);
+
+        MainApp mainApp = new MainApp();
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+        mainApp.start(null);
+
+        // the data is not loaded without its care instructions, the file is kept as it is, and the property is named
+        assertEquals(new AddressBook(), model.getAddressBook());
+        assertEquals(misspelledData, FileUtil.readFromFile(dataFile));
+        assertEquals(misspelledData, FileUtil.readFromFile(getRecoveryFiles().get(0)));
+        assertTrue(uiStub.warningMessage.endsWith(String.format(JsonUtil.MESSAGE_UNKNOWN_PROPERTY, "careInstructons")));
     }
 
     @Test
