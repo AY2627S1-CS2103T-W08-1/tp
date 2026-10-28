@@ -48,6 +48,7 @@ public class RestoreCommandTest {
 
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-10-21T09:00:00Z"), ZoneOffset.UTC);
     private static final String BACKUP_NAME = "mediconnect-20261020-083015.json";
+    private static final String BACKUP_NAME_WITHOUT_EXTENSION = "mediconnect-20261020-083015";
     // the backup that restore makes of the current data, named after FIXED_CLOCK
     private static final String AUTOMATIC_BACKUP_NAME = "mediconnect-20261021-090000.json";
 
@@ -227,6 +228,41 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_nameWithoutExtension_restoresBackupWithExtension() throws Exception {
+        // Equivalence partitioning: a name without ".json" that only a backup with ".json" added matches
+        AddressBook backupData = createAddressBook(HOON);
+        writeBackup(backupData);
+        RestoreCommand restoreCommand = createRestoreCommand(BACKUP_NAME_WITHOUT_EXTENSION);
+
+        assertCommandSuccess(restoreCommand, model, getExpectedSuccessMessage(1, "patient", ""),
+                new ModelManager(backupData, new UserPrefs()));
+    }
+
+    @Test
+    public void execute_fileWithoutExtensionAlsoExists_restoresFileWithGivenName() throws Exception {
+        // Equivalence partitioning: a name that a file matches exactly, restored before the one with ".json"
+        writeBackup(createAddressBook(HOON));
+        AddressBook exactMatchData = createAddressBook(IDA);
+        new JsonAddressBookStorage(temporaryFolder.resolve(BACKUP_NAME_WITHOUT_EXTENSION)).saveAddressBook(
+                exactMatchData);
+        RestoreCommand restoreCommand = createRestoreCommand(BACKUP_NAME_WITHOUT_EXTENSION);
+        String expectedMessage = String.format(Locale.ROOT, RestoreCommand.MESSAGE_SUCCESS, 1, "patient", "",
+                BACKUP_NAME_WITHOUT_EXTENSION, temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
+
+        assertCommandSuccess(restoreCommand, model, expectedMessage,
+                new ModelManager(exactMatchData, new UserPrefs()));
+    }
+
+    @Test
+    public void execute_nameWithoutExtensionOfMissingBackup_throwsCommandExceptionWithGivenName() {
+        // Equivalence partitioning: a name without ".json" that no file matches, even with ".json" added
+        RestoreCommand restoreCommand = createRestoreCommand(BACKUP_NAME_WITHOUT_EXTENSION);
+
+        assertCommandFailure(restoreCommand, model, String.format(RestoreCommand.MESSAGE_NOT_FOUND,
+                BACKUP_NAME_WITHOUT_EXTENSION, temporaryFolder));
+    }
+
+    @Test
     public void execute_missingBackup_throwsCommandException() {
         assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, temporaryFolder));
     }
@@ -353,7 +389,15 @@ public class RestoreCommandTest {
     }
 
     private RestoreCommand createRestoreCommand() {
-        return new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, temporaryFolder);
+        return createRestoreCommand(BACKUP_NAME);
+    }
+
+    /**
+     * Returns a command that restores {@code fileName} from the temporary folder, timestamped with
+     * {@code FIXED_CLOCK}.
+     */
+    private RestoreCommand createRestoreCommand(String fileName) {
+        return new RestoreCommand(fileName, FIXED_CLOCK, temporaryFolder);
     }
 
     private String getExpectedSuccessMessage(int patientCount, String patientWord, String archivedNote) {

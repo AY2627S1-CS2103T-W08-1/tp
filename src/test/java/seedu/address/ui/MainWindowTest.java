@@ -8,6 +8,7 @@ import static seedu.address.ui.JavaFxTestUtil.runOnFxThread;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -81,11 +82,36 @@ public class MainWindowTest {
 
         boolean isHelpWindowShowing = runOnFxThread(() -> {
             createMainWindow().handleHelp();
-            return Window.getWindows().stream()
-                    .anyMatch(window -> window instanceof Stage stage && "Help".equals(stage.getTitle()));
+            return findShownHelpWindow().isPresent();
         });
 
         assertTrue(isHelpWindowShowing);
+    }
+
+    @Test
+    public void handleHelp_helpWindowMinimized_showsHelpWindowNotMinimized() throws Exception {
+        // Equivalence partitioning: a help window that is open but minimized, which still counts as shown
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+
+        boolean isHelpWindowBack = runOnFxThread(() -> {
+            MainWindow mainWindow = createMainWindow();
+            mainWindow.handleHelp();
+            findShownHelpWindow().orElseThrow().setIconified(true);
+            mainWindow.handleHelp();
+            return findShownHelpWindow().filter(helpWindow -> !helpWindow.isIconified()).isPresent();
+        });
+
+        assertTrue(isHelpWindowBack);
+    }
+
+    /**
+     * Returns the help window if it is shown. Must be called on the JavaFX application thread.
+     */
+    private static Optional<Stage> findShownHelpWindow() {
+        return Window.getWindows().stream()
+                .filter(window -> window instanceof Stage stage && "Help".equals(stage.getTitle()))
+                .map(window -> (Stage) window)
+                .findFirst();
     }
 
     /**
