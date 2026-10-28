@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
+import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
@@ -57,6 +58,20 @@ import seedu.address.testutil.PatientUtil;
 public class AddressBookParserTest {
 
     private final AddressBookParser parser = new AddressBookParser();
+
+    @Test
+    public void parseCommand_prefixLikeFirstValueWord_rejectedAcrossCommands() {
+        for (String input : List.of(
+                "add n/A ic/S1111111A dob/1950-04-12 p/91234567 a/x/123",
+                "edit 1 a/x/123", "addcare 1 ci/x/123", "editcare 1 1 ci/x/1", "editmed 1 1 med/x/1",
+                "addcontact 1 n/x/1 r/GP p/123", "editcontact 1 1 nt/x/1",
+                "addappt 1 d/2027-01-01 t/10:00 w/x/1", "editappt 1 1 nt/x/1")) {
+            assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "x/"), () ->
+                    parser.parseCommand(input));
+        }
+        assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "p/"), () ->
+                parser.parseCommand("addcare 1 med/p/9"));
+    }
 
     @Test
     public void parseCommand_add() throws Exception {
