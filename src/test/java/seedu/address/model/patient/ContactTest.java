@@ -14,6 +14,27 @@ import org.junit.jupiter.api.Test;
 public class ContactTest {
 
     @Test
+    public void constructor_textLength_limitsCountCodePointsAfterNormalization() {
+        for (String character : List.of("a", "\uD83D\uDE00")) {
+            String name = character.repeat(Contact.MAX_NAME_LENGTH);
+            String role = character.repeat(Contact.MAX_ROLE_LENGTH);
+            String note = character.repeat(Contact.MAX_NOTE_LENGTH);
+            Contact contact = new Contact("\u00a0" + name + "\u00a0", "\u00a0" + role + "\u00a0", "123", note);
+            assertEquals(name, contact.getName());
+            assertEquals(role, contact.getRole());
+            assertEquals(note, contact.getNote());
+            assertThrows(IllegalArgumentException.class, Contact.MESSAGE_NAME_CONSTRAINTS, () ->
+                    new Contact(name + character, "GP", "123", ""));
+            assertThrows(IllegalArgumentException.class, Contact.MESSAGE_ROLE_CONSTRAINTS, () ->
+                    new Contact("Clinic", role + character, "123", ""));
+            assertThrows(IllegalArgumentException.class, Contact.MESSAGE_NOTE_CONSTRAINTS, () ->
+                    new Contact("Clinic", "GP", "123", note + character));
+        }
+        assertEquals("Tan Lim", new Contact("Tan" + " ".repeat(Contact.MAX_NAME_LENGTH) + "Lim",
+                "GP", "123", "").getName());
+    }
+
+    @Test
     public void constructor_validFields_normalized() {
         Contact contact = new Contact(
                 "  Tan   & Partners Clinic  ", " GP ", " +65 6123-4567 ", "Call in the morning");
