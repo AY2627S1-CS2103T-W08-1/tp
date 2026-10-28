@@ -33,6 +33,9 @@ public class ListBackupsCommand extends Command {
             + BackupCommand.COMMAND_WORD + ".";
     public static final String MESSAGE_OLDER_BACKUPS = "... and %1$d older";
     public static final String MESSAGE_FAILURE = "Could not list the backups in %1$s.";
+    public static final String MESSAGE_NOT_A_FOLDER = "Could not list the backups: %1$s is a file, "
+            + "not a folder. Move or rename that file, so that " + BackupCommand.COMMAND_WORD
+            + " can make the folder.";
 
     /** Most backups listed, so that the list stays short enough to read in the result box. */
     public static final int MAX_LISTED_BACKUPS = 10;
@@ -90,11 +93,17 @@ public class ListBackupsCommand extends Command {
      * Returns the backup files in the backup folder, newest first, or an empty list if the folder does not exist.
      *
      * @param shownBackupDir Full path of the backup folder, for the error message.
-     * @throws CommandException if the folder or the times its files were last changed cannot be read.
+     * @throws CommandException if a file is where the folder should be, or the folder or the times its files
+     *     were last changed cannot be read.
      */
     private List<Path> findBackupsNewestFirst(Path shownBackupDir) throws CommandException {
-        if (!Files.isDirectory(backupDir)) {
+        if (!Files.exists(backupDir)) {
             return List.of();
+        }
+        if (!Files.isDirectory(backupDir)) {
+            // saying there are no backups would suggest running backup, which fails while the file is there
+            logger.warning("The backup folder " + backupDir + " is a file");
+            throw new CommandException(String.format(MESSAGE_NOT_A_FOLDER, shownBackupDir));
         }
 
         try (Stream<Path> files = Files.list(backupDir)) {

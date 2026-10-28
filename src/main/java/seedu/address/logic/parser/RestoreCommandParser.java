@@ -26,7 +26,9 @@ public class RestoreCommandParser implements Parser<Command> {
      */
     @Override
     public Command parse(String args) throws ParseException {
-        String fileName = args.trim();
+        // trims Unicode whitespace too, as ParserUtil#parseAddress does, since a no-break space around a
+        // pasted name is not part of it
+        String fileName = args.replaceAll("(?U)^\\s+|\\s+$", "");
         if (fileName.isEmpty()) {
             return new ListBackupsCommand();
         }

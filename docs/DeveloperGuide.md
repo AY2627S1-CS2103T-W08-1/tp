@@ -124,6 +124,12 @@ How the parsing works:
   Both use lowercase spellings. For example, `LIST` produces `Unknown command.` rather than running `list`.
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
+* Field parsers use `ArgumentTokenizer#verifyNoInvalidPrefixes` before tokenization. For each recognized field
+  prefix, the validator also checks its attached first value word with no valid field prefixes. This admits the
+  command's standalone slash-word exceptions, numeric slash text and URLs, but rejects prefix-like value text
+  such as `a/x/123` and gives the usual correction for punctuated slash words such as `a/s/o,`.
+  The nested validation cannot recurse again because its set of valid prefixes is empty. Tokenization still
+  requires a space before an actual field prefix; it does not turn an embedded prefix into a new field.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
@@ -182,6 +188,8 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It reads the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
 
+Before mapping the JSON to objects, `JsonUtil` also rejects a file in which a name or a text value has half of a surrogate pair on its own. Only a JSON escape of a surrogate, such as `\ud800`, in a hand-edited file can give such text. It cannot be written as UTF-8, so the next save would silently turn it into `?`.
+
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
 objects. Each patient is saved with its name, NRIC, date of birth, phone number and address as strings, its
@@ -231,7 +239,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 1. `ViewCommandParser` parses the index in the same way as `DeleteCommandParser`, so `view` accepts the same `INDEX` values as `delete`.
 1. `ViewCommand#execute()` checks the index against the filtered patient list. An index beyond the list size produces the same invalid-index message as `delete`.
 1. `ViewCommand` calls `Model#setViewedPatient()` with the selected patient.
-1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, care instruction, contact or appointment list.
+1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, care instruction, contact or appointment list. Each entry is shown on one line by `PatientFormatter#toSingleLine()`, which exported records also use, so that a line break stored in a hand-edited entry cannot look like another numbered entry.
 
 `ModelManager` keeps the viewed patient consistent with the address book:
 
@@ -367,7 +375,7 @@ The `backup` command saves a copy of all patient data to the `data/backups` fold
 
 #### Implementation
 
-`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. Checking whether a name is free and then saving under it are two steps, so two backups made at the same moment, e.g., in two MediConnect windows, or by `restore` or `clear confirm` while a backup is made, could otherwise choose the same name, and one would replace the other. `BackupCommand#saveUnderNextFreeName()` therefore does both while it holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 
 The sequence diagram below shows a successful `restore old.json`.
 
@@ -441,7 +449,7 @@ The `help` command, `F1` and the **Help** menu open the `HelpWindow`, which list
 
 #### Implementation
 
-1. `HelpCommand#execute()` returns a `CommandResult` that asks the UI to show help, and `MainWindow#handleHelp()` shows the help window if it is not already shown. The **Help** menu item, whose shortcut is `F1`, calls `handleHelp()` directly. It then calls `requestFocus()` on the main window, so that the user can keep typing commands while the help window is open.
+1. `HelpCommand#execute()` returns a `CommandResult` that asks the UI to show help, and `MainWindow#handleHelp()` shows the help window if it is not already shown. The **Help** menu item, whose shortcut is `F1`, calls `handleHelp()` directly. It then calls `requestFocus()` on the main window, so that the user can keep typing commands while the help window is open. A minimized help window still counts as shown, and bringing it back from the Dock or the taskbar would move the focus to it, so `handleHelp()` hides it and shows it again instead. `HelpWindow#show()` first clears the minimized state, which a window hidden while minimized would otherwise keep.
 1. The list is `HelpCommand#COMMAND_SUMMARY`, built once from each command's `COMMAND_WORD` or `COMMAND_FORMAT` and the prefixes in `CliSyntax`, which the parsers also use. A renamed command word or prefix therefore also changes the help text. `HelpCommandTest` checks that every command is listed once, in order, and that `AddressBookParser` parses every listed format, filled in with sample values, into that command.
 1. `MainWindow` makes the main window the owner of the help window, so that the help window closes and minimizes with it. An event handler on the help window's own stage hides it on `Esc`, and each time the help window is shown, it adds the same handler to its owner as an event filter. A filter is used because it sees `Esc` before the focused command box does. It also keeps itself in front of other windows only while it or its owner has the focus, through a `BooleanBinding` on both windows' `focusedProperty()`. The binding is kept in a field, since the properties it observes refer to it only weakly. When the help window is hidden, the filter is removed and the owner's focus is no longer followed.
 
@@ -467,11 +475,17 @@ are named constants in `Contact`. Both contact parsers and `JsonAdaptedContact` 
 the same limits apply to add, edit, startup loading and restore. Formatting and duplicate identity are unchanged.
 
 `Patient` keeps an immutable contact list in insertion order. `withContacts` replaces only that list; `addcare`
-copies it when rebuilding a patient. Contact identity compares names ignoring case and collapsed spaces, and
-phones ignoring spaces and hyphens, while retaining `+`. The model rejects duplicate identities within a patient.
+copies it when rebuilding a patient. `Contact` rejects Unicode-whitespace-only names and roles, normalizes
+name whitespace to single ordinary spaces, and trims role boundaries. Contact identity compares names ignoring
+case and normalized whitespace, and phones ignoring spaces and hyphens, while retaining `+`.
+The model rejects duplicate identities within a patient.
 
 The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit reject unknown and repeated
-prefixes without slash-word exceptions. Notes from commands use `trim()`; stored notes are
+prefixes, but allow standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` in free text, ignoring case.
+Both add and edit pass their allowed-word sets to `ArgumentTokenizer#verifyNoInvalidPrefixes`; recognized field
+prefixes still delimit fields normally. Contact validation and the add/edit parsers use
+`StringUtil#stripUnicodeWhitespace()` to trim Unicode boundaries, including no-break spaces. The helper scans
+non-whitespace runs and preserves internal text. Notes from commands use this helper; stored notes are
 preserved when loading. Edit uses `Optional<String>` to distinguish
 an omitted note (preserve) from a present empty note (clear). Commands use displayed patient indices and
 contact indices from the detail panel. They validate indices and duplicates before calling `Model#setPatient`.
@@ -1726,6 +1740,10 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `help` again<br>
       Expected: No second help window opens. The status message shows `Opened help window.`
 
+   1. Test case: Minimize the help window, then enter `help` again.<br>
+      Expected: The help window opens again in front of the main window, and the next command typed goes to the
+      main window's command box.
+
 1. Closing the help window
 
    1. Prerequisites: The help window has just been opened with `help`, so the main window's command box has the focus.
@@ -1768,6 +1786,23 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `add n/Ben s/o, Ng ic/S1111111B dob/1950-01-01 p/91111111 a/Blk 1`<br>
    Expected: No patient is added. The status message shows
    `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
+
+### Checking the first word of a field value
+
+1. Prerequisites: Use sample data in a disposable app folder.
+
+1. Test case: `add n/First Value Test ic/S1111111A dob/1950-04-12 p/91234567 a/x/123`<br>
+   Expected: `Unrecognized parameter: x/. Please check the command format.` No patient is added.
+
+1. Replace `a/x/123` with `a/s/o,` in the previous command.<br>
+   Expected: `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.` No patient is added.
+
+1. Test cases: `addcare 1 ci/x/123` and `addcare 1 med/p/9`.<br>
+   Expected: Unrecognized-parameter errors naming `x/` and `p/` respectively. No care entries are added.
+
+1. Replace `a/x/123` with `a/21/3` in the first command and run it. Then change its NRIC to `S1111112A`
+   and its address to `a/https://example.com` and run it again.<br>
+   Expected: Both patients are added; numeric slash text and URLs can still be the first address word.
 
 ### Adding a patient with a blank address
 
@@ -1831,6 +1866,39 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, close the app and change a contact phone in `data/mediconnect.json`
       to `+++123+++`, then relaunch.<br>
       Expected: The file is rejected, startup shows the recovery-copy path, and the original invalid data is preserved.
+
+1. Copied no-break spaces in contact fields
+
+   1. Prerequisites: Use sample data. The gaps in `Whitespace Contact` and the blank values below are
+      no-break spaces (U+00A0); copy and paste them when testing.
+
+   1. Test case: `addcontact 1 n/Whitespace Contact r/Guardian p/91234567 nt/Call first`<br>
+      Expected: The contact is added. Run `view 1` and note its contact number.
+
+   1. Test case: `addcontact 1 n/Whitespace Contact r/Guardian p/91234567`<br>
+      Expected: The duplicate-contact error; no second contact is added.
+
+   1. Test cases: `addcontact 1 n/  r/Guardian p/91234567` and
+      `addcontact 1 n/Whitespace Contact r/  p/91234567`<br>
+      Expected: Blank-name and blank-role errors respectively, without adding contacts.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX nt/ `, using the noted contact number.<br>
+      Expected: The note is cleared, as with an ordinary-space-only note. Other fields are unchanged.
+
+1. Adding and editing contacts with slash words
+
+   1. Test case: `addcontact 1 n/Tan s/o Lim r/Guardian p/91234567 nt/Call c/o daughter`<br>
+      Expected: The contact is added with the name and note unchanged. Run `view 1` to check its contact number.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX n/Siti d/o Ahmad nt/Call C/O family`, replacing `CONTACT_INDEX`
+      with the number from the previous step.<br>
+      Expected: The contact is updated, preserving the spelling and letter case of both fields.
+
+   1. Other accepted standalone words to try: `a/l`, `a/p`, `S/O`, `D/O`, `C/O`.<br>
+      Try these in a name, role or note for both add and edit.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX nt/Call c/o, family`, using the same contact number.<br>
+      Expected: No contact is changed. The message explains that `c/o` must be a separate word without punctuation.
 
 ### Listing active patients
 
