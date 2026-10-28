@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalContacts.GP;
@@ -61,6 +62,7 @@ public class EditContactCommandTest {
         assertEquals(String.format(EditContactCommand.MESSAGE_SUCCESS, patient.getName(), GUARDIAN),
                 command.execute(model).getFeedbackToUser());
         assertEquals(List.of(GUARDIAN), model.getFilteredPatientList().get(0).getContacts());
+        assertEquals(model.getFilteredPatientList().get(0), model.getViewedPatient().getValue());
     }
 
     @Test
@@ -75,6 +77,7 @@ public class EditContactCommandTest {
                 Optional.empty(), Optional.empty(), Optional.of("12"), Optional.empty());
         assertThrows(CommandException.class, Contact.MESSAGE_PHONE_CONSTRAINTS, () -> invalid.execute(model));
         assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertNull(model.getViewedPatient().getValue());
         edit(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(GP.getNote())).execute(model);
         assertEquals(patient, model.getFilteredPatientList().get(0));
     }
@@ -88,6 +91,22 @@ public class EditContactCommandTest {
         assertThrows(CommandException.class, Messages.MESSAGE_INVALID_CONTACT_INDEX, () ->
                 edit(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of("")).execute(model));
         assertEquals(patient, model.getFilteredPatientList().get(0));
+    }
+
+    @Test
+    public void execute_otherPatientViewed_showsChangedPatient() throws Exception {
+        Patient first = new PatientBuilder().build();
+        Patient second = new PatientBuilder().withNric("S1111111B").withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(first).withPatient(second).build(),
+                new UserPrefs());
+        model.setViewedPatient(first);
+
+        edit(INDEX_SECOND_PATIENT, INDEX_FIRST_PATIENT, Optional.of("Call first")).execute(model);
+        Contact expected = new Contact(GP.getName(), GP.getRole(), GP.getPhone(), "Call first");
+
+        assertEquals(second.withContacts(List.of(expected)), model.getViewedPatient().getValue());
+        assertEquals(first, model.getAddressBook().getPatientList().get(0));
+        assertEquals(2, model.getFilteredPatientList().size());
     }
 
     @Test

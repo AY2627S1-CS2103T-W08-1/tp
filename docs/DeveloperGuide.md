@@ -508,7 +508,11 @@ use this helper; stored notes are
 preserved when loading. Edit uses `Optional<String>` to distinguish
 an omitted note (preserve) from a present empty note (clear). Commands use displayed patient indices and
 contact indices from the detail panel. They validate indices and duplicates before calling `Model#setPatient`.
-The existing viewed-patient listener refreshes that panel automatically.
+After updating the patient, each contact command calls `Model#setViewedPatient(editedPatient)`, so the panel
+shows the affected patient even if another patient was previously viewed or the panel was empty. The existing
+viewed-patient listener refreshes the panel; commands do not access UI controls. The patient-list filter is retained.
+Rejected commands do not change the viewed patient. If saving fails, the existing `LogicManager` snapshot
+restores the patient data, filter and previously viewed patient.
 
 `JsonAdaptedContact` saves the four contact fields. Missing contact lists load as empty, and missing notes load as
 empty strings. Null entries, invalid fields and duplicate identities reject the data file with a reason.
@@ -2020,6 +2024,24 @@ testers are expected to do more *exploratory* testing.
       Then run `editcontact 1 OTHER_INDEX n/Review clinic p/456`, replacing `OTHER_INDEX` with that number.<br>
       Expected: The second contact is added, but its edit is rejected as a duplicate of `Review clinic` despite
       their different roles and notes. Both contacts remain as they were before the edit.
+
+1. Showing the patient affected by a contact command
+
+   1. Prerequisites: At least two active patients are listed. Run `view 1`.
+
+   1. Test case: `addcontact 2 n/Panel Check r/Guardian p/91234567`<br>
+      Expected: The panel switches to patient 2. Scroll to Contacts and note the new contact's number.
+      The displayed patient list is unchanged.
+
+   1. Run `view 1`, then `editcontact 2 CONTACT_INDEX nt/Call first`, using the number just noted.<br>
+      Expected: The panel switches to patient 2 and shows the updated note under Contacts.
+
+   1. Run `view 1`, then `deletecontact 2 CONTACT_INDEX`, using the same number.<br>
+      Expected: The panel switches to patient 2 and the added contact is gone. Remaining contacts are renumbered.
+
+   1. Run `view 1`, then `editcontact 2 999 nt/Call first` and `deletecontact 2 999`, where 999 exceeds the
+      number of contacts on patient 2.<br>
+      Expected: Each command reports an invalid contact index and the panel continues to show patient 1.
 
 1. Validating contact phone numbers
 
