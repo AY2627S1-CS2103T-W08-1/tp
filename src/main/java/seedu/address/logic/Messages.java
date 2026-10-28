@@ -4,7 +4,10 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +39,8 @@ public class Messages {
             "The appointment index provided is invalid.";
     public static final String MESSAGE_DUPLICATE_APPOINTMENT =
             "This appointment already exists for this patient.";
+    public static final String MESSAGE_APPOINTMENT_BEFORE_DOB =
+            "The appointment cannot be before the patient's date of birth, %1$s.";
     public static final String MESSAGE_PAST_APPOINTMENT = "Note: this appointment is in the past.";
     public static final String MESSAGE_FAR_FUTURE_APPOINTMENT = "Note: this appointment is more than 2 years ahead.";
     public static final String MESSAGE_CLASH =
@@ -60,6 +65,11 @@ public class Messages {
 
     /** Reason given by {@code describeWriteFailure} when MediConnect is not allowed to write to a folder. */
     public static final String MESSAGE_NO_WRITE_PERMISSION = "MediConnect does not have permission to write there";
+
+    /** Reason given by {@code describeWriteFailure} when a file has the name of a folder to be made. */
+    public static final String MESSAGE_FILE_IN_PLACE_OF_FOLDER =
+            "there is a file named %1$s where that folder should be. Move or rename the file, "
+            + "so that the folder can be made";
 
     /** Reason given by {@code describeWriteFailure} when the file system does not give a reason of its own. */
     public static final String MESSAGE_FILE_SYSTEM_ERROR = "the folder or file could not be created";
@@ -114,7 +124,8 @@ public class Messages {
 
     /**
      * Returns a short, readable reason for {@code ioe}, a failure to write a file, suitable for showing to the user.
-     * File system exceptions use the file path as their message, so their reason is used instead.
+     * File system exceptions use the file path as their message, so their reason is used instead. A file that
+     * has the name of a folder to make is named, since the file system gives no reason for it.
      * Trailing full stops are removed, as the messages that show the reason add their own.
      *
      * @param ioe Exception thrown while writing the file.
@@ -124,6 +135,11 @@ public class Messages {
         requireNonNull(ioe);
         if (ioe instanceof AccessDeniedException) {
             return MESSAGE_NO_WRITE_PERMISSION;
+        }
+        // Files#createDirectories throws this, without a reason, when a file has the name of a folder to make
+        if (ioe instanceof FileAlreadyExistsException existsException && existsException.getFile() != null) {
+            Path fileName = Paths.get(existsException.getFile()).getFileName();
+            return String.format(MESSAGE_FILE_IN_PLACE_OF_FOLDER, fileName);
         }
 
         String reason = getReportedReason(ioe);

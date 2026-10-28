@@ -36,6 +36,7 @@ public class AddApptCommandParser implements Parser<AddApptCommand> {
     @Override
     public AddApptCommand parse(String args) throws ParseException {
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_WITH, PREFIX_NOTE),
                 PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,

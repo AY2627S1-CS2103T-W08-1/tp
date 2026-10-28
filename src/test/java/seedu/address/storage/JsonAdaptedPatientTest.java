@@ -274,6 +274,20 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_canonicallyEquivalentCareEntry_throwsIllegalValueException() {
+        JsonAdaptedPatient duplicateAllergens = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of("Caf\u00e9", "Cafe\u0301"), List.of(), null, null, null);
+        JsonAdaptedPatient duplicateInstructions = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB,
+                VALID_PHONE, VALID_ADDRESS, List.of(), List.of(),
+                List.of("R\u00e9sum\u00e9", "Re\u0301sume\u0301"), null, null, null);
+
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_DUPLICATE_ALLERGEN,
+                duplicateAllergens::toModelType);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_DUPLICATE_CARE_INSTRUCTION,
+                duplicateInstructions::toModelType);
+    }
+
+    @Test
     public void toModelType_duplicateContacts_keepsCause() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(),
@@ -303,7 +317,8 @@ public class JsonAdaptedPatientTest {
         assertThrows(IllegalValueException.class, "Contact entry must not be null.", nullEntry::toModelType);
         JsonAdaptedPatient duplicates = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(),
-                List.of(new JsonAdaptedContact(contact), new JsonAdaptedContact(contact)), null, null);
+                List.of(new JsonAdaptedContact(contact), new JsonAdaptedContact("Tan\u00a0&\u202fPartners\u2007Clinic",
+                        contact.getRole(), contact.getPhone(), contact.getNote())), null, null);
         assertThrows(IllegalValueException.class, MESSAGE_DUPLICATE,
                 duplicates::toModelType);
     }
@@ -326,5 +341,16 @@ public class JsonAdaptedPatientTest {
                 VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
                 List.of(new JsonAdaptedAppointment(CHECKUP), new JsonAdaptedAppointment(sameCheckup)), null);
         assertThrows(IllegalValueException.class, Appointment.MESSAGE_DUPLICATE, duplicates::toModelType);
+    }
+
+    @Test
+    public void toModelType_appointmentBeforeDob_throwsIllegalValueException() {
+        // addappt, editappt and edit reject it, so a hand-edited data file or backup cannot hold it either
+        Appointment beforeBirth = new Appointment(BENSON.getDob().value.minusDays(1), LocalTime.of(10, 0),
+                "Dr Tan", "");
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
+                List.of(new JsonAdaptedAppointment(beforeBirth)), null);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_APPOINTMENT_BEFORE_DOB, patient::toModelType);
     }
 }

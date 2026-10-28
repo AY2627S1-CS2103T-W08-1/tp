@@ -6,6 +6,8 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.text.Normalizer;
 import java.util.Objects;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * An immutable person or organization to contact about a patient.
  */
@@ -21,6 +23,7 @@ public class Contact {
     private static final int MIN_PHONE_DIGITS = 3;
     private static final int MAX_PHONE_DIGITS = 15;
     private static final String PHONE_REGEX = "\\+?[0-9 -]+";
+    private static final String WHITESPACE_REGEX = "(?U)\\s+";
 
     private final String name;
     private final String role;
@@ -36,8 +39,8 @@ public class Contact {
         checkArgument(isValidName(name), MESSAGE_NAME_CONSTRAINTS);
         checkArgument(isValidRole(role), MESSAGE_ROLE_CONSTRAINTS);
         checkArgument(isValidPhone(phone), MESSAGE_PHONE_CONSTRAINTS);
-        this.name = name.strip().replaceAll("\\s+", " ");
-        this.role = role.strip();
+        this.name = name.replaceAll(WHITESPACE_REGEX, " ").strip();
+        this.role = StringUtil.stripUnicodeWhitespace(role);
         this.phone = phone.strip();
         this.note = note;
     }
@@ -74,14 +77,14 @@ public class Contact {
      * Returns whether a contact name is nonblank.
      */
     public static boolean isValidName(String name) {
-        return !name.isBlank();
+        return !StringUtil.stripUnicodeWhitespace(name).isEmpty();
     }
 
     /**
      * Returns whether a contact role is nonblank.
      */
     public static boolean isValidRole(String role) {
-        return !role.isBlank();
+        return !StringUtil.stripUnicodeWhitespace(role).isEmpty();
     }
 
     /**

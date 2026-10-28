@@ -147,11 +147,12 @@ public class EditMedCommandParserTest {
 
     @Test
     public void parse_unknownPrefix_throwsParseException() {
-        assertParseFailure(parser, " 1 1 med/Aspirin T/08:00", String.format(MESSAGE_UNKNOWN_PREFIX, "T/"));
         assertParseFailure(parser, " 4 1 med/Aspirin p/123", String.format(MESSAGE_UNKNOWN_PREFIX, "p/"));
-        for (String prefix : List.of("p/", "dob/", "xyz/", "x/", "T/", "MED/", "al/", "ci/")) {
+        for (String prefix : List.of("p/", "dob/", "al/", "ci/")) {
             assertParseFailure(parser, " 1 2 med/Aspirin " + prefix + "value",
                     String.format(MESSAGE_UNKNOWN_PREFIX, prefix));
+        }
+        for (String prefix : List.of("p/", "dob/", "xyz/", "x/", "T/", "MED/", "al/", "ci/")) {
             assertParseFailure(parser, " 1 2 " + prefix + "value",
                     String.format(MESSAGE_UNKNOWN_PREFIX, prefix));
             assertParseFailure(parser, " 1 2 t/08:00 " + prefix + "value",
@@ -166,9 +167,11 @@ public class EditMedCommandParserTest {
     }
 
     @Test
-    public void parse_prefixLikeWordWithLettersBeforeSlash_throwsParseException() {
-        assertParseFailure(parser, " 1 2 med/Insulin 10 units/day", String.format(MESSAGE_UNKNOWN_PREFIX, "units/"));
-        assertParseFailure(parser, " 1 2 med/Amoxicillin 250 mg/ml", String.format(MESSAGE_UNKNOWN_PREFIX, "mg/"));
+    public void parse_clinicalSlashWords_preserved() {
+        assertParseSuccess(parser, " 1 2 med/Insulin 10 units/day",
+                edit(Optional.of("Insulin 10 units/day"), Optional.empty()));
+        assertParseSuccess(parser, " 1 2 med/Amoxicillin 250 mg/ml",
+                edit(Optional.of("Amoxicillin 250 mg/ml"), Optional.empty()));
     }
 
     @Test

@@ -3,6 +3,7 @@ package seedu.address.model.patient;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +30,8 @@ public class Patient {
             "A patient cannot have duplicate allergens, ignoring letter case and whitespace differences.";
     public static final String MESSAGE_DUPLICATE_CARE_INSTRUCTION =
             "A patient cannot have duplicate care instructions, ignoring letter case and whitespace differences.";
+    public static final String MESSAGE_APPOINTMENT_BEFORE_DOB =
+            "A patient cannot have an appointment before their date of birth.";
 
     // Identity fields
     private final Name name;
@@ -83,7 +86,7 @@ public class Patient {
 
     /**
      * Creates a patient with contacts, appointments, and the requested archived state.
-     * Duplicate contact identities and null appointments are rejected.
+     * Duplicate contact identities, null appointments and appointments before {@code dob} are rejected.
      */
     public Patient(Name name, Nric nric, Dob dob, Phone phone, Address address,
             List<Medication> medications, List<String> allergens, List<String> careInstructions,
@@ -109,6 +112,7 @@ public class Patient {
         // List.copyOf rejects null appointments before they are sorted.
         this.appointments = List.copyOf(appointments).stream().sorted().toList();
         verifyNoDuplicateAppointments(this.appointments);
+        verifyNoAppointmentsBeforeDob(this.appointments, dob);
     }
 
     /**
@@ -144,11 +148,12 @@ public class Patient {
     }
 
     /**
-     * Returns a care entry with Unicode whitespace collapsed and removed from both ends.
+     * Returns a care entry in NFC form, with Unicode whitespace collapsed and removed from both ends.
      */
     public static String normalizeCareEntry(String entry) {
         Objects.requireNonNull(entry);
-        return entry.replaceAll("(?U)\\s+", " ").trim();
+        String normalizedWhitespace = entry.replaceAll("(?U)\\s+", " ").trim();
+        return Normalizer.normalize(normalizedWhitespace, Normalizer.Form.NFC);
     }
 
     /**
@@ -161,6 +166,15 @@ public class Patient {
             checkArgument(appointments.subList(0, i).stream().noneMatch(appointment::isSameAppointment),
                     Appointment.MESSAGE_DUPLICATE);
         }
+    }
+
+    /**
+     * Rejects appointments dated before {@code dob}, as {@code addappt}, {@code editappt} and {@code edit} do,
+     * so that a data file cannot hold them either. An appointment on the date of birth is allowed.
+     */
+    private static void verifyNoAppointmentsBeforeDob(List<Appointment> appointments, Dob dob) {
+        checkArgument(appointments.stream().noneMatch(appointment -> dob.isAfter(appointment.getDate())),
+                MESSAGE_APPOINTMENT_BEFORE_DOB);
     }
 
     /**
