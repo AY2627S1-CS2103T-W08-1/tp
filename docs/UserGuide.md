@@ -809,7 +809,8 @@ Format: `due [INDEX]`
   them from the patient list. Archived patients are not included.
 * With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
   the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
-  number (1, 2, 3, ...).
+  number (1, 2, 3, ...). If that patient is archived, `due` returns
+  `This patient is archived. Unarchive them to list their medication times.`
 * Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
   with several times has one line for each time.
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same

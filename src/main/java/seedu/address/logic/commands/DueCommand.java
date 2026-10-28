@@ -87,7 +87,7 @@ public class DueCommand extends Command {
     /**
      * Returns the patients to list: all patients, or only the patient at the index of this command.
      *
-     * @throws CommandException if the index is not in the displayed patient list.
+     * @throws CommandException if the index is not in the displayed patient list, or the patient is archived.
      */
     private List<Patient> getCandidatePatients(Model model) throws CommandException {
         if (patientIndex.isEmpty()) {
@@ -98,7 +98,11 @@ public class DueCommand extends Command {
         if (patientIndex.get().getZeroBased() >= lastShownList.size()) {
             throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX);
         }
-        return List.of(lastShownList.get(patientIndex.get().getZeroBased()));
+        Patient patient = lastShownList.get(patientIndex.get().getZeroBased());
+        if (patient.isArchived()) {
+            throw new CommandException(Messages.MESSAGE_DUE_PATIENT_ARCHIVED);
+        }
+        return List.of(patient);
     }
 
     /**

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static seedu.address.logic.Messages.MESSAGE_DUE_PATIENT_ARCHIVED;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_NOTHING_DUE_TODAY;
 import static seedu.address.logic.Messages.MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT;
@@ -210,13 +211,13 @@ public class DueCommandTest {
     }
 
     @Test
-    public void execute_archivedPatientAtDisplayedIndex_notListed() throws Exception {
+    public void execute_archivedPatientAtDisplayedIndex_throwsCommandException() {
         Patient archivedAlex = new PatientBuilder(alex).withArchived(true).build();
         Model model = createModel(archivedAlex);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
 
-        assertDue(new DueCommand(INDEX_FIRST_PATIENT, clockAt(7, 0, 0)), model,
-                String.format(MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT, archivedAlex.getName()));
+        assertCommandFailure(new DueCommand(INDEX_FIRST_PATIENT, clockAt(7, 0, 0)), model,
+                MESSAGE_DUE_PATIENT_ARCHIVED);
     }
 
     @Test

@@ -47,6 +47,8 @@ public class Messages {
             "Warning: %1$s already has an appointment at this date and time (with %2$s).";
     public static final String MESSAGE_NOTHING_DUE_TODAY = "No medications are due today.";
     public static final String MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT = "No medications are due today for %1$s.";
+    public static final String MESSAGE_DUE_PATIENT_ARCHIVED =
+            "This patient is archived. Unarchive them to list their medication times.";
     public static final String MESSAGE_DUE_ENTRY = "%1$s %2$s: %3$s";
     public static final String MESSAGE_DUE_EARLIER_TODAY_SUFFIX = " (earlier today)";
     public static final String MESSAGE_INVALID_MEDICATION_DISPLAYED_INDEX =
