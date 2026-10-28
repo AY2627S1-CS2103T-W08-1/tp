@@ -199,6 +199,18 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void readAddressBook_unpairedSurrogateInAddress_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: a hand-edited address with half of a surrogate pair, which saving again
+        // would silently change to "?"
+        Path filePath = testFolder.resolve("UnpairedSurrogate.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        Files.writeString(filePath, Files.readString(filePath).replace("Jurong", "\\ud800Jurong"));
+
+        assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
+    }
+
+    @Test
     public void saveAddressBook_nullAddressBook_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> saveAddressBook(null, "SomeFile.json"));
     }

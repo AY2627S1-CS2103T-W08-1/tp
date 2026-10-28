@@ -171,12 +171,33 @@ public class MainAppTest {
     }
 
     @Test
+    public void initModelManager_unpairedSurrogateInDataFile_startsEmptyAndKeepsCopy() throws Exception {
+        // Equivalence partitioning: an address edited by hand to hold half of a surrogate pair, which must
+        // not be loaded and later saved as "?"
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        StorageManager storage = createStorageWithSampleData(dataFile);
+        String editedData = Files.readString(dataFile).replace("Geylang", "\\ud800 Geylang");
+        Files.writeString(dataFile, editedData);
+        MainApp mainApp = new MainApp();
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        mainApp.start(null);
+
+        assertEquals(new AddressBook(), model.getAddressBook());
+        Path recoveryFile = getRecoveryFiles().get(0);
+        assertEquals(editedData, Files.readString(recoveryFile));
+        assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(),
+                MainApp.MESSAGE_UNREADABLE_DATA), uiStub.warningMessage);
+    }
+
+    @Test
     public void initModelManager_dataFileWithByteOrderMark_loadsDataWithoutWarning() throws Exception {
         // Equivalence partitioning: a valid data file edited by hand in an editor that adds a UTF-8
         // byte-order mark
         Path dataFile = temporaryFolder.resolve("mediconnect.json");
-        StorageManager storage = createStorage(dataFile);
-        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        StorageManager storage = createStorageWithSampleData(dataFile);
         addUtf8ByteOrderMark(dataFile);
         MainApp mainApp = new MainApp();
         UiStub uiStub = new UiStub();
@@ -271,6 +292,15 @@ public class MainAppTest {
         assertNull(uiStub.startedStage);
         assertSame(uiStub, mainApp.ui);
         assertNull(uiStub.warningMessage);
+    }
+
+    /**
+     * Returns storage for {@code dataFile}, after saving the sample data there.
+     */
+    private StorageManager createStorageWithSampleData(Path dataFile) throws IOException {
+        StorageManager storage = createStorage(dataFile);
+        storage.saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        return storage;
     }
 
     private StorageManager createStorage(Path dataFile) {
