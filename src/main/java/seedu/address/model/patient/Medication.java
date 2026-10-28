@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Represents a medication of a patient: a description and the times of day it is taken.
  * Guarantees: immutable; description is valid with normalized whitespace; times are sorted ascending,
@@ -78,10 +80,11 @@ public class Medication {
      * Returns {@code description} with every run of whitespace, including Unicode whitespace and line breaks,
      * replaced by one space, without leading and trailing whitespace, and in Unicode form NFC, as for the other
      * care entries, so that descriptions that look the same are the same.
+     *
+     * @see StringUtil#normalizeEntry(String)
      */
     public static String normalizeDescription(String description) {
-        requireNonNull(description);
-        return Patient.normalizeCareEntry(description);
+        return StringUtil.normalizeEntry(description);
     }
 
     /**
