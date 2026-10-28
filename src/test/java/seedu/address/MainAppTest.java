@@ -434,6 +434,37 @@ public class MainAppTest {
     }
 
     @Test
+    public void init_unsavedSamples_warnsWhileRejectingSecondInstance() throws Exception {
+        Path dataFolder = temporaryFolder.resolve("data");
+        Files.writeString(dataFolder, "keep this file");
+        Path dataFile = dataFolder.resolve("mediconnect.json");
+        Path prefsFile = temporaryFolder.resolve("preferences.json");
+        StartupAppStub first = new StartupAppStub(dataFile, prefsFile, null);
+        StartupAppStub second = new StartupAppStub(dataFile, prefsFile, null);
+        try {
+            first.init();
+            UiStub ui = new UiStub();
+            first.ui = ui;
+            first.start(null);
+
+            assertTrue(ui.isStarted);
+            assertEquals(SampleDataUtil.getSampleAddressBook(), first.model.getAddressBook());
+            assertNotNull(ui.warningMessage);
+            assertTrue(ui.warningMessage.contains("The sample patients are not saved."));
+            assertNull(first.startupError);
+            second.init();
+            second.start(null);
+            assertEquals(String.format(MainApp.MESSAGE_DATA_IN_USE, dataFile.toAbsolutePath()), second.startupError);
+            assertNull(second.model);
+            assertEquals("keep this file", Files.readString(dataFolder));
+            assertFalse(Files.exists(dataFile));
+        } finally {
+            second.stop();
+            first.stop();
+        }
+    }
+
+    @Test
     public void init_secondInstance_showsErrorWithoutChangingData() throws Exception {
         Path dataFile = temporaryFolder.resolve("mediconnect.json");
         Path prefsFile = temporaryFolder.resolve("preferences.json");
