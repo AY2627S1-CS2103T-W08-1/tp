@@ -237,6 +237,26 @@ the real startup-error method and checks that the error is presented before exit
 No model, logic or main window is created after a preservation failure, and `stop()` skips preference saving
 when there is no model. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
+The storage diagram also shows the standalone `DataFileLock` helper held by `MainApp`; it is not owned by
+`StorageManager`. `MainApp#init()` acquires it before reading preferences or patient data. Its exclusive OS file lock
+is held until shutdown, so a second instance using that app folder cannot load a stale copy of its data.
+An in-use file or a failure to acquire the lock produces a startup error without creating a model or main window.
+The lock is released immediately if recovery fails, and in `stop()` even if preference saving fails.
+Lock-close I/O failures are logged without interrupting shutdown; a focused regression covers this cleanup path.
+
+`DataFileLock` hashes the data path after resolving its parent directory's aliases, including missing folders.
+Lock files live in `.mediconnect/locks` under the app's launch folder, beside `preferences.json`, separately from
+patient data. Atomic data-file replacement therefore does not remove the lock. The lock files must be writable;
+a read-only data folder can still be viewed when the app-local lock folder is usable. A synchronized registry
+avoids opening a second channel to the same held lock in one JVM, because closing that channel can release process-wide locks
+on some systems. Closing the owner channel or terminating its JVM releases the OS lock. Metadata files remain
+in place to avoid races from deleting a lock file while another process uses it. They contain no patient data.
+This guard coordinates instances using the same app-local lock directory. Sharing a data folder between different
+app folders through symlinks or junctions is unsupported: their separate lock directories allow both instances to
+open the data and can permit stale writes. Canonicalizing the data path does not make separate lock files coordinate.
+External editors do not observe the lock and must only be used while the app is closed. Path-injecting constructors use the preferences file's parent as the
+app folder, so startup tests use the same relative lock location inside their temporary app folder.
+
 When startup reaches `initModelManager` and the data file is missing, `MainApp` uses sample patients and attempts
 to save them once through `createDataFileIfMissing`. If that save throws `IOException`, startup continues and the existing startup warning
 dialog explains that the samples are unsaved, giving the absolute data path and a reason formatted by
@@ -411,7 +431,7 @@ The `backup` command saves a copy of all patient data to the `data/backups` fold
 
 #### Implementation
 
-`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. Checking whether a name is free and then saving under it are two steps, so two backups made at the same moment, e.g., in two MediConnect windows, or by `restore` or `clear confirm` while a backup is made, could otherwise choose the same name, and one would replace the other. `BackupCommand#saveUnderNextFreeName()` therefore does both while it holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. Checking whether a name is free and then saving under it are two steps, so two backups targeting the same folder at the same moment could otherwise choose the same name, and one would replace the other. `BackupCommand#saveUnderNextFreeName()` therefore does both while it holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 
 The sequence diagram below shows a successful `restore old.json`.
 
@@ -1773,7 +1793,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Non-Functional Requirements
 
-1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
+1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation. Only one running instance may use a given app folder's data at a time. Sharing data between different app folders is unsupported.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
 4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors. If the recovery copy cannot be created, it must instead show a startup error and exit without changing patient data.
@@ -2368,6 +2388,24 @@ testers are expected to do more *exploratory* testing.
 1. Alternatively, use malformed JSON in a readable test data file and deny write access to its containing folder.<br>
    Expected: Failure to create a recovery copy produces the same startup error instead of opening an empty model.
    Restore permissions and repair or replace the test file before relaunching.
+
+### Preventing concurrent access to patient data
+
+1. Prerequisites: Use the updated JAR in a disposable app folder. Close any older MediConnect instances first.
+   Open a terminal in this folder and run `java -jar mediconnect.jar`.
+   Check that `.mediconnect/locks` is created inside this app folder and contains a lock file.
+
+1. From a second terminal in the same folder, run the same command.<br>
+   Expected: The second launch shows an error saying that MediConnect is already using the data file, gives
+   its full path, and asks you to close the other window. No second main window opens.
+
+1. In the first window, run `add n/Lock Test ic/S1111111A dob/1950-04-12 p/91234567 a/Blk 1`, then close it.
+   Relaunch from the same folder.<br>
+   Expected: The app opens normally and the new patient is present; rejecting the second launch lost no changes.
+
+1. In this disposable folder only, terminate the running process without a normal exit, then relaunch.<br>
+   Expected: The app opens normally with the last successfully saved data. Remaining lock metadata does not
+   block startup; do not delete it while another instance is running.
 
 ### Backing up data
 
