@@ -89,6 +89,11 @@ public class RestoreCommand extends Command {
         this.backupDir = backupDir;
     }
 
+    @Override
+    public boolean requiresSaveWhenUnchanged() {
+        return true;
+    }
+
     /**
      * Replaces the patient data in {@code model} with the data in the backup file.
      * The whole file is checked and the current data is backed up first, and if either step fails,
