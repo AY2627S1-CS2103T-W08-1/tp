@@ -25,8 +25,9 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
     @Override
     public AddCareCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS, PREFIX_MEDICATION, PREFIX_ALLERGEN,
-                PREFIX_CARE_INSTRUCTION);
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION),
+                PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION);
         List<String> medications = argMultimap.getAllValues(PREFIX_MEDICATION);

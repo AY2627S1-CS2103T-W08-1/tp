@@ -83,7 +83,7 @@ public class AddContactCommandParserTest {
             String args = " 1" + FIELDS + " nt/note " + prefix + "again";
             assertParseFailure(parser, args, Messages.getErrorMessageForDuplicatePrefixes(prefix));
         }
-        assertParseFailure(parser, " 1" + FIELDS + " x/value",
+        assertParseFailure(parser, " 1 x/value" + FIELDS,
                 String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/"));
     }
 
