@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalContacts.GP;
@@ -28,6 +29,19 @@ import seedu.address.testutil.PatientBuilder;
 public class AddContactCommandTest {
 
     @Test
+    public void execute_canonicallyEquivalentContact_rejectedWithoutChanges() {
+        Contact original = new Contact("Caf\u00e9", "GP", "123", "");
+        Patient patient = new PatientBuilder().withContacts(original).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        model.setViewedPatient(patient);
+        Contact duplicate = new Contact("Cafe\u0301", "Guardian", "123", "Different note");
+        assertThrows(CommandException.class, Contact.MESSAGE_DUPLICATE, () ->
+                new AddContactCommand(INDEX_FIRST_PATIENT, duplicate).execute(model));
+        assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertEquals(patient, model.getViewedPatient().getValue());
+    }
+
+    @Test
     public void execute_validContact_addedAndViewedPatientUpdated() throws Exception {
         Patient patient = new PatientBuilder()
                 .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0))))
@@ -51,6 +65,7 @@ public class AddContactCommandTest {
         assertThrows(CommandException.class, Contact.MESSAGE_DUPLICATE, () ->
                 new AddContactCommand(INDEX_FIRST_PATIENT, duplicate).execute(model));
         assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertNull(model.getViewedPatient().getValue());
     }
 
     @Test
@@ -63,8 +78,24 @@ public class AddContactCommandTest {
         new AddContactCommand(INDEX_FIRST_PATIENT, GP).execute(model);
         assertEquals(second.withContacts(List.of(GP)), model.getFilteredPatientList().get(0));
         assertEquals(first, model.getAddressBook().getPatientList().get(0));
+        assertEquals(second.withContacts(List.of(GP)), model.getViewedPatient().getValue());
         assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX, () ->
                 new AddContactCommand(INDEX_SECOND_PATIENT, GUARDIAN).execute(model));
+    }
+
+    @Test
+    public void execute_otherPatientViewed_showsChangedPatient() throws Exception {
+        Patient first = new PatientBuilder().build();
+        Patient second = new PatientBuilder().withNric("S1111111B").withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(first).withPatient(second).build(),
+                new UserPrefs());
+        model.setViewedPatient(first);
+
+        new AddContactCommand(INDEX_SECOND_PATIENT, GUARDIAN).execute(model);
+
+        assertEquals(second.withContacts(List.of(GP, GUARDIAN)), model.getViewedPatient().getValue());
+        assertEquals(first, model.getAddressBook().getPatientList().get(0));
+        assertEquals(2, model.getFilteredPatientList().size());
     }
 
     @Test

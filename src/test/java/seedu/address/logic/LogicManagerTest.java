@@ -13,6 +13,7 @@ import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NRIC_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 
@@ -199,6 +200,28 @@ public class LogicManagerTest {
         assertEquals(List.of(ALICE, archivedPatient), model.getAddressBook().getPatientList());
         assertEquals(List.of(ALICE), model.getFilteredPatientList());
         assertEquals(ALICE, model.getViewedPatient().getValue());
+    }
+
+    @Test
+    public void execute_contactSaveFails_restoresPatientsListAndViewedPatient() throws Exception {
+        Patient patientWithContact = new PatientBuilder(BENSON).withContacts(GP).build();
+        model.addPatient(ALICE);
+        model.addPatient(patientWithContact);
+        model.setViewedPatient(ALICE);
+        logic = createLogicWithFailingStorage(DUMMY_IO_EXCEPTION);
+
+        for (String input : List.of("addcontact 2 n/Mary r/Guardian p/123", "editcontact 2 1 nt/Call first",
+                "deletecontact 2 1")) {
+            wasSaveAttempted = false;
+            assertThrows(CommandException.class,
+                    String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()), () ->
+                    logic.execute(input));
+
+            assertTrue(wasSaveAttempted);
+            assertEquals(List.of(ALICE, patientWithContact), model.getAddressBook().getPatientList());
+            assertEquals(List.of(ALICE, patientWithContact), model.getFilteredPatientList());
+            assertEquals(ALICE, model.getViewedPatient().getValue());
+        }
     }
 
     @Test

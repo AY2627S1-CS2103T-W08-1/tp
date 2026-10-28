@@ -88,6 +88,6 @@ public class AddApptCommandParserTest {
 
     @Test
     public void parse_unknownPrefix_throwsParseException() {
-        assertParseFailure(parser, "1" + VALID_FIELDS + " x/12", String.format(MESSAGE_UNKNOWN_PREFIX, "x/"));
+        assertParseFailure(parser, "1 x/12" + VALID_FIELDS, String.format(MESSAGE_UNKNOWN_PREFIX, "x/"));
     }
 }

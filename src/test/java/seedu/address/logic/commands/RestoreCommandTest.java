@@ -33,6 +33,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.logic.Messages;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
@@ -201,7 +202,7 @@ public class RestoreCommandTest {
         writeBackup(createAddressBook(HOON, IDA));
         replaceWithInvalidUtf8Byte(temporaryFolder.resolve(BACKUP_NAME), HOON.getName().fullName);
 
-        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_UNREADABLE, BACKUP_NAME));
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NOT_UTF8, BACKUP_NAME));
     }
 
     @Test
@@ -303,6 +304,19 @@ public class RestoreCommandTest {
 
             assertRestoreFailure(String.format(RestoreCommand.MESSAGE_UNREADABLE, BACKUP_NAME));
         }
+    }
+
+    @Test
+    public void execute_misspelledPropertyInBackup_throwsCommandException() throws Exception {
+        // restoring it would otherwise drop the misspelled property's values, here every care instruction
+        writeBackup(getTypicalAddressBook());
+        Path backupFile = temporaryFolder.resolve(BACKUP_NAME);
+        String content = Files.readString(backupFile);
+        assertTrue(content.contains("\"careInstructions\""));
+        Files.writeString(backupFile, content.replace("\"careInstructions\"", "\"careInstructons\""));
+
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_INVALID_DATA, BACKUP_NAME,
+                String.format(JsonUtil.MESSAGE_UNKNOWN_PROPERTY, "careInstructons")));
     }
 
     @Test

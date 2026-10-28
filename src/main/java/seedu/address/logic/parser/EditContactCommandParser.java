@@ -27,6 +27,7 @@ public class EditContactCommandParser implements Parser<EditContactCommand> {
     @Override
     public EditContactCommand parse(String args) throws ParseException {
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_NAME, PREFIX_ROLE, PREFIX_NOTE),
                 PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);
         ArgumentMultimap fields = ArgumentTokenizer.tokenize(args,
                 PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);
@@ -51,9 +52,10 @@ public class EditContactCommandParser implements Parser<EditContactCommand> {
         validateField(fields.getValue(PREFIX_NAME), Contact::isValidName, Contact.MESSAGE_NAME_CONSTRAINTS);
         validateField(fields.getValue(PREFIX_ROLE), Contact::isValidRole, Contact.MESSAGE_ROLE_CONSTRAINTS);
         validateField(fields.getValue(PREFIX_PHONE), Contact::isValidPhone, Contact.MESSAGE_PHONE_CONSTRAINTS);
+        Optional<String> note = fields.getValue(PREFIX_NOTE).map(StringUtil::stripUnicodeWhitespace);
+        validateField(note, Contact::isValidNote, Contact.MESSAGE_NOTE_CONSTRAINTS);
         return new EditContactCommand(patientIndex, contactIndex, fields.getValue(PREFIX_NAME),
-                fields.getValue(PREFIX_ROLE), fields.getValue(PREFIX_PHONE),
-                fields.getValue(PREFIX_NOTE).map(StringUtil::stripUnicodeWhitespace));
+                fields.getValue(PREFIX_ROLE), fields.getValue(PREFIX_PHONE), note);
     }
 
     private static void validateField(Optional<String> value, Predicate<String> validator, String message)
