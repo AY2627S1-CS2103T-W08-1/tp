@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CARE_INSTRUCTION;
 
+import java.util.List;
 import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
@@ -26,15 +27,9 @@ public class EditCareCommandParser implements Parser<EditCareCommand> {
         ArgumentMultimap fields = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS, PREFIX_CARE_INSTRUCTION);
         fields.verifyNoDuplicatePrefixesFor(PREFIX_CARE_INSTRUCTION);
 
-        String[] indices = fields.getPreamble().split("\\s+");
-        Index patientIndex;
-        Index careInstructionIndex;
+        List<Index> indices;
         try {
-            if (indices.length != 2) {
-                throw new ParseException(ParserUtil.MESSAGE_INVALID_INDEX);
-            }
-            patientIndex = ParserUtil.parseIndex(indices[0]);
-            careInstructionIndex = ParserUtil.parseIndex(indices[1]);
+            indices = ParserUtil.parseTwoIndexes(fields.getPreamble());
         } catch (ParseException e) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCareCommand.MESSAGE_USAGE), e);
         }
@@ -48,6 +43,6 @@ public class EditCareCommandParser implements Parser<EditCareCommand> {
         if (!Patient.isCareInstructionWithinMaxLength(normalizedInstruction)) {
             throw new ParseException(EditCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
         }
-        return new EditCareCommand(patientIndex, careInstructionIndex, careInstruction);
+        return new EditCareCommand(indices.get(0), indices.get(1), careInstruction);
     }
 }
