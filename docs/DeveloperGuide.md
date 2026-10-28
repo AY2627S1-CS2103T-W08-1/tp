@@ -790,7 +790,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | caregiver returning from a break           | see what changed in a patient's records while I was away | catch up after another caregiver has taken over |
 | `*`      | caregiver                                  | give a community nurse view-only access to a patient's records | avoid repeating the patient's background at every visit |
 | `*`      | caregiver                                  | export all my data | move to another app without losing my records |
-*{More to be added}*
 
 ### Use cases
 
@@ -1628,8 +1627,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2a1. MediConnect shows a message that there are no upcoming appointments.
 
       Use case ends.
-
-*{More to be added}*
 
 **Use case: UC18 - Add a patient's contact**
 
