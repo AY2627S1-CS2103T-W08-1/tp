@@ -509,6 +509,11 @@ copies it when rebuilding a patient. `Contact` rejects Unicode-whitespace-only n
 name whitespace to single ordinary spaces, and trims role boundaries. Contact identity compares names ignoring
 case and normalized whitespace, and phones ignoring spaces and hyphens, while retaining `+`.
 The model rejects duplicate identities within a patient.
+`Contact#isSameContact` converts names to Unicode NFC with `java.text.Normalizer` before comparing them
+ignoring case, so composed and decomposed spellings such as `Café` and `Café` have the same identity.
+This comparison preserves accents and does not change display or stored name text. Full `equals` and `hashCode`
+still compare all stored fields. Add, edit and `Patient`'s duplicate validation share this identity rule, so
+`JsonAdaptedPatient` also rejects these duplicates during startup loading and restore.
 
 The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit declare names, roles and notes
 as free text for slash validation; phones remain structured. Repeated and unsupported reserved prefixes are
@@ -1995,6 +2000,19 @@ testers are expected to do more *exploratory* testing.
    Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
 
 ### Managing patient contacts
+
+1. Canonically equivalent Unicode names
+
+   1. Prerequisites: Use sample data. Copy the names below: `Café` uses U+00E9, while `Café` uses
+      U+0065 followed by U+0301 for its last two code points. The two names should look the same.
+
+   1. Test case: `addcontact 1 n/Café r/GP p/123`, followed by
+      `addcontact 1 n/Café r/Guardian p/123`.<br>
+      Expected: The first succeeds; the second reports the duplicate-contact error and adds nothing.
+
+   1. Test case: `addcontact 1 n/Other clinic r/GP p/123`. Run `view 1` and note its contact number, then run
+      `editcontact 1 CONTACT_INDEX n/Café`, replacing `CONTACT_INDEX` with that number.<br>
+      Expected: The duplicate-contact error; the existing contacts and their names remain unchanged.
 
 1. Prerequisites: The sample data is loaded. Run `view 1` and note the existing contacts and care information.
 
