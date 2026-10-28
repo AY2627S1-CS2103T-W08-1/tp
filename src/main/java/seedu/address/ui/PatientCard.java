@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -40,6 +42,8 @@ public class PatientCard extends UiPart<Region> {
      */
     public PatientCard(Patient patient, int displayedIndex) {
         super(FXML);
+        requireNonNull(patient);
+        assert displayedIndex >= 1 : "the displayed index of a patient starts at 1";
         this.patient = patient;
         id.setText(displayedIndex + ". ");
         name.setText(patient.getName().fullName + (patient.isArchived() ? ARCHIVED_MARKER : ""));
