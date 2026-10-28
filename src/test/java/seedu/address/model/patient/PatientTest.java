@@ -198,6 +198,10 @@ public class PatientTest {
                 new PatientBuilder(ALICE).withAllergens("Penicillin", "penicillin\u00a0").build());
         assertThrows(IllegalArgumentException.class, Patient.MESSAGE_DUPLICATE_CARE_INSTRUCTION, () ->
                 new PatientBuilder(ALICE).withCareInstructions("Check\u00a0blood sugar", "check blood sugar").build());
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_DUPLICATE_ALLERGEN, () ->
+                new PatientBuilder(ALICE).withAllergens("Caf\u00e9", "Cafe\u0301").build());
+        assertThrows(IllegalArgumentException.class, Patient.MESSAGE_DUPLICATE_CARE_INSTRUCTION, () ->
+                new PatientBuilder(ALICE).withCareInstructions("R\u00e9sum\u00e9", "Re\u0301sume\u0301").build());
     }
 
     @Test
