@@ -164,11 +164,16 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Opens the help window if it is not already open, and keeps the keyboard focus in the main window, so that the
-     * next command can be typed straight away. Esc closes the help window.
+     * Opens the help window if it is not already open, or brings it back if it is minimized, and keeps the
+     * keyboard focus in the main window, so that the next command can be typed straight away. Esc closes the
+     * help window.
      */
     @FXML
     public void handleHelp() {
+        if (helpWindow.isMinimized()) {
+            // bringing it back from the Dock or the taskbar would move the focus to it, so it is reopened
+            helpWindow.hide();
+        }
         if (!helpWindow.isShowing()) {
             helpWindow.show();
         }

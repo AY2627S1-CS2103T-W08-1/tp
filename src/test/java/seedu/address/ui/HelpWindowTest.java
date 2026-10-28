@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.ui.JavaFxTestUtil.runOnFxThread;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -87,6 +89,43 @@ public class HelpWindowTest {
         });
 
         assertTrue(isShowing);
+    }
+
+    @Test
+    public void show_hiddenWhileMinimized_shownNotMinimized() throws Exception {
+        // Equivalence partitioning: a window hidden while minimized, e.g., by Esc in the main window
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+
+        boolean isShownMinimized = runOnFxThread(() -> {
+            HelpWindow helpWindow = new HelpWindow();
+            helpWindow.getRoot().setIconified(true);
+            helpWindow.show();
+            boolean isMinimized = helpWindow.getRoot().isIconified();
+            helpWindow.hide();
+            return isMinimized;
+        });
+
+        assertFalse(isShownMinimized);
+    }
+
+    @Test
+    public void isMinimized_hiddenShownAndMinimized_trueOnlyWhenShownAndMinimized() throws Exception {
+        // Equivalence partitioning: hidden but minimized, shown, and shown and minimized
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+
+        List<Boolean> results = runOnFxThread(() -> {
+            HelpWindow helpWindow = new HelpWindow();
+            helpWindow.getRoot().setIconified(true);
+            boolean isHiddenWindowMinimized = helpWindow.isMinimized();
+            helpWindow.show();
+            boolean isShownWindowMinimized = helpWindow.isMinimized();
+            helpWindow.getRoot().setIconified(true);
+            boolean isMinimizedWindowMinimized = helpWindow.isMinimized();
+            helpWindow.hide();
+            return List.of(isHiddenWindowMinimized, isShownWindowMinimized, isMinimizedWindowMinimized);
+        });
+
+        assertEquals(List.of(false, false, true), results);
     }
 
     @Test

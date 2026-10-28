@@ -106,6 +106,24 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void readAddressBook_misspelledOrRepeatedProperty_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: a misspelled property and a property given twice, whose values would
+        // otherwise be lost the next time the data is saved
+        Path filePath = testFolder.resolve("StrictData.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        String savedData = Files.readString(filePath);
+        String misspelledProperty = savedData.replaceFirst("\"careInstructions\"", "\"careInstructons\"");
+        String repeatedProperty = savedData.replaceFirst("\"phone\" : ", "\"phone\" : \"81234567\", \"phone\" : ");
+        assertFalse(savedData.equals(misspelledProperty) || savedData.equals(repeatedProperty));
+
+        for (String damagedData : List.of(misspelledProperty, repeatedProperty)) {
+            Files.writeString(filePath, damagedData);
+            assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
+        }
+    }
+
+    @Test
     public void readAddressBook_contentAfterSavedData_throwsDataLoadingException() throws Exception {
         // Equivalence partitioning: a saved data file damaged later by text added after its data
         Path filePath = testFolder.resolve("ContentAfterData.json");
