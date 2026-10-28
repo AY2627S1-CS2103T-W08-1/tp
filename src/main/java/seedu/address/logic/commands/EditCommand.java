@@ -19,6 +19,7 @@ import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Dob;
 import seedu.address.model.patient.Name;
@@ -42,6 +43,8 @@ public class EditCommand extends Command {
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_DUPLICATE_PATIENT = AddCommand.MESSAGE_DUPLICATE_PATIENT;
     public static final String MESSAGE_DUPLICATE_ARCHIVED_PATIENT = AddCommand.MESSAGE_DUPLICATE_ARCHIVED_PATIENT;
+    public static final String MESSAGE_DOB_AFTER_APPOINTMENT =
+            "The date of birth cannot be after the patient's earliest appointment, on %1$s.";
 
     private final Index index;
     private final EditPatientDescriptor editPatientDescriptor;
@@ -69,6 +72,7 @@ public class EditCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(index.getZeroBased());
+        verifyDobNotAfterAppointments(patientToEdit, editPatientDescriptor);
         Patient editedPatient = createEditedPatient(patientToEdit, editPatientDescriptor);
         if (!patientToEdit.isSamePatient(editedPatient) && model.hasPatient(editedPatient)) {
             String message = AddCommand.hasArchivedDuplicate(model, editedPatient)
@@ -82,6 +86,22 @@ public class EditCommand extends Command {
                 ? PREDICATE_SHOW_ARCHIVED_PATIENTS : PREDICATE_SHOW_ACTIVE_PATIENTS);
         model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_EDIT_PATIENT_SUCCESS, Messages.format(editedPatient)));
+    }
+
+    /**
+     * Rejects a new date of birth after the patient's earliest appointment, which would leave an appointment
+     * before the patient was born.
+     */
+    private static void verifyDobNotAfterAppointments(Patient patient, EditPatientDescriptor descriptor)
+            throws CommandException {
+        Optional<Dob> newDob = descriptor.getDob();
+        // appointments are sorted by date, so the first one is the earliest
+        Optional<Appointment> earliestAppointment = patient.getAppointments().stream().findFirst();
+        if (newDob.isPresent() && earliestAppointment.isPresent()
+                && newDob.get().isAfter(earliestAppointment.get().getDate())) {
+            throw new CommandException(String.format(MESSAGE_DOB_AFTER_APPOINTMENT,
+                    earliestAppointment.get().getDate()));
+        }
     }
 
     private static Patient createEditedPatient(Patient patient, EditPatientDescriptor descriptor) {

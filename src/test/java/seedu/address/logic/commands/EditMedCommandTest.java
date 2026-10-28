@@ -199,6 +199,18 @@ public class EditMedCommandTest {
     }
 
     @Test
+    public void execute_canonicallyEquivalentDescriptionOfOtherMedication_failsAndLeavesModelUnchanged() {
+        Medication creme = new Medication("Cr\u00e8me 5mg");
+        Patient patientWithCreme = new PatientBuilder(ALICE).withMedications(creme, ASPIRIN).build();
+        Model modelWithCreme = createModel(patientWithCreme);
+
+        // the accent is written as a letter and a combining mark, which looks the same
+        String message = String.format(MESSAGE_DUPLICATE_MEDICATION_DESCRIPTION, "Cr\u00e8me 5mg");
+        assertCommandFailure(descriptionOnly(SECOND_MEDICATION, "Cre\u0300me 5mg"), modelWithCreme, message);
+        assertEquals(List.of(creme, ASPIRIN), modelWithCreme.getFilteredPatientList().get(0).getMedications());
+    }
+
+    @Test
     public void execute_invalidMedicationIndex_failsAndLeavesModelUnchanged() {
         assertCommandFailure(descriptionOnly(THIRD_MEDICATION, "Aspirin 75mg"), model,
                 MESSAGE_INVALID_MEDICATION_DISPLAYED_INDEX);

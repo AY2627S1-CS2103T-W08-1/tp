@@ -3,6 +3,7 @@ package seedu.address.model.patient;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.text.Normalizer;
 import java.util.Objects;
 
 import seedu.address.commons.util.StringUtil;
@@ -12,8 +13,15 @@ import seedu.address.commons.util.StringUtil;
  */
 public class Contact {
 
-    public static final String MESSAGE_NAME_CONSTRAINTS = "Contact name cannot be blank.";
-    public static final String MESSAGE_ROLE_CONSTRAINTS = "Contact role cannot be blank.";
+    public static final int MAX_NAME_LENGTH = 100;
+    public static final int MAX_ROLE_LENGTH = 100;
+    public static final int MAX_NOTE_LENGTH = 500;
+    public static final String MESSAGE_NAME_CONSTRAINTS =
+            "Contact name cannot be blank and must not exceed " + MAX_NAME_LENGTH + " characters.";
+    public static final String MESSAGE_ROLE_CONSTRAINTS =
+            "Contact role cannot be blank and must not exceed " + MAX_ROLE_LENGTH + " characters.";
+    public static final String MESSAGE_NOTE_CONSTRAINTS =
+            "Contact note must not exceed " + MAX_NOTE_LENGTH + " characters.";
     public static final String MESSAGE_PHONE_CONSTRAINTS =
             "Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, "
             + "and at most one + at the start.";
@@ -38,7 +46,8 @@ public class Contact {
         checkArgument(isValidName(name), MESSAGE_NAME_CONSTRAINTS);
         checkArgument(isValidRole(role), MESSAGE_ROLE_CONSTRAINTS);
         checkArgument(isValidPhone(phone), MESSAGE_PHONE_CONSTRAINTS);
-        this.name = name.replaceAll(WHITESPACE_REGEX, " ").strip();
+        checkArgument(isValidNote(note), MESSAGE_NOTE_CONSTRAINTS);
+        this.name = normalizeName(name);
         this.role = StringUtil.stripUnicodeWhitespace(role);
         this.phone = phone.strip();
         this.note = note;
@@ -73,17 +82,35 @@ public class Contact {
     }
 
     /**
-     * Returns whether a contact name is nonblank.
+     * Returns whether a contact name is nonblank and within the length limit after normalization.
      */
     public static boolean isValidName(String name) {
-        return !StringUtil.stripUnicodeWhitespace(name).isEmpty();
+        String normalizedName = normalizeName(name);
+        return !StringUtil.stripUnicodeWhitespace(normalizedName).isEmpty()
+                && isWithinMaxLength(normalizedName, MAX_NAME_LENGTH);
     }
 
     /**
-     * Returns whether a contact role is nonblank.
+     * Returns whether a contact role is nonblank and within the length limit after trimming.
      */
     public static boolean isValidRole(String role) {
-        return !StringUtil.stripUnicodeWhitespace(role).isEmpty();
+        String trimmedRole = StringUtil.stripUnicodeWhitespace(role);
+        return !trimmedRole.isEmpty() && isWithinMaxLength(trimmedRole, MAX_ROLE_LENGTH);
+    }
+
+    /**
+     * Returns whether a contact note is within the length limit. An empty note is valid.
+     */
+    public static boolean isValidNote(String note) {
+        return isWithinMaxLength(note, MAX_NOTE_LENGTH);
+    }
+
+    private static String normalizeName(String name) {
+        return name.replaceAll(WHITESPACE_REGEX, " ").strip();
+    }
+
+    private static boolean isWithinMaxLength(String text, int maxLength) {
+        return text.codePointCount(0, text.length()) <= maxLength;
     }
 
     /**
@@ -96,12 +123,17 @@ public class Contact {
     }
 
     /**
-     * Compares names ignoring case, and phones ignoring spaces and hyphens.
+     * Compares names in Unicode NFC form ignoring case, and phones ignoring spaces and hyphens.
+     * Canonically equivalent name spellings identify the same contact without changing display text.
      * The plus sign is significant; no country code is inferred.
      */
     public boolean isSameContact(Contact other) {
-        return other != null && name.equalsIgnoreCase(other.name)
+        return other != null && getComparisonName().equalsIgnoreCase(other.getComparisonName())
                 && getComparisonPhone().equals(other.getComparisonPhone());
+    }
+
+    private String getComparisonName() {
+        return Normalizer.normalize(name, Normalizer.Form.NFC);
     }
 
     private String getComparisonPhone() {

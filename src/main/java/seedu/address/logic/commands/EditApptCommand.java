@@ -106,6 +106,10 @@ public class EditApptCommand extends Command {
 
         Appointment appointmentToEdit = otherAppointments.remove(appointmentIndex.getZeroBased());
         Appointment editedAppointment = createEditedAppointment(appointmentToEdit);
+        if (patientToEdit.getDob().isAfter(editedAppointment.getDate())) {
+            throw new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_BEFORE_DOB,
+                    patientToEdit.getDob()));
+        }
         if (otherAppointments.stream().anyMatch(editedAppointment::isSameAppointment)) {
             throw new CommandException(Messages.MESSAGE_DUPLICATE_APPOINTMENT);
         }

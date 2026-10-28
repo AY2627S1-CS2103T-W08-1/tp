@@ -21,6 +21,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
+import seedu.address.logic.Messages;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -45,6 +46,10 @@ public class MainApp extends Application {
             "The data file could not be loaded. Starting with no patients.\nRecovery copy: %1$s\nDetails: %2$s";
     public static final String MESSAGE_UNREADABLE_DATA =
             "The file could not be read as MediConnect patient data. Check its JSON format and file permissions.";
+    public static final String MESSAGE_DATA_CREATION_FAILED =
+            "The data file could not be created. The sample patients are not saved.\nData file: %1$s\nReason: %2$s.\n"
+            + "Close MediConnect, check that the parent path is a writable folder with free disk space, then restart.";
+
     public static final String MESSAGE_STARTUP_FAILURE =
             "MediConnect could not start safely.\nData file: %1$s\nReason: %2$s\n"
             + "Check that this path is a file and that you can read it and write to its folder, then try again. "
@@ -133,9 +138,9 @@ public class MainApp extends Application {
 
     /**
      * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
-     * The data from the sample address book will be used instead, and saved to a new data file,
-     * if {@code storage}'s address book is not found,
-     * or an empty address book will be used after preserving an unreadable data file.
+     * Sample data is used if {@code storage}'s address book is not found, with an initial save attempt.
+     * A failed initial save produces a startup warning. An empty address book is used after preserving
+     * an unreadable data file.
      *
      * @throws IOException If an unreadable data file cannot be preserved.
      */
@@ -171,6 +176,7 @@ public class MainApp extends Application {
 
     /**
      * Saves {@code data} to {@code storage}'s data file if the file does not exist yet.
+     * Records a startup warning if the initial data cannot be saved.
      */
     private void createDataFileIfMissing(Storage storage, ReadOnlyAddressBook data) {
         if (Files.exists(storage.getAddressBookFilePath())) {
@@ -179,6 +185,8 @@ public class MainApp extends Application {
         try {
             storage.saveAddressBook(data);
         } catch (IOException e) {
+            dataLoadWarning = String.format(MESSAGE_DATA_CREATION_FAILED,
+                    storage.getAddressBookFilePath().toAbsolutePath(), Messages.describeWriteFailure(e));
             logger.warning("Could not create the data file " + storage.getAddressBookFilePath()
                     + ": " + StringUtil.getDetails(e));
         }

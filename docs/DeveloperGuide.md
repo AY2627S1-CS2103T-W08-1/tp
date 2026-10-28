@@ -233,6 +233,12 @@ the real startup-error method and checks that the error is presented before exit
 No model, logic or main window is created after a preservation failure, and `stop()` skips preference saving
 when there is no model. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
+When startup reaches `initModelManager` and the data file is missing, `MainApp` uses sample patients and attempts
+to save them once through `createDataFileIfMissing`. If that save throws `IOException`, startup continues and the existing startup warning
+dialog explains that the samples are unsaved, giving the absolute data path and a reason formatted by
+`Messages#describeWriteFailure`. `MainApp#start` shows the warning after `Ui#start`; no new UI is needed.
+Successful initial saves produce no warning. Command-time save failures still roll back through `LogicManager`.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -486,6 +492,11 @@ The `help` command, `F1` and the **Help** menu open the `HelpWindow`, which list
 ### Contact management
 
 `Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
+It owns the text limits: `MAX_NAME_LENGTH` and `MAX_ROLE_LENGTH` are 100, and `MAX_NOTE_LENGTH` is 500.
+Validators count Unicode code points after name normalization and role trimming. Notes are checked as supplied
+to the model: command parsers trim their boundaries first, while stored note text is preserved and counted in full.
+The constructor enforces these rules for commands, startup loading and restore through `JsonAdaptedContact`.
+The edit parser validates supplied fields before creating a command, including a trimmed optional note.
 Names are nonblank free text because contacts can be people or organisations, such as `Tan & Partners Clinic`.
 They deliberately do not use patient `Name` constraints. Contact phones likewise have their own rules so clinic
 and international numbers work without weakening patient-phone validation. `Contact#isValidPhone()` requires
@@ -498,6 +509,11 @@ copies it when rebuilding a patient. `Contact` rejects Unicode-whitespace-only n
 name whitespace to single ordinary spaces, and trims role boundaries. Contact identity compares names ignoring
 case and normalized whitespace, and phones ignoring spaces and hyphens, while retaining `+`.
 The model rejects duplicate identities within a patient.
+`Contact#isSameContact` converts names to Unicode NFC with `java.text.Normalizer` before comparing them
+ignoring case, so composed and decomposed spellings such as `Café` and `Café` have the same identity.
+This comparison preserves accents and does not change display or stored name text. Full `equals` and `hashCode`
+still compare all stored fields. Add, edit and `Patient`'s duplicate validation share this identity rule, so
+`JsonAdaptedPatient` also rejects these duplicates during startup loading and restore.
 
 The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit declare names, roles and notes
 as free text for slash validation; phones remain structured. Repeated and unsupported reserved prefixes are
@@ -1985,6 +2001,19 @@ testers are expected to do more *exploratory* testing.
 
 ### Managing patient contacts
 
+1. Canonically equivalent Unicode names
+
+   1. Prerequisites: Use sample data. Copy the names below: `Café` uses U+00E9, while `Café` uses
+      U+0065 followed by U+0301 for its last two code points. The two names should look the same.
+
+   1. Test case: `addcontact 1 n/Café r/GP p/123`, followed by
+      `addcontact 1 n/Café r/Guardian p/123`.<br>
+      Expected: The first succeeds; the second reports the duplicate-contact error and adds nothing.
+
+   1. Test case: `addcontact 1 n/Other clinic r/GP p/123`. Run `view 1` and note its contact number, then run
+      `editcontact 1 CONTACT_INDEX n/Café`, replacing `CONTACT_INDEX` with that number.<br>
+      Expected: The duplicate-contact error; the existing contacts and their names remain unchanged.
+
 1. Prerequisites: The sample data is loaded. Run `view 1` and note the existing contacts and care information.
 
 1. Test case: `addcontact 1 n/Mary Tan r/Guardian p/+44 20 7946 0958 nt/Call first`<br>
@@ -2060,6 +2089,18 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, close the app and change a contact phone in `data/mediconnect.json`
       to `+++123+++`, then relaunch.<br>
       Expected: The file is rejected, startup shows the recovery-copy path, and the original invalid data is preserved.
+
+1. Contact text length limits
+
+   1. Prerequisites: Prepare strings of 100 and 101 characters for names/roles, and 500 and 501 for notes.
+      Replace `NAME`, `ROLE` and `NOTE` in the commands below with those strings, without the placeholder labels.
+
+   1. Test case: `addcontact 1 n/NAME r/ROLE p/123 nt/NOTE`, using the 100/100/500-character strings.<br>
+      Expected: The contact is added. Run `view 1` and note its contact number.
+
+   1. Repeat the add with one field over its limit at a time, then try `editcontact 1 CONTACT_INDEX n/NAME`,
+      `editcontact 1 CONTACT_INDEX r/ROLE` and `editcontact 1 CONTACT_INDEX nt/NOTE` with overlong values.<br>
+      Expected: Each command reports the affected field's length constraint and leaves contacts unchanged.
 
 1. Copied no-break spaces in contact fields
 
@@ -2250,6 +2291,18 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, replace the data file with malformed JSON, such as `{"persons": [`, and launch.<br>
       Expected: The warning keeps the recovery path and asks you to check the JSON format and file permissions.
       It does not display raw parser exceptions or claim to identify a patient entry.
+
+1. Starting when a missing data file cannot be created
+
+   1. Prerequisites: Use a disposable folder containing the app JAR, with the app closed and no existing data.
+      Create a regular file named `data` (without an extension) in that folder, so it blocks the data folder.
+
+   1. Launch the app.<br>
+      Expected: The sample patients appear, then a warning says they are not saved, names the full data-file path,
+      gives a reason and asks you to check the parent folder and free space. The blocking file is unchanged.
+
+   1. Close the app, move the blocking file elsewhere, and relaunch.<br>
+      Expected: The app creates `data/mediconnect.json` with sample patients and shows no creation warning.
 
 ### Startup failures that prevent data recovery
 
