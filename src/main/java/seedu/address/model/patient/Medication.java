@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Represents a medication of a patient: a description and the times of day it is taken.
  * Guarantees: immutable; description is valid with normalized whitespace; times are sorted ascending,
@@ -19,7 +21,10 @@ import java.util.stream.Collectors;
  */
 public class Medication {
 
+    public static final int MAX_DESCRIPTION_LENGTH = 500;
     public static final String MESSAGE_DESCRIPTION_CONSTRAINTS = "Medication description cannot be blank.";
+    public static final String MESSAGE_DESCRIPTION_TOO_LONG =
+            "Medication descriptions cannot exceed " + MAX_DESCRIPTION_LENGTH + " characters.";
     public static final String MESSAGE_TIME_CONSTRAINTS = "Time must be in HH:MM (24-hour), e.g. 08:30.";
 
     private static final String TIME_PATTERN = "HH:mm";
@@ -54,7 +59,7 @@ public class Medication {
         if (!isValidDescription(description)) {
             throw new IllegalArgumentException(MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
-        this.description = description.trim().replaceAll("\\s+", " ");
+        this.description = normalizeDescription(description);
         this.times = times.stream()
                 .map(time -> time.truncatedTo(ChronoUnit.MINUTES))
                 .distinct()
@@ -64,10 +69,30 @@ public class Medication {
 
     /**
      * Returns true if {@code description} contains at least one non-whitespace character.
+     * Unicode whitespace, such as a no-break space, counts as whitespace.
      */
     public static boolean isValidDescription(String description) {
         requireNonNull(description);
-        return !description.isBlank();
+        return !normalizeDescription(description).isEmpty();
+    }
+
+    /**
+     * Returns {@code description} with every run of whitespace, including Unicode whitespace and line breaks,
+     * replaced by one space, without leading and trailing whitespace, and in Unicode form NFC, as for the other
+     * care entries, so that descriptions that look the same are the same.
+     *
+     * @see StringUtil#normalizeEntry(String)
+     */
+    public static String normalizeDescription(String description) {
+        return StringUtil.normalizeEntry(description);
+    }
+
+    /**
+     * Returns true if {@code description} does not exceed the maximum medication-description length.
+     */
+    public static boolean isDescriptionWithinMaxLength(String description) {
+        requireNonNull(description);
+        return description.codePointCount(0, description.length()) <= MAX_DESCRIPTION_LENGTH;
     }
 
     /**

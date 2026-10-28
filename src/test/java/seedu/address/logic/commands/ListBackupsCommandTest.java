@@ -11,6 +11,9 @@ import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
 import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -66,11 +69,31 @@ public class ListBackupsCommandTest {
     }
 
     @Test
+    public void execute_fileInPlaceOfBackupFolder_throwsCommandException() throws Exception {
+        // Equivalence partitioning: a file where the folder should be, which backup cannot make a folder of
+        Path fileInPlaceOfFolder = Files.writeString(temporaryFolder.resolve("backups"), "not a folder");
+
+        assertCommandFailure(new ListBackupsCommand(fileInPlaceOfFolder), model,
+                String.format(ListBackupsCommand.MESSAGE_NOT_A_FOLDER, fileInPlaceOfFolder));
+    }
+
+    @Test
     public void execute_onlyOtherFilesInFolder_saysNoBackups() throws Exception {
         // temporary files of an unfinished backup, other files and folders are not backups
         Files.createFile(temporaryFolder.resolve("mediconnect-20261020-083015.json.123.tmp"));
         Files.createFile(temporaryFolder.resolve("notes.txt"));
         Files.createDirectory(temporaryFolder.resolve("old.json"));
+
+        assertCommandSuccess(new ListBackupsCommand(temporaryFolder), model,
+                String.format(ListBackupsCommand.MESSAGE_NO_BACKUPS, temporaryFolder), expectedModel);
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "making a link on Windows needs administrator rights")
+    public void execute_linkToDeletedBackup_saysNoBackups() throws Exception {
+        // the file of such a link is known not to exist, so it is not taken for an unopenable folder
+        Files.createSymbolicLink(temporaryFolder.resolve("mediconnect-20261020-083015.json"),
+                temporaryFolder.resolve("deleted.json"));
 
         assertCommandSuccess(new ListBackupsCommand(temporaryFolder), model,
                 String.format(ListBackupsCommand.MESSAGE_NO_BACKUPS, temporaryFolder), expectedModel);
@@ -138,7 +161,7 @@ public class ListBackupsCommandTest {
 
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
-    public void execute_unreadableBackupFolder_throwsCommandException() throws Exception {
+    public void execute_unreadableBackupFolder_throwsCommandExceptionNamingPermission() throws Exception {
         createBackup("mediconnect-20261020-083015.json", EARLIER);
         assertTrue(temporaryFolder.toFile().setReadable(false));
         try {
@@ -146,10 +169,40 @@ public class ListBackupsCommandTest {
             assumeFalse(Files.isReadable(temporaryFolder));
 
             assertCommandFailure(new ListBackupsCommand(temporaryFolder), model,
-                    String.format(ListBackupsCommand.MESSAGE_FAILURE, temporaryFolder));
+                    String.format(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION, temporaryFolder));
         } finally {
             temporaryFolder.toFile().setReadable(true);
         }
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
+    public void execute_backupFolderListedButNotOpened_throwsCommandExceptionNamingFolder() throws Exception {
+        // e.g., after chmod 444 on the folder: its names can be listed, but not one of its files checked
+        createBackup("mediconnect-20261020-083015.json", EARLIER);
+        assertTrue(temporaryFolder.toFile().setExecutable(false));
+        try {
+            // users with admin rights (e.g., root) can still open it, so the test only applies to others
+            assumeFalse(Files.exists(temporaryFolder.resolve("mediconnect-20261020-083015.json")));
+
+            assertCommandFailure(new ListBackupsCommand(temporaryFolder), model,
+                    String.format(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION, temporaryFolder));
+        } finally {
+            temporaryFolder.toFile().setExecutable(true);
+        }
+    }
+
+    @Test
+    public void describeListingFailure_eachKindOfFailure_namesPermissionOnlyWhenAccessIsDenied() {
+        AccessDeniedException accessDenied = new AccessDeniedException("data/backups");
+
+        assertEquals(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION,
+                ListBackupsCommand.describeListingFailure(accessDenied));
+        // e.g., thrown while the files are listed, rather than when the folder is opened
+        assertEquals(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION,
+                ListBackupsCommand.describeListingFailure(new UncheckedIOException(accessDenied)));
+        assertEquals(ListBackupsCommand.MESSAGE_FAILURE,
+                ListBackupsCommand.describeListingFailure(new IOException("disk error")));
     }
 
     @Test

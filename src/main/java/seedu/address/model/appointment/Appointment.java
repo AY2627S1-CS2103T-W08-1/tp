@@ -4,12 +4,14 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Represents an appointment of a Patient in MediConnect.
@@ -21,8 +23,12 @@ public class Appointment implements Comparable<Appointment> {
             "Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.";
     public static final String MESSAGE_TIME_CONSTRAINTS =
             "Appointment time should be in HH:MM 24-hour format, e.g. 14:30.";
-    public static final String MESSAGE_PROVIDER_CONSTRAINTS =
-            "Who the appointment is with should not be blank.";
+    public static final int MAX_PROVIDER_LENGTH = 100;
+    public static final int MAX_NOTE_LENGTH = 500;
+    public static final String MESSAGE_PROVIDER_CONSTRAINTS = "Who the appointment is with should not be blank, and "
+            + "should be one line of at most " + MAX_PROVIDER_LENGTH + " characters.";
+    public static final String MESSAGE_NOTE_CONSTRAINTS =
+            "An appointment note should be one line of at most " + MAX_NOTE_LENGTH + " characters.";
     public static final String MESSAGE_DUPLICATE = "A patient cannot have two appointments at the same date and "
             + "time with the same person, ignoring letter case and extra spaces.";
 
@@ -41,6 +47,16 @@ public class Appointment implements Comparable<Appointment> {
      */
     public static final LocalDate EARLIEST_DATE = LocalDate.of(1900, 1, 1);
 
+    /*
+     * Any line break, which would show as another line of a list of appointments, e.g. a fake appointment.
+     */
+    private static final Pattern LINE_BREAK = Pattern.compile("\\R");
+
+    /*
+     * Whitespace includes Unicode whitespace, e.g. a no-break space copied from a web page.
+     */
+    private static final String WHITESPACE_REGEX = "(?U)\\s+";
+
     private final LocalDate date;
     private final LocalTime time;
     private final String provider;
@@ -50,12 +66,15 @@ public class Appointment implements Comparable<Appointment> {
      * Every field must be present and not null. An empty {@code note} means the appointment has no note.
      * The date must not be before {@code EARLIEST_DATE}.
      * The time must be a whole minute, so that it is saved and loaded in HH:MM format.
+     * The provider and note must be valid, as declared in {@link #isValidProvider(String)} and
+     * {@link #isValidNote(String)}.
      */
     public Appointment(LocalDate date, LocalTime time, String provider, String note) {
         requireAllNonNull(date, time, provider, note);
         checkArgument(!date.isBefore(EARLIEST_DATE), MESSAGE_DATE_CONSTRAINTS);
         checkArgument(time.equals(time.truncatedTo(ChronoUnit.MINUTES)), MESSAGE_TIME_CONSTRAINTS);
         checkArgument(isValidProvider(provider), MESSAGE_PROVIDER_CONSTRAINTS);
+        checkArgument(isValidNote(note), MESSAGE_NOTE_CONSTRAINTS);
         this.date = date;
         this.time = time;
         this.provider = provider;
@@ -97,7 +116,21 @@ public class Appointment implements Comparable<Appointment> {
      * Returns true if a given string is a valid provider, i.e. who the appointment is with.
      */
     public static boolean isValidProvider(String test) {
-        return !test.isBlank();
+        return !test.replaceAll(WHITESPACE_REGEX, "").isEmpty() && isOneLineOfAtMost(test, MAX_PROVIDER_LENGTH);
+    }
+
+    /**
+     * Returns true if a given string is a valid note. An empty note means that the appointment has no note.
+     */
+    public static boolean isValidNote(String test) {
+        return isOneLineOfAtMost(test, MAX_NOTE_LENGTH);
+    }
+
+    /**
+     * Returns true if {@code test} has no line break and at most {@code maxLength} characters.
+     */
+    private static boolean isOneLineOfAtMost(String test, int maxLength) {
+        return !LINE_BREAK.matcher(test).find() && test.codePointCount(0, test.length()) <= maxLength;
     }
 
     public LocalDate getDate() {
@@ -134,13 +167,22 @@ public class Appointment implements Comparable<Appointment> {
 
     /**
      * Returns true if both appointments are at the same date and time with the same provider,
-     * ignoring letter case and repeated spaces in the provider. Notes are not compared.
+     * ignoring letter case, repeated spaces, including Unicode spaces, and how accented letters are stored
+     * in the provider. Notes are not compared.
      * This defines a weaker notion of equality between two appointments.
      */
     public boolean isSameAppointment(Appointment otherAppointment) {
         return isAtSameTimeAs(otherAppointment)
-                && provider.replaceAll("\\s+", " ")
-                        .equalsIgnoreCase(otherAppointment.provider.replaceAll("\\s+", " "));
+                && toComparableProvider(provider).equalsIgnoreCase(toComparableProvider(otherAppointment.provider));
+    }
+
+    /**
+     * Returns {@code provider} in Unicode NFC form, with each run of whitespace as one space. In NFC form, an
+     * accented letter typed as one character, e.g. "é", and as a letter followed by a combining accent are the
+     * same text, as for contact names.
+     */
+    private static String toComparableProvider(String provider) {
+        return Normalizer.normalize(provider, Normalizer.Form.NFC).replaceAll(WHITESPACE_REGEX, " ");
     }
 
     /**
@@ -185,11 +227,26 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
+     * Returns the date and time as shown to the user, e.g. "2026-10-25 14:30".
+     */
+    public String getDateTimeText() {
+        return date + " " + time;
+    }
+
+    /**
+     * Returns who the appointment is with and its note, if any, as shown to the user after the date and time,
+     * e.g. "with Dr Tan (Fasting)".
+     */
+    public String getDetailsText() {
+        String details = "with " + provider;
+        return note.isEmpty() ? details : details + " (" + note + ")";
+    }
+
+    /**
      * Returns the appointment as shown to the user, e.g. "2026-10-25 14:30 with Dr Tan (Fasting)".
      */
     @Override
     public String toString() {
-        String appointment = date + " " + time + " with " + provider;
-        return note.isEmpty() ? appointment : appointment + " (" + note + ")";
+        return getDateTimeText() + " " + getDetailsText();
     }
 }

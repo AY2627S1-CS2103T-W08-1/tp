@@ -38,6 +38,8 @@ public class AddCareCommand extends Command {
     public static final String MESSAGE_BLANK_MEDICATION = "Medication entries cannot be blank.";
     public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
     public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
+    public static final String MESSAGE_MEDICATION_TOO_LONG = Medication.MESSAGE_DESCRIPTION_TOO_LONG;
+    public static final String MESSAGE_ALLERGEN_TOO_LONG = Patient.MESSAGE_ALLERGEN_TOO_LONG;
     public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG = Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG;
     public static final String MESSAGE_DUPLICATE_EXISTING =
             "%1$s \"%2$s\" was not added: it already exists for this patient.";
@@ -75,6 +77,14 @@ public class AddCareCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
+        if (medications.stream().map(Medication::normalizeDescription)
+                .anyMatch(entry -> !Medication.isDescriptionWithinMaxLength(entry))) {
+            throw new CommandException(MESSAGE_MEDICATION_TOO_LONG);
+        }
+        if (allergens.stream().map(Patient::normalizeCareEntry)
+                .anyMatch(entry -> !Patient.isAllergenWithinMaxLength(entry))) {
+            throw new CommandException(MESSAGE_ALLERGEN_TOO_LONG);
+        }
         if (careInstructions.stream().map(Patient::normalizeCareEntry)
                 .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
             throw new CommandException(MESSAGE_CARE_INSTRUCTION_TOO_LONG);
@@ -89,7 +99,7 @@ public class AddCareCommand extends Command {
 
         int existingMedicationCount = updatedMedicationDescriptions.size();
         appendNewEntries(updatedMedicationDescriptions, medications, "Medication", addedEntries, duplicateMessages,
-                AddCareCommand::normalizeEntry);
+                Medication::normalizeDescription);
         appendNewEntries(updatedAllergens, allergens, "Allergen", addedEntries, duplicateMessages,
                 Patient::normalizeCareEntry);
         appendNewEntries(updatedCareInstructions, careInstructions, "Care instruction", addedEntries,
@@ -146,10 +156,6 @@ public class AddCareCommand extends Command {
     private static boolean containsIgnoreCase(List<String> entries, String requestedEntry,
             UnaryOperator<String> normalizer) {
         return entries.stream().anyMatch(entry -> normalizer.apply(entry).equalsIgnoreCase(requestedEntry));
-    }
-
-    private static String normalizeEntry(String entry) {
-        return entry.trim().replaceAll("\\s+", " ");
     }
 
     @Override

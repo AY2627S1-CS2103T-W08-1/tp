@@ -45,6 +45,13 @@ public class JsonAdaptedMedicationTest {
     }
 
     @Test
+    public void toModelType_descriptionWithLineBreak_loadsAsOneLine() throws Exception {
+        JsonAdaptedMedication adapted = new JsonAdaptedMedication("Aspirin\n20:00 Amy Tan: Warfarin",
+                List.of("08:00"));
+        assertEquals("Aspirin 20:00 Amy Tan: Warfarin", adapted.toModelType().getDescription());
+    }
+
+    @Test
     public void toModelType_nullDescription_throwsIllegalValueException() {
         JsonAdaptedMedication adapted = new JsonAdaptedMedication(null, List.of());
         assertThrows(IllegalValueException.class, MISSING_DESCRIPTION_MESSAGE, adapted::toModelType);

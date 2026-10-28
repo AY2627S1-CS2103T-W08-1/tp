@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,6 +51,20 @@ public class TestUtil {
 
         Files.write(file, utf8ByteOrderMark);
         Files.write(file, content, StandardOpenOption.APPEND);
+    }
+
+    /**
+     * Replaces the first byte of {@code asciiText} in {@code file} with {@code 0xFF}, which is never part of
+     * valid UTF-8, as editing the file in a byte editor or damage on the disk can.
+     */
+    public static void replaceWithInvalidUtf8Byte(Path file, String asciiText) throws IOException {
+        byte[] content = Files.readAllBytes(file);
+        // ISO-8859-1 maps each byte to one character, so the index of the text is also its byte index
+        int textIndex = new String(content, StandardCharsets.ISO_8859_1).indexOf(asciiText);
+        assertTrue(textIndex >= 0, asciiText + " is not in " + file);
+
+        content[textIndex] = (byte) 0xFF;
+        Files.write(file, content);
     }
 
     /**

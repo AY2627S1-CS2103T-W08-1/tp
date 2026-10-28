@@ -19,6 +19,7 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.DANIEL;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.AddressBookBuilder;
@@ -104,6 +106,41 @@ public class EditCommandTest {
 
         assertCommandFailure(new EditCommand(INDEX_FIRST_PATIENT, descriptor), model,
                 EditCommand.MESSAGE_DUPLICATE_ARCHIVED_PATIENT);
+    }
+
+    @Test
+    public void execute_dobAfterEarliestAppointment_throwsCommandException() {
+        Appointment earliest = new Appointment(LocalDate.of(2000, 5, 1), LocalTime.of(9, 0), "Dr Lim", "");
+        Model model = new ModelManager(new AddressBookBuilder()
+                .withPatient(new PatientBuilder(ALICE).withAppointments(CHECKUP, earliest).build()).build(),
+                new UserPrefs());
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withDob("2000-05-02").build();
+
+        assertCommandFailure(new EditCommand(INDEX_FIRST_PATIENT, descriptor), model,
+                String.format(EditCommand.MESSAGE_DOB_AFTER_APPOINTMENT, "2000-05-01"));
+    }
+
+    @Test
+    public void execute_dobOnEarliestAppointment_editsPatient() throws Exception {
+        Appointment earliest = new Appointment(LocalDate.of(2000, 5, 1), LocalTime.of(9, 0), "Dr Lim", "");
+        Model model = new ModelManager(new AddressBookBuilder()
+                .withPatient(new PatientBuilder(ALICE).withAppointments(CHECKUP, earliest).build()).build(),
+                new UserPrefs());
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withDob("2000-05-01").build();
+
+        new EditCommand(INDEX_FIRST_PATIENT, descriptor).execute(model);
+
+        assertEquals("2000-05-01", model.getAddressBook().getPatientList().get(0).getDob().toString());
+    }
+
+    @Test
+    public void execute_dobOfPatientWithoutAppointments_editsPatient() throws Exception {
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(ALICE).build(), new UserPrefs());
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withDob("2000-05-01").build();
+
+        new EditCommand(INDEX_FIRST_PATIENT, descriptor).execute(model);
+
+        assertEquals("2000-05-01", model.getAddressBook().getPatientList().get(0).getDob().toString());
     }
 
     @Test

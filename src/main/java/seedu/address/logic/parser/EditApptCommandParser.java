@@ -37,6 +37,7 @@ public class EditApptCommandParser implements Parser<EditApptCommand> {
     @Override
     public EditApptCommand parse(String args) throws ParseException {
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_WITH, PREFIX_NOTE),
                 PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
@@ -69,7 +70,10 @@ public class EditApptCommandParser implements Parser<EditApptCommand> {
         if (argMultimap.getValue(PREFIX_WITH).isPresent()) {
             provider = Optional.of(ParserUtil.parseProvider(argMultimap.getValue(PREFIX_WITH).get()));
         }
-        Optional<String> note = argMultimap.getValue(PREFIX_NOTE);
+        Optional<String> note = Optional.empty();
+        if (argMultimap.getValue(PREFIX_NOTE).isPresent()) {
+            note = Optional.of(ParserUtil.parseNote(argMultimap.getValue(PREFIX_NOTE).get()));
+        }
 
         return new EditApptCommand(indexes.get(0), indexes.get(1), date, time, provider, note);
     }

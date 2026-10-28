@@ -42,7 +42,7 @@ public class PatientFormatter {
     /** Heading of the list of appointments. */
     public static final String HEADING_APPOINTMENTS = "Appointments";
 
-    /** Added after each past appointment. */
+    /** Added after the date and time of each past appointment. */
     public static final String PAST_MARK = " (past)";
 
     /** A line break inside an entry. */
@@ -71,8 +71,7 @@ public class PatientFormatter {
     /**
      * Returns one numbered line per entry in {@code entries}, e.g., "1. Metformin 500mg",
      * or a single {@code NONE_RECORDED} line if there are no entries.
-     * A line break inside an entry, which only a hand-edited data file can hold, becomes a single space,
-     * so that each entry stays on one numbered line.
+     * Each entry is put on one line by {@code toSingleLine}, so that it stays on one numbered line.
      *
      * @param entries Entries of one list, in the order to number them.
      * @return the lines to show for the list.
@@ -85,16 +84,29 @@ public class PatientFormatter {
 
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < entries.size(); i++) {
-            String entry = LINE_BREAK_PATTERN.splitAsStream(entries.get(i)).map(String::strip)
-                    .filter(line -> !line.isEmpty()).collect(Collectors.joining(" "));
-            lines.add((i + 1) + ". " + entry);
+            lines.add((i + 1) + ". " + toSingleLine(entries.get(i)));
         }
         return lines;
     }
 
     /**
-     * Returns the text of each of {@code appointments}, in the same order, with {@code PAST_MARK} after each
-     * appointment before {@code now}, e.g., "2026-10-02 10:00 with Dr Tan (past)".
+     * Returns {@code entry} on one line: each line break in it, which only a hand-edited data file can hold,
+     * becomes a single space, with the spaces around it removed. Otherwise, the text after a line break,
+     * e.g., "2. Shellfish", could be taken for another numbered entry.
+     * The detail panel and exported records both show entries this way.
+     *
+     * @param entry Entry of a list, e.g., an allergen.
+     * @return the entry without line breaks.
+     */
+    public static String toSingleLine(String entry) {
+        requireNonNull(entry);
+        return LINE_BREAK_PATTERN.splitAsStream(entry).map(String::strip)
+                .filter(line -> !line.isEmpty()).collect(Collectors.joining(" "));
+    }
+
+    /**
+     * Returns the text of each of {@code appointments}, in the same order, with {@code PAST_MARK} after the date
+     * and time of each appointment before {@code now}, e.g., "2026-10-02 10:00 (past) with Dr Tan".
      *
      * @param appointments Appointments in the order they are numbered.
      * @param now Date and time that decides which appointments are past.
@@ -103,15 +115,25 @@ public class PatientFormatter {
     public static List<String> formatAppointments(List<Appointment> appointments, LocalDateTime now) {
         requireAllNonNull(appointments, now);
         return appointments.stream()
-                .map(appointment -> appointment + (appointment.isBefore(now) ? PAST_MARK : ""))
+                .map(appointment -> formatAppointment(appointment, now))
                 .toList();
+    }
+
+    /**
+     * Returns the text of {@code appointment}, with {@code PAST_MARK} after its date and time if it is before
+     * {@code now}. Only the app writes the date and time, so a note or {@code WITH} text, which come after
+     * them, cannot look like the mark.
+     */
+    private static String formatAppointment(Appointment appointment, LocalDateTime now) {
+        String mark = appointment.isBefore(now) ? PAST_MARK : "";
+        return appointment.getDateTimeText() + mark + " " + appointment.getDetailsText();
     }
 
     /**
      * Returns the full record of {@code patient}: the name and basic details, then each care list, the contacts
      * and the appointments under their headings, with a blank line before each heading.
      * Appointments are numbered as in the detail panel: upcoming ones (at or after {@code now}) first,
-     * then past ones, each marked with {@code PAST_MARK}.
+     * then past ones, each marked with {@code PAST_MARK} after its date and time.
      *
      * @param patient Patient whose record is formatted.
      * @param now Date and time that decides which appointments are upcoming.

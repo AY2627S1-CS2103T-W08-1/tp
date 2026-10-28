@@ -85,7 +85,26 @@ public class AppointmentTest {
     public void isValidProvider() {
         assertFalse(Appointment.isValidProvider("")); // empty string
         assertFalse(Appointment.isValidProvider("   ")); // spaces only
+        assertFalse(Appointment.isValidProvider(" ")); // no-break space only
+        assertFalse(Appointment.isValidProvider("Dr Tan\nDr Fake")); // line break
+        assertFalse(Appointment.isValidProvider("a".repeat(Appointment.MAX_PROVIDER_LENGTH + 1))); // too long
         assertTrue(Appointment.isValidProvider("Dr Tan"));
+        assertTrue(Appointment.isValidProvider("a".repeat(Appointment.MAX_PROVIDER_LENGTH))); // maximum length
+    }
+
+    @Test
+    public void isValidNote() {
+        assertFalse(Appointment.isValidNote("Bring results)\n2. 2099-01-01 09:00 with Dr Fake")); // line break
+        assertFalse(Appointment.isValidNote("Bring results")); // Unicode line separator
+        assertFalse(Appointment.isValidNote("a".repeat(Appointment.MAX_NOTE_LENGTH + 1))); // too long
+        assertTrue(Appointment.isValidNote("")); // no note
+        assertTrue(Appointment.isValidNote("a".repeat(Appointment.MAX_NOTE_LENGTH))); // maximum length
+    }
+
+    @Test
+    public void constructor_noteWithLineBreak_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, Appointment.MESSAGE_NOTE_CONSTRAINTS, ()
+            -> new Appointment(DATE, TIME, "Dr Tan", "Fasting\nFake line"));
     }
 
     @Test
@@ -109,6 +128,7 @@ public class AppointmentTest {
 
         // same provider, ignoring case, repeated spaces and note -> returns true
         assertTrue(appointment.isSameAppointment(new Appointment(DATE, TIME, "dr  TAN", "Fasting")));
+        assertTrue(appointment.isSameAppointment(new Appointment(DATE, TIME, "Dr Tan", ""))); // no-break space
 
         // null -> returns false
         assertFalse(appointment.isSameAppointment(null));
@@ -116,6 +136,21 @@ public class AppointmentTest {
         // different provider or time -> returns false
         assertFalse(appointment.isSameAppointment(new Appointment(DATE, TIME, "Dr Lim", "")));
         assertFalse(appointment.isSameAppointment(new Appointment(DATE, TIME.plusMinutes(1), "Dr Tan", "")));
+    }
+
+    @Test
+    public void isSameAppointment_canonicallyEquivalentProviders_returnsTrue() {
+        // "é" as one character, and as "e" followed by a combining accent, look the same
+        Appointment composed = new Appointment(DATE, TIME, "Caf\u00e9 clinic", "");
+        Appointment decomposed = new Appointment(DATE, TIME, "CAFE\u0301 clinic", "");
+        assertTrue(composed.isSameAppointment(decomposed));
+        assertTrue(decomposed.isSameAppointment(composed));
+        assertEquals("CAFE\u0301 clinic", decomposed.getProvider()); // the spelling typed is kept
+
+        // accents still count, and fullwidth letters are not canonically equivalent, as for contact names
+        assertFalse(composed.isSameAppointment(new Appointment(DATE, TIME, "Cafe clinic", "")));
+        assertFalse(new Appointment(DATE, TIME, "Clinic", "")
+                .isSameAppointment(new Appointment(DATE, TIME, "\uff23linic", "")));
     }
 
     @Test
@@ -151,5 +186,13 @@ public class AppointmentTest {
         assertEquals("2026-11-05 09:30 with Dr Tan", new Appointment(DATE, TIME, "Dr Tan", "").toString());
         assertEquals("2026-11-05 09:30 with Dr Tan (Fasting)",
                 new Appointment(DATE, TIME, "Dr Tan", "Fasting").toString());
+    }
+
+    @Test
+    public void getDateTimeTextAndDetailsText() {
+        Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "Fasting");
+        assertEquals("2026-11-05 09:30", appointment.getDateTimeText());
+        assertEquals("with Dr Tan (Fasting)", appointment.getDetailsText());
+        assertEquals("with Dr Tan", new Appointment(DATE, TIME, "Dr Tan", "").getDetailsText());
     }
 }

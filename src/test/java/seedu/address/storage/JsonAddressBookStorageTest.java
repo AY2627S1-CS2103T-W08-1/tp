@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
+import static seedu.address.testutil.TestUtil.replaceWithInvalidUtf8Byte;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
@@ -112,12 +113,42 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void readAddressBook_misspelledOrRepeatedProperty_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: a misspelled property and a property given twice, whose values would
+        // otherwise be lost the next time the data is saved
+        Path filePath = testFolder.resolve("StrictData.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        String savedData = Files.readString(filePath);
+        String misspelledProperty = savedData.replaceFirst("\"careInstructions\"", "\"careInstructons\"");
+        String repeatedProperty = savedData.replaceFirst("\"phone\" : ", "\"phone\" : \"81234567\", \"phone\" : ");
+        assertFalse(savedData.equals(misspelledProperty) || savedData.equals(repeatedProperty));
+
+        for (String damagedData : List.of(misspelledProperty, repeatedProperty)) {
+            Files.writeString(filePath, damagedData);
+            assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
+        }
+    }
+
+    @Test
     public void readAddressBook_contentAfterSavedData_throwsDataLoadingException() throws Exception {
         // Equivalence partitioning: a saved data file damaged later by text added after its data
         Path filePath = testFolder.resolve("ContentAfterData.json");
         JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
         storage.saveAddressBook(getTypicalAddressBook());
         Files.writeString(filePath, "\nTHIS IS NOT JSON", StandardOpenOption.APPEND);
+
+        assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
+    }
+
+    @Test
+    public void readAddressBook_invalidUtf8InSavedData_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: a saved data file with a byte inside an address that is not valid UTF-8,
+        // which must not be loaded as a replacement character
+        Path filePath = testFolder.resolve("InvalidUtf8.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        replaceWithInvalidUtf8Byte(filePath, "Jurong");
 
         assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
     }
@@ -172,6 +203,18 @@ public class JsonAddressBookStorageTest {
         storage.saveAddressBook(original);
 
         assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void readAddressBook_unpairedSurrogateInAddress_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: a hand-edited address with half of a surrogate pair, which saving again
+        // would silently change to "?"
+        Path filePath = testFolder.resolve("UnpairedSurrogate.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        Files.writeString(filePath, Files.readString(filePath).replace("Jurong", "\\ud800Jurong"));
+
+        assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
     }
 
     @Test

@@ -24,7 +24,9 @@ import static seedu.address.ui.PatientDetailPanel.MESSAGE_NO_PATIENT;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -33,14 +35,22 @@ import org.junit.jupiter.api.Test;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import seedu.address.logic.PatientFormatter;
 import seedu.address.model.appointment.Appointment;
+import seedu.address.model.patient.Contact;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
@@ -49,6 +59,7 @@ public class PatientDetailPanelTest {
 
     /** Time at which the panel's appointments are split into upcoming and past ones. */
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 18, 12, 0);
+    private static final double WINDOW_SIZE = 400;
 
     private static boolean isToolkitAvailable;
 
@@ -178,7 +189,8 @@ public class PatientDetailPanelTest {
         Appointment upcoming = new Appointment(LocalDate.of(2999, 1, 1), LocalTime.of(9, 0), "Dr Tan", "");
         viewedPatient.set(new PatientBuilder().withAppointments(past, upcoming).build());
 
-        assertEquals(List.of(upcoming.toString(), past + PAST_MARK), getEntryTexts(content, "#appointments"));
+        assertEquals(List.of(upcoming.toString(), "2000-01-01 09:00" + PAST_MARK + " with Dr Lee"),
+                getEntryTexts(content, "#appointments"));
         assertEquals(List.of("1.", "2."), getNumberTexts(content, "#appointments"));
     }
 
@@ -214,6 +226,24 @@ public class PatientDetailPanelTest {
                 .build());
 
         assertEquals(List.of("Metformin 500mg (08:00, 20:00)", "Aspirin"), getEntryTexts(content, "#medications"));
+    }
+
+    @Test
+    public void viewedPatient_entriesWithLineBreaks_showsEachEntryOnOneNumberedLine() {
+        // Equivalence partitioning: a line break stored in each kind of entry that can hold one, which only a
+        // hand-edited data file can give, must not look like a second numbered entry
+        VBox content = createPanelContent();
+        viewedPatient.set(new PatientBuilder().withAllergens("Penicillin\n2. Shellfish")
+                .withCareInstructions("Walk daily\r\n2. Rest in bed")
+                .withContacts(new Contact("Dr Tan", "GP", "91234567", "Call first\n2. Fax")).build());
+
+        assertEquals(List.of("Penicillin 2. Shellfish"), getEntryTexts(content, "#allergens"));
+        assertEquals(List.of("Walk daily 2. Rest in bed"), getEntryTexts(content, "#careInstructions"));
+        assertEquals(List.of("Dr Tan (GP); Phone: 91234567; Note: Call first 2. Fax"),
+                getEntryTexts(content, "#contacts"));
+        for (String id : List.of("#allergens", "#careInstructions", "#contacts")) {
+            assertEquals(List.of("1."), getNumberTexts(content, id));
+        }
     }
 
     @Test
@@ -275,7 +305,7 @@ public class PatientDetailPanelTest {
         displayedPatients.setAll(ALICE, BENSON);
         viewedPatient.set(BENSON);
 
-        assertEquals(String.format(MESSAGE_LIST_INDEX, 2), ((Label) lookup(content, "#listIndex")).getText());
+        assertEquals(expectedListIndex(2), ((Label) lookup(content, "#listIndex")).getText());
     }
 
     @Test
@@ -296,7 +326,7 @@ public class PatientDetailPanelTest {
         Label listIndex = (Label) lookup(content, "#listIndex");
         displayedPatients.setAll(ALICE, BENSON);
         viewedPatient.set(ALICE);
-        assertEquals(String.format(MESSAGE_LIST_INDEX, 1), listIndex.getText());
+        assertEquals(expectedListIndex(1), listIndex.getText());
 
         // e.g., after find hides the viewed patient
         displayedPatients.setAll(BENSON);
@@ -304,7 +334,7 @@ public class PatientDetailPanelTest {
 
         // e.g., after list shows the viewed patient again, at another index
         displayedPatients.setAll(BENSON, ALICE);
-        assertEquals(String.format(MESSAGE_LIST_INDEX, 2), listIndex.getText());
+        assertEquals(expectedListIndex(2), listIndex.getText());
     }
 
     @Test
@@ -343,6 +373,54 @@ public class PatientDetailPanelTest {
         assertEquals(scrollPane.getVmax(), scrollPane.getVvalue());
     }
 
+    @Test
+    public void mousePress_lineOfPanelWhileCommandBoxHasFocus_focusKept() throws Exception {
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+
+        List<Boolean> isFocusKeptAfterEachPress = runOnFxThread(this::pressLineWithEachButton);
+
+        assertEquals(List.of(true, true), isFocusKeptAfterEachPress);
+    }
+
+    /**
+     * Shows a panel viewing Alice below a command box that has the focus, presses a line of the panel with
+     * the primary, then the secondary mouse button, as a click and a right-click to copy the line do, and
+     * returns whether the command box still has the focus after each press. Must be called on the JavaFX
+     * application thread.
+     */
+    private List<Boolean> pressLineWithEachButton() {
+        ScrollPane scrollPane = createPanel();
+        viewedPatient.set(ALICE);
+        TextField commandBox = new TextField();
+        Stage stage = new Stage();
+        stage.setScene(new Scene(new VBox(commandBox, scrollPane), WINDOW_SIZE, WINDOW_SIZE));
+        stage.show();
+        try {
+            commandBox.requestFocus();
+            Node line = lookup((VBox) scrollPane.getContent(), "#name");
+            List<Boolean> isFocusKeptAfterEachPress = new ArrayList<>();
+            for (MouseButton button : List.of(MouseButton.PRIMARY, MouseButton.SECONDARY)) {
+                press(line, button);
+                isFocusKeptAfterEachPress.add(stage.getScene().getFocusOwner() == commandBox);
+            }
+            return isFocusKeptAfterEachPress;
+        } finally {
+            stage.close();
+        }
+    }
+
+    /**
+     * Fires a press of the mouse {@code button} at the center of {@code node}.
+     */
+    private static void press(Node node, MouseButton button) {
+        Bounds bounds = node.localToScene(node.getBoundsInLocal());
+        double x = bounds.getCenterX();
+        double y = bounds.getCenterY();
+        boolean isSecondary = button == MouseButton.SECONDARY;
+        Event.fireEvent(node, new MouseEvent(MouseEvent.MOUSE_PRESSED, x, y, x, y, button, 1, false, false,
+                false, false, !isSecondary, false, isSecondary, false, isSecondary, true, null));
+    }
+
     /**
      * Creates a panel bound to {@code viewedPatient} and {@code displayedPatients}, and returns its scroll pane.
      */
@@ -363,6 +441,14 @@ public class PatientDetailPanelTest {
 
     private static Node lookup(VBox content, String selector) {
         return content.lookup(selector);
+    }
+
+    /**
+     * Returns the list index line that the panel shows for {@code oneBasedIndex}, written with the digits
+     * 0 to 9, as the panel writes it, whatever the computer's language settings are.
+     */
+    private static String expectedListIndex(int oneBasedIndex) {
+        return String.format(Locale.ROOT, MESSAGE_LIST_INDEX, oneBasedIndex);
     }
 
     /**

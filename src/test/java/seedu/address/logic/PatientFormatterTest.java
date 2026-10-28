@@ -68,6 +68,33 @@ public class PatientFormatterTest {
     }
 
     @Test
+    public void toSingleLine_nullEntry_throwsNullPointerException() {
+        // Equivalence partitioning: null, the invalid partition of entries, which no stored list holds
+        assertThrows(NullPointerException.class, () -> PatientFormatter.toSingleLine(null));
+    }
+
+    @Test
+    public void toSingleLine_eachKindOfLineBreak_becomesOneSpace() {
+        // Equivalence partitioning: a line feed, a carriage return with a line feed, and a Unicode line
+        // separator, each with spaces around it
+        assertEquals("Penicillin 2. Shellfish", PatientFormatter.toSingleLine("Penicillin \n 2. Shellfish"));
+        assertEquals("Penicillin 2. Shellfish", PatientFormatter.toSingleLine("Penicillin\r\n2. Shellfish"));
+        assertEquals("Penicillin 2. Shellfish", PatientFormatter.toSingleLine("Penicillin 2. Shellfish"));
+    }
+
+    @Test
+    public void toSingleLine_lineBreakAtStartOrEnd_removed() {
+        // Boundary value analysis: a line break before the first and after the last character of the entry
+        assertEquals("Penicillin", PatientFormatter.toSingleLine("\nPenicillin\n"));
+    }
+
+    @Test
+    public void toSingleLine_noLineBreak_unchanged() {
+        // Equivalence partitioning: an entry as commands create it, with its inner spaces kept
+        assertEquals("Take 2  tablets", PatientFormatter.toSingleLine("Take 2  tablets"));
+    }
+
+    @Test
     public void formatEntries_longRunOfSpacesWithoutLineBreak_spacesKept() {
         String entry = "Take" + " ".repeat(60_000) + "daily";
 
@@ -105,8 +132,22 @@ public class PatientFormatterTest {
         Appointment upcoming = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(14, 0), "Dr Lim", "");
         Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Polyclinic", "");
 
-        assertEquals(List.of("2026-12-01 14:00 with Dr Lim", "2026-10-01 09:00 with Polyclinic (past)"),
+        assertEquals(List.of("2026-12-01 14:00 with Dr Lim", "2026-10-01 09:00 (past) with Polyclinic"),
                 PatientFormatter.formatAppointments(List.of(upcoming, past), NOW));
+    }
+
+    @Test
+    public void formatAppointments_textEndingInPastMark_onlyRealPastAppointmentMarked() {
+        // a note or WITH of "past" must not look like the mark, which comes right after the date and time
+        Appointment upcomingWithNote = new Appointment(LocalDate.of(2027, 12, 1), LocalTime.of(10, 0), "Dr Tan",
+                "past");
+        Appointment upcomingWithProvider = new Appointment(LocalDate.of(2027, 12, 2), LocalTime.of(10, 0),
+                "Dr Tan (past)", "");
+        Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(10, 0), "Dr Tan", "past");
+
+        assertEquals(List.of("2027-12-01 10:00 with Dr Tan (past)", "2027-12-02 10:00 with Dr Tan (past)",
+                "2026-10-01 10:00 (past) with Dr Tan (past)"),
+                PatientFormatter.formatAppointments(List.of(upcomingWithNote, upcomingWithProvider, past), NOW));
     }
 
     @Test
@@ -159,7 +200,7 @@ public class PatientFormatterTest {
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
         assertEquals(List.of("Appointments", "1. 2026-12-01 14:00 with Dr Lim",
-                "2. 2026-10-01 09:00 with Polyclinic (past)"),
+                "2. 2026-10-01 09:00 (past) with Polyclinic"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
 
@@ -172,7 +213,7 @@ public class PatientFormatterTest {
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
         assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim",
-                "2. 2026-10-20 14:29 with Polyclinic (past)"),
+                "2. 2026-10-20 14:29 (past) with Polyclinic"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
 

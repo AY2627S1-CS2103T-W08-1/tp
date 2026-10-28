@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static seedu.address.logic.Messages.MESSAGE_DUE_PATIENT_ARCHIVED;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_NOTHING_DUE_TODAY;
 import static seedu.address.logic.Messages.MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT;
@@ -153,10 +154,56 @@ public class DueCommandTest {
                 patient("Amy Bee", "S0000002A", medication("Dose B", 9, 0), medication("Dose C", 7, 0)),
                 patient("amy bee", "S0000001A", medication("Dose D", 9, 0)));
         assertDue(new DueCommand(clockAt(0, 0, 0)), model,
-                "07:00 Amy Bee: Dose C",
-                "09:00 amy bee: Dose D",
-                "09:00 Amy Bee: Dose B",
+                "07:00 Amy Bee (S0000002A): Dose C",
+                "09:00 amy bee (S0000001A): Dose D",
+                "09:00 Amy Bee (S0000002A): Dose B",
                 "09:00 zoe Lim: Dose A");
+    }
+
+    @Test
+    public void execute_sameNameDifferentNrics_nricShownOnlyForSharedName() throws Exception {
+        Model model = createModel(
+                patient("Amy Tan", "S1111111A", medication("Aspirin", 8, 0)),
+                patient("Amy Tan", "S2222222B", medication("Aspirin", 8, 0)),
+                patient("Bob Lim", "S3333333C", medication("Aspirin", 8, 0)));
+        assertDue(new DueCommand(clockAt(0, 0, 0)), model,
+                "08:00 Amy Tan (S1111111A): Aspirin",
+                "08:00 Amy Tan (S2222222B): Aspirin",
+                "08:00 Bob Lim: Aspirin");
+    }
+
+    @Test
+    public void execute_sameNameButOnlyOneHasDoses_nricNotShown() throws Exception {
+        Model model = createModel(
+                patient("Amy Tan", "S1111111A", medication("Aspirin", 8, 0)),
+                patient("Amy Tan", "S2222222B", new Medication("Vitamin D")));
+        assertDue(new DueCommand(clockAt(0, 0, 0)), model, "08:00 Amy Tan: Aspirin");
+    }
+
+    @Test
+    public void execute_sameNameButOneArchived_nricNotShown() throws Exception {
+        Patient archivedAmy = new PatientBuilder(patient("Amy Tan", "S2222222B", medication("Aspirin", 8, 0)))
+                .withArchived(true).build();
+        Model model = createModel(patient("Amy Tan", "S1111111A", medication("Aspirin", 8, 0)), archivedAmy);
+        assertDue(new DueCommand(clockAt(0, 0, 0)), model, "08:00 Amy Tan: Aspirin");
+    }
+
+    @Test
+    public void execute_sameNameWithTwoMedications_nricShownOnEveryLine() throws Exception {
+        Model model = createModel(
+                patient("Amy Tan", "S1111111A", medication("Aspirin", 8, 0), medication("Zinc", 9, 0)),
+                patient("Amy Tan", "S2222222B", medication("Aspirin", 8, 0)));
+        assertDue(new DueCommand(clockAt(8, 30, 0)), model,
+                "08:00 Amy Tan (S1111111A): Aspirin (earlier today)",
+                "08:00 Amy Tan (S2222222B): Aspirin (earlier today)",
+                "09:00 Amy Tan (S1111111A): Zinc");
+    }
+
+    @Test
+    public void execute_descriptionWithLineBreak_listsOneLinePerTime() throws Exception {
+        Model model = createModel(patient("Amy Tan", "S0000001A",
+                medication("Aspirin\n20:00 Amy Tan: Warfarin", 8, 0)));
+        assertDue(new DueCommand(clockAt(0, 0, 0)), model, "08:00 Amy Tan: Aspirin 20:00 Amy Tan: Warfarin");
     }
 
     @Test
@@ -210,13 +257,13 @@ public class DueCommandTest {
     }
 
     @Test
-    public void execute_archivedPatientAtDisplayedIndex_notListed() throws Exception {
+    public void execute_archivedPatientAtDisplayedIndex_throwsCommandException() {
         Patient archivedAlex = new PatientBuilder(alex).withArchived(true).build();
         Model model = createModel(archivedAlex);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
 
-        assertDue(new DueCommand(INDEX_FIRST_PATIENT, clockAt(7, 0, 0)), model,
-                String.format(MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT, archivedAlex.getName()));
+        assertCommandFailure(new DueCommand(INDEX_FIRST_PATIENT, clockAt(7, 0, 0)), model,
+                MESSAGE_DUE_PATIENT_ARCHIVED);
     }
 
     @Test
