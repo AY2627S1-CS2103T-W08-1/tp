@@ -270,6 +270,16 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_duplicateMedicationsIgnoringCase_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(new JsonAdaptedMedication("Aspirin", List.of("08:00")),
+                        new JsonAdaptedMedication("aspirin", List.of("20:00"))), List.of(), List.of(), null, null,
+                null);
+        assertThrows(IllegalValueException.class, JsonAdaptedPatient.MESSAGE_DUPLICATE_MEDICATION,
+                patient::toModelType);
+    }
+
+    @Test
     public void toModelType_contacts_preservedOrRejected() throws Exception {
         var contact = GP;
         var patient = new PatientBuilder(BENSON).withContacts(contact)
