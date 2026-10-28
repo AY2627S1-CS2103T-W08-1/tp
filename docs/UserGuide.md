@@ -966,7 +966,12 @@ starting from 1, including archived patients; this is not an index from a filter
 entry is reported, so another error may appear after you repair it. For malformed JSON or other read failures,
 the warning asks you to check the JSON format and file permissions; a patient position may not be available.
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
-If the recovery copy cannot be created, startup stops so the original file is not overwritten.
+If the recovery copy cannot be created, the main window does not open. An error dialog headed
+`MediConnect could not start` shows the data-file path, a reason, and what to check. Closing the dialog exits
+the app without changing patient data. This also happens if `data/mediconnect.json` is a folder rather than a file.
+Check that you can read the data file and write to its containing folder, and that there is enough free disk space.
+If the path is a folder, rename or move that folder safely and put a valid data file at the expected path.
+Keep the original data while fixing the problem, then launch MediConnect again.
 To recover your data, close MediConnect, repair a copy of the recovery file and replace `data/mediconnect.json`
 with the repaired file before restarting. Keep the recovery copy until you have checked the recovered patients.
 We still recommend backing up the file before editing it.<br>
