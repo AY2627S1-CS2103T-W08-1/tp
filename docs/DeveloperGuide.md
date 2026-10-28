@@ -1615,6 +1615,117 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 *{More to be added}*
 
+**Use case: UC18 - Add a patient's contact**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7).
+2.  Caregiver requests to add a contact, giving a name, role and phone, and optionally a note.
+3.  MediConnect adds the contact at the end of the patient's contact list and shows the added contact's details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The patient index is missing or invalid.
+
+    * 2a1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 1.
+
+* 2b. A required field is missing, a field is invalid, or the command format is invalid.
+
+    * 2b1. MediConnect shows an error message describing the problem and changes nothing.
+
+      Use case resumes at step 2.
+
+* 2c. The patient already has a contact with the same name and phone under the duplicate rules for contacts.
+
+    * 2c1. MediConnect shows a duplicate-contact error and changes nothing, even if the role or note differs.
+
+      Use case resumes at step 2.
+
+* 3a. The updated patient data cannot be saved.
+
+    * 3a1. MediConnect undoes the addition and shows a save-failure message.
+
+      Use case ends.
+
+**Use case: UC19 - Edit a patient's contact**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7), with the contacts numbered.
+2.  Caregiver requests to edit a specific contact, giving its number and one or more replacement fields.
+3.  MediConnect changes only the supplied fields, keeps the contact's number, and shows its updated details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The patient index or contact number is missing or invalid.
+
+    * 2a1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 1.
+
+* 2b. No field to change is given, a supplied field is invalid, or the command format is invalid.
+
+    * 2b1. MediConnect shows an error message describing the problem and changes nothing.
+
+      Use case resumes at step 2.
+
+* 2c. The edited contact would duplicate another contact of the patient.
+
+    * 2c1. MediConnect shows a duplicate-contact error and changes nothing.
+
+      Use case resumes at step 2.
+
+* 2d. Caregiver supplies an empty note.
+
+    * 2d1. MediConnect clears the contact's note. An omitted note would preserve the existing note.
+
+      Use case resumes at step 3.
+
+* 3a. The updated patient data cannot be saved.
+
+    * 3a1. MediConnect undoes the edit and shows a save-failure message.
+
+      Use case ends.
+
+**Use case: UC20 - Delete a patient's contact**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7), with the contacts numbered.
+2.  Caregiver requests to delete a specific contact, giving its number.
+3.  MediConnect removes the contact, renumbers the remaining contacts, and shows the removed contact's details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The patient index or contact number is missing or invalid, or the command format is invalid.
+
+    * 2a1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 1.
+
+* 3a. The updated patient data cannot be saved.
+
+    * 3a1. MediConnect restores the deleted contact and the previous numbering, and shows a save-failure message.
+
+      Use case ends.
+
 ### Non-Functional Requirements
 
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
@@ -1855,6 +1966,26 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `editcontact 1 99 nt/note`, then `deletecontact 1 99`.<br>
    Expected: Both report `The contact index provided is invalid.` and change nothing.
+
+1. Adding and editing contact fields
+
+   1. Test cases: `addcontact 1 n/ r/GP p/123` and `addcontact 1 n/Review clinic r/GP p/12`.<br>
+      Expected: The first reports the contact-name constraints; the second reports the phone constraints.
+      Neither adds a contact.
+
+   1. Test case: `addcontact 1 n/Review clinic r/GP p/123 nt/Call first`.<br>
+      Expected: The contact is added. Run `view 1` and note its contact number as `CONTACT_INDEX`.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX r/Guardian p/456`, replacing `CONTACT_INDEX` with that number.<br>
+      Expected: The role and phone change, while the name, note, contact number and other patient data are preserved.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX`, using the same number.<br>
+      Expected: `Specify at least one contact field to edit.` The contact is unchanged.
+
+   1. Test case: `addcontact 1 n/Other review clinic r/GP p/789`. Run `view 1` and note its number as `OTHER_INDEX`.
+      Then run `editcontact 1 OTHER_INDEX n/Review clinic p/456`, replacing `OTHER_INDEX` with that number.<br>
+      Expected: The second contact is added, but its edit is rejected as a duplicate of `Review clinic` despite
+      their different roles and notes. Both contacts remain as they were before the edit.
 
 1. Validating contact phone numbers
 
