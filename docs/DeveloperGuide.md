@@ -492,6 +492,11 @@ The `help` command, `F1` and the **Help** menu open the `HelpWindow`, which list
 ### Contact management
 
 `Contact` is immutable and contains a name, role, phone and optional note (stored as an empty string when absent).
+It owns the text limits: `MAX_NAME_LENGTH` and `MAX_ROLE_LENGTH` are 100, and `MAX_NOTE_LENGTH` is 500.
+Validators count Unicode code points after name normalization and role trimming. Notes are checked as supplied
+to the model: command parsers trim their boundaries first, while stored note text is preserved and counted in full.
+The constructor enforces these rules for commands, startup loading and restore through `JsonAdaptedContact`.
+The edit parser validates supplied fields before creating a command, including a trimmed optional note.
 Names are nonblank free text because contacts can be people or organisations, such as `Tan & Partners Clinic`.
 They deliberately do not use patient `Name` constraints. Contact phones likewise have their own rules so clinic
 and international numbers work without weakening patient-phone validation. `Contact#isValidPhone()` requires
@@ -2084,6 +2089,18 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, close the app and change a contact phone in `data/mediconnect.json`
       to `+++123+++`, then relaunch.<br>
       Expected: The file is rejected, startup shows the recovery-copy path, and the original invalid data is preserved.
+
+1. Contact text length limits
+
+   1. Prerequisites: Prepare strings of 100 and 101 characters for names/roles, and 500 and 501 for notes.
+      Replace `NAME`, `ROLE` and `NOTE` in the commands below with those strings, without the placeholder labels.
+
+   1. Test case: `addcontact 1 n/NAME r/ROLE p/123 nt/NOTE`, using the 100/100/500-character strings.<br>
+      Expected: The contact is added. Run `view 1` and note its contact number.
+
+   1. Repeat the add with one field over its limit at a time, then try `editcontact 1 CONTACT_INDEX n/NAME`,
+      `editcontact 1 CONTACT_INDEX r/ROLE` and `editcontact 1 CONTACT_INDEX nt/NOTE` with overlong values.<br>
+      Expected: Each command reports the affected field's length constraint and leaves contacts unchanged.
 
 1. Copied no-break spaces in contact fields
 

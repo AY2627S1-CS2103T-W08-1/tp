@@ -55,6 +55,18 @@ public class EditContactCommandTest {
     }
 
     @Test
+    public void execute_overlongNote_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder().withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        model.setViewedPatient(patient);
+        EditContactCommand command = edit(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                Optional.of("n".repeat(Contact.MAX_NOTE_LENGTH + 1)));
+        assertThrows(CommandException.class, Contact.MESSAGE_NOTE_CONSTRAINTS, () -> command.execute(model));
+        assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertEquals(patient, model.getViewedPatient().getValue());
+    }
+
+    @Test
     public void execute_noteChangedAndCleared_otherFieldsPreserved() throws Exception {
         Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN).withAllergens("Allergen")
                 .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0)))).build();
