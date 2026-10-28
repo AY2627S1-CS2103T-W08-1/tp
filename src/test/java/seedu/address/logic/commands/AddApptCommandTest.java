@@ -107,6 +107,27 @@ public class AddApptCommandTest {
     }
 
     @Test
+    public void execute_dateBeforeDob_throwsCommandException() {
+        Model model = new ModelManager();
+        model.addPatient(ALICE);
+        Appointment dayBeforeBirth = new Appointment(ALICE.getDob().value.minusDays(1), LocalTime.of(10, 0),
+                "Dr Tan", "");
+        assertCommandFailure(new AddApptCommand(INDEX_FIRST_PATIENT, dayBeforeBirth, FIXED_CLOCK), model,
+                String.format(Messages.MESSAGE_APPOINTMENT_BEFORE_DOB, ALICE.getDob()));
+    }
+
+    @Test
+    public void execute_dateOnDob_addsAppointment() throws Exception {
+        Model model = new ModelManager();
+        model.addPatient(ALICE);
+        Appointment onBirthday = new Appointment(ALICE.getDob().value, LocalTime.of(10, 0), "Dr Tan", "");
+
+        new AddApptCommand(INDEX_FIRST_PATIENT, onBirthday, FIXED_CLOCK).execute(model);
+
+        assertEquals(List.of(onBirthday), model.getAddressBook().getPatientList().get(0).getAppointments());
+    }
+
+    @Test
     public void execute_invalidIndex_throwsCommandException() {
         Model model = new ModelManager();
         model.addPatient(ALICE);
