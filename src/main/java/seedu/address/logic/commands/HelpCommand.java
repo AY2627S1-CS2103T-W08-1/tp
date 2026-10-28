@@ -22,8 +22,8 @@ public class HelpCommand extends Command {
 
     public static final String COMMAND_WORD = "help";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Opens the help window, which lists every command "
-            + "with its format and a one-line description.\n"
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Opens the help window, which lists every "
+            + "command with its format and a one-line description.\n"
             + "Example: " + COMMAND_WORD;
 
     /** Separates the format of a command from its description in {@code COMMAND_SUMMARY}. */
