@@ -26,6 +26,9 @@ MediConnect is a **desktop application for managing patient records and care inf
    A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands.<br>
    ![Ui](images/Ui.png)
 
+   Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
+   naming the data file and exits. Close the first window before opening it again.
+
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
 
@@ -887,6 +890,8 @@ Format: `clear confirm`
 * The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
   using that file's name to recover the data. There is no undo command.
 * An empty address book is backed up too. Existing backups are never overwritten.
+* A successful clear writes an empty data file even if the app already shows no patients. After an unreadable-file
+  startup warning, this lets you discard the unreadable data and start empty; the recovery copy is kept.
 * If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
 
 Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
@@ -899,7 +904,10 @@ Saves a copy of all patient data to the `data/backups` folder, inside the folder
 Format: `backup`
 
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
-* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten. This also holds when two backups are made at the same moment, e.g., in two MediConnect windows, or when `restore` or `clear confirm` backs up your data while you make a backup. To let such backups take turns, MediConnect keeps an empty file named `.backup.lock` in `data/backups`; it is not a backup, and `restore` does not list it.
+* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name,
+  so no backup is overwritten. Backups written to the same folder at the same time take turns, including
+  automatic backups made by `restore` and `clear confirm`. MediConnect keeps an empty file named `.backup.lock`
+  in `data/backups` for this purpose; it is not a backup, and `restore` does not list it.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
@@ -936,6 +944,9 @@ Format: `restore [FILENAME]`
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
 * After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+* A successful `restore FILENAME` writes the selected data even if it matches the data already shown. Restoring
+  an empty backup after an unreadable-file startup warning replaces the data file with valid empty data.
+  If the replacement cannot be saved, the restore fails and the app returns to its previous state.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
@@ -1005,15 +1016,28 @@ Format: `exit`
 
 ### Saving the data
 
-MediConnect automatically saves data after every command that changes it. You do not need to save manually.
+MediConnect handles saving automatically. You do not need to save manually.
+See [clear](#clearing-all-patients-clear) and [restore](#restoring-data-from-a-backup-restore) for how these commands
+replace your saved data.
+
+MediConnect prevents two windows launched from the same app folder from using its data together.
+Its small lock files are in `.mediconnect/locks` inside the folder you launch MediConnect from;
+they contain no patient records. They can remain after exit and do not need to be removed after a crash.
+Do not delete them while MediConnect is running. The app needs permission to create and write these files.
+If the lock folder cannot be used, a startup error names it and the app exits; see the [FAQ](#faq) for recovery steps.
+
+Do not make different app folders share the same `data` folder, including through linked folders. This setup
+is unsupported: each app folder has its own lock files, so one app can overwrite the other's changes.
+Use one app folder for each set of patient data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
-`Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,
-`view`, `help` and `exit`, still work.
+`Could not save data ...` followed by `Nothing was changed.` You can still run `list`, `view`, `help` and `exit`.
 
 ### Editing the data file
 
 MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
+Close MediConnect before editing, replacing or moving its data file or home folder. Otherwise, an open window
+can overwrite external edits from its older in-memory data. Restart the app to load the edited file.
 Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also applies to backups in `data/backups`.
 A file saved in another encoding, such as "ANSI" in Windows Notepad, is not valid UTF-8 if it contains letters
 outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`. For such
@@ -1033,6 +1057,8 @@ A misspelled property name, e.g., `careInstructons`, or a property given twice i
 file invalid, so that its value is not lost the next time the data is saved. The `Details:` line names a misspelled
 property, e.g., `Unknown property "careInstructons". Check its spelling.`
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
+To discard the unreadable data, use [clear confirm](#clearing-all-patients-clear). To recover from a valid backup,
+use [restore FILENAME](#restoring-data-from-a-backup-restore).
 If the recovery copy cannot be created, the main window does not open. An error dialog headed
 `MediConnect could not start` shows the data-file path, a reason, and what to check. Closing the dialog exits
 the app without changing patient data. This also happens if `data/mediconnect.json` is a folder rather than a file.
@@ -1057,6 +1083,12 @@ The warning names the data file and a failure reason. Close the app, check that 
 folder with enough free disk space, then restart. Move the app to a writable folder if needed. Until the problem
 is fixed, commands that cannot save their changes fail and are undone; closing the app does not save the samples.
 Other startup errors may prevent the main window from opening at all.
+
+**Q**: Why does startup say it could not protect the data file?<br>
+**A**: MediConnect could not create or open its lock files in `.mediconnect/locks`.
+Close all MediConnect windows. Check that `.mediconnect` and `.mediconnect/locks` are folders and that you can
+write to them; move aside any file occupying either folder's path. If needed, move the entire app folder,
+including `data`, to a writable location, then launch MediConnect from there.
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
