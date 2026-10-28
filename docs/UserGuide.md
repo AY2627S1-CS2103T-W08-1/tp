@@ -954,7 +954,7 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
 
-`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there.
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 
