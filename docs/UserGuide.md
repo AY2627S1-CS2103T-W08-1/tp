@@ -89,7 +89,8 @@ Format: `help`
 * The help window stays in front of the main window, and you can keep typing commands in the main window while it
   is open. When you switch to another app, such as a browser, the help window goes behind that app's windows.
   Press `Esc` to close it.
-* If the help window is already open, no second help window is opened.
+* If the help window is already open, no second help window is opened. If it is minimized, it is opened again in
+  front of the main window, and you can keep typing commands.
 
 The command returns `Opened help window.`
 
@@ -148,6 +149,10 @@ Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` 
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
+This also applies to the first word immediately after a field prefix: `a/x/123` is rejected just like
+`a/Blk 1 x/123`. A prefix cannot be embedded there as text, even if it is valid elsewhere in that command.
+Each command's supported standalone slash words remain allowed; keep them separate from punctuation.
+Addresses can still begin with numeric slash text such as `a/21/3` or a URL such as `a/https://example.com`.
 
 ### Adding care information: `addcare`
 
@@ -354,9 +359,10 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 * A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
-* Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
-  including standalone `s/o`, `d/o` and `c/o`, are rejected.
-  Standalone `a/l` and `a/p` are allowed in free text, ignoring letter case.
+* Unknown prefixes and repeated prefixes are rejected. Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are
+  allowed in names, roles and notes, ignoring letter case, e.g., `n/Tan s/o Lim` or `nt/Call c/o daughter`.
+  Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
+  Other words starting with unrecognised letters followed by `/` are rejected.
   Text matching a recognised prefix after a space starts another field, even inside a note.
 * Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
   the panel updates immediately. Existing care information is preserved.
@@ -863,12 +869,15 @@ Format: `restore [FILENAME]`
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
   For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
   counting from 1, and the validation reason.
+* The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
+  `data/backups` also has a file with exactly the name given, that file is restored instead.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
 * After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
+* `restore mediconnect-20261020-083015` does the same.
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
 
@@ -974,12 +983,6 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
-
---------------------------------------------------------------------------------------------------------------------
-
-## Known issues
-
-1. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 
 --------------------------------------------------------------------------------------------------------------------
 
