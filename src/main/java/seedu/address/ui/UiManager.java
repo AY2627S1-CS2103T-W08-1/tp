@@ -62,6 +62,14 @@ public class UiManager implements Ui {
         showAlertDialogAndWait(AlertType.WARNING, "MediConnect warning", null, message);
     }
 
+    /**
+     * Shows a startup error before any main window exists. Must be called on the JavaFX application thread.
+     */
+    public static void showStartupError(String message) {
+        requireNonNull(message);
+        showAlertDialogAndWait(null, AlertType.ERROR, "MediConnect could not start", null, message);
+    }
+
     private Image getImage(String imagePath) {
         return new Image(MainApp.class.getResourceAsStream(imagePath));
     }
