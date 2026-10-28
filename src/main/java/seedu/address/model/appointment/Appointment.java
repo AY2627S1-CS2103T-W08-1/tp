@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -166,13 +167,22 @@ public class Appointment implements Comparable<Appointment> {
 
     /**
      * Returns true if both appointments are at the same date and time with the same provider,
-     * ignoring letter case and repeated spaces, including Unicode spaces, in the provider. Notes are not compared.
+     * ignoring letter case, repeated spaces, including Unicode spaces, and how accented letters are stored
+     * in the provider. Notes are not compared.
      * This defines a weaker notion of equality between two appointments.
      */
     public boolean isSameAppointment(Appointment otherAppointment) {
         return isAtSameTimeAs(otherAppointment)
-                && provider.replaceAll(WHITESPACE_REGEX, " ")
-                        .equalsIgnoreCase(otherAppointment.provider.replaceAll(WHITESPACE_REGEX, " "));
+                && toComparableProvider(provider).equalsIgnoreCase(toComparableProvider(otherAppointment.provider));
+    }
+
+    /**
+     * Returns {@code provider} in Unicode NFC form, with each run of whitespace as one space. In NFC form, an
+     * accented letter typed as one character, e.g. "é", and as a letter followed by a combining accent are the
+     * same text, as for contact names.
+     */
+    private static String toComparableProvider(String provider) {
+        return Normalizer.normalize(provider, Normalizer.Form.NFC).replaceAll(WHITESPACE_REGEX, " ");
     }
 
     /**
@@ -217,11 +227,26 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
+     * Returns the date and time as shown to the user, e.g. "2026-10-25 14:30".
+     */
+    public String getDateTimeText() {
+        return date + " " + time;
+    }
+
+    /**
+     * Returns who the appointment is with and its note, if any, as shown to the user after the date and time,
+     * e.g. "with Dr Tan (Fasting)".
+     */
+    public String getDetailsText() {
+        String details = "with " + provider;
+        return note.isEmpty() ? details : details + " (" + note + ")";
+    }
+
+    /**
      * Returns the appointment as shown to the user, e.g. "2026-10-25 14:30 with Dr Tan (Fasting)".
      */
     @Override
     public String toString() {
-        String appointment = date + " " + time + " with " + provider;
-        return note.isEmpty() ? appointment : appointment + " (" + note + ")";
+        return getDateTimeText() + " " + getDetailsText();
     }
 }

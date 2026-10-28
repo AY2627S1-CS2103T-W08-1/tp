@@ -189,7 +189,8 @@ public class PatientDetailPanelTest {
         Appointment upcoming = new Appointment(LocalDate.of(2999, 1, 1), LocalTime.of(9, 0), "Dr Tan", "");
         viewedPatient.set(new PatientBuilder().withAppointments(past, upcoming).build());
 
-        assertEquals(List.of(upcoming.toString(), past + PAST_MARK), getEntryTexts(content, "#appointments"));
+        assertEquals(List.of(upcoming.toString(), "2000-01-01 09:00" + PAST_MARK + " with Dr Lee"),
+                getEntryTexts(content, "#appointments"));
         assertEquals(List.of("1.", "2."), getNumberTexts(content, "#appointments"));
     }
 

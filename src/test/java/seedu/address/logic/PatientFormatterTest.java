@@ -132,8 +132,22 @@ public class PatientFormatterTest {
         Appointment upcoming = new Appointment(LocalDate.of(2026, 12, 1), LocalTime.of(14, 0), "Dr Lim", "");
         Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(9, 0), "Polyclinic", "");
 
-        assertEquals(List.of("2026-12-01 14:00 with Dr Lim", "2026-10-01 09:00 with Polyclinic (past)"),
+        assertEquals(List.of("2026-12-01 14:00 with Dr Lim", "2026-10-01 09:00 (past) with Polyclinic"),
                 PatientFormatter.formatAppointments(List.of(upcoming, past), NOW));
+    }
+
+    @Test
+    public void formatAppointments_textEndingInPastMark_onlyRealPastAppointmentMarked() {
+        // a note or WITH of "past" must not look like the mark, which comes right after the date and time
+        Appointment upcomingWithNote = new Appointment(LocalDate.of(2027, 12, 1), LocalTime.of(10, 0), "Dr Tan",
+                "past");
+        Appointment upcomingWithProvider = new Appointment(LocalDate.of(2027, 12, 2), LocalTime.of(10, 0),
+                "Dr Tan (past)", "");
+        Appointment past = new Appointment(LocalDate.of(2026, 10, 1), LocalTime.of(10, 0), "Dr Tan", "past");
+
+        assertEquals(List.of("2027-12-01 10:00 with Dr Tan (past)", "2027-12-02 10:00 with Dr Tan (past)",
+                "2026-10-01 10:00 (past) with Dr Tan (past)"),
+                PatientFormatter.formatAppointments(List.of(upcomingWithNote, upcomingWithProvider, past), NOW));
     }
 
     @Test
@@ -186,7 +200,7 @@ public class PatientFormatterTest {
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
         assertEquals(List.of("Appointments", "1. 2026-12-01 14:00 with Dr Lim",
-                "2. 2026-10-01 09:00 with Polyclinic (past)"),
+                "2. 2026-10-01 09:00 (past) with Polyclinic"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
 
@@ -199,7 +213,7 @@ public class PatientFormatterTest {
         List<String> lines = PatientFormatter.formatRecord(patient, NOW);
 
         assertEquals(List.of("Appointments", "1. 2026-10-20 14:30 with Dr Lim",
-                "2. 2026-10-20 14:29 with Polyclinic (past)"),
+                "2. 2026-10-20 14:29 (past) with Polyclinic"),
                 lines.subList(lines.size() - 3, lines.size()));
     }
 
