@@ -51,13 +51,15 @@ public class EditContactCommandParserTest {
     }
 
     @Test
-    public void parse_indianNameSlashWords_success() {
-        for (String token : List.of("a/l", "a/p", "A/L", "A/P")) {
-            String name = "Muthu " + token + " Ramasamy";
+    public void parse_standaloneSlashWords_preservedInContactFields() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "S/O", "D/O", "C/O", "A/L", "A/P")) {
+            String name = "Tan " + token + " Lim";
+            String role = "Guardian " + token + " family";
+            String note = "Call " + token + " daughter";
 
-            assertParseSuccess(parser, " 1 1 n/" + name,
+            assertParseSuccess(parser, " 1 1 n/" + name + " r/" + role + " nt/" + note,
                     new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(name),
-                            Optional.empty(), Optional.empty(), Optional.empty()));
+                            Optional.of(role), Optional.empty(), Optional.of(note)));
         }
     }
 
@@ -105,10 +107,14 @@ public class EditContactCommandParserTest {
                     Messages.getErrorMessageForDuplicatePrefixes(prefix));
         }
         assertParseFailure(parser, " 1 1 x/value", String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/"));
-        for (String token : List.of("s/o", "d/o", "c/o", "S/O")) {
-            String prefix = token.substring(0, token.indexOf('/') + 1);
-            assertParseFailure(parser, " 1 1 nt/Ask " + token + " Clinic",
-                    String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix));
+    }
+
+    @Test
+    public void parse_punctuatedSlashWords_rejected() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p")) {
+            String expected = String.format(Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token + ",", token);
+            assertParseFailure(parser, " 1 1 n/Tan " + token + ", Lim", expected);
+            assertParseFailure(parser, " 1 1 nt/Call " + token + ", daughter", expected);
         }
     }
 }
