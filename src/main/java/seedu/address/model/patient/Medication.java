@@ -23,7 +23,7 @@ public class Medication {
     public static final String MESSAGE_DESCRIPTION_CONSTRAINTS = "Medication description cannot be blank.";
     public static final String MESSAGE_DESCRIPTION_TOO_LONG =
             "Medication descriptions cannot exceed " + MAX_DESCRIPTION_LENGTH + " characters.";
-    public static final String MESSAGE_TIME_CONSTRAINTS = "Time must be in HH:MM (24-hour), e.g. 08:30.";
+    public static final String MESSAGE_TIME_CONSTRAINTS = "Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.";
 
     private static final String TIME_PATTERN = "HH:mm";
     private static final String TIME_REGEX = "\\d{2}:\\d{2}";

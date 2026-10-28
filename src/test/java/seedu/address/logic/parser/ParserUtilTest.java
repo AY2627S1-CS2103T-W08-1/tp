@@ -249,8 +249,8 @@ public class ParserUtilTest {
     @Test
     public void parseTime_invalidInput_throwsParseException() {
         String message = Medication.MESSAGE_TIME_CONSTRAINTS;
-        for (String invalidTime : new String[] {"", WHITESPACE, "24:00", "08:60", "8:30", "08:5", "0830", "08.30",
-            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30",
+        for (String invalidTime : new String[] {"", WHITESPACE, "24:00", "08:60", "9:60", "08:5", "0830", "08.30",
+            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30", "8:5", ":30", "1:2:3",
             "\uff10\uff18:\uff13\uff10", "0\u0663:30"}) {
             assertThrows(ParseException.class, message, () -> ParserUtil.parseTime(invalidTime));
         }
@@ -261,6 +261,19 @@ public class ParserUtilTest {
         assertEquals(LocalTime.MIDNIGHT, ParserUtil.parseTime("00:00"));
         assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("08:30"));
         assertEquals(LocalTime.of(23, 59), ParserUtil.parseTime("23:59"));
+    }
+
+    @Test
+    public void parseTime_oneDigitHour_returnsLocalTime() throws Exception {
+        assertEquals(LocalTime.of(9, 30), ParserUtil.parseTime("9:30"));
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("8:30"));
+        assertEquals(LocalTime.of(0, 5), ParserUtil.parseTime("0:05"));
+        assertEquals(LocalTime.of(9, 0), ParserUtil.parseTime(WHITESPACE + "9:00" + WHITESPACE));
+    }
+
+    @Test
+    public void parseTime_oneDigitHourWithInvalidMinute_throwsParseException() {
+        assertThrows(ParseException.class, Medication.MESSAGE_TIME_CONSTRAINTS, () -> ParserUtil.parseTime("9:60"));
     }
 
     @Test

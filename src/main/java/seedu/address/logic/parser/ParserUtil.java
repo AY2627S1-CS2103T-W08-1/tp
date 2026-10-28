@@ -132,15 +132,18 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String time} in 24-hour HH:MM format into a {@code LocalTime}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Parses a {@code String time} in 24-hour HH:MM or H:MM format into a {@code LocalTime}.
+     * Leading and trailing whitespaces will be trimmed, and an hour of one digit is read as if it had a leading 0.
      *
-     * @throws ParseException if the given {@code time} is not exactly two digits, a colon and two digits,
+     * @throws ParseException if the given {@code time} is not one or two digits, a colon and two digits,
      *     or is not a valid time of day.
      */
     public static LocalTime parseTime(String time) throws ParseException {
         requireNonNull(time);
         String trimmedTime = time.trim();
+        if (trimmedTime.matches("\\d:\\d{2}")) {
+            trimmedTime = "0" + trimmedTime;
+        }
         if (!Medication.isValidTime(trimmedTime)) {
             throw new ParseException(Medication.MESSAGE_TIME_CONSTRAINTS);
         }

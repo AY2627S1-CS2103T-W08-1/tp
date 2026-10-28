@@ -49,6 +49,12 @@ public class EditMedCommandParserTest {
     }
 
     @Test
+    public void parse_oneDigitHourTimes_success() {
+        assertParseSuccess(parser, " 1 2 t/8:00 t/20:00",
+                edit(Optional.empty(), Optional.of(List.of(MORNING, EVENING))));
+    }
+
+    @Test
     public void parse_descriptionAndTimes_success() {
         assertParseSuccess(parser, " 1 2 med/Aspirin t/20:00",
                 edit(Optional.of("Aspirin"), Optional.of(List.of(EVENING))));
@@ -118,7 +124,7 @@ public class EditMedCommandParserTest {
 
     @Test
     public void parse_invalidTime_throwsParseException() {
-        for (String time : new String[] {"24:00", "08:60", "8:30", "0830", "08:30:00", "abc", "-1:00", "08:30pm",
+        for (String time : new String[] {"24:00", "08:60", "9:60", "0830", "08:30:00", "abc", "-1:00", "08:30pm",
             "08:00 20:00", "08:00,20:00"}) {
             assertParseFailure(parser, " 1 2 t/" + time, Medication.MESSAGE_TIME_CONSTRAINTS);
         }

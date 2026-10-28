@@ -245,8 +245,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
   same as another medication of the same patient, ignoring letter case and whitespace differences, is rejected.
   Changing only the letter case of the medication's own description is allowed.
-* `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), with two digits on each side of the colon,
-  e.g., `08:30`. Leading and trailing spaces are ignored.
+* `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), e.g., `08:30`. An hour of one digit is also
+  accepted and read with a leading 0, so `8:30` means `08:30`. Leading and trailing spaces are ignored.
   * Giving `t/` **replaces all** the existing times of the medication, so the new times are the only ones left.
     Repeat `t/` for more than one time, e.g., `t/08:00 t/20:00`.
   * Times are shown in ascending order, and a time given more than once is kept once.
@@ -287,7 +287,7 @@ A command that fails changes nothing. Errors are reported as follows:
 * A command with neither `med/` nor `t/` returns `At least one of med/ or t/ must be provided.`
 * A blank `med/` returns `Medication description cannot be blank.`
 * A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, returns
-  `Time must be in HH:MM (24-hour), e.g. 08:30.`
+  `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.`
 * A `t/` with nothing after it next to another `t/` (e.g., `t/08:00 t/`) returns
   `t/ with no time clears all times and cannot be combined with other times.`
 * A description that already belongs to another medication of the patient returns
@@ -448,7 +448,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`. It cannot be before the
   patient's date of birth, but can be on it.
-* `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
+* `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`. An hour of one digit is also accepted and read
+  with a leading 0, so `9:30` means `09:30`.
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank and has at most
   100 characters. Leading and trailing spaces are ignored, and multiple spaces between words are reduced to one.
   Special spaces, such as a no-break space copied from a web page, count as spaces.
@@ -488,7 +489,7 @@ Other errors are reported as follows:
   `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`
 * A date before the patient's date of birth returns
   `The appointment cannot be before the patient's date of birth, DOB.`
-* An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
+* An invalid time returns `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.`
 * A blank `WITH`, or one longer than 100 characters, returns
   `Who the appointment is with should not be blank, and should be one line of at most 100 characters.`
 * A `NOTE` longer than 500 characters returns `An appointment note should be one line of at most 500 characters.`
