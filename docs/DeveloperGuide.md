@@ -276,7 +276,7 @@ Filtering the patient list (e.g., with `find`) does not change the viewed patien
 
 Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
 
-The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
+The panel numbers the appointments with upcoming ones first, then past ones, in the order that `cancelappt` and `editappt` also use. Upcoming and past are decided at the time the patient was last shown, which `Model#getAppointmentsOrderedAt()` returns, so the numbers do not change when an appointment passes while the patient is shown. `Logic#getAppointmentLinesAsShown()` reads that time once, and uses it both to order the appointments and to mark each past one with `(past)` through `PatientFormatter#formatAppointments()`. The mark goes right after the date and time, which only the app writes, so a note or `WITH` text ending in `(past)` cannot look like it. `PatientFormatter#formatRecord()`, which the `export` command uses, calls the same method with the time of the export, so an exported record words appointments the same way as the panel.
 
 #### Design considerations
 
@@ -291,7 +291,7 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 
 **Aspect: How past appointments are shown**
 
-* **Alternative 1 (current choice):** Keep one numbered list and add `(past)` after each past appointment.
+* **Alternative 1 (current choice):** Keep one numbered list and add `(past)` after the date and time of each past appointment.
   * Pros: The numbers that `cancelappt` and `editappt` use stay in one list, so the panel and an exported record stay easy to read.
   * Cons: The mark adds a little text to each past appointment.
 * **Alternative 2:** Split the list under Upcoming and Past headings, as `listappt INDEX` does.
@@ -2241,7 +2241,7 @@ testers are expected to do more *exploratory* testing.
       Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
 
    1. Test case: `view 2` on the sample data<br>
-      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`.
+      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`.
 
    1. Test case: `view 0`<br>
       Expected: The detail panel is unchanged. The status message shows the invalid command format error.
@@ -2433,7 +2433,7 @@ testers are expected to do more *exploratory* testing.
       Expected: The appointment is added, and the message ends with `Warning: Alex Yeoh already has an appointment at this date and time (with Dr Lim).`
 
    1. Test case: `addappt 1 d/2020-01-01 t/09:00 w/Dr Tan`<br>
-      Expected: The appointment is added, and the message ends with `Note: this appointment is in the past.` The panel lists it last, marked `(past)`.
+      Expected: The appointment is added, and the message ends with `Note: this appointment is in the past.` The panel lists it last, marked `(past)` after its date and time.
 
    1. Test case: `addappt 1 d/2207-11-05 t/09:30 w/Dr Tan`<br>
       Expected: The appointment is added, and the message ends with `Note: this appointment is more than 2 years ahead.`
