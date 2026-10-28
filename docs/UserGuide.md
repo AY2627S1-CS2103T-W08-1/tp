@@ -938,11 +938,11 @@ Format: `restore [FILENAME]`
 * `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
+* The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
+  `data/backups` also has a file with exactly the name given, that file is restored instead.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
   For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
   counting from 1, and the validation reason.
-* The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
-  `data/backups` also has a file with exactly the name given, that file is restored instead.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
 * After a restore, the list shows all active restored patients. The detail panel is cleared, unless the patient shown there is also in the backup with the same details.
