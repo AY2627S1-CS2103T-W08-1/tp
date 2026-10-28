@@ -75,6 +75,10 @@ class JsonAdaptedAppointment {
         }
 
         String modelNote = note == null ? "" : note;
+        if (!Appointment.isValidNote(modelNote)) {
+            throw new IllegalValueException(Appointment.MESSAGE_NOTE_CONSTRAINTS);
+        }
+
         return new Appointment(LocalDate.parse(date), LocalTime.parse(time), provider, modelNote);
     }
 }

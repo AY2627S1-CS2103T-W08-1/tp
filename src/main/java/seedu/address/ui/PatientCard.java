@@ -12,6 +12,7 @@ import seedu.address.model.patient.Patient;
 public class PatientCard extends UiPart<Region> {
 
     private static final String FXML = "PatientListCard.fxml";
+    private static final String ARCHIVED_MARKER = " (Archived)";
 
     /**
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -41,7 +42,7 @@ public class PatientCard extends UiPart<Region> {
         super(FXML);
         this.patient = patient;
         id.setText(displayedIndex + ". ");
-        name.setText(patient.getName().fullName);
+        name.setText(patient.getName().fullName + (patient.isArchived() ? ARCHIVED_MARKER : ""));
         phone.setText(patient.getPhone().value);
         nric.setText(patient.getNric().value);
     }

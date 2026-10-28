@@ -3,9 +3,12 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +38,12 @@ public class BackupCommand extends Command {
     /** Folder that backups are saved to, relative to the folder MediConnect is launched from. */
     public static final Path DEFAULT_BACKUP_DIR = Paths.get("data", "backups");
 
+    /**
+     * Empty file in the backup folder that a backup locks while it chooses its name and is saved, so that
+     * backups made at the same time take turns.
+     */
+    static final String LOCK_FILE_NAME = ".backup.lock";
+
     private static final String FILE_NAME_PREFIX = "mediconnect-";
     private static final String FILE_EXTENSION = ".json";
     private static final String SUFFIX_SEPARATOR = "-";
@@ -43,6 +52,9 @@ public class BackupCommand extends Command {
             DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss", Locale.ROOT);
 
     private static final Logger logger = LogsCenter.getLogger(BackupCommand.class);
+
+    /** Lets the threads of this MediConnect take turns to lock {@code LOCK_FILE_NAME}. */
+    private static final Object backupLock = new Object();
 
     private final Clock clock;
     private final Path backupDir;
@@ -90,9 +102,10 @@ public class BackupCommand extends Command {
 
     /**
      * Saves {@code addressBook} to a new timestamped file in the backup folder and returns the file's path.
-     * {@code RestoreCommand} also uses this, to back up the current data before replacing it.
+     * {@code RestoreCommand} and {@code ClearCommand} also use this before replacing or clearing the current data.
      * The data is written through {@code FileUtil#writeThroughTemporaryFile}, so a failed write never leaves a
      * cut-off backup, and on macOS and Linux, only the current user can open the backup.
+     * No backup is overwritten, even by another backup made at the same time.
      *
      * @throws IOException if the backup folder or file cannot be written.
      */
@@ -100,9 +113,7 @@ public class BackupCommand extends Command {
         requireNonNull(addressBook);
         try {
             Files.createDirectories(backupDir);
-            Path backupFile = getBackupFilePath();
-            FileUtil.writeThroughTemporaryFile(backupFile,
-                    temporaryFile -> new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
+            Path backupFile = saveUnderNextFreeName(addressBook);
             logger.info("Saved backup to " + backupFile);
             return backupFile;
         } catch (IOException ioe) {
@@ -112,8 +123,31 @@ public class BackupCommand extends Command {
     }
 
     /**
+     * Saves {@code addressBook} under the next free backup name, while holding the lock on
+     * {@code LOCK_FILE_NAME} in the backup folder, and returns the file's path. Another backup made at the
+     * same time, e.g., in another MediConnect window, or by {@code restore} or {@code clear confirm}, waits
+     * until this one is saved, so that it cannot choose the same name.
+     *
+     * @throws IOException if the lock file or the backup cannot be written.
+     */
+    private Path saveUnderNextFreeName(ReadOnlyAddressBook addressBook) throws IOException {
+        // a FileLock keeps out other processes, but a process may hold it only once, so threads take turns
+        synchronized (backupLock) {
+            try (FileChannel lockFile = FileChannel.open(backupDir.resolve(LOCK_FILE_NAME),
+                    StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                    FileLock lock = lockFile.lock()) {
+                Path backupFile = getBackupFilePath();
+                FileUtil.writeThroughTemporaryFile(backupFile, temporaryFile ->
+                        new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
+                return backupFile;
+            }
+        }
+    }
+
+    /**
      * Returns the path of the next backup file, named after the current time.
-     * If a backup with that name already exists, a suffix such as "-1" is added so it is not overwritten.
+     * If a file or folder with that name already exists, a suffix such as "-1" is added so that it is not
+     * overwritten.
      */
     private Path getBackupFilePath() {
         String baseName = FILE_NAME_PREFIX + LocalDateTime.now(clock).format(TIMESTAMP_FORMAT);

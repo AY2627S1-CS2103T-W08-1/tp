@@ -40,6 +40,15 @@ public class EditCareCommandParserTest {
     }
 
     @Test
+    public void parse_standaloneSlashWords_success() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o", "C/O")) {
+            String instruction = "Ask " + token + " Clinic";
+            assertParseSuccess(parser, "1 2 ci/" + instruction,
+                    new EditCareCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, instruction));
+        }
+    }
+
+    @Test
     public void parse_overlongText_rejected() {
         assertParseFailure(parser,
                 " 1 1 ci/" + "a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1),
@@ -51,6 +60,5 @@ public class EditCareCommandParserTest {
         assertParseFailure(parser, " 1 1 ci/First ci/Second",
                 Messages.getErrorMessageForDuplicatePrefixes(CliSyntax.PREFIX_CARE_INSTRUCTION));
         assertParseFailure(parser, " 1 1 x/value", String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/"));
-        assertParseFailure(parser, " 1 1 ci/Ask s/o Clinic", String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "s/"));
     }
 }

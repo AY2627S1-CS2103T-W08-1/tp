@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCareCommand;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 public class AddCareCommandParserTest {
@@ -43,6 +44,15 @@ public class AddCareCommandParserTest {
     }
 
     @Test
+    public void parse_standaloneSlashWords_success() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o", "C/O")) {
+            String instruction = "Bring documents " + token + " daughter";
+            assertParseSuccess(parser, "1 ci/" + instruction,
+                    new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of(instruction)));
+        }
+    }
+
+    @Test
     public void parse_unknownPrefix_throwsParseException() {
         for (String prefix : List.of("p/", "dob/", "xyz/")) {
             assertParseFailure(parser, "1 med/Aspirin " + prefix + "value",
@@ -70,6 +80,25 @@ public class AddCareCommandParserTest {
         assertParseFailure(parser,
                 "1 ci/" + "a".repeat(Patient.MAX_CARE_INSTRUCTION_LENGTH + 1),
                 AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
+    }
+
+    @Test
+    public void parse_maxLengthMedicationAndAllergen_success() {
+        String medication = "m".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        String allergen = "a".repeat(Patient.MAX_ALLERGEN_LENGTH);
+
+        assertParseSuccess(parser, "1 med/" + medication + " al/" + allergen,
+                new AddCareCommand(INDEX_FIRST_PATIENT, List.of(medication), List.of(allergen), List.of()));
+    }
+
+    @Test
+    public void parse_overlongMedicationOrAllergen_throwsParseException() {
+        assertParseFailure(parser,
+                "1 med/" + "m".repeat(Medication.MAX_DESCRIPTION_LENGTH + 1),
+                AddCareCommand.MESSAGE_MEDICATION_TOO_LONG);
+        assertParseFailure(parser,
+                "1 al/" + "a".repeat(Patient.MAX_ALLERGEN_LENGTH + 1),
+                AddCareCommand.MESSAGE_ALLERGEN_TOO_LONG);
     }
 
     @Test

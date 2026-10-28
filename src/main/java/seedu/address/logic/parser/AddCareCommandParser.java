@@ -12,6 +12,7 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -19,13 +20,15 @@ import seedu.address.model.patient.Patient;
  */
 public class AddCareCommandParser implements Parser<AddCareCommand> {
 
+    private static final Set<String> ALLOWED_SLASH_TOKENS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o");
+
     @Override
     public AddCareCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), PREFIX_MEDICATION, PREFIX_ALLERGEN,
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS, PREFIX_MEDICATION, PREFIX_ALLERGEN,
                 PREFIX_CARE_INSTRUCTION);
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_MEDICATION, PREFIX_ALLERGEN,
-                PREFIX_CARE_INSTRUCTION);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
+                PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION);
         List<String> medications = argMultimap.getAllValues(PREFIX_MEDICATION);
         List<String> allergens = argMultimap.getAllValues(PREFIX_ALLERGEN);
         List<String> careInstructions = argMultimap.getAllValues(PREFIX_CARE_INSTRUCTION);
@@ -44,6 +47,14 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         rejectBlankEntries(medications, AddCareCommand.MESSAGE_BLANK_MEDICATION);
         rejectBlankCareEntries(allergens, AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         rejectBlankCareEntries(careInstructions, AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
+        if (medications.stream().map(AddCareCommandParser::normalizeMedicationEntry)
+                .anyMatch(entry -> !Medication.isDescriptionWithinMaxLength(entry))) {
+            throw new ParseException(AddCareCommand.MESSAGE_MEDICATION_TOO_LONG);
+        }
+        if (allergens.stream().map(Patient::normalizeCareEntry)
+                .anyMatch(entry -> !Patient.isAllergenWithinMaxLength(entry))) {
+            throw new ParseException(AddCareCommand.MESSAGE_ALLERGEN_TOO_LONG);
+        }
         if (careInstructions.stream().map(Patient::normalizeCareEntry)
                 .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
             throw new ParseException(AddCareCommand.MESSAGE_CARE_INSTRUCTION_TOO_LONG);
@@ -61,5 +72,9 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         if (entries.stream().map(Patient::normalizeCareEntry).anyMatch(String::isEmpty)) {
             throw new ParseException(message);
         }
+    }
+
+    private static String normalizeMedicationEntry(String entry) {
+        return entry.trim().replaceAll("\\s+", " ");
     }
 }

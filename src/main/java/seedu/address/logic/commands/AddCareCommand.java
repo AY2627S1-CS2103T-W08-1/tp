@@ -38,6 +38,8 @@ public class AddCareCommand extends Command {
     public static final String MESSAGE_BLANK_MEDICATION = "Medication entries cannot be blank.";
     public static final String MESSAGE_BLANK_ALLERGEN = "Allergen entries cannot be blank.";
     public static final String MESSAGE_BLANK_CARE_INSTRUCTION = "Care instructions cannot be blank.";
+    public static final String MESSAGE_MEDICATION_TOO_LONG = Medication.MESSAGE_DESCRIPTION_TOO_LONG;
+    public static final String MESSAGE_ALLERGEN_TOO_LONG = Patient.MESSAGE_ALLERGEN_TOO_LONG;
     public static final String MESSAGE_CARE_INSTRUCTION_TOO_LONG = Patient.MESSAGE_CARE_INSTRUCTION_TOO_LONG;
     public static final String MESSAGE_DUPLICATE_EXISTING =
             "%1$s \"%2$s\" was not added: it already exists for this patient.";
@@ -75,6 +77,14 @@ public class AddCareCommand extends Command {
         }
 
         Patient patientToEdit = lastShownList.get(targetIndex.getZeroBased());
+        if (medications.stream().map(AddCareCommand::normalizeEntry)
+                .anyMatch(entry -> !Medication.isDescriptionWithinMaxLength(entry))) {
+            throw new CommandException(MESSAGE_MEDICATION_TOO_LONG);
+        }
+        if (allergens.stream().map(Patient::normalizeCareEntry)
+                .anyMatch(entry -> !Patient.isAllergenWithinMaxLength(entry))) {
+            throw new CommandException(MESSAGE_ALLERGEN_TOO_LONG);
+        }
         if (careInstructions.stream().map(Patient::normalizeCareEntry)
                 .anyMatch(entry -> !Patient.isCareInstructionWithinMaxLength(entry))) {
             throw new CommandException(MESSAGE_CARE_INSTRUCTION_TOO_LONG);

@@ -22,7 +22,7 @@ public class DeleteContactCommand extends Command {
     public static final String COMMAND_WORD = "deletecontact";
     public static final String COMMAND_FORMAT = COMMAND_WORD + " INDEX CONTACT_INDEX";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Deletes a patient's contact.\n"
-            + "Format: " + COMMAND_FORMAT + "\n"
+            + "Parameters: " + COMMAND_FORMAT + "\n"
             + "Example: " + COMMAND_WORD + " 1 2";
     public static final String MESSAGE_SUCCESS = "Deleted contact for %1$s: %2$s";
 

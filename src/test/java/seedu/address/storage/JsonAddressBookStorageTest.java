@@ -3,6 +3,8 @@ package seedu.address.storage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TestUtil.addUtf8ByteOrderMark;
+import static seedu.address.testutil.TestUtil.replaceWithInvalidUtf8Byte;
 import static seedu.address.testutil.TypicalContacts.GP;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.HOON;
@@ -115,6 +117,29 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void readAddressBook_invalidUtf8InSavedData_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: a saved data file with a byte inside an address that is not valid UTF-8,
+        // which must not be loaded as a replacement character
+        Path filePath = testFolder.resolve("InvalidUtf8.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        replaceWithInvalidUtf8Byte(filePath, "Jurong");
+
+        assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
+    }
+
+    @Test
+    public void readAddressBook_byteOrderMarkBeforeSavedData_readsData() throws Exception {
+        // Equivalence partitioning: a saved data file edited by hand and saved again as "UTF-8 with BOM"
+        Path filePath = testFolder.resolve("ByteOrderMark.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        addUtf8ByteOrderMark(filePath);
+
+        assertEquals(getTypicalAddressBook(), new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
     public void readAndSaveAddressBook_allInOrder_success() throws Exception {
         Path filePath = testFolder.resolve("TempAddressBook.json");
         AddressBook original = getTypicalAddressBook();
@@ -153,6 +178,18 @@ public class JsonAddressBookStorageTest {
         storage.saveAddressBook(original);
 
         assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void readAddressBook_unpairedSurrogateInAddress_throwsDataLoadingException() throws Exception {
+        // Equivalence partitioning: a hand-edited address with half of a surrogate pair, which saving again
+        // would silently change to "?"
+        Path filePath = testFolder.resolve("UnpairedSurrogate.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        Files.writeString(filePath, Files.readString(filePath).replace("Jurong", "\\ud800Jurong"));
+
+        assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
     }
 
     @Test

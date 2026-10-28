@@ -69,7 +69,10 @@ public class EditApptCommandParser implements Parser<EditApptCommand> {
         if (argMultimap.getValue(PREFIX_WITH).isPresent()) {
             provider = Optional.of(ParserUtil.parseProvider(argMultimap.getValue(PREFIX_WITH).get()));
         }
-        Optional<String> note = argMultimap.getValue(PREFIX_NOTE);
+        Optional<String> note = Optional.empty();
+        if (argMultimap.getValue(PREFIX_NOTE).isPresent()) {
+            note = Optional.of(ParserUtil.parseNote(argMultimap.getValue(PREFIX_NOTE).get()));
+        }
 
         return new EditApptCommand(indexes.get(0), indexes.get(1), date, time, provider, note);
     }
