@@ -192,8 +192,8 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
   `Unrecognized parameter: p/. Please check the command format.`
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
   punctuation attached.
-* Duplicate entries, ignoring letter case and whitespace differences, are not added again. Other unique entries in
-  the same command are still added.
+* Duplicate entries, ignoring letter case, whitespace differences, and equivalent Unicode forms that look the same,
+  are not added again. Other unique entries in the same command are still added.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
 * After a successful command, the detail panel shows the updated patient so the new entry numbers can be checked.
 
@@ -308,10 +308,11 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
   panel. Both must be positive integers.
 * `NEW_TEXT` is free text with leading and trailing whitespace removed and consecutive internal whitespace collapsed
   to one space. It cannot be blank or exceed 500 characters after normalization.
-* An edit that would duplicate another care instruction, ignoring letter case and whitespace differences, is rejected.
-  Editing an instruction to its current text is allowed.
-* `ci/` must appear exactly once. Its value follows the [slash-text rules](#slash-text-in-field-values), with the same standalone
-  slash-word exceptions as `addcare`. Other reserved prefixes and unknown prefixes before `ci/` are rejected.
+* An edit that would duplicate another care instruction, ignoring letter case, whitespace differences, and
+  equivalent Unicode forms that look the same, is rejected. Editing an instruction to its current text is allowed.
+* `ci/` must appear exactly once. Its value follows the [slash-text rules](#slash-text-in-field-values), with the same
+  standalone slash-word exceptions as `addcare`. Other reserved prefixes and unknown prefixes before `ci/` are
+  rejected.
 
 Example: `editcare 1 1 ci/Check blood sugar after lunch`
 

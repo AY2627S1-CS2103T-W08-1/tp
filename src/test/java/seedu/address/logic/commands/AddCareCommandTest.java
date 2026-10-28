@@ -211,6 +211,21 @@ public class AddCareCommandTest {
     }
 
     @Test
+    public void execute_canonicallyEquivalentDuplicate_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder(ALICE).withAllergens("Caf\u00e9")
+                .withCareInstructions("R\u00e9sum\u00e9").build();
+        Model actualModel = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(),
+                List.of("Cafe\u0301"), List.of("Re\u0301sume\u0301"));
+
+        String expectedMessage = String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                "Allergen", "Caf\u00e9")
+                + "\n" + String.format(AddCareCommand.MESSAGE_DUPLICATE_EXISTING,
+                        "Care instruction", "R\u00e9sum\u00e9");
+        assertCommandFailure(command, actualModel, expectedMessage);
+    }
+
+    @Test
     public void execute_noCareEntries_throwsCommandException() {
         AddCareCommand command = new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of());
 
