@@ -383,7 +383,11 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   accent, or an emoji made from several symbols, can count as more than one.
 * A contact with the same name (ignoring case and differences in spacing) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
-  country codes are not inferred. The same contact can belong to different patients.
+  country codes are not inferred. The same accented name counts as the same name even if the accent was typed
+  separately: for example, `Café` with a single `é` and `Café` with `e` followed by a separate accent.
+  Accents remain significant, so
+  `Cafe` and `Café` are different names. The entered name spelling is preserved for display and saving.
+  The same contact can belong to different patients.
 * Name, role and note follow the [slash-text rules](#slash-text-in-field-values); `and/or` and `mg/ml` are allowed.
   Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are allowed, ignoring letter case, e.g., `n/Tan s/o Lim`.
   Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
@@ -406,6 +410,11 @@ The same field and duplicate rules apply to `editcontact` and saved data, includ
 follow the same space cleanup when loaded. Saved notes keep their spaces, which count toward the 500-character
 limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored; repair a copy
 using the [data recovery instructions](#editing-the-data-file).
+
+The same duplicate-name rules apply when loading data or restoring a backup. Older files containing contacts
+with the same accented name typed in these different ways and the same phone are rejected as duplicates.
+Remove the duplicate contact
+from a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 

@@ -14,6 +14,20 @@ import org.junit.jupiter.api.Test;
 public class ContactTest {
 
     @Test
+    public void isSameContact_canonicalUnicodeNames_comparedWithoutChangingDisplayText() {
+        Contact composed = new Contact("Caf\u00e9", "GP", "+65 6123-4567", "");
+        Contact decomposed = new Contact("CAFE\u0301", "Guardian", "+6561234567", "Other note");
+        assertTrue(composed.isSameContact(decomposed));
+        assertTrue(decomposed.isSameContact(composed));
+        assertEquals("CAFE\u0301", decomposed.getName());
+        assertFalse(composed.equals(decomposed));
+        assertFalse(composed.isSameContact(new Contact("Cafe", "GP", "+6561234567", "")));
+        assertFalse(composed.isSameContact(new Contact("Cafe\u0301", "GP", "123", "")));
+        assertFalse(new Contact("Clinic", "GP", "123", "")
+                .isSameContact(new Contact("\uff23linic", "GP", "123", "")));
+    }
+
+    @Test
     public void constructor_textLength_limitsCountCodePointsAfterNormalization() {
         for (String character : List.of("a", "\uD83D\uDE00")) {
             String name = character.repeat(Contact.MAX_NAME_LENGTH);
