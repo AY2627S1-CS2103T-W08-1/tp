@@ -19,6 +19,18 @@ public class AddContactCommandParserTest {
     private final AddContactCommandParser parser = new AddContactCommandParser();
 
     @Test
+    public void parse_textLength_acceptsLimitsAndRejectsOverlongFields() {
+        String name = "\uD83D\uDE00".repeat(Contact.MAX_NAME_LENGTH);
+        String role = "r".repeat(Contact.MAX_ROLE_LENGTH);
+        String note = "n".repeat(Contact.MAX_NOTE_LENGTH);
+        assertParseSuccess(parser, " 1 n/" + name + " r/" + role + " p/123 nt/\u00a0" + note + "\u00a0",
+                new AddContactCommand(INDEX_FIRST_PATIENT, new Contact(name, role, "123", note)));
+        assertParseFailure(parser, " 1 n/" + name + "x r/GP p/123", Contact.MESSAGE_NAME_CONSTRAINTS);
+        assertParseFailure(parser, " 1 n/Clinic r/" + role + "x p/123", Contact.MESSAGE_ROLE_CONSTRAINTS);
+        assertParseFailure(parser, " 1" + FIELDS + " nt/" + note + "x", Contact.MESSAGE_NOTE_CONSTRAINTS);
+    }
+
+    @Test
     public void parse_validFields_contactCreated() {
         assertParseSuccess(parser, " 1" + FIELDS + " nt/Call in the morning",
                 new AddContactCommand(INDEX_FIRST_PATIENT, GP));

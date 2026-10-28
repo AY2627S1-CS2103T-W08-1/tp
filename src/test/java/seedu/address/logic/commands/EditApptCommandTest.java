@@ -214,6 +214,22 @@ public class EditApptCommandTest {
     }
 
     @Test
+    public void execute_dateBeforeDob_throwsCommandException() {
+        LocalDate dayBeforeBirth = ALICE.getDob().value.minusDays(1);
+        assertCommandFailure(createCommand(Optional.of(dayBeforeBirth), Optional.empty(), Optional.empty(),
+                Optional.empty()), createModelWithAppointments(CHECKUP),
+                String.format(Messages.MESSAGE_APPOINTMENT_BEFORE_DOB, ALICE.getDob()));
+    }
+
+    @Test
+    public void execute_dateOnDob_editsWithPastNote() {
+        LocalDate birthday = ALICE.getDob().value;
+        assertEditSuccess(createCommand(Optional.of(birthday), Optional.empty(), Optional.empty(),
+                Optional.empty()), new Appointment(birthday, CHECKUP.getTime(), "Dr Tan", "Fasting"),
+                "\n" + MESSAGE_PAST_APPOINTMENT);
+    }
+
+    @Test
     public void execute_appointmentIndexOutOfRange_throwsCommandException() {
         EditApptCommand command = new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
                 Optional.of(NEW_DATE), Optional.empty(), Optional.empty(), Optional.empty(), FIXED_CLOCK);
