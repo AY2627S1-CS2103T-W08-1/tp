@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,6 +45,8 @@ public class RestoreCommand extends Command {
             "MediConnect does not have permission to read %1$s. Your data has not been changed.";
     public static final String MESSAGE_UNREADABLE = "The backup %1$s could not be read. It may be damaged, "
             + "or not a MediConnect data file. Your data has not been changed.";
+    public static final String MESSAGE_NOT_UTF8 = "The backup %1$s could not be read, as it is not saved as "
+            + "UTF-8. Save it as UTF-8, then restore it again. Your data has not been changed.";
     public static final String MESSAGE_INVALID_DATA = "The backup %1$s has invalid data, so it was not restored. "
             + "Your data has not been changed.\nDetails: %2$s";
     public static final String MESSAGE_BACKUP_FAILED = "Could not back up the current data to %1$s: %2$s. "
@@ -189,6 +192,10 @@ public class RestoreCommand extends Command {
         }
         if (cause instanceof AccessDeniedException) {
             return String.format(MESSAGE_NO_READ_PERMISSION, backupName);
+        }
+        // e.g., a backup edited by hand and saved as "ANSI" in Windows Notepad with a non-English letter
+        if (cause instanceof CharacterCodingException) {
+            return String.format(MESSAGE_NOT_UTF8, backupName);
         }
         return String.format(MESSAGE_UNREADABLE, backupName);
     }
