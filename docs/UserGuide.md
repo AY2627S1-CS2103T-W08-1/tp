@@ -696,7 +696,7 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
 Examples:
 * `find Bernice` returns `Bernice Yu`
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
+  <img src="images/findAlexDavidResult.png" alt="result of find alex david: 2 patient(s) listed, Alex Yeoh and David Li" width="560" />
 
 ### Deleting a patient: `delete`
 
