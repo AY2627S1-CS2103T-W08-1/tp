@@ -44,13 +44,16 @@ public class JsonAddressBookStorage {
     /**
      * Similar to {@link #readAddressBook()}.
      *
+     * The file is read strictly, so a misspelled or repeated property makes it invalid, rather than its value being
+     * lost the next time the data is saved.
+     *
      * @param filePath location of the data. Cannot be null.
      * @throws DataLoadingException if loading the data from storage failed.
      */
     public Optional<ReadOnlyAddressBook> readAddressBook(Path filePath) throws DataLoadingException {
         requireNonNull(filePath);
 
-        Optional<JsonSerializableAddressBook> jsonAddressBook = JsonUtil.readJsonFile(
+        Optional<JsonSerializableAddressBook> jsonAddressBook = JsonUtil.readJsonFileStrictly(
                 filePath, JsonSerializableAddressBook.class);
         if (!jsonAddressBook.isPresent()) {
             return Optional.empty();

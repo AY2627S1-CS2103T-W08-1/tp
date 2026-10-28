@@ -26,6 +26,7 @@ public class EditCommandParser implements Parser<EditCommand> {
     public EditCommand parse(String args) throws ParseException {
         requireNonNull(args);
         ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_ADDRESS),
                 PREFIX_NAME, PREFIX_NRIC, PREFIX_DOB, PREFIX_PHONE, PREFIX_ADDRESS);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_NAME, PREFIX_NRIC, PREFIX_DOB, PREFIX_PHONE, PREFIX_ADDRESS);
