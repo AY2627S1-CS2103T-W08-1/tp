@@ -57,10 +57,11 @@ public class AddContactCommand extends Command {
         }
         List<Contact> contacts = new ArrayList<>(patient.getContacts());
         contacts.add(contact);
-        Patient updatedPatient = patient.withContacts(contacts);
-        model.setPatient(patient, updatedPatient);
-        assert model.getAddressBook().getPatientList().contains(updatedPatient)
+        Patient editedPatient = patient.withContacts(contacts);
+        model.setPatient(patient, editedPatient);
+        assert model.getAddressBook().getPatientList().contains(editedPatient)
                 : "The model must store the patient with the added contact.";
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), contact));
     }
 

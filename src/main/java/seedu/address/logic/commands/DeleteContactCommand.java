@@ -51,10 +51,11 @@ public class DeleteContactCommand extends Command {
         }
         List<Contact> contacts = new ArrayList<>(patient.getContacts());
         Contact removed = contacts.remove(contactIndex.getZeroBased());
-        Patient updatedPatient = patient.withContacts(contacts);
-        model.setPatient(patient, updatedPatient);
-        assert model.getAddressBook().getPatientList().contains(updatedPatient)
+        Patient editedPatient = patient.withContacts(contacts);
+        model.setPatient(patient, editedPatient);
+        assert model.getAddressBook().getPatientList().contains(editedPatient)
                 : "The model must store the patient with the contact removed.";
+        model.setViewedPatient(editedPatient);
         return new CommandResult(String.format(MESSAGE_SUCCESS, patient.getName(), removed));
     }
 

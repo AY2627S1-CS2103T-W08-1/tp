@@ -25,8 +25,9 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
     @Override
     public AddCareCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS, PREFIX_MEDICATION, PREFIX_ALLERGEN,
-                PREFIX_CARE_INSTRUCTION);
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, ALLOWED_SLASH_TOKENS,
+                Set.of(PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION),
+                PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, ALLOWED_SLASH_TOKENS,
                 PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION);
         List<String> medications = argMultimap.getAllValues(PREFIX_MEDICATION);
@@ -44,10 +45,10 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
             throw new ParseException(AddCareCommand.MESSAGE_NO_CARE_INFO);
         }
 
-        rejectBlankEntries(medications, AddCareCommand.MESSAGE_BLANK_MEDICATION);
+        rejectBlankMedications(medications);
         rejectBlankCareEntries(allergens, AddCareCommand.MESSAGE_BLANK_ALLERGEN);
         rejectBlankCareEntries(careInstructions, AddCareCommand.MESSAGE_BLANK_CARE_INSTRUCTION);
-        if (medications.stream().map(AddCareCommandParser::normalizeMedicationEntry)
+        if (medications.stream().map(Medication::normalizeDescription)
                 .anyMatch(entry -> !Medication.isDescriptionWithinMaxLength(entry))) {
             throw new ParseException(AddCareCommand.MESSAGE_MEDICATION_TOO_LONG);
         }
@@ -62,9 +63,9 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         return new AddCareCommand(index, medications, allergens, careInstructions);
     }
 
-    private static void rejectBlankEntries(List<String> entries, String message) throws ParseException {
-        if (entries.stream().anyMatch(String::isBlank)) {
-            throw new ParseException(message);
+    private static void rejectBlankMedications(List<String> medications) throws ParseException {
+        if (!medications.stream().allMatch(Medication::isValidDescription)) {
+            throw new ParseException(AddCareCommand.MESSAGE_BLANK_MEDICATION);
         }
     }
 
@@ -72,9 +73,5 @@ public class AddCareCommandParser implements Parser<AddCareCommand> {
         if (entries.stream().map(Patient::normalizeCareEntry).anyMatch(String::isEmpty)) {
             throw new ParseException(message);
         }
-    }
-
-    private static String normalizeMedicationEntry(String entry) {
-        return entry.trim().replaceAll("\\s+", " ");
     }
 }

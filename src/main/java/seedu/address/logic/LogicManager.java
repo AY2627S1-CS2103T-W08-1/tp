@@ -65,8 +65,9 @@ public class LogicManager implements Logic {
         commandResult = command.execute(model);
         assert commandResult != null : "A successfully executed command must return a result.";
 
-        // Saves only changed patient data, so that commands that only read it still work if the file is read-only.
-        if (model.getAddressBook().equals(snapshot.addressBook())) {
+        // Explicit replacements must also save an unchanged model, e.g. after startup recovery.
+        // Other unchanged commands still work if the file is read-only.
+        if (!command.requiresSaveWhenUnchanged() && model.getAddressBook().equals(snapshot.addressBook())) {
             return commandResult;
         }
 

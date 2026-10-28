@@ -9,6 +9,15 @@ import seedu.address.model.Model;
 public abstract class Command {
 
     /**
+     * Returns whether successful execution requires saving even if the patient data is unchanged.
+     * Explicit data replacement commands override this so they can repair an unreadable data file.
+     * Other commands are saved only when they change patient data.
+     */
+    public boolean requiresSaveWhenUnchanged() {
+        return false;
+    }
+
+    /**
      * Executes the command and returns the result message.
      *
      * @param model {@code Model} which the command should operate on.

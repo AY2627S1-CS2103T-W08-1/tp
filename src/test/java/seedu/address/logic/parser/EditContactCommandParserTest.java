@@ -18,6 +18,19 @@ public class EditContactCommandParserTest {
     private final EditContactCommandParser parser = new EditContactCommandParser();
 
     @Test
+    public void parse_textLength_acceptsLimitsAndRejectsOverlongFields() {
+        String name = "n".repeat(Contact.MAX_NAME_LENGTH);
+        String role = "r".repeat(Contact.MAX_ROLE_LENGTH);
+        String note = "\uD83D\uDE00".repeat(Contact.MAX_NOTE_LENGTH);
+        assertParseSuccess(parser, " 1 1 n/" + name + " r/" + role + " nt/\u00a0" + note + "\u00a0",
+                new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(name),
+                        Optional.of(role), Optional.empty(), Optional.of(note)));
+        assertParseFailure(parser, " 1 1 n/" + name + "x", Contact.MESSAGE_NAME_CONSTRAINTS);
+        assertParseFailure(parser, " 1 1 r/" + role + "x", Contact.MESSAGE_ROLE_CONSTRAINTS);
+        assertParseFailure(parser, " 1 1 nt/" + note + "x", Contact.MESSAGE_NOTE_CONSTRAINTS);
+    }
+
+    @Test
     public void parse_allFieldsOrEmptyNote_preserved() {
         assertParseSuccess(parser, " 1 1 n/Clinic r/Emergency p/+44 123 nt/Call first",
                 new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of("Clinic"),
@@ -28,23 +41,36 @@ public class EditContactCommandParserTest {
     }
 
     @Test
-    public void parse_note_trimmedLikeAppointmentNotes() {
+    public void parse_note_trimsUnicodeWhitespace() {
         assertParseSuccess(parser, " 1 1 nt/  Call first  ",
                 new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
                         Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("Call first")));
         assertParseSuccess(parser, " 1 1 nt/\u2003Call first\u2003",
                 new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.empty(), Optional.empty(),
-                        Optional.empty(), Optional.of("\u2003Call first\u2003")));
+                        Optional.empty(), Optional.of("Call first")));
     }
 
     @Test
-    public void parse_indianNameSlashWords_success() {
-        for (String token : List.of("a/l", "a/p", "A/L", "A/P")) {
-            String name = "Muthu " + token + " Ramasamy";
+    public void parse_standaloneSlashWords_preservedInContactFields() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "S/O", "D/O", "C/O", "A/L", "A/P")) {
+            String name = "Tan " + token + " Lim";
+            String role = "Guardian " + token + " family";
+            String note = "Call " + token + " daughter";
 
-            assertParseSuccess(parser, " 1 1 n/" + name,
+            assertParseSuccess(parser, " 1 1 n/" + name + " r/" + role + " nt/" + note,
                     new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT, Optional.of(name),
-                            Optional.empty(), Optional.empty(), Optional.empty()));
+                            Optional.of(role), Optional.empty(), Optional.of(note)));
+        }
+    }
+
+    @Test
+    public void parse_unicodeWhitespace_rejectsBlankNamesAndRolesAndClearsNotes() {
+        for (String space : List.of("\u00a0", "\u202f", "\u2007")) {
+            assertParseFailure(parser, " 1 1 n/" + space, Contact.MESSAGE_NAME_CONSTRAINTS);
+            assertParseFailure(parser, " 1 1 r/" + space, Contact.MESSAGE_ROLE_CONSTRAINTS);
+            assertParseSuccess(parser, " 1 1 nt/" + space,
+                    new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                            Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("")));
         }
     }
 
@@ -81,10 +107,14 @@ public class EditContactCommandParserTest {
                     Messages.getErrorMessageForDuplicatePrefixes(prefix));
         }
         assertParseFailure(parser, " 1 1 x/value", String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/"));
-        for (String token : List.of("s/o", "d/o", "c/o", "S/O")) {
-            String prefix = token.substring(0, token.indexOf('/') + 1);
-            assertParseFailure(parser, " 1 1 nt/Ask " + token + " Clinic",
-                    String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix));
+    }
+
+    @Test
+    public void parse_punctuatedSlashWords_rejected() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p")) {
+            String expected = String.format(Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token + ",", token);
+            assertParseFailure(parser, " 1 1 n/Tan " + token + ", Lim", expected);
+            assertParseFailure(parser, " 1 1 nt/Call " + token + ", daughter", expected);
         }
     }
 }

@@ -98,12 +98,44 @@ public class AddApptCommandTest {
     }
 
     @Test
+    public void execute_canonicallyEquivalentProvider_throwsCommandException() {
+        // the same "Café clinic", with "é" as "e" followed by a combining accent, is not added a second time
+        Appointment composed = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Caf\u00e9 clinic", "");
+        Model model = new ModelManager();
+        model.addPatient(new PatientBuilder(ALICE).withAppointments(composed).build());
+        Appointment decomposed = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Cafe\u0301 clinic", "");
+        assertCommandFailure(new AddApptCommand(INDEX_FIRST_PATIENT, decomposed, FIXED_CLOCK), model,
+                MESSAGE_DUPLICATE_APPOINTMENT);
+    }
+
+    @Test
     public void execute_duplicateAppointment_throwsCommandException() {
         Model model = new ModelManager();
         model.addPatient(new PatientBuilder(ALICE).withAppointments(CHECKUP).build());
         Appointment duplicate = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "dr  TAN", "");
         assertCommandFailure(new AddApptCommand(INDEX_FIRST_PATIENT, duplicate, FIXED_CLOCK), model,
                 MESSAGE_DUPLICATE_APPOINTMENT);
+    }
+
+    @Test
+    public void execute_dateBeforeDob_throwsCommandException() {
+        Model model = new ModelManager();
+        model.addPatient(ALICE);
+        Appointment dayBeforeBirth = new Appointment(ALICE.getDob().value.minusDays(1), LocalTime.of(10, 0),
+                "Dr Tan", "");
+        assertCommandFailure(new AddApptCommand(INDEX_FIRST_PATIENT, dayBeforeBirth, FIXED_CLOCK), model,
+                String.format(Messages.MESSAGE_APPOINTMENT_BEFORE_DOB, ALICE.getDob()));
+    }
+
+    @Test
+    public void execute_dateOnDob_addsAppointment() throws Exception {
+        Model model = new ModelManager();
+        model.addPatient(ALICE);
+        Appointment onBirthday = new Appointment(ALICE.getDob().value, LocalTime.of(10, 0), "Dr Tan", "");
+
+        new AddApptCommand(INDEX_FIRST_PATIENT, onBirthday, FIXED_CLOCK).execute(model);
+
+        assertEquals(List.of(onBirthday), model.getAddressBook().getPatientList().get(0).getAppointments());
     }
 
     @Test
