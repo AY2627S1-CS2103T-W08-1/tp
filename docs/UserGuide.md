@@ -192,6 +192,9 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * Duplicate entries, ignoring letter case, whitespace differences, and equivalent Unicode forms that look the same,
   are not added again. Other unique entries in the same command are still added.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
+  `addcare` does not accept `t/`: `addcare 1 med/Paracetamol 500mg t/08:00` returns
+  `Unrecognized parameter: t/. Please check the command format.` Add the medication first, check its number with
+  `view`, then run `editmed INDEX MED_INDEX t/08:00`.
 * After a successful command, the detail panel shows the updated patient so the new entry numbers can be checked.
 
 Examples:
