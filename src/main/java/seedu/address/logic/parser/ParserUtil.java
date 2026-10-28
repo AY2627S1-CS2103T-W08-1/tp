@@ -25,6 +25,12 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
     public static final String MESSAGE_NOT_TWO_INDEXES = "Exactly two indexes must be given.";
 
+    /*
+     * Apostrophes that phones, word processors and email programs type in names, e.g. in "O’Brien":
+     * the left and right single quotation marks and the modifier letter apostrophe.
+     */
+    private static final String TYPED_APOSTROPHES_REGEX = "[\\u2018\\u2019\\u02BC]";
+
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
      * trimmed.
@@ -57,13 +63,13 @@ public class ParserUtil {
     /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed, and multiple spaces between words reduced to one.
-     * Curly apostrophes (’) are replaced with straight ones (').
+     * Curly apostrophes (‘ and ’) and modifier letter apostrophes (ʼ) are replaced with straight ones (').
      *
      * @throws ParseException if the given {@code name} is invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        String trimmedName = name.trim().replaceAll("\\s+", " ").replace('’', '\'');
+        String trimmedName = name.trim().replaceAll("\\s+", " ").replaceAll(TYPED_APOSTROPHES_REGEX, "'");
         if (!Name.isValidName(trimmedName)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
