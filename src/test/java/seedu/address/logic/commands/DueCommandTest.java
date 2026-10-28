@@ -200,6 +200,13 @@ public class DueCommandTest {
     }
 
     @Test
+    public void execute_descriptionWithLineBreak_listsOneLinePerTime() throws Exception {
+        Model model = createModel(patient("Amy Tan", "S0000001A",
+                medication("Aspirin\n20:00 Amy Tan: Warfarin", 8, 0)));
+        assertDue(new DueCommand(clockAt(0, 0, 0)), model, "08:00 Amy Tan: Aspirin 20:00 Amy Tan: Warfarin");
+    }
+
+    @Test
     public void execute_samePatientSameTime_keepsMedicationOrder() throws Exception {
         Model model = createModel(patient("Amy Bee", "S0000001A",
                 medication("Second Listed Dose", 9, 0), medication("Another Dose", 9, 0)));

@@ -39,6 +39,13 @@ public class MedicationTest {
     }
 
     @Test
+    public void constructor_descriptionWithLineBreak_flattenedToOneLine() {
+        assertEquals("Aspirin 20:00 Amy Tan: Warfarin",
+                new Medication("Aspirin\n20:00 Amy Tan: Warfarin").getDescription());
+        assertEquals("Aspirin Warfarin", new Medication("Aspirin\r\nWarfarin").getDescription());
+    }
+
+    @Test
     public void constructor_noTimes_emptyTimes() {
         assertTrue(new Medication(DESCRIPTION).getTimes().isEmpty());
     }
