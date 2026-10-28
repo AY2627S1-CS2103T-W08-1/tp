@@ -50,4 +50,15 @@ public class JsonAdaptedContactTest {
         }
     }
 
+    @Test
+    public void toModelType_unicodeWhitespace_normalizesFieldsAndPreservesStoredNote() throws Exception {
+        Contact expected = new Contact("Tan & Partners Clinic", "GP", "123", "\u00a0Call first\u00a0");
+        assertEquals(expected, new JsonAdaptedContact("\u00a0Tan\u00a0& Partners Clinic\u202f", "\u2007GP\u00a0",
+                "123", "\u00a0Call first\u00a0").toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_NAME_CONSTRAINTS, () ->
+                new JsonAdaptedContact("\u00a0", "GP", "123", "").toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_ROLE_CONSTRAINTS, () ->
+                new JsonAdaptedContact("Clinic", "\u202f", "123", "").toModelType());
+    }
+
 }
