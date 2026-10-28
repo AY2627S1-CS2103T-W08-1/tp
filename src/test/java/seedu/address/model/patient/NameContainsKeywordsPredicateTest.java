@@ -104,6 +104,17 @@ public class NameContainsKeywordsPredicateTest {
     }
 
     @Test
+    public void test_canonicallyEquivalentAccents_match() {
+        Patient composed = new PatientBuilder().withName("Jos\u00e9 Tan").build();
+        Patient decomposed = new PatientBuilder().withName("Jose\u0301 Tan").build();
+
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Jose\u0301")).test(composed));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Jos\u00e9")).test(decomposed));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("JOSE\u0301")).test(composed));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Jose")).test(composed));
+    }
+
+    @Test
     public void test_keywordOfOnlySeparators_returnsFalse() {
         Patient patient = new PatientBuilder().withName("Mary-Jane Tan").build();
         assertFalse(new NameContainsKeywordsPredicate(List.of("-")).test(patient));
