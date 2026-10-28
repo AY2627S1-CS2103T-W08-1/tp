@@ -11,6 +11,9 @@ import static seedu.address.testutil.LocaleTestUtil.NON_LATIN_DIGIT_LOCALE;
 import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -147,7 +150,7 @@ public class ListBackupsCommandTest {
 
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
-    public void execute_unreadableBackupFolder_throwsCommandException() throws Exception {
+    public void execute_unreadableBackupFolder_throwsCommandExceptionNamingPermission() throws Exception {
         createBackup("mediconnect-20261020-083015.json", EARLIER);
         assertTrue(temporaryFolder.toFile().setReadable(false));
         try {
@@ -155,10 +158,23 @@ public class ListBackupsCommandTest {
             assumeFalse(Files.isReadable(temporaryFolder));
 
             assertCommandFailure(new ListBackupsCommand(temporaryFolder), model,
-                    String.format(ListBackupsCommand.MESSAGE_FAILURE, temporaryFolder));
+                    String.format(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION, temporaryFolder));
         } finally {
             temporaryFolder.toFile().setReadable(true);
         }
+    }
+
+    @Test
+    public void describeListingFailure_eachKindOfFailure_namesPermissionOnlyWhenAccessIsDenied() {
+        AccessDeniedException accessDenied = new AccessDeniedException("data/backups");
+
+        assertEquals(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION,
+                ListBackupsCommand.describeListingFailure(accessDenied));
+        // e.g., thrown while the files are listed, rather than when the folder is opened
+        assertEquals(ListBackupsCommand.MESSAGE_NO_READ_PERMISSION,
+                ListBackupsCommand.describeListingFailure(new UncheckedIOException(accessDenied)));
+        assertEquals(ListBackupsCommand.MESSAGE_FAILURE,
+                ListBackupsCommand.describeListingFailure(new IOException("disk error")));
     }
 
     @Test

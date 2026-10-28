@@ -43,6 +43,8 @@ public class RestoreCommand extends Command {
             "No backup named %1$s was found in %2$s. Your data has not been changed.";
     public static final String MESSAGE_NO_READ_PERMISSION =
             "MediConnect does not have permission to read %1$s. Your data has not been changed.";
+    public static final String MESSAGE_NO_FOLDER_READ_PERMISSION = "MediConnect does not have permission to "
+            + "read the backup folder %1$s. Your data has not been changed.";
     public static final String MESSAGE_UNREADABLE = "The backup %1$s could not be read. It may be damaged, "
             + "or not a MediConnect data file. Your data has not been changed.";
     public static final String MESSAGE_NOT_UTF8 = "The backup %1$s could not be read, as it is not saved as "
@@ -131,7 +133,7 @@ public class RestoreCommand extends Command {
         Path backupFile = backupDir.resolve(backupName);
         String notFoundMessage = String.format(MESSAGE_NOT_FOUND, fileName, backupDir.toAbsolutePath().normalize());
         if (!Files.isRegularFile(backupFile)) {
-            throw new CommandException(notFoundMessage);
+            throw new CommandException(describeMissingBackup(notFoundMessage));
         }
 
         try {
@@ -143,6 +145,17 @@ public class RestoreCommand extends Command {
             logger.warning("Could not restore " + backupFile + ": " + reason);
             throw new CommandException(reason, dle);
         }
+    }
+
+    /**
+     * Returns the reason to give when the backup to restore is not found: that MediConnect may not read the
+     * backup folder, since a backup in such a folder looks missing, or else {@code notFoundMessage}.
+     */
+    private String describeMissingBackup(String notFoundMessage) {
+        boolean isFolderUnreadable = Files.isDirectory(backupDir) && !Files.isReadable(backupDir);
+        return isFolderUnreadable
+                ? String.format(MESSAGE_NO_FOLDER_READ_PERMISSION, backupDir.toAbsolutePath().normalize())
+                : notFoundMessage;
     }
 
     /**

@@ -17,6 +17,7 @@ import static seedu.address.testutil.TypicalPatients.HOON;
 import static seedu.address.testutil.TypicalPatients.IDA;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -353,6 +354,25 @@ public class RestoreCommandTest {
             assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NO_READ_PERMISSION, BACKUP_NAME));
         } finally {
             backupFile.toFile().setReadable(true);
+        }
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
+    public void execute_unreadableBackupFolder_throwsCommandExceptionNamingFolder() throws Exception {
+        writeBackup(createAddressBook(HOON));
+        File folder = temporaryFolder.toFile();
+        // without both permissions, the backup in the folder cannot be found, so it would look missing
+        assertTrue(folder.setReadable(false) && folder.setExecutable(false));
+        try {
+            // users with admin rights (e.g., root) can still read it, so the test only applies to others
+            assumeFalse(Files.isReadable(temporaryFolder));
+
+            assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NO_FOLDER_READ_PERMISSION,
+                    temporaryFolder.toAbsolutePath().normalize()));
+        } finally {
+            folder.setExecutable(true);
+            folder.setReadable(true);
         }
     }
 
