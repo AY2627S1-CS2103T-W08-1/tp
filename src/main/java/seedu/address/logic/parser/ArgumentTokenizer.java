@@ -23,6 +23,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class ArgumentTokenizer {
 
     private static final Pattern PREFIX_CANDIDATE_PATTERN = Pattern.compile("(?<!\\S)([A-Za-z]+/)\\S*");
+    private static final String NOT_APPLICABLE_TOKEN = "N/A";
     private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("\\p{P}");
 
     /**
@@ -65,7 +66,8 @@ public class ArgumentTokenizer {
 
     /**
      * Checks field syntax while allowing non-reserved slash text in the given free-text fields.
-     * Known MediConnect prefixes remain reserved; existing standalone slash-word exceptions still apply.
+     * Known MediConnect prefixes remain reserved regardless of case, except for literal N/A in free text.
+     * Existing standalone slash-word exceptions still apply.
      *
      * @param argsString Original command arguments to check.
      * @param allowedSlashTokens Lowercase standalone tokens allowed as ordinary text by the command.
@@ -113,7 +115,8 @@ public class ArgumentTokenizer {
                 continue;
             }
 
-            if (inFreeText && !CliSyntax.RESERVED_PREFIXES.contains(new Prefix(candidate))) {
+            if (inFreeText && (NOT_APPLICABLE_TOKEN.equals(unpunctuatedToken)
+                    || !CliSyntax.RESERVED_PREFIXES.contains(new Prefix(candidate.toLowerCase(Locale.ROOT))))) {
                 continue;
             }
 

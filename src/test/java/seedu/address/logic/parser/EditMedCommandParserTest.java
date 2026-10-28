@@ -168,8 +168,6 @@ public class EditMedCommandParserTest {
 
     @Test
     public void parse_clinicalSlashWords_preserved() {
-        assertParseSuccess(parser, " 1 2 med/Aspirin T/08:00",
-                edit(Optional.of("Aspirin T/08:00"), Optional.empty()));
         assertParseSuccess(parser, " 1 2 med/Insulin 10 units/day",
                 edit(Optional.of("Insulin 10 units/day"), Optional.empty()));
         assertParseSuccess(parser, " 1 2 med/Amoxicillin 250 mg/ml",

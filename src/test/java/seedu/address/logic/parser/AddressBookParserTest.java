@@ -77,7 +77,7 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_slashTextInFreeTextFields_preservedAcrossCommands() throws Exception {
-        for (String text : List.of("and/or", "mg/ml", "units/day", "N/A", "x/123", "and/or, mg/ml")) {
+        for (String text : List.of("and/or", "mg/ml", "units/day", "N/A", "N/A,", "x/123", "and/or, mg/ml")) {
             Patient patient = new PatientBuilder().withAddress(text).build();
             assertEquals(new AddCommand(patient), parser.parseCommand(PatientUtil.getAddCommand(patient)));
             assertEquals(new EditCommand(INDEX_FIRST_PATIENT,
@@ -102,6 +102,27 @@ public class AddressBookParserTest {
                     Optional.empty(), Optional.of(text), Optional.of(text)),
                     parser.parseCommand("editappt 1 1 w/" + text + " nt/" + text));
         }
+    }
+
+    @Test
+    public void parseCommand_wrongCaseNotePrefix_rejectedAcrossFreeTextCommands() {
+        for (String input : List.of(
+                "add n/Alex ic/S1111111A dob/1950-04-12 p/91234567 a/Block 1 NT/bring scans",
+                "edit 1 a/Block 1 NT/bring scans", "addcare 1 ci/Use cane NT/bring scans",
+                "editcare 1 1 ci/Use cane NT/bring scans", "editmed 1 1 med/Aspirin NT/bring scans",
+                "addcontact 1 n/Clinic r/GP p/123 nt/Call first NT/bring scans",
+                "editcontact 1 1 nt/Call first NT/bring scans",
+                "addappt 1 d/2027-01-01 t/10:00 w/Dr Tan NT/bring scans",
+                "editappt 1 1 w/Dr Tan NT/bring scans")) {
+            assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "NT/"), () ->
+                    parser.parseCommand(input));
+        }
+    }
+
+    @Test
+    public void parseCommand_wrongCaseTimePrefix_rejectedInMedicationDescription() {
+        assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "T/"), () ->
+                parser.parseCommand("editmed 1 1 med/Aspirin T/08:00"));
     }
 
     @Test
