@@ -57,6 +57,12 @@ public class MedicationTest {
     }
 
     @Test
+    public void constructor_decomposedAccent_storedAsComposedAccent() {
+        assertEquals("Cr\u00e8me 5mg", new Medication("Cre\u0300me 5mg").getDescription());
+        assertTrue(Medication.isValidDescription("e\u0301"));
+    }
+
+    @Test
     public void constructor_noTimes_emptyTimes() {
         assertTrue(new Medication(DESCRIPTION).getTimes().isEmpty());
     }
@@ -145,6 +151,7 @@ public class MedicationTest {
         assertTrue(medication.isSameMedication(new Medication(DESCRIPTION)));
         assertTrue(medication.isSameMedication(new Medication("  metformin   500MG ")));
         assertTrue(medication.isSameMedication(new Medication("Metformin\u00a0500mg")));
+        assertTrue(new Medication("Cr\u00e8me 5mg").isSameMedication(new Medication("Cre\u0300me 5mg")));
         assertFalse(medication.isSameMedication(new Medication("Metformin 850mg", List.of(MORNING))));
     }
 

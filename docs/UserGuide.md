@@ -244,7 +244,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * At least one of `med/` or `t/` must be given.
 * `med/DESCRIPTION` replaces the description. Leading and trailing whitespace is removed, and consecutive internal
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
-  same as another medication of the same patient, ignoring letter case and spacing, is rejected.
+  same as another medication of the same patient, ignoring letter case, whitespace differences, and equivalent
+  Unicode forms that look the same, is rejected.
   Changing only the letter case of the medication's own description is allowed.
 * `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), with two digits on each side of the colon,
   e.g., `08:30`. Leading and trailing spaces are ignored.

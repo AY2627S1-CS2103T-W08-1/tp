@@ -76,11 +76,12 @@ public class Medication {
 
     /**
      * Returns {@code description} with every run of whitespace, including Unicode whitespace and line breaks,
-     * replaced by one space, and without leading and trailing whitespace.
+     * replaced by one space, without leading and trailing whitespace, and in Unicode form NFC, as for the other
+     * care entries, so that descriptions that look the same are the same.
      */
     public static String normalizeDescription(String description) {
         requireNonNull(description);
-        return description.replaceAll("(?U)\\s+", " ").trim();
+        return Patient.normalizeCareEntry(description);
     }
 
     /**
