@@ -12,12 +12,13 @@ import seedu.address.commons.util.ToStringBuilder;
 
 /**
  * Tests that a {@code Patient}'s {@code Name} matches any of the keywords given.
- * A name and a keyword are split into parts at spaces, hyphens, apostrophes and dots, ignoring letter case.
+ * A name and a keyword are split into parts at spaces, hyphens, apostrophes (straight or curly) and dots,
+ * ignoring letter case.
  * A keyword matches if its parts are next to each other in the name, e.g., {@code Mary-Jane} matches
  * {@code Mary-Jane Tan} and {@code Jane} matches it too.
  */
 public class NameContainsKeywordsPredicate implements Predicate<Patient> {
-    private static final Pattern NAME_PART_SEPARATORS = Pattern.compile("[\\s\\-'.]+");
+    private static final Pattern NAME_PART_SEPARATORS = Pattern.compile("[\\s\\-'\u2019.]+");
 
     private final List<String> keywords;
 

@@ -710,6 +710,7 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
   and `Mary-Jane` all match `Mary-Jane Tan`, `Brien` and `O'Brien` match `Mary O'Brien`, and `Jr` matches
   `Tan Ah Kow Jr.`. A keyword is split in the same way, and all its words must be next to each other in the name,
   so `Mary-Jane` does not match `Mary Lim`.
+* A curly apostrophe (`’`) in a keyword is treated as `'`, so `O’Brien` matches `Mary O'Brien`.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:

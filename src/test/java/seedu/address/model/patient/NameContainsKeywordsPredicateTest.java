@@ -95,6 +95,15 @@ public class NameContainsKeywordsPredicateTest {
     }
 
     @Test
+    public void test_curlyApostropheInKeyword_matchesStraightApostropheInName() {
+        Patient patient = new PatientBuilder().withName("Mary O'Brien").build();
+
+        assertTrue(new NameContainsKeywordsPredicate(List.of("O\u2019Brien")).test(patient));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("\u2019Brien")).test(patient));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("O\u2019Brian")).test(patient));
+    }
+
+    @Test
     public void test_keywordOfOnlySeparators_returnsFalse() {
         Patient patient = new PatientBuilder().withName("Mary-Jane Tan").build();
         assertFalse(new NameContainsKeywordsPredicate(List.of("-")).test(patient));
