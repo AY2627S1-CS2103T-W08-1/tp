@@ -39,6 +39,8 @@ public class Messages {
             "The appointment index provided is invalid.";
     public static final String MESSAGE_DUPLICATE_APPOINTMENT =
             "This appointment already exists for this patient.";
+    public static final String MESSAGE_APPOINTMENT_BEFORE_DOB =
+            "The appointment cannot be before the patient's date of birth, %1$s.";
     public static final String MESSAGE_PAST_APPOINTMENT = "Note: this appointment is in the past.";
     public static final String MESSAGE_FAR_FUTURE_APPOINTMENT = "Note: this appointment is more than 2 years ahead.";
     public static final String MESSAGE_CLASH =
