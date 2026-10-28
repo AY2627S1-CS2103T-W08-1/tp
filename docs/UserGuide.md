@@ -354,9 +354,10 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 * A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
-* Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
-  including standalone `s/o`, `d/o` and `c/o`, are rejected.
-  Standalone `a/l` and `a/p` are allowed in free text, ignoring letter case.
+* Unknown prefixes and repeated prefixes are rejected. Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are
+  allowed in names, roles and notes, ignoring letter case, e.g., `n/Tan s/o Lim` or `nt/Call c/o daughter`.
+  Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
+  Other words starting with unrecognised letters followed by `/` are rejected.
   Text matching a recognised prefix after a space starts another field, even inside a note.
 * Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
   the panel updates immediately. Existing care information is preserved.

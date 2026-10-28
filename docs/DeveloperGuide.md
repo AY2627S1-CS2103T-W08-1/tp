@@ -482,7 +482,9 @@ case and normalized whitespace, and phones ignoring spaces and hyphens, while re
 The model rejects duplicate identities within a patient.
 
 The three contact parsers use the shared prefixes in `CliSyntax`. Add and edit reject unknown and repeated
-prefixes without slash-word exceptions. Contact validation and the add/edit parsers use
+prefixes, but allow standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` in free text, ignoring case.
+Both add and edit pass their allowed-word sets to `ArgumentTokenizer#verifyNoInvalidPrefixes`; recognized field
+prefixes still delimit fields normally. Contact validation and the add/edit parsers use
 `StringUtil#stripUnicodeWhitespace()` to trim Unicode boundaries, including no-break spaces. The helper scans
 non-whitespace runs and preserves internal text. Notes from commands use this helper; stored notes are
 preserved when loading. Edit uses `Optional<String>` to distinguish
@@ -1862,6 +1864,21 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `editcontact 1 CONTACT_INDEX nt/ `, using the noted contact number.<br>
       Expected: The note is cleared, as with an ordinary-space-only note. Other fields are unchanged.
+
+1. Adding and editing contacts with slash words
+
+   1. Test case: `addcontact 1 n/Tan s/o Lim r/Guardian p/91234567 nt/Call c/o daughter`<br>
+      Expected: The contact is added with the name and note unchanged. Run `view 1` to check its contact number.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX n/Siti d/o Ahmad nt/Call C/O family`, replacing `CONTACT_INDEX`
+      with the number from the previous step.<br>
+      Expected: The contact is updated, preserving the spelling and letter case of both fields.
+
+   1. Other accepted standalone words to try: `a/l`, `a/p`, `S/O`, `D/O`, `C/O`.<br>
+      Try these in a name, role or note for both add and edit.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX nt/Call c/o, family`, using the same contact number.<br>
+      Expected: No contact is changed. The message explains that `c/o` must be a separate word without punctuation.
 
 ### Listing active patients
 
