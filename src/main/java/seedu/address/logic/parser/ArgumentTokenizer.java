@@ -51,6 +51,7 @@ public class ArgumentTokenizer {
      * A prefix candidate consists of one or more letters followed immediately by a slash.
      * Standalone tokens in {@code allowedSlashTokens} are treated as ordinary text, ignoring case.
      * Allowed tokens with trailing punctuation are rejected with a correction.
+     * The first word immediately after a recognized field prefix is checked as value text too.
      *
      * @param argsString Original command arguments to check.
      * @param allowedSlashTokens Lowercase tokens allowed as ordinary text by the command.
@@ -83,6 +84,8 @@ public class ArgumentTokenizer {
 
             // Allow recognized command prefixes.
             if (allowed.contains(candidate)) {
+                // No command prefix is valid inside a value; omitting validPrefixes also bounds this recursion.
+                verifyNoInvalidPrefixes(token.substring(candidate.length()), allowedSlashTokens);
                 continue;
             }
 

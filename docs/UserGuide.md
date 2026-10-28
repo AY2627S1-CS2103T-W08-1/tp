@@ -148,6 +148,10 @@ Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` 
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
+This also applies to the first word immediately after a field prefix: `a/x/123` is rejected just like
+`a/Blk 1 x/123`. A prefix cannot be embedded there as text, even if it is valid elsewhere in that command.
+Each command's supported standalone slash words remain allowed; keep them separate from punctuation.
+Addresses can still begin with numeric slash text such as `a/21/3` or a URL such as `a/https://example.com`.
 
 ### Adding care information: `addcare`
 
@@ -354,9 +358,10 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 * A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
-* Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
-  including standalone `s/o`, `d/o` and `c/o`, are rejected.
-  Standalone `a/l` and `a/p` are allowed in free text, ignoring letter case.
+* Unknown prefixes and repeated prefixes are rejected. Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are
+  allowed in names, roles and notes, ignoring letter case, e.g., `n/Tan s/o Lim` or `nt/Call c/o daughter`.
+  Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
+  Other words starting with unrecognised letters followed by `/` are rejected.
   Text matching a recognised prefix after a space starts another field, even inside a note.
 * Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
   the panel updates immediately. Existing care information is preserved.
