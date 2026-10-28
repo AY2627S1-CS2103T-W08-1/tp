@@ -39,6 +39,11 @@ public class ClearCommand extends Command {
         backupCommand = new BackupCommand(clock, backupDir);
     }
 
+    @Override
+    public boolean requiresSaveWhenUnchanged() {
+        return true;
+    }
+
     /**
      * Backs up all patient data before clearing it, and returns the backup location with the success message.
      *
