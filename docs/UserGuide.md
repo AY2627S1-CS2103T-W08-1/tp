@@ -250,8 +250,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`: for example,
     `t/08:00 t/` is rejected.
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
-* The patient's other details and other medications are not changed. If the patient is shown in the details panel,
-  the panel updates.
+* The patient's other details and other medications are not changed. After a successful command, the detail panel
+  shows this patient with the updated medication, even if it showed another patient before.
 * The description follows the [slash-text rules](#slash-text-in-field-values): `mg/ml` and `units/day` are allowed.
   Reserved prefixes outside this command, such as `p/`, are rejected. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
@@ -717,8 +717,9 @@ Format: `deletemed INDEX MED_INDEX`
 * `INDEX` and `MED_INDEX` must both be given, in that order, and nothing else may follow them.
 * The other medications, allergens, care instructions, and details of the patient are not changed. The
   medications after the deleted one move up by one number, e.g., deleting medication 1 makes the old medication 2
-  the new medication 1. If the patient is shown in the details panel, the panel updates and renumbers its list.
-  When the last medication is deleted, the panel shows `None recorded`.
+  the new medication 1. After a successful command, the detail panel shows this patient, even if it showed another
+  patient before, with the medications renumbered. When the last medication is deleted, the panel shows
+  `None recorded`.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):
