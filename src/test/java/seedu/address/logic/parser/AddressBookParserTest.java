@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
@@ -12,12 +13,18 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 
 import java.time.Clock;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddApptCommand;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
@@ -311,6 +318,55 @@ public class AddressBookParserTest {
     public void parseCommand_unrecognisedInput_throwsParseException() {
         assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE), ()
             -> parser.parseCommand(""));
+    }
+
+    @Test
+    public void parseCommand_unknownCommandWord_doesNotLogTheWord() {
+        String sensitiveWord = "S1234567A";
+        List<String> messages = parseAndCollectLogMessages(sensitiveWord + " 91234567");
+
+        assertFalse(messages.stream().anyMatch(message -> message.contains(sensitiveWord)));
+    }
+
+    @Test
+    public void parseCommand_knownCommandWord_doesNotLogArguments() {
+        List<String> messages = parseAndCollectLogMessages(FindCommand.COMMAND_WORD + " S1234567A");
+
+        assertFalse(messages.stream().anyMatch(message -> message.contains("S1234567A")));
+    }
+
+    /**
+     * Returns the messages that the parser logs at any level while it parses {@code userInput}, which is
+     * expected to be accepted or to fail with a {@code ParseException}.
+     */
+    private List<String> parseAndCollectLogMessages(String userInput) {
+        List<String> messages = new ArrayList<>();
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord logRecord) {
+                messages.add(logRecord.getMessage());
+            }
+
+            @Override
+            public void flush() { }
+
+            @Override
+            public void close() { }
+        };
+        handler.setLevel(Level.ALL);
+        Logger parserLogger = LogsCenter.getLogger(AddressBookParser.class);
+        Level originalLevel = parserLogger.getLevel();
+        parserLogger.setLevel(Level.ALL);
+        parserLogger.addHandler(handler);
+        try {
+            parser.parseCommand(userInput);
+        } catch (ParseException e) {
+            // the messages are what matters here
+        } finally {
+            parserLogger.removeHandler(handler);
+            parserLogger.setLevel(originalLevel);
+        }
+        return messages;
     }
 
     @Test
