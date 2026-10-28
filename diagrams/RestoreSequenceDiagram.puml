@@ -107,8 +107,8 @@ RestoreCommand --> LogicManager : r
 deactivate RestoreCommand
 
 note right of LogicManager
-As after every command, LogicManager then
-saves m, which replaces data/mediconnect.json.
+LogicManager then saves m, even if its data
+is unchanged, replacing data/mediconnect.json.
 end note
 
 [<-- LogicManager
