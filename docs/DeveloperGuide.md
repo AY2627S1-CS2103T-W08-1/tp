@@ -1739,6 +1739,38 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC21 - Find patients by name**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to find patients, giving one or more keywords from the patient's name.
+2.  MediConnect shows the active patients whose names match at least one keyword, and how many there are.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. No keyword is given.
+
+    * 1a1. MediConnect shows an error message that at least one keyword must be given.
+
+      Use case ends.
+
+* 2a. No active patient matches a keyword.
+
+    * 2a1. MediConnect shows a message that no patients were found.
+
+      Use case ends.
+
+* 2b. Caregiver wants to use a patient in the result.
+
+    * 2b1. Caregiver gives the number of the patient in the shown list to another command, e.g., to view the patient (UC7) or to edit a medication (UC4).
+
+      Use case ends.
+
 ### Non-Functional Requirements
 
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
@@ -1979,6 +2011,70 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `addcare 999 med/Ibuprofen`<br>
    Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
+
+### Editing and deleting medications
+
+1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh's medications, `1. Aspirin 100mg (08:00)`
+   and `2. Amlodipine 5mg (08:00, 20:00)`. The test cases build on each other, so run them in this order.
+
+1. Test case: `editmed 1 2 t/07:30 t/19:30`<br>
+   Expected: The status message shows `Updated medication 2 of Alex Yeoh: Amlodipine 5mg (07:30, 19:30)`. The detail
+   panel shows the new times.
+
+1. Test case: `editmed 1 1 med/Aspirin 75mg`<br>
+   Expected: The description changes to `Aspirin 75mg` and the time `08:00` is kept.
+
+1. Test case: `editmed 1 2 t/`<br>
+   Expected: Amlodipine 5mg has no times any more, and the status message shows it without brackets.
+
+1. Test case: `editmed 1 1 med/amlodipine 5mg`<br>
+   Expected: Nothing changes. The status message shows
+   `Medication "amlodipine 5mg" was not updated: it already exists for this patient.`
+
+1. Test case: `editmed 1 1`<br>
+   Expected: Nothing changes. The status message shows `At least one of med/ or t/ must be provided.`
+
+1. Test case: `editmed 1 9 t/08:00`<br>
+   Expected: Nothing changes. The status message shows `The medication index provided is invalid.`
+
+1. Test case: `deletemed 1 1`<br>
+   Expected: Aspirin 75mg is deleted and Amlodipine 5mg becomes medication 1 in the detail panel. The status message
+   shows `Deleted medication 1 of Alex Yeoh: Aspirin 75mg (08:00)`.
+
+1. Test case: Repeat `deletemed 1 1`.<br>
+   Expected: Amlodipine 5mg is deleted. The detail panel shows `None recorded` for the medications.
+
+1. Test case: Repeat `deletemed 1 1` again.<br>
+   Expected: Nothing changes. The status message shows `The medication index provided is invalid.`
+
+1. Test case: `deletemed 1`<br>
+   Expected: Nothing changes. The status message shows `Invalid command format!` followed by the usage of `deletemed`.
+
+### Listing today's medication times
+
+1. Prerequisites: The sample data is loaded again, e.g., by starting MediConnect with an empty `data` folder, so that
+   only Alex Yeoh has medication times.
+
+1. Test case: `due`<br>
+   Expected: The result box lists `08:00 Alex Yeoh: Aspirin 100mg`, `08:00 Alex Yeoh: Amlodipine 5mg` and
+   `20:00 Alex Yeoh: Amlodipine 5mg`, one per line. A line is followed by ` (earlier today)` if its time is before
+   the current time of the computer. The patient list and the detail panel do not change.
+
+1. Test case: `due 2`<br>
+   Expected: The status message shows `No medications are due today for Bernice Yu.`
+
+1. Test case: `due 1`<br>
+   Expected: The same three lines as `due`.
+
+1. Test case: Run `archive 1`, then `due`.<br>
+   Expected: The status message shows `No medications are due today.`, because Alex Yeoh is archived and archived
+   patients are left out.
+
+1. Test case: `due 999`<br>
+   Expected: The status message shows `The patient index provided is invalid.`
+
+1. Test case: `due abc`<br>
+   Expected: The status message shows `Invalid command format!` followed by the usage of `due`.
 
 ### Managing patient contacts
 
