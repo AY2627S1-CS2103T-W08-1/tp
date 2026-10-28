@@ -360,21 +360,24 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 
 * Name, role and phone are required. Each prefix can appear only once; fields can appear in any order.
 * Names are nonblank free text, so both people and organisations such as `Tan & Partners Clinic` are supported.
-  Leading/trailing whitespace is removed and repeated spaces in a name become one.
+  Leading/trailing Unicode whitespace, including copied no-break spaces, is removed. Repeated whitespace
+  inside a name becomes one ordinary space.
 * Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
-  other roles are allowed.
+  other roles are allowed. Surrounding Unicode whitespace is removed; a whitespace-only role is rejected.
 * Contact phones must contain 3 to 15 digits (`0`–`9`). Spaces and hyphens are allowed and do not count toward
   this limit. At most one `+` is allowed, at the start after trimming, e.g., `+44 20 7946 0958`.
   These differ from patient-phone rules so overseas and short clinic numbers such as `123` remain supported.
   Formatting is preserved after trimming. Extensions and parentheses are not supported.
 * The note is optional. An omitted or empty `nt/` creates a contact without a note.
-  Surrounding spaces are removed from notes entered through commands.
-* A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
+  Surrounding Unicode whitespace is removed from notes entered through commands. A whitespace-only `nt/`
+  gives an empty note; this also clears an existing note in `editcontact`. Internal note spacing is preserved.
+* A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
-* Name, role and note follow the [slash-text rules](#slash-text-in-field-values); `and/or`, `mg/ml`, `s/o`, and `c/o` are allowed.
-  Standalone `a/l` and `a/p` are allowed, ignoring letter case. `d/o` still starts with the reserved `d/` prefix
-  and is rejected. Repeated prefixes and unknown prefixes before any field are rejected.
+* Name, role and note follow the [slash-text rules](#slash-text-in-field-values); `and/or` and `mg/ml` are allowed.
+  Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are allowed, ignoring letter case, e.g., `n/Tan s/o Lim`.
+  Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
+  Repeated prefixes and unknown prefixes before any field are rejected.
   Text matching a supported prefix after a space starts another field, even inside a note.
 * Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
   the panel updates immediately. Existing care information is preserved.
@@ -391,6 +394,10 @@ A duplicate returns `This contact (identified by name and phone) already exists.
 The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
 that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
 in a copy of the file using the [data recovery instructions](#editing-the-data-file).
+
+Saved contact names and roles follow the same whitespace rules. Whitespace-only names or roles and contacts
+that become duplicates after name normalization are rejected when loaded or restored. Stored note formatting
+is preserved; Unicode trimming of notes applies only to values entered through commands.
 
 ### Editing a contact: `editcontact`
 
