@@ -87,6 +87,7 @@
         "viewing-a-patient": "Viewing a patient",
         "saving-data": "Saving data",
         "startup-failures-that-prevent-data-recovery": "Startup failures that prevent data recovery",
+        "preventing-concurrent-access-to-patient-data": "Preventing concurrent access to patient data",
         "backing-up-data": "Backing up data",
         "restoring-data": "Restoring data",
         "exporting-a-patient-s-record": "Exporting a patient's record",
