@@ -190,7 +190,7 @@ The `Storage` component,
 
 The patient data is saved in `data/mediconnect.json` and the user preferences in `preferences.json`, both relative to the folder the app is launched from. `MainApp` sets these paths when the app starts.
 
-`JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted.
+`JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted. An existing file that cannot be written to, e.g., because it is read-only, is not replaced, although on macOS and Linux its folder may let the temporary file take its place.
 
 `JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It reads the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
 
@@ -209,6 +209,12 @@ an NRIC, a patient has duplicate contacts or appointments, or an allergen or car
 the whole file is rejected. Care-entry duplicates ignore letter case and whitespace differences, as the care commands
 do.
 
+`JsonAddressBookStorage` reads the file with `JsonUtil#readJsonFileStrictly()`, which also rejects a property that the
+JSON class does not have, e.g., a misspelled `careInstructons`, and a property given twice. Ignoring them, as Jackson
+does by default, would drop their values without a warning the next time the data is saved. An unknown property is
+reported as invalid data that names it, while its value is not shown, since it can be patient data. `preferences.json`
+is still read leniently, so that a file from an older version keeps its known settings.
+
 On a `DataLoadingException`, `MainApp` copies the unreadable file beside the original as
 `mediconnect-unreadable-<UUID>.json` before creating an empty model. The copy uses no replacement option, so an
 existing recovery file is never overwritten. The UI shows its absolute path and failure details in a startup warning.
@@ -218,7 +224,14 @@ the cause. The first invalid entry is reported. Both startup and `restore` use t
 validation messages for `IllegalValueException` causes; other read failures receive a generic format/permissions
 message rather than raw parser exceptions that can include file contents. Later commands
 save normally to the original data path. If preservation fails, the exception stops initialization before commands
-can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
+can overwrite the file. `MainApp#init()` records this `IOException` instead of letting JavaFX abort initialization.
+`MainApp#start()` then uses `UiManager#showStartupError()` to show an error dialog without a main-window owner,
+on the JavaFX application thread, before exiting. The dialog names the data-file path and distinguishes a
+directory path, denied access, and other preservation failures without displaying raw parser exceptions.
+The dialog and exit actions can be supplied through a package-private constructor for tests. A regression runs
+the real startup-error method and checks that the error is presented before exit; the UI tests cover the dialog.
+No model, logic or main window is created after a preservation failure, and `stop()` skips preference saving
+when there is no model. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
 ### Common classes
 
@@ -740,7 +753,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | see a list of upcoming appointments across all patients | plan my schedule |
 | `* *`    | caregiver                                  | record notes after an appointment | remember what was discussed for future reference |
 | `* *`    | caregiver                                  | view a patient's appointment history | see their past visits at a glance |
-| `* *`    | caregiver                                  | see a daily summary of everything due today across all patients | check all my responsibilities in one place |
 | `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
 | `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
 | `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
@@ -752,6 +764,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | edit or cancel an appointment | keep the schedule accurate when a visit is rescheduled |
 | `* *`    | new user                                   | see sample patient data when I first open the app | understand what a complete record looks like before entering real data |
 | `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients |
+| `*`      | caregiver                                  | see a daily summary of everything due today across all patients | check all my responsibilities in one place |
 | `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
@@ -1212,13 +1225,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
     * 3a1. MediConnect shows an error message asking for only the name of a backup file.
 
-      Use case resumes at step 2.
+      Use case resumes at step 3.
 
 * 3b. There is no backup with the given name.
 
     * 3b1. MediConnect shows an error message that no such backup was found, and that the data has not been changed.
 
-      Use case resumes at step 2.
+      Use case resumes at step 3.
 
 * 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, or MediConnect has no permission to read it.
 
@@ -1614,12 +1627,123 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 *{More to be added}*
 
+**Use case: UC18 - Add a patient's contact**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7).
+2.  Caregiver requests to add a contact, giving a name, role and phone, and optionally a note.
+3.  MediConnect adds the contact at the end of the patient's contact list and shows the added contact's details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The patient index is missing or invalid.
+
+    * 2a1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 1.
+
+* 2b. A required field is missing, a field is invalid, or the command format is invalid.
+
+    * 2b1. MediConnect shows an error message describing the problem and changes nothing.
+
+      Use case resumes at step 2.
+
+* 2c. The patient already has a contact with the same name and phone under the duplicate rules for contacts.
+
+    * 2c1. MediConnect shows a duplicate-contact error and changes nothing, even if the role or note differs.
+
+      Use case resumes at step 2.
+
+* 3a. The updated patient data cannot be saved.
+
+    * 3a1. MediConnect undoes the addition and shows a save-failure message.
+
+      Use case ends.
+
+**Use case: UC19 - Edit a patient's contact**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7), with the contacts numbered.
+2.  Caregiver requests to edit a specific contact, giving its number and one or more replacement fields.
+3.  MediConnect changes only the supplied fields, keeps the contact's number, and shows its updated details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The patient index or contact number is missing or invalid.
+
+    * 2a1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 1.
+
+* 2b. No field to change is given, a supplied field is invalid, or the command format is invalid.
+
+    * 2b1. MediConnect shows an error message describing the problem and changes nothing.
+
+      Use case resumes at step 2.
+
+* 2c. The edited contact would duplicate another contact of the patient.
+
+    * 2c1. MediConnect shows a duplicate-contact error and changes nothing.
+
+      Use case resumes at step 2.
+
+* 2d. Caregiver supplies an empty note.
+
+    * 2d1. MediConnect clears the contact's note. An omitted note would preserve the existing note.
+
+      Use case resumes at step 3.
+
+* 3a. The updated patient data cannot be saved.
+
+    * 3a1. MediConnect undoes the edit and shows a save-failure message.
+
+      Use case ends.
+
+**Use case: UC20 - Delete a patient's contact**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver views a patient's details (UC7), with the contacts numbered.
+2.  Caregiver requests to delete a specific contact, giving its number.
+3.  MediConnect removes the contact, renumbers the remaining contacts, and shows the removed contact's details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The patient index or contact number is missing or invalid, or the command format is invalid.
+
+    * 2a1. MediConnect shows an error message and changes nothing.
+
+      Use case resumes at step 1.
+
+* 3a. The updated patient data cannot be saved.
+
+    * 3a1. MediConnect restores the deleted contact and the previous numbering, and shows a save-failure message.
+
+      Use case ends.
+
 ### Non-Functional Requirements
 
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
-4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors.
+4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors. If the recovery copy cannot be created, it must instead show a startup error and exit without changing patient data.
 5. MediConnect must not use a database management system.
 6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
 7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
@@ -1877,6 +2001,26 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `editcontact 1 99 nt/note`, then `deletecontact 1 99`.<br>
    Expected: Both report `The contact index provided is invalid.` and change nothing.
 
+1. Adding and editing contact fields
+
+   1. Test cases: `addcontact 1 n/ r/GP p/123` and `addcontact 1 n/Review clinic r/GP p/12`.<br>
+      Expected: The first reports the contact-name constraints; the second reports the phone constraints.
+      Neither adds a contact.
+
+   1. Test case: `addcontact 1 n/Review clinic r/GP p/123 nt/Call first`.<br>
+      Expected: The contact is added. Run `view 1` and note its contact number as `CONTACT_INDEX`.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX r/Guardian p/456`, replacing `CONTACT_INDEX` with that number.<br>
+      Expected: The role and phone change, while the name, note, contact number and other patient data are preserved.
+
+   1. Test case: `editcontact 1 CONTACT_INDEX`, using the same number.<br>
+      Expected: `Specify at least one contact field to edit.` The contact is unchanged.
+
+   1. Test case: `addcontact 1 n/Other review clinic r/GP p/789`. Run `view 1` and note its number as `OTHER_INDEX`.
+      Then run `editcontact 1 OTHER_INDEX n/Review clinic p/456`, replacing `OTHER_INDEX` with that number.<br>
+      Expected: The second contact is added, but its edit is rejected as a duplicate of `Review clinic` despite
+      their different roles and notes. Both contacts remain as they were before the edit.
+
 1. Validating contact phone numbers
 
    1. Test cases: `addcontact 1 n/Short number r/Clinic p/123` and
@@ -2084,6 +2228,26 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, replace the data file with malformed JSON, such as `{"persons": [`, and launch.<br>
       Expected: The warning keeps the recovery path and asks you to check the JSON format and file permissions.
       It does not display raw parser exceptions or claim to identify a patient entry.
+
+### Startup failures that prevent data recovery
+
+1. Prerequisites: Use a disposable app folder. With the app closed, create a directory named
+   `data/mediconnect.json` in place of the data file. Keep any real data elsewhere.
+
+1. Launch MediConnect.<br>
+   Expected: No main window opens. An error dialog titled `MediConnect could not start` gives the data-file
+   path and says it is a folder instead of a file. Closing the dialog exits the app. The directory is unchanged.
+
+1. Replace that directory with a valid data file and relaunch.<br>
+   Expected: The main window opens normally with the saved patients.
+
+1. Where file permissions can be controlled, deny read access to the test data file, then launch.<br>
+   Expected: A startup error explains the read/copy permission problem. The patient data remains unchanged.
+   Restore permissions before continuing. Do not run this test with an account that bypasses those permissions.
+
+1. Alternatively, use malformed JSON in a readable test data file and deny write access to its containing folder.<br>
+   Expected: Failure to create a recovery copy produces the same startup error instead of opening an empty model.
+   Restore permissions and repair or replace the test file before relaunching.
 
 ### Backing up data
 
