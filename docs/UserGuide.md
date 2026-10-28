@@ -790,10 +790,11 @@ Format: `view INDEX`
   `Tab` skips the patient list. To reach a patient in a long patient list quickly, use `find`.
 * A line break inside an entry, which only editing the data file by hand can add, is shown as a space, as in an
   exported record, so that each entry stays on its own numbered line.
-* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
-  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`. Clicking or right-clicking the
-  panel does not move the cursor out of the command box, so you can paste the copied text into a command straight
-  away.
+* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click its text and choose
+  **Copy**. A line of details is copied with its label, e.g., `NRIC: S1234567A`. A numbered entry is copied without
+  its number, e.g., `Penicillin`, so that it can be pasted into a command as it is; right-clicking the number itself
+  shows no menu. Clicking or right-clicking the panel does not move the cursor out of the command box, so you can
+  paste the copied text into a command straight away.
 * The panel keeps showing the patient after commands that do not change a patient, such as `list` or `find`, even
   if `find` hides the patient from the list. A command that changes a patient's details or care information, e.g.,
   `edit`, `addcare` or `addappt`, shows that patient instead, with the change, as does `listappt INDEX`. The panel goes
