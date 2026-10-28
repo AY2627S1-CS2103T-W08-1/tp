@@ -44,6 +44,15 @@ public class DobTest {
     }
 
     @Test
+    public void isAfter() {
+        Dob dob = new Dob("1950-04-12");
+        assertThrows(NullPointerException.class, () -> dob.isAfter(null));
+        assertTrue(dob.isAfter(LocalDate.of(1950, 4, 11))); // day before
+        assertFalse(dob.isAfter(LocalDate.of(1950, 4, 12))); // same day
+        assertFalse(dob.isAfter(LocalDate.of(1950, 4, 13))); // day after
+    }
+
+    @Test
     public void equals() {
         Dob dob = new Dob("1950-04-12");
 

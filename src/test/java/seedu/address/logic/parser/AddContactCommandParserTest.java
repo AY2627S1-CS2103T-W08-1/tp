@@ -19,6 +19,18 @@ public class AddContactCommandParserTest {
     private final AddContactCommandParser parser = new AddContactCommandParser();
 
     @Test
+    public void parse_textLength_acceptsLimitsAndRejectsOverlongFields() {
+        String name = "\uD83D\uDE00".repeat(Contact.MAX_NAME_LENGTH);
+        String role = "r".repeat(Contact.MAX_ROLE_LENGTH);
+        String note = "n".repeat(Contact.MAX_NOTE_LENGTH);
+        assertParseSuccess(parser, " 1 n/" + name + " r/" + role + " p/123 nt/\u00a0" + note + "\u00a0",
+                new AddContactCommand(INDEX_FIRST_PATIENT, new Contact(name, role, "123", note)));
+        assertParseFailure(parser, " 1 n/" + name + "x r/GP p/123", Contact.MESSAGE_NAME_CONSTRAINTS);
+        assertParseFailure(parser, " 1 n/Clinic r/" + role + "x p/123", Contact.MESSAGE_ROLE_CONSTRAINTS);
+        assertParseFailure(parser, " 1" + FIELDS + " nt/" + note + "x", Contact.MESSAGE_NOTE_CONSTRAINTS);
+    }
+
+    @Test
     public void parse_validFields_contactCreated() {
         assertParseSuccess(parser, " 1" + FIELDS + " nt/Call in the morning",
                 new AddContactCommand(INDEX_FIRST_PATIENT, GP));
@@ -29,13 +41,25 @@ public class AddContactCommandParserTest {
     }
 
     @Test
-    public void parse_indianNameSlashWords_contactCreated() {
-        for (String token : List.of("a/l", "a/p", "A/L", "A/P")) {
-            String name = "Muthu " + token + " Ramasamy";
-            Contact contact = new Contact(name, "Emergency", "123", "");
+    public void parse_standaloneSlashWords_preservedInContactFields() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "S/O", "D/O", "C/O", "A/L", "A/P")) {
+            String name = "Tan " + token + " Lim";
+            String role = "Guardian " + token + " family";
+            String note = "Call " + token + " daughter";
+            Contact contact = new Contact(name, role, "123", note);
 
-            assertParseSuccess(parser, " 1 n/" + name + " r/Emergency p/123",
+            assertParseSuccess(parser, " 1 n/" + name + " r/" + role + " p/123 nt/" + note,
                     new AddContactCommand(INDEX_FIRST_PATIENT, contact));
+        }
+    }
+
+    @Test
+    public void parse_unicodeWhitespace_rejectsBlankNamesAndRolesAndTrimsNotes() {
+        for (String space : List.of("\u00a0", "\u202f", "\u2007")) {
+            assertParseFailure(parser, " 1 n/" + space + " r/GP p/123", Contact.MESSAGE_NAME_CONSTRAINTS);
+            assertParseFailure(parser, " 1 n/Clinic r/" + space + " p/123", Contact.MESSAGE_ROLE_CONSTRAINTS);
+            assertParseSuccess(parser, " 1 n/Clinic r/GP p/123 nt/" + space,
+                    new AddContactCommand(INDEX_FIRST_PATIENT, new Contact("Clinic", "GP", "123", "")));
         }
     }
 
@@ -71,25 +95,24 @@ public class AddContactCommandParserTest {
             String args = " 1" + FIELDS + " nt/note " + prefix + "again";
             assertParseFailure(parser, args, Messages.getErrorMessageForDuplicatePrefixes(prefix));
         }
-        assertParseFailure(parser, " 1" + FIELDS + " x/value",
+        assertParseFailure(parser, " 1 x/value" + FIELDS,
                 String.format(Messages.MESSAGE_UNKNOWN_PREFIX, "x/"));
     }
 
     @Test
-    public void parse_slashWords_rejected() {
-        for (String token : List.of("s/o", "d/o", "c/o", "S/O")) {
-            String prefix = token.substring(0, token.indexOf('/') + 1);
-            String expected = String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix);
-            assertParseFailure(parser, " 1 n/Ali " + token + " Abu r/Emergency p/123", expected);
-            assertParseFailure(parser, " 1" + FIELDS + " nt/Ask " + token + " Clinic", expected);
+    public void parse_punctuatedSlashWords_rejected() {
+        for (String token : List.of("s/o", "d/o", "c/o", "a/l", "a/p")) {
+            String expected = String.format(Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, token + ",", token);
+            assertParseFailure(parser, " 1 n/Tan " + token + ", Lim r/Guardian p/123", expected);
+            assertParseFailure(parser, " 1" + FIELDS + " nt/Call " + token + ", daughter", expected);
         }
     }
 
     @Test
-    public void parse_note_trimmedLikeAppointmentNotes() {
+    public void parse_note_trimsUnicodeWhitespace() {
         assertParseSuccess(parser, " 1" + FIELDS + " nt/  Call in the morning  ",
                 new AddContactCommand(INDEX_FIRST_PATIENT, GP));
-        Contact contact = new Contact(GP.getName(), GP.getRole(), GP.getPhone(), "\u2003Call first\u2003");
+        Contact contact = new Contact(GP.getName(), GP.getRole(), GP.getPhone(), "Call first");
         assertParseSuccess(parser, " 1" + FIELDS + " nt/\u2003Call first\u2003",
                 new AddContactCommand(INDEX_FIRST_PATIENT, contact));
     }

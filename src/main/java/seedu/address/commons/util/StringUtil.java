@@ -5,12 +5,36 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.Normalizer;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Helper functions for handling strings.
  */
 public class StringUtil {
+
+    private static final Pattern NON_WHITESPACE_PATTERN =
+            Pattern.compile("(?U)[^\\s\\p{javaWhitespace}\\x00-\\x20]+");
+
+    /**
+     * Removes leading and trailing Unicode whitespace, including no-break spaces, preserving internal text.
+     * Also removes the control characters handled by {@code String#trim()}.
+     */
+    public static String stripUnicodeWhitespace(String text) {
+        requireNonNull(text);
+        Matcher matcher = NON_WHITESPACE_PATTERN.matcher(text);
+        if (!matcher.find()) {
+            return "";
+        }
+        int start = matcher.start();
+        int end = matcher.end();
+        while (matcher.find()) {
+            end = matcher.end();
+        }
+        return text.substring(start, end);
+    }
 
     /**
      * Returns true if the {@code sentence} contains the {@code word}.
@@ -36,6 +60,22 @@ public class StringUtil {
 
         return Arrays.stream(wordsInPreppedSentence)
                 .anyMatch(preppedWord::equalsIgnoreCase);
+    }
+
+    /**
+     * Returns {@code entry} with every run of whitespace, including Unicode whitespace such as a no-break space
+     * and line breaks, replaced by one space, without leading and trailing whitespace, and in Unicode form NFC,
+     * so that entries that look the same are the same. The letter case is kept.
+     * <br>examples:<pre>
+     *       normalizeEntry("  a \t b ") == "a b"
+     *       normalizeEntry("cafe" + combining acute accent) == "caf" + the single character e with acute accent
+     *       </pre>
+     * @throws NullPointerException if {@code entry} is null.
+     */
+    public static String normalizeEntry(String entry) {
+        requireNonNull(entry);
+        String normalizedWhitespace = entry.replaceAll("(?U)\\s+", " ").trim();
+        return Normalizer.normalize(normalizedWhitespace, Normalizer.Form.NFC);
     }
 
     /**

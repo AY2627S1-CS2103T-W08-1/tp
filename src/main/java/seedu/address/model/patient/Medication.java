@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Represents a medication of a patient: a description and the times of day it is taken.
  * Guarantees: immutable; description is valid with normalized whitespace; times are sorted ascending,
@@ -57,7 +59,7 @@ public class Medication {
         if (!isValidDescription(description)) {
             throw new IllegalArgumentException(MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
-        this.description = description.trim().replaceAll("\\s+", " ");
+        this.description = normalizeDescription(description);
         this.times = times.stream()
                 .map(time -> time.truncatedTo(ChronoUnit.MINUTES))
                 .distinct()
@@ -67,10 +69,22 @@ public class Medication {
 
     /**
      * Returns true if {@code description} contains at least one non-whitespace character.
+     * Unicode whitespace, such as a no-break space, counts as whitespace.
      */
     public static boolean isValidDescription(String description) {
         requireNonNull(description);
-        return !description.isBlank();
+        return !normalizeDescription(description).isEmpty();
+    }
+
+    /**
+     * Returns {@code description} with every run of whitespace, including Unicode whitespace and line breaks,
+     * replaced by one space, without leading and trailing whitespace, and in Unicode form NFC, as for the other
+     * care entries, so that descriptions that look the same are the same.
+     *
+     * @see StringUtil#normalizeEntry(String)
+     */
+    public static String normalizeDescription(String description) {
+        return StringUtil.normalizeEntry(description);
     }
 
     /**

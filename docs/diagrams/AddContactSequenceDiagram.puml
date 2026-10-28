@@ -75,6 +75,17 @@ end
 Model --> AddContactCommand
 deactivate Model
 
+AddContactCommand -> Model : setViewedPatient(editedPatient)
+activate Model
+
+Model -> PatientDetailPanel : viewedPatient listener fires
+activate PatientDetailPanel
+PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
+deactivate PatientDetailPanel
+
+Model --> AddContactCommand
+deactivate Model
+
 create CommandResult
 AddContactCommand -> CommandResult
 activate CommandResult

@@ -71,8 +71,7 @@ public class PatientFormatter {
     /**
      * Returns one numbered line per entry in {@code entries}, e.g., "1. Metformin 500mg",
      * or a single {@code NONE_RECORDED} line if there are no entries.
-     * A line break inside an entry, which only a hand-edited data file can hold, becomes a single space,
-     * so that each entry stays on one numbered line.
+     * Each entry is put on one line by {@code toSingleLine}, so that it stays on one numbered line.
      *
      * @param entries Entries of one list, in the order to number them.
      * @return the lines to show for the list.
@@ -85,11 +84,24 @@ public class PatientFormatter {
 
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < entries.size(); i++) {
-            String entry = LINE_BREAK_PATTERN.splitAsStream(entries.get(i)).map(String::strip)
-                    .filter(line -> !line.isEmpty()).collect(Collectors.joining(" "));
-            lines.add((i + 1) + ". " + entry);
+            lines.add((i + 1) + ". " + toSingleLine(entries.get(i)));
         }
         return lines;
+    }
+
+    /**
+     * Returns {@code entry} on one line: each line break in it, which only a hand-edited data file can hold,
+     * becomes a single space, with the spaces around it removed. Otherwise, the text after a line break,
+     * e.g., "2. Shellfish", could be taken for another numbered entry.
+     * The detail panel and exported records both show entries this way.
+     *
+     * @param entry Entry of a list, e.g., an allergen.
+     * @return the entry without line breaks.
+     */
+    public static String toSingleLine(String entry) {
+        requireNonNull(entry);
+        return LINE_BREAK_PATTERN.splitAsStream(entry).map(String::strip)
+                .filter(line -> !line.isEmpty()).collect(Collectors.joining(" "));
     }
 
     /**

@@ -14,6 +14,23 @@ import seedu.address.model.patient.Contact;
 public class JsonAdaptedContactTest {
 
     @Test
+    public void toModelType_textLength_acceptsLimitsAndRejectsOverlongFields() throws Exception {
+        String name = "n".repeat(Contact.MAX_NAME_LENGTH);
+        String role = "r".repeat(Contact.MAX_ROLE_LENGTH);
+        String note = "\uD83D\uDE00".repeat(Contact.MAX_NOTE_LENGTH);
+        Contact contact = new Contact(name, role, "123", note);
+        assertEquals(contact, new JsonAdaptedContact(contact).toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_NAME_CONSTRAINTS, () ->
+                new JsonAdaptedContact(name + "x", "GP", "123", "").toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_ROLE_CONSTRAINTS, () ->
+                new JsonAdaptedContact("Clinic", role + "x", "123", "").toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_NOTE_CONSTRAINTS, () ->
+                new JsonAdaptedContact("Clinic", "GP", "123", note + "x").toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_NOTE_CONSTRAINTS, () ->
+                new JsonAdaptedContact("Clinic", "GP", "123", " " + note).toModelType());
+    }
+
+    @Test
     public void toModelType_validFields_preserved() throws Exception {
         assertEquals(GP, new JsonAdaptedContact(GP).toModelType());
         Contact withoutNote = new Contact(GP.getName(), GP.getRole(), GP.getPhone(), "");
@@ -48,6 +65,17 @@ public class JsonAdaptedContactTest {
             assertThrows(IllegalValueException.class, Contact.MESSAGE_PHONE_CONSTRAINTS, () ->
                     new JsonAdaptedContact("Clinic", "GP", phone, "").toModelType());
         }
+    }
+
+    @Test
+    public void toModelType_unicodeWhitespace_normalizesFieldsAndPreservesStoredNote() throws Exception {
+        Contact expected = new Contact("Tan & Partners Clinic", "GP", "123", "\u00a0Call first\u00a0");
+        assertEquals(expected, new JsonAdaptedContact("\u00a0Tan\u00a0& Partners Clinic\u202f", "\u2007GP\u00a0",
+                "123", "\u00a0Call first\u00a0").toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_NAME_CONSTRAINTS, () ->
+                new JsonAdaptedContact("\u00a0", "GP", "123", "").toModelType());
+        assertThrows(IllegalValueException.class, Contact.MESSAGE_ROLE_CONSTRAINTS, () ->
+                new JsonAdaptedContact("Clinic", "\u202f", "123", "").toModelType());
     }
 
 }

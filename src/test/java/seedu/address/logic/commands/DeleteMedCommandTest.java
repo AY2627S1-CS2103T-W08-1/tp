@@ -78,7 +78,9 @@ public class DeleteMedCommandTest {
     public void execute_onlyMedication_leavesEmptyList() {
         Patient single = new PatientBuilder(ALICE).withMedications(ASPIRIN).build();
         Model actualModel = createModel(single);
-        Model expectedModel = createModel(new PatientBuilder(single).withMedications(new Medication[0]).build());
+        Patient expectedSingle = new PatientBuilder(single).withMedications(new Medication[0]).build();
+        Model expectedModel = createModel(expectedSingle);
+        expectedModel.setViewedPatient(expectedSingle);
 
         assertCommandSuccess(new DeleteMedCommand(INDEX_FIRST_PATIENT, FIRST_MEDICATION), actualModel,
                 String.format(MESSAGE_DELETE_MEDICATION_SUCCESS, 1, single.getName(), ASPIRIN), expectedModel);
@@ -153,6 +155,25 @@ public class DeleteMedCommandTest {
     }
 
     @Test
+    public void execute_otherPatientViewed_detailPanelShowsEditedPatient() throws Exception {
+        model.addPatient(BENSON);
+        model.setViewedPatient(BENSON);
+
+        new DeleteMedCommand(INDEX_FIRST_PATIENT, FIRST_MEDICATION).execute(model);
+
+        Patient viewed = model.getViewedPatient().getValue();
+        assertEquals(model.getFilteredPatientList().get(0), viewed);
+        assertEquals(List.of(ASPIRIN, AMLODIPINE), viewed.getMedications());
+    }
+
+    @Test
+    public void execute_noPatientViewed_detailPanelShowsEditedPatient() throws Exception {
+        new DeleteMedCommand(INDEX_FIRST_PATIENT, FIRST_MEDICATION).execute(model);
+
+        assertEquals(model.getFilteredPatientList().get(0), model.getViewedPatient().getValue());
+    }
+
+    @Test
     public void execute_repeatedUntilEmpty_thenInvalidMedicationIndex() throws Exception {
         DeleteMedCommand command = new DeleteMedCommand(INDEX_FIRST_PATIENT, FIRST_MEDICATION);
         command.execute(model);
@@ -204,7 +225,9 @@ public class DeleteMedCommandTest {
         showPatientAtIndex(filteredModel, INDEX_SECOND_PATIENT);
 
         Model expectedModel = new ModelManager(filteredModel.getAddressBook(), new UserPrefs());
-        expectedModel.setPatient(patient, new PatientBuilder(patient).withMedications(ASPIRIN, AMLODIPINE).build());
+        Patient expected = new PatientBuilder(patient).withMedications(ASPIRIN, AMLODIPINE).build();
+        expectedModel.setPatient(patient, expected);
+        expectedModel.setViewedPatient(expected);
         showPatientAtIndex(expectedModel, INDEX_SECOND_PATIENT);
 
         assertCommandSuccess(new DeleteMedCommand(INDEX_FIRST_PATIENT, FIRST_MEDICATION), filteredModel,
@@ -243,7 +266,9 @@ public class DeleteMedCommandTest {
      * {@code remaining} as the patient's medications, in order.
      */
     private void assertDeleteSuccess(Index medicationIndex, Medication deleted, Medication... remaining) {
-        Model expectedModel = createModel(new PatientBuilder(patient).withMedications(remaining).build());
+        Patient expectedPatient = new PatientBuilder(patient).withMedications(remaining).build();
+        Model expectedModel = createModel(expectedPatient);
+        expectedModel.setViewedPatient(expectedPatient);
         String expectedMessage = String.format(MESSAGE_DELETE_MEDICATION_SUCCESS, medicationIndex.getOneBased(),
                 patient.getName(), deleted);
         assertCommandSuccess(new DeleteMedCommand(INDEX_FIRST_PATIENT, medicationIndex), model, expectedMessage,

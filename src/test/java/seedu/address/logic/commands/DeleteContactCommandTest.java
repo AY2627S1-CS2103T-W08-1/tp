@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalContacts.GP;
@@ -51,12 +52,13 @@ public class DeleteContactCommandTest {
         assertThrows(CommandException.class, Messages.MESSAGE_INVALID_CONTACT_INDEX, () ->
                 new DeleteContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT).execute(model));
         assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertNull(model.getViewedPatient().getValue());
     }
 
     @Test
     public void execute_filteredList_changesOnlyDisplayedPatient() throws Exception {
         Patient first = new PatientBuilder().withContacts(GP).build();
-        Patient second = new PatientBuilder().withNric("S1111111B").withContacts(GUARDIAN).build();
+        Patient second = new PatientBuilder().withNric("S1111111B").withContacts(GUARDIAN).withArchived(true).build();
         Model model = new ModelManager(new AddressBookBuilder().withPatient(first).withPatient(second).build(),
                 new UserPrefs());
         model.updateFilteredPatientList(candidate -> candidate.isSamePatient(second));
@@ -65,7 +67,23 @@ public class DeleteContactCommandTest {
         assertEquals("Emergency", model.getFilteredPatientList().get(0).getContacts().get(0).getRole());
         new DeleteContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT).execute(model);
         assertEquals(second.withContacts(List.of()), model.getFilteredPatientList().get(0));
+        assertEquals(second.withContacts(List.of()), model.getViewedPatient().getValue());
         assertEquals(first, model.getAddressBook().getPatientList().get(0));
+    }
+
+    @Test
+    public void execute_otherPatientViewed_showsChangedPatient() throws Exception {
+        Patient first = new PatientBuilder().build();
+        Patient second = new PatientBuilder().withNric("S1111111B").withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(first).withPatient(second).build(),
+                new UserPrefs());
+        model.setViewedPatient(first);
+
+        new DeleteContactCommand(INDEX_SECOND_PATIENT, INDEX_FIRST_PATIENT).execute(model);
+
+        assertEquals(second.withContacts(List.of()), model.getViewedPatient().getValue());
+        assertEquals(first, model.getAddressBook().getPatientList().get(0));
+        assertEquals(2, model.getFilteredPatientList().size());
     }
 
     @Test
