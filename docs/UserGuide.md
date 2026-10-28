@@ -109,7 +109,8 @@ Format: `help`
 * The help window stays in front of the main window, and you can keep typing commands in the main window while it
   is open. When you switch to another app, such as a browser, the help window goes behind that app's windows.
   Press `Esc` to close it.
-* If the help window is already open, no second help window is opened.
+* If the help window is already open, no second help window is opened. If it is minimized, it is opened again in
+  front of the main window, and you can keep typing commands.
 
 The command returns `Opened help window.`
 
@@ -997,12 +998,6 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
-
---------------------------------------------------------------------------------------------------------------------
-
-## Known issues
-
-1. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 
 --------------------------------------------------------------------------------------------------------------------
 
