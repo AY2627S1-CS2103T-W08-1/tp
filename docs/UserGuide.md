@@ -767,7 +767,7 @@ A command that fails changes nothing. Errors are reported as follows:
 
 ### Viewing a patient's full details: `view`
 
-Shows all the details of the specified patient in the panel to the right of the patient list.
+Shows all the details of the specified patient in the detail panel, to the right of the patient list.
 
 Format: `view INDEX`
 
@@ -794,9 +794,10 @@ Format: `view INDEX`
   **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`. Clicking or right-clicking the
   panel does not move the cursor out of the command box, so you can paste the copied text into a command straight
   away.
-* The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
-  patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
-  to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
+* The panel keeps showing the patient after commands that do not change a patient, such as `list` or `find`, even
+  if `find` hides the patient from the list. A command that changes a patient's details or care information, e.g.,
+  `edit`, `addcare` or `addappt`, shows that patient instead, with the change, as does `listappt INDEX`. The panel goes
+  back to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
   replaces your data with a backup that does not have this patient with the same details.
 * Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
   `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
@@ -935,7 +936,7 @@ Format: `restore [FILENAME]`
   `data/backups` also has a file with exactly the name given, that file is restored instead.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
-* After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+* After a restore, the list shows all active restored patients. The detail panel is cleared, unless the patient shown there is also in the backup with the same details.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.

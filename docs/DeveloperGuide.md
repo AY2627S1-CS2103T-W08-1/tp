@@ -76,7 +76,7 @@ The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDi
 
 The main window shows two panels side by side:
 
-* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed. Its list cannot take the focus, and `DarkTheme.css` has no style for a selected card, so a click neither takes the focus from the command box nor highlights a patient that the detail panel, which only `view` changes, may not show. The click still selects the card inside the list, but nothing reads that selection. As a trade-off, `Tab` skips the list, so it cannot be scrolled with the keyboard. Before, the arrow keys scrolled it by selecting patients, which showed the same misleading highlight. The mouse wheel, the list's scroll bar and `find` still reach every patient.
+* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed. Its list cannot take the focus, and `DarkTheme.css` has no style for a selected card, so a click neither takes the focus from the command box nor highlights a patient that the detail panel, which only commands change, may not show. The click still selects the card inside the list, but nothing reads that selection. As a trade-off, `Tab` skips the list, so it cannot be scrolled with the keyboard. Before, the arrow keys scrolled it by selecting patients, which showed the same misleading highlight. The mouse wheel, the list's scroll bar and `find` still reach every patient.
 * `PatientDetailPanel` shows the full details of the patient being viewed, including their medications, allergens, care instructions, contacts and appointments. It observes `Logic#getViewedPatient()` and redraws itself whenever that value changes, showing a placeholder message when no patient is being viewed. See the [view patient feature](#view-patient-feature) for how the viewed patient is set and cleared.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
@@ -272,7 +272,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 * `deletePatient(target)` clears the viewed patient if `target` is being viewed.
 * `setAddressBook(...)`, which `clear confirm` and `restore` use, clears the viewed patient unless the new data has the same patient with the same details.
 
-Filtering the patient list (e.g., with `find`) does not change the viewed patient.
+Filtering the patient list (e.g., with `find`) does not change the viewed patient. Commands that change a patient's details or care information, e.g., `edit`, `addcare` and `addappt`, and `listappt INDEX` also call `Model#setViewedPatient()`, with the patient they changed or listed, so that the user can check the result in the panel.
 
 Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
 
@@ -1176,7 +1176,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
-* 4b. The patient is deleted or archived later.
+* 4b. The patient is deleted or archived later, all patients are cleared, or a restore replaces the data with a backup that does not have the patient with the same details.
 
     * 4b1. MediConnect clears the detail panel.
 
@@ -1255,9 +1255,15 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-* 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, or MediConnect has no permission to read it.
+* 3c. The name is given without the `.json` at its end, and there is no file with exactly that name.
 
-    * 4a1. MediConnect shows an error message that the backup could not be read, or that it has no permission to read the backup, and that the data has not been changed.
+    * 3c1. MediConnect restores the backup whose name is the given name with `.json` added.
+
+      Use case resumes at step 4.
+
+* 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, is not saved as UTF-8, or MediConnect has no permission to read it.
+
+    * 4a1. MediConnect shows an error message that the backup could not be read, that it is not saved as UTF-8, or that it has no permission to read the backup, and that the data has not been changed.
 
       Use case ends.
 
@@ -1784,6 +1790,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   appointment passes.
 * **Archive**: To remove a patient's profile from the active patient list while keeping all of its records for future
   reference. Unlike deleting, archiving does not remove any data.
+* **Backup**: A copy of all patient data, saved by `backup` (or automatically before `clear confirm` and `restore`) as
+  a JSON file in `data/backups`, named after the date and time it was made. `restore` replaces the data with one.
 * **Care handover**: The transfer of responsibility for a patient's care from one person to another, e.g., from the
   main caregiver to a relative while the caregiver is travelling.
 * **Care information**: The care-related records in a patient's profile, i.e., allergies, medications, care
@@ -1799,6 +1807,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   GP, specialist, or pharmacist) or an emergency contact.
 * **Daily time**: A time of day, in 24-hour `HH:MM` format, at which a patient takes a medication every day, e.g.,
   `08:00`. A medication can have any number of daily times, or none.
+* **Detail panel**: The panel to the right of the patient list that shows the full details of one patient: the one
+  last shown with `view INDEX`, or by a command that changed them, e.g., `addcare`. It shows a placeholder message
+  when no patient is shown.
 * **Display scaling**: An operating system setting that enlarges text and other on-screen elements by a percentage
   (e.g., 125%) to make them easier to read.
 * **Dose**: One daily time of one medication of one patient. `due` lists one line for each dose.
