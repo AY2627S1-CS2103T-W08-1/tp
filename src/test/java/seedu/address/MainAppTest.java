@@ -2,6 +2,7 @@ package seedu.address;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,8 +14,10 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -28,11 +31,13 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Phone;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
+import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PatientUtil;
 import seedu.address.ui.Ui;
@@ -239,6 +244,92 @@ public class MainAppTest {
     }
 
     @Test
+    public void start_failedStartup_presentsErrorBeforeExit() throws Exception {
+        Path dataFile = Files.createDirectory(temporaryFolder.resolve("mediconnect.json"));
+        List<String> events = new ArrayList<>();
+        MainApp app = new MainApp(dataFile, temporaryFolder.resolve("preferences.json"),
+                message -> events.add("error: " + message), () -> events.add("exit"));
+
+        app.init();
+        app.start(null);
+        app.stop();
+
+        String expectedMessage = String.format(MainApp.MESSAGE_STARTUP_FAILURE, dataFile.toAbsolutePath(),
+                MainApp.MESSAGE_DATA_PATH_DIRECTORY);
+        assertEquals(List.of("error: " + expectedMessage, "exit"), events);
+        assertNull(app.model);
+        assertNull(app.ui);
+        assertTrue(Files.isDirectory(dataFile));
+    }
+
+    @Test
+    public void init_dataPathIsDirectory_startShowsErrorAndStopIsSafe() throws Exception {
+        Path dataFile = Files.createDirectory(temporaryFolder.resolve("mediconnect.json"));
+        StartupAppStub app = new StartupAppStub(dataFile, temporaryFolder.resolve("preferences.json"), null);
+
+        app.init();
+        app.start(null);
+        app.stop();
+
+        assertEquals(String.format(MainApp.MESSAGE_STARTUP_FAILURE, dataFile.toAbsolutePath(),
+                MainApp.MESSAGE_DATA_PATH_DIRECTORY), app.startupError);
+        assertNull(app.model);
+        assertNull(app.logic);
+        assertNull(app.ui);
+        assertTrue(Files.isDirectory(dataFile));
+        assertTrue(getRecoveryFiles().isEmpty());
+    }
+
+    @Test
+    public void init_dataAccessDenied_startExplainsPermissionsWithoutChangingData() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Files.writeString(dataFile, INVALID_DATA);
+        StartupAppStub app = new StartupAppStub(dataFile, temporaryFolder.resolve("preferences.json"),
+                new AccessDeniedException(dataFile.toString()));
+
+        app.init();
+        app.start(null);
+        app.stop();
+
+        assertEquals(String.format(MainApp.MESSAGE_STARTUP_FAILURE, dataFile.toAbsolutePath(),
+                MainApp.MESSAGE_DATA_ACCESS_DENIED), app.startupError);
+        assertEquals(INVALID_DATA, Files.readString(dataFile));
+        assertNull(app.ui);
+    }
+
+    @Test
+    public void init_otherRecoveryFailure_startShowsSafeMessage() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        Files.writeString(dataFile, INVALID_DATA);
+        StartupAppStub app = new StartupAppStub(dataFile, temporaryFolder.resolve("preferences.json"),
+                new IOException("private exception details"));
+
+        app.init();
+        app.start(null);
+
+        assertEquals(String.format(MainApp.MESSAGE_STARTUP_FAILURE, dataFile.toAbsolutePath(),
+                MainApp.MESSAGE_DATA_PRESERVATION_FAILED), app.startupError);
+        assertFalse(app.startupError.contains("private exception details"));
+        assertEquals(INVALID_DATA, Files.readString(dataFile));
+    }
+
+    @Test
+    public void init_validData_startOpensUiNormally() throws Exception {
+        Path dataFile = temporaryFolder.resolve("mediconnect.json");
+        createStorage(dataFile).saveAddressBook(SampleDataUtil.getSampleAddressBook());
+        StartupAppStub app = new StartupAppStub(dataFile, temporaryFolder.resolve("preferences.json"), null);
+
+        app.init();
+        UiStub ui = new UiStub();
+        app.ui = ui;
+        app.start(null);
+
+        assertTrue(ui.isStarted);
+        assertNull(app.startupError);
+        assertEquals(SampleDataUtil.getSampleAddressBook(), app.model.getAddressBook());
+    }
+
+    @Test
     public void stop_savesUserPrefs() throws Exception {
         Path prefsFile = temporaryFolder.resolve("userPrefs.json");
         JsonAddressBookStorage addressBookStorage =
@@ -299,6 +390,32 @@ public class MainAppTest {
     private List<Path> getRecoveryFiles() throws IOException {
         try (var files = Files.list(temporaryFolder)) {
             return files.filter(path -> path.getFileName().toString().startsWith("mediconnect-unreadable-")).toList();
+        }
+    }
+
+    /**
+     * Captures startup errors without opening a dialog or exiting the test process.
+     */
+    private static class StartupAppStub extends MainApp {
+        private final IOException failure;
+        private String startupError;
+
+        StartupAppStub(Path dataFile, Path prefsFile, IOException failure) {
+            super(dataFile, prefsFile);
+            this.failure = failure;
+        }
+
+        @Override
+        protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) throws IOException {
+            if (failure != null) {
+                throw failure;
+            }
+            return super.initModelManager(storage, userPrefs);
+        }
+
+        @Override
+        protected void showStartupError(String message) {
+            startupError = message;
         }
     }
 

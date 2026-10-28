@@ -212,7 +212,14 @@ the cause. The first invalid entry is reported. Both startup and `restore` use t
 validation messages for `IllegalValueException` causes; other read failures receive a generic format/permissions
 message rather than raw parser exceptions that can include file contents. Later commands
 save normally to the original data path. If preservation fails, the exception stops initialization before commands
-can overwrite the file. JSON validation stays in storage; startup recovery stays in `MainApp`.
+can overwrite the file. `MainApp#init()` records this `IOException` instead of letting JavaFX abort initialization.
+`MainApp#start()` then uses `UiManager#showStartupError()` to show an error dialog without a main-window owner,
+on the JavaFX application thread, before exiting. The dialog names the data-file path and distinguishes a
+directory path, denied access, and other preservation failures without displaying raw parser exceptions.
+The dialog and exit actions can be supplied through a package-private constructor for tests. A regression runs
+the real startup-error method and checks that the error is presented before exit; the UI tests cover the dialog.
+No model, logic or main window is created after a preservation failure, and `stop()` skips preference saving
+when there is no model. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
 ### Common classes
 
@@ -1728,7 +1735,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation.
 2. MediConnect must work on Windows, Linux, and macOS computers with Java `25` installed.
 3. MediConnect must be distributed as a single JAR file of no more than 100 MB and must not require an installer.
-4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors.
+4. MediConnect must store its data locally in a human-editable JSON text file that can be edited in a standard text editor. If the edited file is invalid, MediConnect must start with no patients, keep a copy of the unreadable file, and show a warning with the copy's path and failure details, including the file entry position for patient validation errors. If the recovery copy cannot be created, it must instead show a startup error and exit without changing patient data.
 5. MediConnect must not use a database management system.
 6. MediConnect must not depend on a team-owned remote server for its essential features and must remain usable without an Internet connection.
 7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
@@ -2209,6 +2216,26 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, replace the data file with malformed JSON, such as `{"persons": [`, and launch.<br>
       Expected: The warning keeps the recovery path and asks you to check the JSON format and file permissions.
       It does not display raw parser exceptions or claim to identify a patient entry.
+
+### Startup failures that prevent data recovery
+
+1. Prerequisites: Use a disposable app folder. With the app closed, create a directory named
+   `data/mediconnect.json` in place of the data file. Keep any real data elsewhere.
+
+1. Launch MediConnect.<br>
+   Expected: No main window opens. An error dialog titled `MediConnect could not start` gives the data-file
+   path and says it is a folder instead of a file. Closing the dialog exits the app. The directory is unchanged.
+
+1. Replace that directory with a valid data file and relaunch.<br>
+   Expected: The main window opens normally with the saved patients.
+
+1. Where file permissions can be controlled, deny read access to the test data file, then launch.<br>
+   Expected: A startup error explains the read/copy permission problem. The patient data remains unchanged.
+   Restore permissions before continuing. Do not run this test with an account that bypasses those permissions.
+
+1. Alternatively, use malformed JSON in a readable test data file and deny write access to its containing folder.<br>
+   Expected: Failure to create a recovery copy produces the same startup error instead of opening an empty model.
+   Restore permissions and repair or replace the test file before relaunching.
 
 ### Backing up data
 
