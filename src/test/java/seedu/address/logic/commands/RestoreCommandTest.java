@@ -277,6 +277,18 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_backupWithUnpairedSurrogateEscape_throwsCommandException() throws Exception {
+        // Equivalence partitioning: a backup edited by hand to hold half of a surrogate pair in a name, which
+        // must not be restored and then saved as "?"
+        writeBackup(createAddressBook(HOON, IDA));
+        Path backupFile = temporaryFolder.resolve(BACKUP_NAME);
+        String name = HOON.getName().fullName;
+        Files.writeString(backupFile, Files.readString(backupFile).replace(name, "\\ud800" + name));
+
+        assertRestoreFailure(String.format(RestoreCommand.MESSAGE_UNREADABLE, BACKUP_NAME));
+    }
+
+    @Test
     public void execute_folderWithBackupName_throwsCommandException() throws Exception {
         Files.createDirectory(temporaryFolder.resolve(BACKUP_NAME));
 

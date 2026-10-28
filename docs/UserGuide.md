@@ -89,7 +89,8 @@ Format: `help`
 * The help window stays in front of the main window, and you can keep typing commands in the main window while it
   is open. When you switch to another app, such as a browser, the help window goes behind that app's windows.
   Press `Esc` to close it.
-* If the help window is already open, no second help window is opened.
+* If the help window is already open, no second help window is opened. If it is minimized, it is opened again in
+  front of the main window, and you can keep typing commands.
 
 The command returns `Opened help window.`
 
@@ -148,6 +149,10 @@ Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` 
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
 
 Leading and trailing spaces in every field are ignored. A word that looks like an unknown prefix, such as `x/12`, is not allowed in any field (see the `add` command).
+This also applies to the first word immediately after a field prefix: `a/x/123` is rejected just like
+`a/Blk 1 x/123`. A prefix cannot be embedded there as text, even if it is valid elsewhere in that command.
+Each command's supported standalone slash words remain allowed; keep them separate from punctuation.
+Addresses can still begin with numeric slash text such as `a/21/3` or a URL such as `a/https://example.com`.
 
 ### Adding care information: `addcare`
 
@@ -340,21 +345,24 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 
 * Name, role and phone are required. Each prefix can appear only once; fields can appear in any order.
 * Names are nonblank free text, so both people and organisations such as `Tan & Partners Clinic` are supported.
-  Leading/trailing whitespace is removed and repeated spaces in a name become one.
+  Leading/trailing Unicode whitespace, including copied no-break spaces, is removed. Repeated whitespace
+  inside a name becomes one ordinary space.
 * Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
-  other roles are allowed.
+  other roles are allowed. Surrounding Unicode whitespace is removed; a whitespace-only role is rejected.
 * Contact phones must contain 3 to 15 digits (`0`–`9`). Spaces and hyphens are allowed and do not count toward
   this limit. At most one `+` is allowed, at the start after trimming, e.g., `+44 20 7946 0958`.
   These differ from patient-phone rules so overseas and short clinic numbers such as `123` remain supported.
   Formatting is preserved after trimming. Extensions and parentheses are not supported.
 * The note is optional. An omitted or empty `nt/` creates a contact without a note.
-  Surrounding spaces are removed from notes entered through commands.
-* A contact with the same name (ignoring case and repeated spaces) and phone (ignoring spaces and hyphens)
+  Surrounding Unicode whitespace is removed from notes entered through commands. A whitespace-only `nt/`
+  gives an empty note; this also clears an existing note in `editcontact`. Internal note spacing is preserved.
+* A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same contact can belong to different patients.
-* Unknown prefixes and repeated prefixes are rejected. Words starting with unrecognised letters followed by `/`,
-  including standalone `s/o`, `d/o` and `c/o`, are rejected.
-  Standalone `a/l` and `a/p` are allowed in free text, ignoring letter case.
+* Unknown prefixes and repeated prefixes are rejected. Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are
+  allowed in names, roles and notes, ignoring letter case, e.g., `n/Tan s/o Lim` or `nt/Call c/o daughter`.
+  Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
+  Other words starting with unrecognised letters followed by `/` are rejected.
   Text matching a recognised prefix after a space starts another field, even inside a note.
 * Contacts appear in insertion order, numbered in the `view` panel. If that patient is already viewed,
   the panel updates immediately. Existing care information is preserved.
@@ -371,6 +379,10 @@ A duplicate returns `This contact (identified by name and phone) already exists.
 The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
 that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
 in a copy of the file using the [data recovery instructions](#editing-the-data-file).
+
+Saved contact names and roles follow the same whitespace rules. Whitespace-only names or roles and contacts
+that become duplicates after name normalization are rejected when loaded or restored. Stored note formatting
+is preserved; Unicode trimming of notes applies only to values entered through commands.
 
 ### Editing a contact: `editcontact`
 
@@ -725,6 +737,8 @@ Format: `view INDEX`
   shown until the patient is shown again.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+* A line break inside an entry, which only editing the data file by hand can add, is shown as a space, as in an
+  exported record, so that each entry stays on its own numbered line.
 * To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
   **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
 * The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
@@ -822,7 +836,7 @@ Saves a copy of all patient data to the `data/backups` folder, inside the folder
 Format: `backup`
 
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
-* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten.
+* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten. This also holds when two backups are made at the same moment, e.g., in two MediConnect windows, or when `restore` or `clear confirm` backs up your data while you make a backup. To let such backups take turns, MediConnect keeps an empty file named `.backup.lock` in `data/backups`; it is not a backup, and `restore` does not list it.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
@@ -850,7 +864,7 @@ Format: `restore [FILENAME]`
 
 * `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
-* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`.
+* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
   For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
   counting from 1, and the validation reason.
@@ -866,7 +880,7 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
 
-`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.`
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there.
 
 ### Exporting a patient's record: `export`
 
@@ -969,12 +983,6 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
-
---------------------------------------------------------------------------------------------------------------------
-
-## Known issues
-
-1. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 
 --------------------------------------------------------------------------------------------------------------------
 

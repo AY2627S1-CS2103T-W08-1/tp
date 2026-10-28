@@ -27,10 +27,29 @@ public class ArgumentTokenizerTest {
 
     @Test
     public void verifyNoInvalidPrefixes_allowedTokens_success() throws Exception {
-        ArgumentTokenizer.verifyNoInvalidPrefixes("p/value/suffix custom/token CUSTOM/TOKEN",
+        ArgumentTokenizer.verifyNoInvalidPrefixes("p/21/3 custom/token CUSTOM/TOKEN",
                 Set.of("custom/token"), pSlash);
         ArgumentTokenizer.verifyNoInvalidPrefixes(" -t value ^Q value 21/3 x1/123 /hello _/value https://example.com",
                 Set.of(), dashT, hatQ);
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_firstValueWord_rejectsPrefixLikeText() {
+        for (String token : List.of("x/123", "p/123", "value/suffix", "med/p/9")) {
+            String prefix = token.substring(0, token.indexOf('/') + 1);
+            assertThrows(ParseException.class, String.format(Messages.MESSAGE_UNKNOWN_PREFIX, prefix), () ->
+                    ArgumentTokenizer.verifyNoInvalidPrefixes("p/" + token, Set.of(), pSlash));
+        }
+        assertThrows(ParseException.class,
+                String.format(Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN, "s/o,", "s/o"), () ->
+                ArgumentTokenizer.verifyNoInvalidPrefixes("p/s/o,", Set.of("s/o"), pSlash));
+    }
+
+    @Test
+    public void verifyNoInvalidPrefixes_firstValueWord_keepsAllowedText() throws Exception {
+        for (String token : List.of("21/3", "https://example.com/path", "custom/token", "CUSTOM/TOKEN")) {
+            ArgumentTokenizer.verifyNoInvalidPrefixes("p/" + token, Set.of("custom/token"), pSlash);
+        }
     }
 
     @Test
