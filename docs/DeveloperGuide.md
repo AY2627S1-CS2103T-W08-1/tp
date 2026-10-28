@@ -382,7 +382,7 @@ The sequence diagram below shows a successful `restore old.json`.
 <puml src="diagrams/RestoreSequenceDiagram.puml" alt="Interactions for the `restore old.json` Command" />
 
 1. `RestoreCommandParser` returns a `ListBackupsCommand` if no `FILENAME` is given. It lists the `.json` files in `data/backups` by the time they were last changed, newest first, so that the user can copy a name. Files changed at the same time, e.g., after being copied together, are listed by name, last first, with numbers compared by value, so that `-10` comes before `-9`. Otherwise, it checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
-1. `RestoreCommand#execute()` reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
+1. `RestoreCommand#execute()` first finds the file. If no file has the given name, but one with `.json` added does, e.g., for `restore mediconnect-20261020-083015`, it restores that file, and its messages give that file's name. It reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
 1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
 1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored, how many of them are archived, since only active patients are then listed, and the path of the automatic backup.
 1. As after every command that changes the patient data, `LogicManager` then saves the `Model`, which replaces `data/mediconnect.json`.
@@ -2083,12 +2083,15 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `restore FILENAME`, where `FILENAME` is the name of the automatic backup from the previous test case<br>
       Expected: The data from before the previous restore is back, i.e., the patient is deleted again.
 
+   1. Test case: `restore FILENAME`, where `FILENAME` is the name you noted first, without the `.json` at the end<br>
+      Expected: The same as the first test case. The status message gives the name with `.json`.
+
 1. Listing the backups
 
    1. Prerequisites: The test cases under "Restoring a backup" above have been run.
 
    1. Test case: `restore`<br>
-      Expected: The data is unchanged. The status message lists the backups in `data/backups`, newest first: the automatic backups made by the two restores, then the backup you made.
+      Expected: The data is unchanged. The status message lists the backups in `data/backups`, newest first: the automatic backups made by the three restores, then the backup you made.
 
 1. Restoring a file that cannot be restored
 
