@@ -233,6 +233,12 @@ the real startup-error method and checks that the error is presented before exit
 No model, logic or main window is created after a preservation failure, and `stop()` skips preference saving
 when there is no model. JSON validation stays in storage; startup recovery stays in `MainApp`.
 
+When startup reaches `initModelManager` and the data file is missing, `MainApp` uses sample patients and attempts
+to save them once through `createDataFileIfMissing`. If that save throws `IOException`, startup continues and the existing startup warning
+dialog explains that the samples are unsaved, giving the absolute data path and a reason formatted by
+`Messages#describeWriteFailure`. `MainApp#start` shows the warning after `Ui#start`; no new UI is needed.
+Successful initial saves produce no warning. Command-time save failures still roll back through `LogicManager`.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -2250,6 +2256,18 @@ testers are expected to do more *exploratory* testing.
    1. In a disposable app folder, replace the data file with malformed JSON, such as `{"persons": [`, and launch.<br>
       Expected: The warning keeps the recovery path and asks you to check the JSON format and file permissions.
       It does not display raw parser exceptions or claim to identify a patient entry.
+
+1. Starting when a missing data file cannot be created
+
+   1. Prerequisites: Use a disposable folder containing the app JAR, with the app closed and no existing data.
+      Create a regular file named `data` (without an extension) in that folder, so it blocks the data folder.
+
+   1. Launch the app.<br>
+      Expected: The sample patients appear, then a warning says they are not saved, names the full data-file path,
+      gives a reason and asks you to check the parent folder and free space. The blocking file is unchanged.
+
+   1. Close the app, move the blocking file elsewhere, and relaunch.<br>
+      Expected: The app creates `data/mediconnect.json` with sample patients and shows no creation warning.
 
 ### Startup failures that prevent data recovery
 
