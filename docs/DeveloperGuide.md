@@ -260,7 +260,7 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 1. `ViewCommand` calls `Model#setViewedPatient()` with the selected patient.
 1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, care instruction, contact or appointment list. Each entry is shown on one line by `PatientFormatter#toSingleLine()`, which exported records also use, so that a line break stored in a hand-edited entry cannot look like another numbered entry.
 
-`ModelManager` keeps the viewed patient consistent with the address book:
+`ModelManager` keeps the viewed patient consistent with the patient data:
 
 * `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information. If the change archives the viewed patient, as `archive` does, it clears the viewed patient instead.
 * `deletePatient(target)` clears the viewed patient if `target` is being viewed.
@@ -300,11 +300,11 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 
 `ClearCommand#execute()` first calls `BackupCommand#execute()` to save all current data using the existing
 backup implementation. A backup failure propagates as a `CommandException` before the model is changed.
-Only after the backup succeeds does it replace the entire address book with an empty one through `Model#setAddressBook()`,
+Only after the backup succeeds does it replace all the patients with an empty list through `Model#setAddressBook()`,
 including archived patients and patients hidden by a filter. The existing model logic clears the viewed patient.
 The success message includes the backup location. `LogicManager` saves the change and restores its snapshot
 if saving fails; the automatic backup remains available. Backups include archived and filtered-out patients,
-even for an empty address book, and can be recovered with `restore`.
+even when there are no patients, and can be recovered with `restore`.
 
 ### Edit patient feature
 
@@ -573,7 +573,7 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
    with the usage message of `due`. It creates a `DueCommand` with a `java.time.Clock` from
    `Clock.systemDefaultZone()`, and with the index if one was given.
 1. `DueCommand#execute()` chooses the patients to list. With an index, it resolves the index against the filtered
-   patient list. Without one, it takes every patient in the address book, so that a `find` does not hide a dose.
+   patient list. Without one, it takes every patient in MediConnect, so that a `find` does not hide a dose.
    Archived patients are always left out.
 1. It reads the current time as `LocalTime.now(clock)`, cut to the minute, and turns every time of every medication
    into a dose. The doses are sorted by time, then by patient name, then by NRIC.
@@ -607,41 +607,43 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
 
 #### Proposed Implementation
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
+MediConnect has no `undo` or `redo` command yet, and the User Guide does not list them. This section describes how they could be added.
 
-* `VersionedAddressBook#commit()` -- Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` -- Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` -- Restores a previously undone address book state from its history.
+The proposed undo/redo mechanism is facilitated by `VersionedPatientData`. It extends `AddressBook`, the class that holds all the patients, active and archived, with an undo/redo history, stored internally as a `patientDataStateList` and `currentStatePointer`. Additionally, it implements the following operations:
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
+* `VersionedPatientData#commit()` -- Saves the current patient data in its history.
+* `VersionedPatientData#undo()` -- Restores the previous patient data from its history.
+* `VersionedPatientData#redo()` -- Restores previously undone patient data from its history.
+
+These operations are exposed in the `Model` interface as `Model#commitPatientData()`, `Model#undoPatientData()` and `Model#redoPatientData()` respectively.
 
 Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
 
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
+Step 1. The caregiver launches MediConnect for the first time. The `VersionedPatientData` will be initialized with the patient data that is loaded from the data file, and the `currentStatePointer` pointing to that single state.
 
 <puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+Step 2. The caregiver executes `delete 5` to delete the 5th patient in the patient list. The `delete` command calls `Model#commitPatientData()`, causing the modified patient data after the `delete 5` command executes to be saved in the `patientDataStateList`, and the `currentStatePointer` is shifted to the newly inserted state.
 
 <puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+Step 3. The caregiver executes `editmed 1 1 med/Aspirin 75mg` to change the description of the 1st medication of the 1st patient. The `editmed` command also calls `Model#commitPatientData()`, causing another modified state to be saved into the `patientDataStateList`.
 
 <puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
 
 <box type="info" seamless>
 
-**Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
+**Note:** If a command fails its execution, it will not call `Model#commitPatientData()`, so the patient data will not be saved into the `patientDataStateList`.
 </box>
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+Step 4. The caregiver now decides that editing the medication was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoPatientData()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous state, and restores the patient data to that state.
 
 <puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
 
 
 <box type="info" seamless>
 
-**Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
+**Note:** If the `currentStatePointer` is at index 0, pointing to the initial state, then there are no previous states to restore. The `undo` command uses `Model#canUndoPatientData()` to check if this is the case. If so, it will return an error to the caregiver rather
 than attempting to perform the undo.
 </box>
 
@@ -658,22 +660,24 @@ Similarly, how an undo operation goes through the `Model` component is shown bel
 
 <puml src="diagrams/UndoSequenceDiagram-Model.puml" alt="UndoSequenceDiagram-Model" />
 
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
+The `redo` command does the opposite — it calls `Model#redoPatientData()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the patient data to that state.
 
 <box type="info" seamless>
 
-**Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
+**Note:** If the `currentStatePointer` is at index `patientDataStateList.size() - 1`, pointing to the latest state, then there are no undone states to restore. The `redo` command uses `Model#canRedoPatientData()` to check if this is the case. If so, it will return an error to the caregiver rather than attempting to perform the redo.
 </box>
 
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
+As for any command that changes patient data, `LogicManager` would save the restored patient data through `Storage` after an `undo` or a `redo`.
+
+Step 5. The caregiver then decides to execute the command `list`. Commands that do not modify the patient data, such as `list`, will usually not call `Model#commitPatientData()`, `Model#undoPatientData()` or `Model#redoPatientData()`. Thus, the `patientDataStateList` remains unchanged.
 
 <puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
 
-Step 6. The user executes `clear confirm`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
+Step 6. The caregiver executes `clear confirm`, which calls `Model#commitPatientData()`. Since the `currentStatePointer` is not pointing at the end of the `patientDataStateList`, all states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `editmed 1 1 med/Aspirin 75mg` command. This is the behavior that most modern desktop applications follow.
 
 <puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
 
-The following activity diagram summarizes what happens when a user executes a new command:
+The following activity diagram summarizes what happens when a caregiver executes a new command:
 
 <puml src="diagrams/CommitActivityDiagram.puml" width="250" />
 
@@ -681,16 +685,14 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 **Aspect: How undo & redo execute:**
 
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
+* **Alternative 1 (current choice):** Saves the entire patient data.
+  * Pros: Easy to implement. `LogicManager` already takes a `Model.Snapshot` of the patient data before each command, to restore it if a save fails, so part of the mechanism exists.
+  * Cons: May have performance issues in terms of memory usage, as every patient with all their medications, contacts and appointments is saved in each state.
 
 * **Alternative 2:** Individual command knows how to undo/redo by
   itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
+  * Pros: Will use less memory (e.g. for `delete`, just save the patient being deleted).
   * Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -2223,7 +2225,7 @@ testers are expected to do more *exploratory* testing.
    A new backup contains all previous active and archived patients. Note its file name for the recovery check below.
 
 1. Test case: `clear confirm` again<br>
-   Expected: The same success message and a new backup path. The empty address book is backed up without
+   Expected: The same success message and a new backup path. A backup of no patients is made without
    overwriting the earlier backup.
 
 1. Test case: `restore FILENAME`, using the backup noted before the repeated clear<br>
