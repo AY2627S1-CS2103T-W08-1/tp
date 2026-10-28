@@ -259,6 +259,20 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_canonicallyEquivalentCareEntry_throwsIllegalValueException() {
+        JsonAdaptedPatient duplicateAllergens = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of("Caf\u00e9", "Cafe\u0301"), List.of(), null, null, null);
+        JsonAdaptedPatient duplicateInstructions = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB,
+                VALID_PHONE, VALID_ADDRESS, List.of(), List.of(),
+                List.of("R\u00e9sum\u00e9", "Re\u0301sume\u0301"), null, null, null);
+
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_DUPLICATE_ALLERGEN,
+                duplicateAllergens::toModelType);
+        assertThrows(IllegalValueException.class, Patient.MESSAGE_DUPLICATE_CARE_INSTRUCTION,
+                duplicateInstructions::toModelType);
+    }
+
+    @Test
     public void toModelType_duplicateContacts_keepsCause() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
                 VALID_ADDRESS, List.of(), List.of(), List.of(),
