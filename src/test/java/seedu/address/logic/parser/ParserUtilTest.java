@@ -41,6 +41,13 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseIndex_nonAsciiDigits_throwsParseException() {
+        for (String index : new String[] {"\uff12", "\u0662", "\uff10\uff11", "1\uff12"}) {
+            assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, () -> ParserUtil.parseIndex(index));
+        }
+    }
+
+    @Test
     public void parseIndex_outOfRangeInput_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, ()
             -> ParserUtil.parseIndex(Long.toString(Integer.MAX_VALUE + 1)));
@@ -105,6 +112,21 @@ public class ParserUtilTest {
     @Test
     public void parseName_curlyApostrophe_returnsNameWithStraightApostrophe() throws Exception {
         assertEquals(new Name("O'Brien"), ParserUtil.parseName("O’Brien"));
+    }
+
+    @Test
+    public void parseName_otherTypedApostrophes_returnsNameWithStraightApostrophe() throws Exception {
+        // the left single quotation mark and the modifier letter apostrophe, which phones and Word also type
+        assertEquals(new Name("Mary O'Brien"), ParserUtil.parseName("Mary O\u2018Brien"));
+        assertEquals(new Name("Mary O'Brien"), ParserUtil.parseName("Mary O\u02bcBrien"));
+    }
+
+    @Test
+    public void parseName_apostropheLookAlike_throwsParseException() {
+        // a backtick, an acute accent and a prime are not apostrophes, so they are not changed into one
+        for (String name : new String[] {"Mary O`Brien", "Mary O\u00b4Brien", "Mary O\u2032Brien"}) {
+            assertThrows(ParseException.class, () -> ParserUtil.parseName(name));
+        }
     }
 
     @Test
@@ -249,8 +271,8 @@ public class ParserUtilTest {
     @Test
     public void parseTime_invalidInput_throwsParseException() {
         String message = Medication.MESSAGE_TIME_CONSTRAINTS;
-        for (String invalidTime : new String[] {"", WHITESPACE, "24:00", "08:60", "8:30", "08:5", "0830", "08.30",
-            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30",
+        for (String invalidTime : new String[] {"", WHITESPACE, "24:00", "08:60", "9:60", "08:5", "0830", "08.30",
+            "08:30:00", "ab:cd", "-1:30", "+8:30", "08:30pm", "08 : 30", "8:5", ":30", "1:2:3",
             "\uff10\uff18:\uff13\uff10", "0\u0663:30"}) {
             assertThrows(ParseException.class, message, () -> ParserUtil.parseTime(invalidTime));
         }
@@ -261,6 +283,19 @@ public class ParserUtilTest {
         assertEquals(LocalTime.MIDNIGHT, ParserUtil.parseTime("00:00"));
         assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("08:30"));
         assertEquals(LocalTime.of(23, 59), ParserUtil.parseTime("23:59"));
+    }
+
+    @Test
+    public void parseTime_oneDigitHour_returnsLocalTime() throws Exception {
+        assertEquals(LocalTime.of(9, 30), ParserUtil.parseTime("9:30"));
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("8:30"));
+        assertEquals(LocalTime.of(0, 5), ParserUtil.parseTime("0:05"));
+        assertEquals(LocalTime.of(9, 0), ParserUtil.parseTime(WHITESPACE + "9:00" + WHITESPACE));
+    }
+
+    @Test
+    public void parseTime_oneDigitHourWithInvalidMinute_throwsParseException() {
+        assertThrows(ParseException.class, Medication.MESSAGE_TIME_CONSTRAINTS, () -> ParserUtil.parseTime("9:60"));
     }
 
     @Test
@@ -278,6 +313,33 @@ public class ParserUtilTest {
         String message = Medication.MESSAGE_DESCRIPTION_CONSTRAINTS;
         assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(""));
         assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(WHITESPACE));
+    }
+
+    @Test
+    public void parseMedicationDescription_overlongDescription_throwsParseException() throws Exception {
+        String atLimit = "m".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        assertEquals(atLimit, ParserUtil.parseMedicationDescription(atLimit));
+        String overLimit = atLimit + "m";
+        String message = Medication.MESSAGE_DESCRIPTION_TOO_LONG;
+        assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(overLimit));
+    }
+
+    @Test
+    public void parseMedicationDescription_longOnlyBecauseOfNoBreakSpaces_accepted() throws Exception {
+        String word = "m".repeat(249);
+        String description = word + "\u00a0".repeat(5) + word; // 503 characters, 499 after normalization
+        assertEquals(description, ParserUtil.parseMedicationDescription(description));
+
+        String paddedDescription = "\u00a0".repeat(10) + "m".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        assertEquals(paddedDescription.strip(), ParserUtil.parseMedicationDescription(paddedDescription).strip());
+    }
+
+    @Test
+    public void parseMedicationDescription_longAfterNormalization_throwsParseException() {
+        String word = "m".repeat(250);
+        String description = word + "\u00a0\u00a0 " + word + "m"; // 502 characters after normalization
+        String message = Medication.MESSAGE_DESCRIPTION_TOO_LONG;
+        assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(description));
     }
 
     @Test

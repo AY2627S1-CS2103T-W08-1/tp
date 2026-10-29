@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -13,6 +14,11 @@ import seedu.address.model.patient.NameContainsKeywordsPredicate;
 public class FindCommandParserTest {
 
     private FindCommandParser parser = new FindCommandParser();
+
+    @Test
+    public void parse_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
 
     @Test
     public void parse_emptyArg_throwsParseException() {
@@ -40,6 +46,29 @@ public class FindCommandParserTest {
 
         // multiple whitespaces between keywords
         assertParseSuccess(parser, " \n Alice \n \t Bob  \t", expectedFindCommand);
+    }
+
+    @Test
+    public void parse_unicodeSpacesBetweenKeywords_splitsIntoKeywords() {
+        FindCommand expectedFindCommand =
+                new FindCommand(new NameContainsKeywordsPredicate(List.of("Alex", "Yeoh")));
+
+        // a no-break space, an em space and an ideographic space, as copied from other applications
+        assertParseSuccess(parser, "Alex\u00a0Yeoh", expectedFindCommand);
+        assertParseSuccess(parser, "\u00a0Alex\u2003Yeoh\u3000", expectedFindCommand);
+        assertParseSuccess(parser, "Alex \u00a0 Yeoh", expectedFindCommand);
+    }
+
+    @Test
+    public void parse_onlyUnicodeSpaces_throwsParseException() {
+        assertParseFailure(parser, "\u00a0", FindCommandParser.MESSAGE_NO_KEYWORDS);
+        assertParseFailure(parser, " \u2003\u3000 ", FindCommandParser.MESSAGE_NO_KEYWORDS);
+    }
+
+    @Test
+    public void parse_decomposedAccentKeyword_returnsComposedKeyword() {
+        assertParseSuccess(parser, "Jose\u0301",
+                new FindCommand(new NameContainsKeywordsPredicate(List.of("Jos\u00e9"))));
     }
 
     @Test

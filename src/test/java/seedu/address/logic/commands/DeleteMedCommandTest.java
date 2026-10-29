@@ -21,6 +21,7 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -171,6 +172,20 @@ public class DeleteMedCommandTest {
         new DeleteMedCommand(INDEX_FIRST_PATIENT, FIRST_MEDICATION).execute(model);
 
         assertEquals(model.getFilteredPatientList().get(0), model.getViewedPatient().getValue());
+    }
+
+    @Test
+    public void execute_localeWithOtherDigits_givesNumberInPanelDigits() throws Exception {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // String.format writes 2 as an Arabic-Indic digit in Egyptian Arabic unless given Locale.ROOT
+            Locale.setDefault(Locale.forLanguageTag("ar-EG"));
+            String message = new DeleteMedCommand(INDEX_FIRST_PATIENT, SECOND_MEDICATION).execute(model)
+                    .getFeedbackToUser();
+            assertEquals("Deleted medication 2 of " + patient.getName() + ": Aspirin 100mg", message);
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     @Test

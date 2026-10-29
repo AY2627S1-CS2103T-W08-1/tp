@@ -43,6 +43,13 @@ public class EditApptCommandParserTest {
     }
 
     @Test
+    public void parse_oneDigitHourTime_success() {
+        assertParseSuccess(parser, "1 2 t/9:30",
+                new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.empty(),
+                        Optional.of(LocalTime.of(9, 30)), Optional.empty(), Optional.empty()));
+    }
+
+    @Test
     public void parse_indianNameSlashWords_providerAccepted() {
         for (String token : new String[] {"a/l", "a/p", "A/L", "A/P"}) {
             String provider = "Dr Muthu " + token + " Ramasamy";
@@ -88,7 +95,7 @@ public class EditApptCommandParserTest {
     @Test
     public void parse_invalidValue_throwsParseException() {
         assertParseFailure(parser, "1 2 d/2026-02-30", Appointment.MESSAGE_DATE_CONSTRAINTS);
-        assertParseFailure(parser, "1 2 t/9:30", Medication.MESSAGE_TIME_CONSTRAINTS);
+        assertParseFailure(parser, "1 2 t/9:60", Medication.MESSAGE_TIME_CONSTRAINTS);
         assertParseFailure(parser, "1 2 w/ ", Appointment.MESSAGE_PROVIDER_CONSTRAINTS);
     }
 

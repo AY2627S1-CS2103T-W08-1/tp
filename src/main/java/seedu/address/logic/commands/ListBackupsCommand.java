@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -33,6 +34,8 @@ public class ListBackupsCommand extends Command {
             + BackupCommand.COMMAND_WORD + ".";
     public static final String MESSAGE_OLDER_BACKUPS = "... and %1$d older";
     public static final String MESSAGE_FAILURE = "Could not list the backups in %1$s.";
+    public static final String MESSAGE_NO_READ_PERMISSION = "Could not list the backups in %1$s, as "
+            + "MediConnect does not have permission to read that folder.";
     public static final String MESSAGE_NOT_A_FOLDER = "Could not list the backups: %1$s is a file, "
             + "not a folder. Move or rename that file, so that " + BackupCommand.COMMAND_WORD
             + " can make the folder.";
@@ -110,14 +113,30 @@ public class ListBackupsCommand extends Command {
             return sortNewestFirst(files.filter(ListBackupsCommand::isBackupFile).toList());
         } catch (IOException | UncheckedIOException ioe) {
             logger.warning("Could not list the backups in " + backupDir + ": " + ioe.getClass().getSimpleName());
-            throw new CommandException(String.format(MESSAGE_FAILURE, shownBackupDir), ioe);
+            throw new CommandException(String.format(describeListingFailure(ioe), shownBackupDir), ioe);
         }
     }
 
     /**
+     * Returns the message for {@code failure} to list the backup folder: one that says that MediConnect may
+     * not read the folder, if that is the cause, or else {@code MESSAGE_FAILURE}.
+     */
+    static String describeListingFailure(Exception failure) {
+        boolean isAccessDenied = failure instanceof AccessDeniedException
+                || failure.getCause() instanceof AccessDeniedException;
+        return isAccessDenied ? MESSAGE_NO_READ_PERMISSION : MESSAGE_FAILURE;
+    }
+
+    /**
      * Returns true if {@code file} is a JSON file, which {@code restore} can restore if its data is valid.
+     *
+     * @throws UncheckedIOException if MediConnect cannot tell whether {@code file} exists, e.g., in a folder
+     *     that it may list but not open, where every backup would otherwise look missing.
      */
     private static boolean isBackupFile(Path file) {
+        if (!Files.exists(file) && !Files.notExists(file)) {
+            throw new UncheckedIOException(new AccessDeniedException(file.toString()));
+        }
         return Files.isRegularFile(file)
                 && file.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(BACKUP_EXTENSION);
     }

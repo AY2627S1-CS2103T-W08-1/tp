@@ -2,8 +2,10 @@ package seedu.address.model.patient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -70,6 +72,91 @@ public class NameContainsKeywordsPredicateTest {
         predicate = new NameContainsKeywordsPredicate(List.of("91234567", "S1234567A", "Main", "Street"));
         assertFalse(predicate.test(new PatientBuilder().withName("Alice").withPhone("91234567")
                 .withNric("S1234567A").withAddress("Main Street").build()));
+    }
+
+    @Test
+    public void constructor_nullKeywords_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new NameContainsKeywordsPredicate(null));
+        assertThrows(NullPointerException.class, () -> new NameContainsKeywordsPredicate(
+                Arrays.asList("Alice", null)));
+    }
+
+    @Test
+    public void test_hyphenApostropheOrDotInName_eachPartMatches() {
+        Patient maryJane = new PatientBuilder().withName("Mary-Jane Tan").build();
+        Patient maryObrien = new PatientBuilder().withName("Mary O'Brien").build();
+        Patient maryLim = new PatientBuilder().withName("Mary Lim").build();
+        Patient kowJr = new PatientBuilder().withName("Tan Ah Kow Jr.").build();
+
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Mary")).test(maryJane));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Jane")).test(maryJane));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Mary-Jane")).test(maryJane));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Brien")).test(maryObrien));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("O'Brien")).test(maryObrien));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Jr")).test(kowJr));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Jr.")).test(kowJr));
+
+        // keyword with several parts needs all the parts, next to each other
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Mary-Jane")).test(maryLim));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Mary-Jane")).test(maryObrien));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Jane")).test(maryLim));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Bri")).test(maryObrien));
+    }
+
+    @Test
+    public void test_curlyApostropheInKeyword_matchesStraightApostropheInName() {
+        Patient patient = new PatientBuilder().withName("Mary O'Brien").build();
+
+        assertTrue(new NameContainsKeywordsPredicate(List.of("O\u2019Brien")).test(patient));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("\u2019Brien")).test(patient));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("O\u2019Brian")).test(patient));
+    }
+
+    @Test
+    public void test_canonicallyEquivalentAccents_match() {
+        Patient composed = new PatientBuilder().withName("Jos\u00e9 Tan").build();
+        Patient decomposed = new PatientBuilder().withName("Jose\u0301 Tan").build();
+
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Jose\u0301")).test(composed));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("Jos\u00e9")).test(decomposed));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("JOSE\u0301")).test(composed));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Jose")).test(composed));
+    }
+
+    @Test
+    public void test_otherApostrophesInKeyword_matchStraightApostropheInName() {
+        Patient patient = new PatientBuilder().withName("Mary O'Brien").build();
+
+        // left and right single quotation marks and a modifier letter apostrophe
+        for (String apostrophe : new String[] {"\u2018", "\u2019", "\u02bc"}) {
+            assertTrue(new NameContainsKeywordsPredicate(List.of("O" + apostrophe + "Brien")).test(patient));
+            assertFalse(new NameContainsKeywordsPredicate(List.of("O" + apostrophe + "Brian")).test(patient));
+        }
+    }
+
+    @Test
+    public void test_unicodeSpaceInKeyword_treatedAsSpace() {
+        Patient alexTan = new PatientBuilder().withName("Alex Tan").build();
+        Patient alexYeoh = new PatientBuilder().withName("Alex Yeoh").build();
+        Patient bernice = new PatientBuilder().withName("Bernice Yu").build();
+
+        // a keyword with a no-break space needs its parts next to each other in the name
+        NameContainsKeywordsPredicate sameKeyword = new NameContainsKeywordsPredicate(List.of("Alex\u00a0Yeoh"));
+        assertTrue(sameKeyword.test(alexYeoh));
+        assertFalse(sameKeyword.test(alexTan));
+
+        // two keywords, as the parser makes them from "Alex\u00a0Yeoh", match either name (an OR search)
+        NameContainsKeywordsPredicate twoKeywords = new NameContainsKeywordsPredicate(List.of("Alex", "Yeoh"));
+        assertTrue(twoKeywords.test(alexTan));
+        assertTrue(twoKeywords.test(alexYeoh));
+        assertFalse(twoKeywords.test(bernice));
+    }
+
+    @Test
+    public void test_keywordOfOnlySeparators_returnsFalse() {
+        Patient patient = new PatientBuilder().withName("Mary-Jane Tan").build();
+        assertFalse(new NameContainsKeywordsPredicate(List.of("-")).test(patient));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("'.")).test(patient));
     }
 
     @Test

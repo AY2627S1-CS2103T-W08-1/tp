@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
@@ -10,6 +11,8 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +23,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.LogCollector;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -28,6 +32,25 @@ import seedu.address.testutil.AddressBookBuilder;
 public class DeleteCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_logsDeletionButNotPatientData() throws Exception {
+        Patient patientToDelete = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
+        List<String> messages;
+        try (LogCollector logs = new LogCollector(DeleteCommand.class)) {
+            new DeleteCommand(INDEX_FIRST_PATIENT).execute(model);
+            messages = logs.getMessages();
+        }
+
+        assertFalse(messages.isEmpty());
+        assertFalse(messages.stream().anyMatch(message -> message.contains(patientToDelete.getName().fullName)
+                || message.contains(patientToDelete.getNric().value)));
+    }
+
+    @Test
+    public void constructor_nullIndex_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new DeleteCommand(null));
+    }
 
     @Test
     public void execute_validIndexUnfilteredList_success() {

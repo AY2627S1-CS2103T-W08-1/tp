@@ -74,9 +74,7 @@ public class FileUtil {
     public static void writeThroughTemporaryFile(Path file, TemporaryFileWriter writer) throws IOException {
         requireNonNull(file);
         requireNonNull(writer);
-        if (Files.exists(file) && !Files.isWritable(file)) {
-            throw new AccessDeniedException(file.toString());
-        }
+        checkWritableIfExists(file);
 
         Path folder = file.toAbsolutePath().getParent();
         assert folder != null : "a file to write is always inside a folder";
@@ -91,6 +89,18 @@ public class FileUtil {
             if (!isReplaced) {
                 deleteTemporaryFile(temporaryFile);
             }
+        }
+    }
+
+    /**
+     * Throws an {@code AccessDeniedException} if {@code file} exists but cannot be written to, e.g., because
+     * it is read-only, so that a temporary file does not replace it although the user made it read-only.
+     *
+     * @throws AccessDeniedException if {@code file} exists and cannot be written to.
+     */
+    private static void checkWritableIfExists(Path file) throws AccessDeniedException {
+        if (Files.exists(file) && !Files.isWritable(file)) {
+            throw new AccessDeniedException(file.toString());
         }
     }
 
