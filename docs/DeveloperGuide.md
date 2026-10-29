@@ -2153,8 +2153,9 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `due`<br>
    Expected: The result box lists `08:00 Alex Yeoh: Aspirin 100mg`, `08:00 Alex Yeoh: Amlodipine 5mg` and
-   `20:00 Alex Yeoh: Amlodipine 5mg`, one per line. A line is followed by ` (earlier today)` if its time is before
-   the current time of the computer. The patient list and the detail panel do not change.
+   `20:00 Alex Yeoh: Amlodipine 5mg`, one per line. The time of a line is followed by ` (earlier today)` if it is
+   before the current time of the computer, e.g., at 10:30, `08:00 (earlier today) Alex Yeoh: Aspirin 100mg` and
+   `20:00 Alex Yeoh: Amlodipine 5mg`. The patient list and the detail panel do not change.
 
 1. Test case: `due 2`<br>
    Expected: The status message shows `No medications are due today for Bernice Yu.`
