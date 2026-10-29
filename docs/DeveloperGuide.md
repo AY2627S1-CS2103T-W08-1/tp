@@ -110,7 +110,7 @@ How the `Logic` component works:
 
 1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
+1. The command can communicate with the `Model` when it is executed (e.g. to delete a patient).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
 1. `LogicManager` saves through `Storage` if patient data changed or the command's
    `requiresSaveWhenUnchanged()` returns `true` (`clear confirm` and `restore FILENAME`). Before executing the
@@ -124,8 +124,9 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
-* Command words are matched case-sensitively by `AddressBookParser`; field prefixes are also case-sensitive.
-  Both use lowercase spellings. For example, `LIST` produces `Unknown command.` rather than running `list`.
+* `AddressBookParser` lowercases only the command word with `Locale.ROOT` before dispatch, so `LIST`, `List`
+  and `list` select the same command regardless of the computer's language. Arguments are unchanged: field
+  prefixes remain case-sensitive and lowercase, while field values and other arguments keep their own rules.
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 * Field parsers use `ArgumentTokenizer#verifyNoInvalidPrefixes` before tokenization, declaring their free-text
@@ -332,11 +333,11 @@ The panel numbers the appointments with upcoming ones first, then past ones, in 
 
 `ClearCommand#execute()` first calls `BackupCommand#execute()` to save all current data using the existing
 backup implementation. A backup failure propagates as a `CommandException` before the model is changed.
-Only after the backup succeeds does it replace the entire address book with an empty one through `Model#setAddressBook()`,
+Only after the backup succeeds does it replace all the patients with an empty list through `Model#setAddressBook()`,
 including archived patients and patients hidden by a filter. The existing model logic clears the viewed patient.
 The success message includes the backup location. `LogicManager` saves the change and restores its snapshot
 if saving fails; the automatic backup remains available. Backups include archived and filtered-out patients,
-even for an empty address book, and can be recovered with `restore`.
+even when there are no patients, and can be recovered with `restore`.
 
 `Command#requiresSaveWhenUnchanged()` defaults to `false`. `ClearCommand` and `RestoreCommand` override it to
 return `true`, so `LogicManager` saves after their successful execution even when the address book equals its
@@ -624,7 +625,7 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
    with the usage message of `due`. It creates a `DueCommand` with a `java.time.Clock` from
    `Clock.systemDefaultZone()`, and with the index if one was given.
 1. `DueCommand#execute()` chooses the patients to list. With an index, it resolves the index against the filtered
-   patient list. Without one, it takes every patient in the address book, so that a `find` does not hide a dose.
+   patient list. Without one, it takes every patient in MediConnect, so that a `find` does not hide a dose.
    Archived patients are always left out.
 1. It reads the current time as `LocalTime.now(clock)`, cut to the minute, and turns every time of every medication
    into a dose. The doses are sorted by time, then by patient name, then by NRIC.
@@ -658,41 +659,43 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
 
 #### Proposed Implementation
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
+MediConnect has no `undo` or `redo` command yet, and the User Guide does not list them. This section describes how they could be added.
 
-* `VersionedAddressBook#commit()` -- Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` -- Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` -- Restores a previously undone address book state from its history.
+The proposed undo/redo mechanism is facilitated by `VersionedPatientData`. It extends `AddressBook`, the class that holds all the patients, active and archived, with an undo/redo history, stored internally as a `patientDataStateList` and `currentStatePointer`. Additionally, it implements the following operations:
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
+* `VersionedPatientData#commit()` -- Saves the current patient data in its history.
+* `VersionedPatientData#undo()` -- Restores the previous patient data from its history.
+* `VersionedPatientData#redo()` -- Restores previously undone patient data from its history.
+
+These operations are exposed in the `Model` interface as `Model#commitPatientData()`, `Model#undoPatientData()` and `Model#redoPatientData()` respectively.
 
 Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
 
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
+Step 1. The caregiver launches MediConnect for the first time. The `VersionedPatientData` will be initialized with the patient data that is loaded from the data file, and the `currentStatePointer` pointing to that single state.
 
 <puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+Step 2. The caregiver executes `delete 5` to delete the 5th patient in the patient list. The `delete` command calls `Model#commitPatientData()`, causing the modified patient data after the `delete 5` command executes to be saved in the `patientDataStateList`, and the `currentStatePointer` is shifted to the newly inserted state.
 
 <puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+Step 3. The caregiver executes `editmed 1 1 med/Aspirin 75mg` to change the description of the 1st medication of the 1st patient. The `editmed` command also calls `Model#commitPatientData()`, causing another modified state to be saved into the `patientDataStateList`.
 
 <puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
 
 <box type="info" seamless>
 
-**Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
+**Note:** If a command fails its execution, it will not call `Model#commitPatientData()`, so the patient data will not be saved into the `patientDataStateList`.
 </box>
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+Step 4. The caregiver now decides that editing the medication was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoPatientData()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous state, and restores the patient data to that state.
 
 <puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
 
 
 <box type="info" seamless>
 
-**Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
+**Note:** If the `currentStatePointer` is at index 0, pointing to the initial state, then there are no previous states to restore. The `undo` command uses `Model#canUndoPatientData()` to check if this is the case. If so, it will return an error to the caregiver rather
 than attempting to perform the undo.
 </box>
 
@@ -709,22 +712,24 @@ Similarly, how an undo operation goes through the `Model` component is shown bel
 
 <puml src="diagrams/UndoSequenceDiagram-Model.puml" alt="UndoSequenceDiagram-Model" />
 
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
+The `redo` command does the opposite — it calls `Model#redoPatientData()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the patient data to that state.
 
 <box type="info" seamless>
 
-**Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
+**Note:** If the `currentStatePointer` is at index `patientDataStateList.size() - 1`, pointing to the latest state, then there are no undone states to restore. The `redo` command uses `Model#canRedoPatientData()` to check if this is the case. If so, it will return an error to the caregiver rather than attempting to perform the redo.
 </box>
 
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
+As for any command that changes patient data, `LogicManager` would save the restored patient data through `Storage` after an `undo` or a `redo`.
+
+Step 5. The caregiver then decides to execute the command `list`. Commands that do not modify the patient data, such as `list`, will usually not call `Model#commitPatientData()`, `Model#undoPatientData()` or `Model#redoPatientData()`. Thus, the `patientDataStateList` remains unchanged.
 
 <puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
 
-Step 6. The user executes `clear confirm`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
+Step 6. The caregiver executes `clear confirm`, which calls `Model#commitPatientData()`. Since the `currentStatePointer` is not pointing at the end of the `patientDataStateList`, all states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `editmed 1 1 med/Aspirin 75mg` command. This is the behavior that most modern desktop applications follow.
 
 <puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
 
-The following activity diagram summarizes what happens when a user executes a new command:
+The following activity diagram summarizes what happens when a caregiver executes a new command:
 
 <puml src="diagrams/CommitActivityDiagram.puml" width="250" />
 
@@ -732,16 +737,14 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 **Aspect: How undo & redo execute:**
 
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
+* **Alternative 1 (current choice):** Saves the entire patient data.
+  * Pros: Easy to implement. `LogicManager` already takes a `Model.Snapshot` of the patient data before each command, to restore it if a save fails, so part of the mechanism exists.
+  * Cons: May have performance issues in terms of memory usage, as every patient with all their medications, contacts and appointments is saved in each state.
 
 * **Alternative 2:** Individual command knows how to undo/redo by
   itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
+  * Pros: Will use less memory (e.g. for `delete`, just save the patient being deleted).
   * Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -807,7 +810,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | caregiver                                  | view a list of all my patients | see at a glance who I am responsible for |
 | `* * *`  | caregiver                                  | view a patient's full profile, including all recorded care information | review everything relevant to that patient in one place |
 | `* * *`  | caregiver                                  | delete a patient profile | remove patients no longer under my care |
-| `* * *`  | caregiver                                  | record a patient's medical conditions (e.g., diabetes, hypertension) | keep their diagnoses in one place for everyone involved in their care |
+| `*`      | caregiver                                  | record a patient's medical conditions (e.g., diabetes, hypertension) | keep their diagnoses in one place for everyone involved in their care |
 | `* * *`  | caregiver                                  | record a patient's allergies | make sure no one gives them a medication or food they react to |
 | `* * *`  | caregiver                                  | add a medication to a patient's profile, including its dosage and frequency | keep track of what they need to take |
 | `* * *`  | caregiver                                  | add a general care instruction to a patient's profile (e.g., "check blood sugar before breakfast") | remember non-medication routine tasks |
@@ -861,7 +864,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | caregiver returning from a break           | see what changed in a patient's records while I was away | catch up after another caregiver has taken over |
 | `*`      | caregiver                                  | give a community nurse view-only access to a patient's records | avoid repeating the patient's background at every visit |
 | `*`      | caregiver                                  | export all my data | move to another app without losing my records |
-*{More to be added}*
 
 ### Use cases
 
@@ -1706,8 +1708,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
-*{More to be added}*
-
 **Use case: UC18 - Add a patient's contact**
 
 **System**: MediConnect<br>
@@ -1816,6 +1816,38 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * 3a. The updated patient data cannot be saved.
 
     * 3a1. MediConnect restores the deleted contact and the previous numbering, and shows a save-failure message.
+
+      Use case ends.
+
+**Use case: UC21 - Find patients by name**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to find patients, giving one or more keywords from the patient's name.
+2.  MediConnect shows the active patients whose names match at least one keyword, and how many there are.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. No keyword is given.
+
+    * 1a1. MediConnect shows an error message that at least one keyword must be given.
+
+      Use case ends.
+
+* 2a. No active patient matches a keyword.
+
+    * 2a1. MediConnect shows a message that no patients were found.
+
+      Use case ends.
+
+* 2b. Caregiver wants to use a patient in the result.
+
+    * 2b1. Caregiver gives the number of the patient in the shown list to another command, e.g., to view the patient (UC7) or to edit a medication (UC4).
 
       Use case ends.
 
@@ -1970,16 +2002,25 @@ testers are expected to do more *exploratory* testing.
    1. Test case: Press `F1`, or choose **Help** in the menu bar. Click the help window, then press `Esc`.<br>
       Expected: `F1` and the menu open the help window as `help` does, and `Esc` in the help window closes it.
 
-### Command case sensitivity
+### Command letter case
 
-1. Test cases: `LIST`, `List`, `Add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
-   Expected: Each returns `Unknown command.` without changing patient data or the displayed list.
+1. Prerequisites: Use sample data in a disposable app folder, with no patient whose NRIC is `S1234567A`.
 
-1. Test case: `list`<br>
-   Expected: The lowercase command succeeds and shows all active patients.
+1. Test cases: `LIST`, `List` and `list`.<br>
+   Expected: Each shows all active patients, without changing patient data.
 
-1. Test case: `add N/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
+1. Test cases: `View 1`, then `EXPORT 1`.<br>
+   Expected: The detail panel shows the first patient, and the export succeeds as with `export 1`.
+
+1. Test case: `Add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`.<br>
+   Expected: John Tan is added with the entered name and address, as with lowercase `add`.
+
+1. Test case: `ADD N/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`.<br>
    Expected: No patient is added. The command reports `Unrecognized parameter: N/. Please check the command format.`
+
+1. Test case: `CLEAR CONFIRM`.<br>
+   Expected: Invalid command format; no patients are cleared. Only the command word ignores letter case,
+   so clearing still requires lowercase `confirm`.
 
 ### Entering a blank command
 
@@ -2064,6 +2105,70 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `addcare 999 med/Ibuprofen`<br>
    Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
+
+### Editing and deleting medications
+
+1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh's medications, `1. Aspirin 100mg (08:00)`
+   and `2. Amlodipine 5mg (08:00, 20:00)`. The test cases build on each other, so run them in this order.
+
+1. Test case: `editmed 1 2 t/07:30 t/19:30`<br>
+   Expected: The status message shows `Updated medication 2 of Alex Yeoh: Amlodipine 5mg (07:30, 19:30)`. The detail
+   panel shows the new times.
+
+1. Test case: `editmed 1 1 med/Aspirin 75mg`<br>
+   Expected: The description changes to `Aspirin 75mg` and the time `08:00` is kept.
+
+1. Test case: `editmed 1 2 t/`<br>
+   Expected: Amlodipine 5mg has no times any more, and the status message shows it without brackets.
+
+1. Test case: `editmed 1 1 med/amlodipine 5mg`<br>
+   Expected: Nothing changes. The status message shows
+   `Medication "amlodipine 5mg" was not updated: it already exists for this patient.`
+
+1. Test case: `editmed 1 1`<br>
+   Expected: Nothing changes. The status message shows `At least one of med/ or t/ must be provided.`
+
+1. Test case: `editmed 1 9 t/08:00`<br>
+   Expected: Nothing changes. The status message shows `The medication index provided is invalid.`
+
+1. Test case: `deletemed 1 1`<br>
+   Expected: Aspirin 75mg is deleted and Amlodipine 5mg becomes medication 1 in the detail panel. The status message
+   shows `Deleted medication 1 of Alex Yeoh: Aspirin 75mg (08:00)`.
+
+1. Test case: Repeat `deletemed 1 1`.<br>
+   Expected: Amlodipine 5mg is deleted. The detail panel shows `None recorded` for the medications.
+
+1. Test case: Repeat `deletemed 1 1` again.<br>
+   Expected: Nothing changes. The status message shows `The medication index provided is invalid.`
+
+1. Test case: `deletemed 1`<br>
+   Expected: Nothing changes. The status message shows `Invalid command format!` followed by the usage of `deletemed`.
+
+### Listing today's medication times
+
+1. Prerequisites: The sample data is loaded again, e.g., by starting MediConnect with an empty `data` folder, so that
+   only Alex Yeoh has medication times.
+
+1. Test case: `due`<br>
+   Expected: The result box lists `08:00 Alex Yeoh: Aspirin 100mg`, `08:00 Alex Yeoh: Amlodipine 5mg` and
+   `20:00 Alex Yeoh: Amlodipine 5mg`, one per line. A line is followed by ` (earlier today)` if its time is before
+   the current time of the computer. The patient list and the detail panel do not change.
+
+1. Test case: `due 2`<br>
+   Expected: The status message shows `No medications are due today for Bernice Yu.`
+
+1. Test case: `due 1`<br>
+   Expected: The same three lines as `due`.
+
+1. Test case: Run `archive 1`, then `due`.<br>
+   Expected: The status message shows `No medications are due today.`, because Alex Yeoh is archived and archived
+   patients are left out.
+
+1. Test case: `due 999`<br>
+   Expected: The status message shows `The patient index provided is invalid.`
+
+1. Test case: `due abc`<br>
+   Expected: The status message shows `Invalid command format!` followed by the usage of `due`.
 
 ### Managing patient contacts
 
