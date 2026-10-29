@@ -330,6 +330,26 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_nameTooLongForFileSystem_throwsCommandExceptionWithNotFound() {
+        // Boundary value: a name longer than the 255 characters that file systems allow, which makes whether the
+        // file exists unknown although the backup folder can be read
+        String tooLongName = "a".repeat(300) + ".json";
+
+        assertCommandFailure(createRestoreCommand(tooLongName), model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, tooLongName, temporaryFolder));
+    }
+
+    @Test
+    public void execute_nameTooLongForFileSystemInMissingFolder_throwsCommandExceptionWithNotFound() {
+        Path missingFolder = temporaryFolder.resolve("missing");
+        String tooLongName = "a".repeat(300) + ".json";
+        RestoreCommand restoreCommand = new RestoreCommand(tooLongName, FIXED_CLOCK, missingFolder);
+
+        assertCommandFailure(restoreCommand, model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, tooLongName, missingFolder));
+    }
+
+    @Test
     public void execute_missingBackupInRelativeFolder_showsFullFolderPath() {
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
                 toPathRelativeToWorkingDir(temporaryFolder));
