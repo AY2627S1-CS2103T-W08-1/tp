@@ -1267,8 +1267,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Use case: UC9 - Restore patient data from a backup**
 
-**Preconditions**: Caregiver has backed up the data before (UC8).
-
 **System**: MediConnect<br>
 **Actor**: Caregiver
 
@@ -2562,6 +2560,8 @@ testers are expected to do more *exploratory* testing.
    1. Launch the app, then enter `backup`.<br>
       Expected: No backup is saved. The status message shows `Could not save the backup to` followed by the folder, says that there is a file named `backups` where that folder should be, and says that your data has not been changed.
 
+   1. Close the app and delete the file named `backups`, so that the backup and restore tests below can make the folder again.
+
 ### Restoring data
 
 1. Restoring a backup
@@ -2582,7 +2582,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The test cases under "Restoring a backup" above have been run.
 
    1. Test case: `restore`<br>
-      Expected: The data is unchanged. The status message lists the backups in `data/backups`, newest first: the automatic backups made by the three restores, then the backup you made.
+      Expected: The data is unchanged. The status message lists the backups in `data/backups`, newest first: the automatic backups made by the three restores, then the backup you made, followed by any older backups, e.g., those made by `clear confirm`.
 
 1. Restoring a file that cannot be restored
 
@@ -2634,6 +2634,8 @@ testers are expected to do more *exploratory* testing.
 
    1. Launch the app, then enter `export 1`.<br>
       Expected: No file is written. The status message shows `Could not export`, the patient's name and the path of the file, and says that there is a file named `exports` where that folder should be.
+
+   1. Close the app and delete the file named `exports`, so that later exports can make the folder again.
 
 ### Managing appointments
 
