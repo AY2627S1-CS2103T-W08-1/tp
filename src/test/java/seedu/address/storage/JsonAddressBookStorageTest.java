@@ -73,7 +73,6 @@ public class JsonAddressBookStorageTest {
     @Test
     public void readAddressBook_invalidMedicationsInFile_throwDataLoadingException() throws Exception {
         String[] invalidMedications = {
-            "[ \"Metformin\" ]",
             "[ { \"times\" : [ \"08:00\" ] } ]",
             "[ { \"description\" : \" \" } ]",
             "[ { \"description\" : \"Metformin\", \"times\" : [ \"8:00\" ] } ]",
@@ -88,6 +87,14 @@ public class JsonAddressBookStorageTest {
             assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(filePath)
                     .readAddressBook(filePath));
         }
+    }
+
+    @Test
+    public void readAddressBook_v13StringMedicationInFile_loadsWithNoTimes() throws Exception {
+        Path filePath = writePatientWithMedications("[ \"Metformin\" ]");
+        ReadOnlyAddressBook readBack = new JsonAddressBookStorage(filePath).readAddressBook(filePath).get();
+        assertEquals(List.of(new Medication("Metformin")),
+                readBack.getPatientList().get(0).getMedications());
     }
 
     @Test

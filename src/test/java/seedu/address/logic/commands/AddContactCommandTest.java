@@ -29,6 +29,19 @@ import seedu.address.testutil.PatientBuilder;
 public class AddContactCommandTest {
 
     @Test
+    public void execute_modelIgnoresContactUpdate_failsInternalAssertion() {
+        Patient patient = new PatientBuilder().withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs()) {
+            @Override
+            public void setPatient(Patient target, Patient editedPatient) {
+                // Simulate a model implementation that silently drops the contact update.
+            }
+        };
+        assertThrows(AssertionError.class, () -> new AddContactCommand(INDEX_FIRST_PATIENT, GUARDIAN).execute(model));
+        assertEquals(patient, model.getAddressBook().getPatientList().get(0));
+    }
+
+    @Test
     public void execute_canonicallyEquivalentContact_rejectedWithoutChanges() {
         Contact original = new Contact("Caf\u00e9", "GP", "123", "");
         Patient patient = new PatientBuilder().withContacts(original).build();

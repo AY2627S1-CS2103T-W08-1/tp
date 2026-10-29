@@ -752,6 +752,26 @@ _{more aspects and alternatives to be added}_
 * [Logging guide](Logging.md)
 * [DevOps guide](DevOps.md)
 
+### Defensive programming
+
+`LogicManager` rejects null dependencies and command text, and asserts that commands return a non-null result.
+`MainApp#initModelManager()` rejects null storage or preferences before file access and asserts that storage
+returns a non-null `Optional`. An empty `Optional` is valid for a missing data file.
+
+The feature commands check their model postconditions before reporting success:
+
+* `AddCommand` asserts that the complete added patient is stored.
+* The contact commands assert that the exact replacement patient, including the updated contacts, is stored.
+* `ClearCommand` asserts that the complete patient list is empty and no patient remains viewed.
+
+These checks use unfiltered patient data, including archived patients, so filters do not cause false failures.
+Tests supply broken model, storage and command implementations to verify the contracts. Existing copy and command
+tests check that replacing a patient preserves unrelated details.
+
+Assertions diagnose programming errors; user-input and file failures use exceptions. See the
+[Testing guide](Testing.md) for assertion-enabled run configurations and the [Logging guide](Logging.md) for
+`LogsCenter` usage. Normal JAR launches leave assertions disabled, so runtime validation does not rely on them.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Appendix: Requirements**
