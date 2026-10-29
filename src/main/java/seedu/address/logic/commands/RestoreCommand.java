@@ -13,7 +13,6 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -130,6 +129,7 @@ public class RestoreCommand extends Command {
      * there is one with ".json" added, that name, so that a backup can be restored without typing its ending.
      * If neither file exists, the only backup whose name matches once its special spaces are normal spaces is
      * restored, since {@code AddressBookParser} turns every special space typed in a command into a normal space.
+     * If more than one backup matches, none is restored.
      */
     private String findBackupName() {
         String nameWithExtension = fileName + ListBackupsCommand.BACKUP_EXTENSION;
@@ -139,26 +139,28 @@ public class RestoreCommand extends Command {
         if (Files.isRegularFile(backupDir.resolve(nameWithExtension))) {
             return nameWithExtension;
         }
-        return findNameWithSpecialSpaces(fileName)
-                .or(() -> findNameWithSpecialSpaces(nameWithExtension))
-                .orElse(fileName);
+        List<String> matchingNames = findNamesWithSpecialSpaces(fileName);
+        if (matchingNames.isEmpty()) {
+            // ".json" is added only if no backup matches the name as given, so that an unclear name restores none
+            matchingNames = findNamesWithSpecialSpaces(nameWithExtension);
+        }
+        return matchingNames.size() == 1 ? matchingNames.get(0) : fileName;
     }
 
     /**
-     * Returns the name of the only file in the backup folder that is {@code typedName} once each special space in
-     * it, e.g., a no-break or ideographic space, is a normal space. Returns an empty {@code Optional} if no file or
-     * more than one has such a name, or the backup folder cannot be listed.
+     * Returns the names of the files in the backup folder that are {@code typedName} once each special space in
+     * them, e.g., a no-break or ideographic space, is a normal space, or an empty list if the backup folder cannot
+     * be listed.
      */
-    private Optional<String> findNameWithSpecialSpaces(String typedName) {
+    private List<String> findNamesWithSpecialSpaces(String typedName) {
         try (Stream<Path> files = Files.list(backupDir)) {
-            List<String> matchingNames = files.filter(Files::isRegularFile)
+            return files.filter(Files::isRegularFile)
                     .map(file -> file.getFileName().toString())
                     .filter(name -> SPECIAL_SPACE_PATTERN.matcher(name).replaceAll(" ").equals(typedName))
                     .toList();
-            return matchingNames.size() == 1 ? Optional.of(matchingNames.get(0)) : Optional.empty();
         } catch (IOException | UncheckedIOException e) {
             // the missing backup is then reported, with the folder's permission if that is the cause
-            return Optional.empty();
+            return List.of();
         }
     }
 

@@ -308,6 +308,18 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_twoNamesMatchAndOneWithExtensionAdded_throwsCommandException() throws Exception {
+        // Boundary value: the name as given is unclear, so a backup with ".json" added is not restored instead
+        writeBackup(createAddressBook(HOON));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json.json"));
+
+        assertCommandFailure(createRestoreCommand("old backup.json"), model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, "old backup.json", temporaryFolder));
+    }
+
+    @Test
     public void execute_missingBackupFolder_throwsCommandException() {
         // the backup folder cannot be listed for a name with special spaces, so the backup is reported missing
         Path missingFolder = temporaryFolder.resolve("missing");
