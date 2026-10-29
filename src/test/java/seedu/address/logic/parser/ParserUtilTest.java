@@ -108,6 +108,21 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseName_otherTypedApostrophes_returnsNameWithStraightApostrophe() throws Exception {
+        // the left single quotation mark and the modifier letter apostrophe, which phones and Word also type
+        assertEquals(new Name("Mary O'Brien"), ParserUtil.parseName("Mary O\u2018Brien"));
+        assertEquals(new Name("Mary O'Brien"), ParserUtil.parseName("Mary O\u02bcBrien"));
+    }
+
+    @Test
+    public void parseName_apostropheLookAlike_throwsParseException() {
+        // a backtick, an acute accent and a prime are not apostrophes, so they are not changed into one
+        for (String name : new String[] {"Mary O`Brien", "Mary O\u00b4Brien", "Mary O\u2032Brien"}) {
+            assertThrows(ParseException.class, () -> ParserUtil.parseName(name));
+        }
+    }
+
+    @Test
     public void parsePhone_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parsePhone((String) null));
     }
