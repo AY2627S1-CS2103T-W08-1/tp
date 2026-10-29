@@ -469,6 +469,27 @@ public class RestoreCommandTest {
 
     @Test
     @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
+    public void execute_unopenableFolderAboveBackupFolder_throwsCommandExceptionNamingFolder() throws Exception {
+        // e.g., after chmod 000 on data, which makes data/backups and the backup in it unreachable
+        Path dataFolder = Files.createDirectory(temporaryFolder.resolve("data"));
+        Path backupDir = Files.createDirectory(dataFolder.resolve("backups"));
+        new JsonAddressBookStorage(backupDir.resolve(BACKUP_NAME)).saveAddressBook(createAddressBook(HOON));
+        File folder = dataFolder.toFile();
+        assertTrue(folder.setReadable(false) && folder.setExecutable(false));
+        try {
+            // users with admin rights (e.g., root) can still read it, so the test only applies to others
+            assumeFalse(Files.isReadable(dataFolder));
+
+            assertCommandFailure(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, backupDir), model,
+                    String.format(RestoreCommand.MESSAGE_NO_FOLDER_READ_PERMISSION, backupDir));
+        } finally {
+            folder.setExecutable(true);
+            folder.setReadable(true);
+        }
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
     public void execute_backupFolderListedButNotOpened_throwsCommandExceptionNamingFolder() throws Exception {
         // e.g., after chmod 444 on the folder, which a user may do to make it read-only
         writeBackup(createAddressBook(HOON));
