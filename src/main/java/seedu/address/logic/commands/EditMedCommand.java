@@ -31,7 +31,7 @@ public class EditMedCommand extends Command {
             + "Parameters: INDEX (must be a positive integer) MED_INDEX (must be a positive integer) "
             + "[" + PREFIX_MEDICATION + "DESCRIPTION] [" + PREFIX_TIME + "TIME]...\n"
             + "At least one of " + PREFIX_MEDICATION + " or " + PREFIX_TIME + " must be given. "
-            + "TIME is in HH:MM (24-hour). Any " + PREFIX_TIME + " given replaces all existing times; "
+            + "TIME is in H:MM or HH:MM (24-hour). Any " + PREFIX_TIME + " given replaces all existing times; "
             + PREFIX_TIME + " with nothing after it clears them and cannot be combined with another "
             + PREFIX_TIME + ".\n"
             + "Example: " + COMMAND_WORD + " 1 2 " + PREFIX_MEDICATION + "Metformin 850mg "

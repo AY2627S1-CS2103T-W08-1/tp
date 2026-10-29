@@ -49,6 +49,11 @@ public class StringUtilTest {
         assertFalse(StringUtil.isNonZeroUnsignedInteger(" 10 ")); // Leading/trailing spaces
         assertFalse(StringUtil.isNonZeroUnsignedInteger("1 0")); // Spaces in the middle
 
+        // EP: digits of other scripts
+        assertFalse(StringUtil.isNonZeroUnsignedInteger("\uff12")); // Full-width digit
+        assertFalse(StringUtil.isNonZeroUnsignedInteger("\u0662")); // Arabic-Indic digit
+        assertFalse(StringUtil.isNonZeroUnsignedInteger("1\uff12"));
+
         // EP: number larger than Integer.MAX_VALUE
         assertFalse(StringUtil.isNonZeroUnsignedInteger(Long.toString(Integer.MAX_VALUE + 1)));
 

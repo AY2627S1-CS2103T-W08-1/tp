@@ -22,10 +22,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class EditMedCommandParser implements Parser<EditMedCommand> {
 
-    private static final int EXPECTED_INDEX_COUNT = 2;
     private static final int PATIENT_INDEX_POSITION = 0;
     private static final int MEDICATION_INDEX_POSITION = 1;
-    private static final String WHITESPACE_REGEX = "\\s+";
 
     /**
      * Parses the given {@code String} of arguments in the context of the {@code EditMedCommand}
@@ -59,21 +57,11 @@ public class EditMedCommandParser implements Parser<EditMedCommand> {
      * @throws ParseException if the preamble does not consist of exactly two positive integers.
      */
     private static List<Index> parseIndices(String preamble) throws ParseException {
-        String[] tokens = preamble.split(WHITESPACE_REGEX);
-        if (preamble.isEmpty() || tokens.length != EXPECTED_INDEX_COUNT) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditMedCommand.MESSAGE_USAGE));
+        try {
+            return ParserUtil.parseTwoIndexes(preamble);
+        } catch (ParseException pe) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditMedCommand.MESSAGE_USAGE), pe);
         }
-
-        List<Index> indices = new ArrayList<>();
-        for (String token : tokens) {
-            try {
-                indices.add(ParserUtil.parseIndex(token));
-            } catch (ParseException pe) {
-                throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditMedCommand.MESSAGE_USAGE),
-                        pe);
-            }
-        }
-        return indices;
     }
 
     private static Optional<String> parseOptionalDescription(Optional<String> description) throws ParseException {

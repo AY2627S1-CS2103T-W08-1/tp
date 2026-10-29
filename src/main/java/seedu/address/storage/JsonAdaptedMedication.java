@@ -66,6 +66,9 @@ class JsonAdaptedMedication {
         if (!Medication.isValidDescription(description)) {
             throw new IllegalValueException(Medication.MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
+        if (!Medication.isDescriptionWithinMaxLength(Medication.normalizeDescription(description))) {
+            throw new IllegalValueException(Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+        }
 
         List<LocalTime> modelTimes = new ArrayList<>();
         for (String time : times) {
@@ -73,7 +76,7 @@ class JsonAdaptedMedication {
                 throw new IllegalValueException(NULL_TIME_MESSAGE);
             }
             if (!Medication.isValidTime(time)) {
-                throw new IllegalValueException(Medication.MESSAGE_TIME_CONSTRAINTS);
+                throw new IllegalValueException(Medication.MESSAGE_DATA_FILE_TIME_CONSTRAINTS);
             }
             modelTimes.add(Medication.toTime(time));
         }

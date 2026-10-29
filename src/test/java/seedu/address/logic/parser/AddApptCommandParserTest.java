@@ -28,6 +28,12 @@ public class AddApptCommandParserTest {
     }
 
     @Test
+    public void parse_oneDigitHourTime_success() {
+        assertParseSuccess(parser, "1 d/2026-11-05 t/9:30 w/Dr Tan nt/Fasting",
+                new AddApptCommand(INDEX_FIRST_PATIENT, CHECKUP));
+    }
+
+    @Test
     public void parse_noNote_successWithEmptyNote() {
         Appointment expected = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Dr Tan", "");
         assertParseSuccess(parser, "1" + VALID_FIELDS, new AddApptCommand(INDEX_FIRST_PATIENT, expected));
@@ -76,7 +82,7 @@ public class AddApptCommandParserTest {
     @Test
     public void parse_invalidValue_throwsParseException() {
         assertParseFailure(parser, "1 d/2026-02-30 t/09:30 w/Dr Tan", Appointment.MESSAGE_DATE_CONSTRAINTS);
-        assertParseFailure(parser, "1 d/2026-11-05 t/9:30 w/Dr Tan", Medication.MESSAGE_TIME_CONSTRAINTS);
+        assertParseFailure(parser, "1 d/2026-11-05 t/9:60 w/Dr Tan", Medication.MESSAGE_TIME_CONSTRAINTS);
         assertParseFailure(parser, "1 d/2026-11-05 t/09:30 w/ ", Appointment.MESSAGE_PROVIDER_CONSTRAINTS);
     }
 
