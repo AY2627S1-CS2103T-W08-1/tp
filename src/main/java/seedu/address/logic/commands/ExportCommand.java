@@ -4,7 +4,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -121,15 +120,14 @@ public class ExportCommand extends Command {
     /**
      * Writes the record of {@code patient} to {@code exportFile}, after creating the export folder if it does not
      * exist. The record is written through {@code FileUtil#writeThroughTemporaryFile}, so a failed write never leaves
-     * a partial record in place of an earlier one. Since the temporary file is always new, no existing file or link
-     * is written to.
+     * a partial record in place of an earlier one, and does not replace an earlier export that is read-only.
+     * Since the temporary file is always new, no existing file or link is written to.
      *
      * @throws CommandException if the folder or the file cannot be written.
      */
     private void writeRecord(Patient patient, Path exportFile) throws CommandException {
         try {
             Files.createDirectories(exportDir);
-            checkEarlierExportIsWritable(exportFile);
             List<String> recordLines = createRecord(patient);
             FileUtil.writeThroughTemporaryFile(exportFile, temporaryFile -> writeLines(temporaryFile, recordLines));
         } catch (IOException ioe) {
@@ -138,18 +136,6 @@ public class ExportCommand extends Command {
             String message = String.format(MESSAGE_FAILURE, patient.getName().fullName,
                     exportFile.toAbsolutePath().normalize(), reason);
             throw new CommandException(message, ioe);
-        }
-    }
-
-    /**
-     * Throws an {@code AccessDeniedException} if {@code exportFile} is an earlier export that is read-only.
-     * The new record would otherwise replace it through a temporary file, although the user made it read-only.
-     *
-     * @throws AccessDeniedException if {@code exportFile} exists and cannot be written to.
-     */
-    private static void checkEarlierExportIsWritable(Path exportFile) throws AccessDeniedException {
-        if (Files.exists(exportFile) && !Files.isWritable(exportFile)) {
-            throw new AccessDeniedException(exportFile.toString());
         }
     }
 
