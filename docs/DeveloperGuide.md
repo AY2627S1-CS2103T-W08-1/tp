@@ -210,9 +210,11 @@ date, time, provider and note.
 The list of patients is saved under the JSON key `persons`, kept from AB3. When the file is read,
 `JsonAdaptedPatient#toModelType()` validates patient fields and converts medications, contacts and appointments using
 their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
-an NRIC, a patient has duplicate contacts or appointments, or an allergen or care instruction is blank or duplicated,
-the whole file is rejected. Care-entry duplicates ignore letter case and whitespace differences, as the care commands
-do.
+an NRIC, a patient has duplicate contacts or appointments, two medications of a patient have the same description,
+or an allergen or care instruction is blank or duplicated, the whole file is rejected. Care-entry and medication
+duplicates ignore letter case and whitespace differences, as the care commands do. A medication saved by v1.3, as a
+plain string, is loaded as a medication with no times, as is a medication without a `times` list. A saved time must
+be written as `HH:MM`, so `8:30` makes the file invalid.
 
 `JsonAddressBookStorage` reads the file with `JsonUtil#readJsonFileStrictly()`, which also rejects a property that the
 JSON class does not have, e.g., a misspelled `careInstructons`, and a property given twice. Ignoring them, as Jackson
@@ -626,7 +628,8 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
    `Clock.systemDefaultZone()`, and with the index if one was given.
 1. `DueCommand#execute()` chooses the patients to list. With an index, it resolves the index against the filtered
    patient list. Without one, it takes every patient in MediConnect, so that a `find` does not hide a dose.
-   Archived patients are always left out.
+   Without an index, archived patients are left out. With an index, an archived patient is rejected with
+   `This patient is archived. Unarchive them to list their medication times.`
 1. It reads the current time as `LocalTime.now(clock)`, cut to the minute, and turns every time of every medication
    into a dose. The doses are sorted by time, then by patient name, then by NRIC.
 1. It writes one line per dose, as `HH:MM NAME: DESCRIPTION`, and adds ` (earlier today)` straight after the time of
@@ -1085,6 +1088,24 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+* 5j. The new description is longer than 500 characters.
+
+    * 5j1. MediConnect shows an error message that the description is too long, with the limit.
+
+      Use case resumes at step 4.
+
+* 5k. The description is given more than once.
+
+    * 5k1. MediConnect shows an error message naming the repeated field.
+
+      Use case resumes at step 4.
+
+* 5l. A parameter that the command does not take is given.
+
+    * 5l1. MediConnect shows an error message naming the unrecognized parameter.
+
+      Use case resumes at step 4.
+
 **Use case: UC5 - Delete a medication of a patient**
 
 **System**: MediConnect<br>
@@ -1169,13 +1190,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+* 1d. The requested patient is archived.
+
+    * 1d1. MediConnect shows an error message that the patient must be unarchived first.
+
+      Use case ends.
+
 * 2a. A time is earlier than the current time.
 
     * 2a1. MediConnect marks that time as earlier today.
 
       Use case ends.
 
-* 2b. No medication has a time, or the patient is archived.
+* 2b. No medication has a time.
 
     * 2b1. MediConnect shows a message that no medications are due today, naming the patient if only one patient was requested.
 
@@ -1839,7 +1866,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
-* 2a. No active patient matches a keyword.
+* 2a. No active patient matches any of the keywords.
 
     * 2a1. MediConnect shows a message that no patients were found.
 

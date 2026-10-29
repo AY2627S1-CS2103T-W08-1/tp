@@ -70,6 +70,24 @@ public class EditMedCommandParserTest {
     }
 
     @Test
+    public void parse_noBreakSpaceAroundTime_success() {
+        Optional<List<LocalTime>> times = Optional.of(List.of(MORNING));
+        assertParseSuccess(parser, " 1 2 t/\u00a008:30",
+                edit(Optional.empty(), Optional.of(List.of(LocalTime.of(8, 30)))));
+        assertParseSuccess(parser, " 1 2 t/08:00\u00a0", edit(Optional.empty(), times));
+        assertParseSuccess(parser, " 1 2 t/\u00a08:00\u00a0 t/\u00a020:00", edit(Optional.empty(),
+                Optional.of(List.of(MORNING, EVENING))));
+    }
+
+    @Test
+    public void parse_noBreakSpaceOnlyTime_clearsTimes() {
+        assertParseSuccess(parser, " 1 2 t/\u00a0", edit(Optional.empty(), Optional.of(List.of())));
+        assertParseSuccess(parser, " 1 2 med/Aspirin t/ \u00a0\u2003", edit(Optional.of("Aspirin"),
+                Optional.of(List.of())));
+        assertParseFailure(parser, " 1 2 t/08:00 t/\u00a0", MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED);
+    }
+
+    @Test
     public void parse_extraSpacesAndNoLeadingSpace_success() {
         Optional<List<LocalTime>> times = Optional.of(List.of(MORNING));
         assertParseSuccess(parser, "   1    2   med/   Aspirin   t/  08:00  ", edit(Optional.of("Aspirin"), times));

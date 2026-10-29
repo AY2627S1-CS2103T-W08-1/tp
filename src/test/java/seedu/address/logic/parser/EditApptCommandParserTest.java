@@ -50,6 +50,14 @@ public class EditApptCommandParserTest {
     }
 
     @Test
+    public void parse_noBreakSpaceAroundTime_success() {
+        EditApptCommand expected = new EditApptCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT, Optional.empty(),
+                Optional.of(LocalTime.of(9, 30)), Optional.empty(), Optional.empty());
+        assertParseSuccess(parser, "1 2 t/\u00a09:30", expected);
+        assertParseSuccess(parser, "1 2 t/09:30\u00a0", expected);
+    }
+
+    @Test
     public void parse_indianNameSlashWords_providerAccepted() {
         for (String token : new String[] {"a/l", "a/p", "A/L", "A/P"}) {
             String provider = "Dr Muthu " + token + " Ramasamy";

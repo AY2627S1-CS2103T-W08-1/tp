@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.EditMedCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -71,6 +72,11 @@ public class EditMedCommandParser implements Parser<EditMedCommand> {
         return Optional.of(ParserUtil.parseMedicationDescription(description.get()));
     }
 
+    /** Returns true if {@code timeValue} has only whitespace, including Unicode whitespace such as a no-break space. */
+    private static boolean isBlankTime(String timeValue) {
+        return StringUtil.stripUnicodeWhitespace(timeValue).isEmpty();
+    }
+
     /**
      * Parses the values of every {@code t/}. No value means the times are not edited; a single blank value
      * means the times are cleared; otherwise every value must be a valid time.
@@ -81,10 +87,10 @@ public class EditMedCommandParser implements Parser<EditMedCommand> {
         if (timeValues.isEmpty()) {
             return Optional.empty();
         }
-        if (timeValues.size() == 1 && timeValues.get(0).isBlank()) {
+        if (timeValues.size() == 1 && isBlankTime(timeValues.get(0))) {
             return Optional.of(List.of());
         }
-        if (timeValues.stream().anyMatch(String::isBlank)) {
+        if (timeValues.stream().anyMatch(EditMedCommandParser::isBlankTime)) {
             throw new ParseException(MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED);
         }
 
