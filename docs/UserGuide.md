@@ -57,8 +57,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Pressing Enter when the command box is empty or contains only whitespace does nothing.
   The text in the command box and the previous result remain unchanged.
 
-* Command words and field prefixes are case-sensitive and must be lowercase, e.g., `list` rather than `LIST`,
-  and `n/` rather than `N/`. Field values follow their own rules; for example, NRIC input is not case-sensitive.
+* Command words can be typed in any letter case: `list`, `LIST` and `List` do the same thing.
+  Field prefixes must still be lowercase, e.g., `n/` rather than `N/`. Field values and other arguments keep their
+  own rules: NRIC input is not case-sensitive, but `confirm` in `clear confirm` must be lowercase.
 
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.

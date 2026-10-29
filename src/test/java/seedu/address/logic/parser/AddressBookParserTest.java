@@ -7,6 +7,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.LocaleTestUtil.callWithDefaultLocale;
 import static seedu.address.testutil.TypicalAppointments.CHECKUP;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
@@ -15,6 +16,7 @@ import java.time.Clock;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -312,6 +314,49 @@ public class AddressBookParserTest {
         String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewCommand.MESSAGE_USAGE);
         assertThrows(ParseException.class, expectedMessage, ()
                 -> parser.parseCommand(ViewCommand.COMMAND_WORD));
+    }
+
+    @Test
+    public void parseCommand_commandWordCase_routesAllCommands() throws Exception {
+        for (String input : List.of("addcontact 1 n/Clinic r/GP p/123", "editcontact 1 1 nt/Call first",
+                "deletecontact 1 1", "add n/Alex Tan ic/S1111111A dob/1950-04-12 p/91234567 a/Blk 1",
+                "addcare 1 ci/Use cane", "addappt 1 d/2027-01-01 t/10:00 w/Dr Tan", "editappt 1 1 nt/Bring scans",
+                "cancelappt 1 1", "listappt 1", "archive 1", "editcare 1 1 ci/Use walker", "deletecare 1 1",
+                "deleteallergy 1 1", "delete 1", "due 1", "deletemed 1 1", "edit 1 n/Amy Bee",
+                "editmed 1 1 med/Aspirin", "clear confirm", "backup", "restore ClinicBackup.json", "export 1",
+                "find Alex", "list", "listarchived", "unarchive 1", "view 1", "exit", "help")) {
+            String[] parts = input.split(" ", 2);
+            String arguments = parts.length == 2 ? " " + parts[1] : "";
+            Class<?> expectedType = parser.parseCommand(input).getClass();
+            for (String commandWord : List.of(parts[0].toUpperCase(Locale.ROOT),
+                    parts[0].substring(0, 1).toUpperCase(Locale.ROOT) + parts[0].substring(1))) {
+                assertEquals(expectedType, parser.parseCommand(commandWord + arguments).getClass());
+            }
+        }
+    }
+
+    @Test
+    public void parseCommand_mixedCaseCommand_preservesFieldValues() throws Exception {
+        Patient patient = new PatientBuilder().withName("Mary-Jane Tan").withAddress("Blk A, #02-03").build();
+        String arguments = PatientUtil.getAddCommand(patient).substring(AddCommand.COMMAND_WORD.length());
+        assertEquals(new AddCommand(patient), parser.parseCommand("aDd" + arguments));
+        assertEquals(new FindCommand(new NameContainsKeywordsPredicate(List.of("Mary-Jane"))),
+                parser.parseCommand("fInD Mary-Jane"));
+        assertEquals(new RestoreCommand("ClinicBackup.json"), parser.parseCommand("rEsToRe ClinicBackup.json"));
+    }
+
+    @Test
+    public void parseCommand_uppercaseInTurkishLocale_recognizesCommand() throws Exception {
+        assertTrue(callWithDefaultLocale(Locale.of("tr", "TR"), () -> parser.parseCommand("LIST"))
+                instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_uppercaseCommand_preservesArgumentCaseRules() {
+        assertThrows(ParseException.class, String.format(MESSAGE_UNKNOWN_PREFIX, "N/"), () ->
+                parser.parseCommand("ADD N/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1"));
+        String clearUsage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ClearCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, clearUsage, () -> parser.parseCommand("CLEAR CONFIRM"));
     }
 
     @Test
