@@ -23,7 +23,7 @@ MediConnect is a **desktop application for managing patient records and care inf
 1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
-   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands.<br>
+   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details on the right.<br>
    ![Ui](images/Ui.png)
 
    Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
@@ -771,7 +771,7 @@ A command that fails changes nothing. Errors are reported as follows:
 
 ### Viewing a patient's full details: `view`
 
-Shows all the details of the specified patient in the panel to the right of the patient list.
+Shows all the details of the specified patient in the detail panel, to the right of the patient list.
 
 Format: `view INDEX`
 
@@ -794,13 +794,15 @@ Format: `view INDEX`
   `Tab` skips the patient list. To reach a patient in a long patient list quickly, use `find`.
 * A line break inside an entry, which only editing the data file by hand can add, is shown as a space, as in an
   exported record, so that each entry stays on its own numbered line.
-* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
-  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`. Clicking or right-clicking the
-  panel does not move the cursor out of the command box, so you can paste the copied text into a command straight
-  away.
-* The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
-  patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
-  to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
+* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click its text and choose
+  **Copy**. A line of details is copied with its label, e.g., `NRIC: S1234567A`. A numbered entry is copied without
+  its number, e.g., `Penicillin`, so that it can be pasted into a command as it is; right-clicking the number itself
+  shows no menu. Clicking or right-clicking the panel does not move the cursor out of the command box, so you can
+  paste the copied text into a command straight away.
+* The panel keeps showing the patient after commands that do not change a patient, such as `list` or `find`, even
+  if `find` hides the patient from the list. A command that changes a patient's details or care information, e.g.,
+  `edit`, `addcare` or `addappt`, shows that patient instead, with the change, as does `listappt INDEX`. The panel goes
+  back to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
   replaces your data with a backup that does not have this patient with the same details.
 * Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
   `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
@@ -890,7 +892,7 @@ Format: `clear confirm`
   and collision handling as `backup`. If the backup fails, no patients are cleared.
 * The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
   using that file's name to recover the data. There is no undo command.
-* An empty address book is backed up too. Existing backups are never overwritten.
+* The backup is made even when there are no patients. Existing backups are never overwritten.
 * A successful clear writes an empty data file even if the app already shows no patients. After an unreadable-file
   startup warning, this lets you discard the unreadable data and start empty; the recovery copy is kept.
 * If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
@@ -937,14 +939,14 @@ Format: `restore [FILENAME]`
 * `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
+* The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
+  `data/backups` also has a file with exactly the name given, that file is restored instead.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
   For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
   counting from 1, and the validation reason.
-* The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
-  `data/backups` also has a file with exactly the name given, that file is restored instead.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
-* After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+* After a restore, the list shows all active restored patients. The detail panel is cleared, unless the patient shown there is also in the backup with the same details.
 * A successful `restore FILENAME` writes the selected data even if it matches the data already shown. Restoring
   an empty backup after an unreadable-file startup warning replaces the data file with valid empty data.
   If the replacement cannot be saved, the restore fails and the app returns to its previous state.
@@ -955,7 +957,7 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
 
-`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there.
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 
@@ -1043,6 +1045,10 @@ Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also appl
 A file saved in another encoding, such as "ANSI" in Windows Notepad, is not valid UTF-8 if it contains letters
 outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`. For such
 a backup, `restore` says that it is not saved as UTF-8.
+
+A data file saved by v1.3 can be loaded. Its medications, which v1.3 saved as plain text, are loaded as medications with no daily times. Use [`editmed`](#editing-a-medication-editmed) to set their times.
+
+A patient who has two medications with the same description, ignoring letter case and spacing, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
 
 <box type="warning" seamless>
 

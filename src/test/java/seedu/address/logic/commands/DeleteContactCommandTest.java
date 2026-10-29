@@ -29,6 +29,20 @@ import seedu.address.testutil.PatientBuilder;
 public class DeleteContactCommandTest {
 
     @Test
+    public void execute_modelIgnoresContactUpdate_failsInternalAssertion() {
+        Patient patient = new PatientBuilder().withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs()) {
+            @Override
+            public void setPatient(Patient target, Patient editedPatient) {
+                // Simulate a model implementation that silently drops the contact update.
+            }
+        };
+        assertThrows(AssertionError.class, () ->
+                new DeleteContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT).execute(model));
+        assertEquals(patient, model.getAddressBook().getPatientList().get(0));
+    }
+
+    @Test
     public void execute_validIndex_removesAndRenumbersContacts() throws Exception {
         Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN)
                 .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0)))).build();

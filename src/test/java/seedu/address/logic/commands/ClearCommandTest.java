@@ -15,10 +15,13 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -34,6 +37,33 @@ public class ClearCommandTest {
     private Path backupDir;
 
     // Checks the required wording independently of the production message constant.
+    @Test
+    public void execute_modelIgnoresClear_failsInternalAssertion() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
+            @Override
+            public void setAddressBook(ReadOnlyAddressBook addressBook) {
+                // Simulate a model implementation that does not clear patient data.
+            }
+        };
+        assertThrows(AssertionError.class, () -> new ClearCommand(FIXED_CLOCK, backupDir).execute(model));
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+    }
+
+    @Test
+    public void execute_modelRetainsViewedPatient_failsInternalAssertion() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
+            private final ObservableValue<Patient> staleSelection =
+                    new SimpleObjectProperty<>(getTypicalAddressBook().getPatientList().get(0));
+
+            @Override
+            public ObservableValue<Patient> getViewedPatient() {
+                return staleSelection;
+            }
+        };
+        assertThrows(AssertionError.class, () -> new ClearCommand(FIXED_CLOCK, backupDir).execute(model));
+        assertTrue(model.getAddressBook().getPatientList().isEmpty());
+    }
+
     @Test
     public void execute_emptyAddressBook_success() {
         Model model = new ModelManager();
