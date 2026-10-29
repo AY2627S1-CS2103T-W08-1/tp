@@ -4,7 +4,9 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
 import java.util.Locale;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
@@ -25,9 +27,15 @@ public class FindCommand extends Command {
 
     public static final String MESSAGE_NO_PATIENTS_FOUND = "No patients found matching the given keyword(s).";
 
+    private static final Logger logger = LogsCenter.getLogger(FindCommand.class);
+
     private final NameContainsKeywordsPredicate predicate;
 
+    /**
+     * Creates a {@code FindCommand} that finds the active patients that match {@code predicate}.
+     */
     public FindCommand(NameContainsKeywordsPredicate predicate) {
+        requireNonNull(predicate);
         this.predicate = predicate;
     }
 
@@ -35,6 +43,8 @@ public class FindCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.updateFilteredPatientList(predicate.and(PREDICATE_SHOW_ACTIVE_PATIENTS));
+        // Only the number of patients is logged, as a keyword can be part of the name of a patient
+        logger.info("Find matched " + model.getFilteredPatientList().size() + " patient(s)");
 
         if (model.getFilteredPatientList().isEmpty()) {
             return new CommandResult(MESSAGE_NO_PATIENTS_FOUND);

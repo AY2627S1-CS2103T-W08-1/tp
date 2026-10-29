@@ -1,5 +1,7 @@
 package seedu.address.model.patient;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 
@@ -25,7 +28,12 @@ public class NameContainsKeywordsPredicate implements Predicate<Patient> {
 
     private final List<String> keywords;
 
+    /**
+     * Creates a predicate that tests the name of a patient against {@code keywords}, none of which is null.
+     */
     public NameContainsKeywordsPredicate(List<String> keywords) {
+        requireNonNull(keywords);
+        CollectionUtil.requireAllNonNull(keywords);
         this.keywords = keywords;
     }
 

@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
@@ -22,6 +23,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
 import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.LogCollector;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -75,6 +77,28 @@ public class FindCommandTest {
         expectedModel.updateFilteredPatientList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
         assertEquals(List.of(CARL, ELLE, FIONA), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void constructor_nullPredicate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new FindCommand(null));
+    }
+
+    @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new FindCommand(preparePredicate("Alice")).execute(null));
+    }
+
+    @Test
+    public void execute_logsMatchCountButNotKeywords() throws Exception {
+        List<String> messages;
+        try (LogCollector logs = new LogCollector(FindCommand.class)) {
+            new FindCommand(preparePredicate("Kurz Elle Kunz")).execute(model);
+            messages = logs.getMessages();
+        }
+
+        assertTrue(messages.stream().anyMatch(message -> message.contains("3")));
+        assertFalse(messages.stream().anyMatch(message -> message.contains("Kurz")));
     }
 
     @Test
