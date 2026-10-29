@@ -448,7 +448,7 @@ The sequence diagram below shows a successful `restore old.json`.
    the previous model, including an empty backup after startup recovery. A save failure restores the model's
    previous data, filter and viewed patient; the automatic backup is kept.
 
-If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing.
+If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing. `RestoreCommand` also checks with `Files#isReadable()` and `Files#isExecutable()` that the backup folder itself cannot be opened, e.g., because it or a folder above it is not readable, since both methods are also false for a name too long for the file system, e.g., of 300 characters. Such a name is reported as not found.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
