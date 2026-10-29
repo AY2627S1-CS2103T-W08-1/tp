@@ -310,6 +310,24 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseMedicationDescription_longOnlyBecauseOfNoBreakSpaces_accepted() throws Exception {
+        String word = "m".repeat(249);
+        String description = word + "\u00a0".repeat(5) + word; // 503 characters, 499 after normalization
+        assertEquals(description, ParserUtil.parseMedicationDescription(description));
+
+        String paddedDescription = "\u00a0".repeat(10) + "m".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        assertEquals(paddedDescription.strip(), ParserUtil.parseMedicationDescription(paddedDescription).strip());
+    }
+
+    @Test
+    public void parseMedicationDescription_longAfterNormalization_throwsParseException() {
+        String word = "m".repeat(250);
+        String description = word + "\u00a0\u00a0 " + word + "m"; // 502 characters after normalization
+        String message = Medication.MESSAGE_DESCRIPTION_TOO_LONG;
+        assertThrows(ParseException.class, message, () -> ParserUtil.parseMedicationDescription(description));
+    }
+
+    @Test
     public void parseMedicationDescription_valid_returnsTrimmedDescription() throws Exception {
         assertEquals("Metformin 500mg", ParserUtil.parseMedicationDescription("  Metformin 500mg" + WHITESPACE));
     }

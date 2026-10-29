@@ -73,6 +73,21 @@ public class JsonAdaptedMedicationTest {
     }
 
     @Test
+    public void toModelType_descriptionLongOnlyBecauseOfNoBreakSpaces_loaded() throws Exception {
+        String word = "m".repeat(249);
+        String description = word + "\u00a0".repeat(5) + word; // 503 characters, 499 after normalization
+        assertEquals(word + " " + word, new JsonAdaptedMedication(description, List.of()).toModelType()
+                .getDescription());
+    }
+
+    @Test
+    public void toModelType_descriptionLongAfterNormalization_rejected() {
+        String word = "m".repeat(250);
+        JsonAdaptedMedication adapted = new JsonAdaptedMedication(word + "\u00a0\u00a0 " + word + "m", List.of());
+        assertThrows(IllegalValueException.class, Medication.MESSAGE_DESCRIPTION_TOO_LONG, adapted::toModelType);
+    }
+
+    @Test
     public void toModelType_invalidTime_throwsIllegalValueException() {
         for (String invalidTime : new String[] {"", "24:00", "08:60", "8:30", "noon"}) {
             JsonAdaptedMedication adapted = new JsonAdaptedMedication(VALID_DESCRIPTION, List.of(invalidTime));

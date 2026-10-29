@@ -128,7 +128,7 @@ public class ParserUtil {
         if (!Medication.isValidDescription(trimmedDescription)) {
             throw new ParseException(Medication.MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
-        if (!Medication.isDescriptionWithinMaxLength(trimmedDescription.replaceAll("\\s+", " "))) {
+        if (!Medication.isDescriptionWithinMaxLength(Medication.normalizeDescription(trimmedDescription))) {
             throw new ParseException(Medication.MESSAGE_DESCRIPTION_TOO_LONG);
         }
         return trimmedDescription;
