@@ -43,6 +43,8 @@ public class RestoreCommand extends Command {
             "No backup named %1$s was found in %2$s. Your data has not been changed.";
     public static final String MESSAGE_NO_READ_PERMISSION =
             "MediConnect does not have permission to read %1$s. Your data has not been changed.";
+    public static final String MESSAGE_NO_FOLDER_READ_PERMISSION = "MediConnect does not have permission to "
+            + "read the backup folder %1$s. Your data has not been changed.";
     public static final String MESSAGE_UNREADABLE = "The backup %1$s could not be read. It may be damaged, "
             + "or not a MediConnect data file. Your data has not been changed.";
     public static final String MESSAGE_NOT_UTF8 = "The backup %1$s could not be read, as it is not saved as "
@@ -85,6 +87,11 @@ public class RestoreCommand extends Command {
         this.fileName = fileName;
         this.clock = clock;
         this.backupDir = backupDir;
+    }
+
+    @Override
+    public boolean requiresSaveWhenUnchanged() {
+        return true;
     }
 
     /**
@@ -131,7 +138,7 @@ public class RestoreCommand extends Command {
         Path backupFile = backupDir.resolve(backupName);
         String notFoundMessage = String.format(MESSAGE_NOT_FOUND, fileName, backupDir.toAbsolutePath().normalize());
         if (!Files.isRegularFile(backupFile)) {
-            throw new CommandException(notFoundMessage);
+            throw new CommandException(describeMissingBackup(backupFile, notFoundMessage));
         }
 
         try {
@@ -143,6 +150,19 @@ public class RestoreCommand extends Command {
             logger.warning("Could not restore " + backupFile + ": " + reason);
             throw new CommandException(reason, dle);
         }
+    }
+
+    /**
+     * Returns the reason to give when {@code backupFile}, the backup to restore, is not found: that
+     * MediConnect may not read the backup folder, if it cannot even tell whether the file exists, or else
+     * {@code notFoundMessage}.
+     */
+    private String describeMissingBackup(Path backupFile, String notFoundMessage) {
+        // neither holds if the folder may not be opened, e.g., after chmod 000 or chmod 444 on it
+        boolean isFolderUnreadable = !Files.exists(backupFile) && !Files.notExists(backupFile);
+        return isFolderUnreadable
+                ? String.format(MESSAGE_NO_FOLDER_READ_PERMISSION, backupDir.toAbsolutePath().normalize())
+                : notFoundMessage;
     }
 
     /**

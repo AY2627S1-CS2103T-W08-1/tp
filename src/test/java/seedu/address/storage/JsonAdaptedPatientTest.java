@@ -334,6 +334,17 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_canonicallyEquivalentProviders_throwsIllegalValueException() {
+        // the same provider, with "é" stored as one character and as "e" followed by a combining accent
+        Appointment composed = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Caf\u00e9 clinic", "");
+        Appointment decomposed = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Cafe\u0301 clinic", "");
+        JsonAdaptedPatient duplicates = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
+                List.of(new JsonAdaptedAppointment(composed), new JsonAdaptedAppointment(decomposed)), null);
+        assertThrows(IllegalValueException.class, Appointment.MESSAGE_DUPLICATE, duplicates::toModelType);
+    }
+
+    @Test
     public void toModelType_sameAppointmentTwice_throwsIllegalValueException() {
         // the same date, time and provider, apart from letter case and spaces, as addappt rejects
         Appointment sameCheckup = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "dr  TAN", "");

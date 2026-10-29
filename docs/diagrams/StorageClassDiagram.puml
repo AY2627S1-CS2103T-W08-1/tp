@@ -8,6 +8,7 @@ package Storage as StoragePackage {
 
 Class "<<interface>>\nStorage" as Storage
 Class StorageManager
+Class DataFileLock
 
 package "UserPrefs Storage" #F4F6F6{
 Class JsonUserPrefsStorage
@@ -23,6 +24,9 @@ Class JsonAdaptedAppointment
 }
 
 }
+
+Class MainApp #555555
+MainApp -down-> "0..1" DataFileLock : holds
 
 Class HiddenOutside #FFFFFF
 HiddenOutside ..> Storage
