@@ -23,6 +23,7 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -186,6 +187,19 @@ public class EditMedCommandTest {
         descriptionOnly(FIRST_MEDICATION, "Metformin 850mg").execute(model);
 
         assertEquals(model.getFilteredPatientList().get(0), model.getViewedPatient().getValue());
+    }
+
+    @Test
+    public void execute_localeWithOtherDigits_givesNumberInPanelDigits() throws Exception {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // String.format writes 2 as an Arabic-Indic digit in Egyptian Arabic unless given Locale.ROOT
+            Locale.setDefault(Locale.forLanguageTag("ar-EG"));
+            String message = timesOnly(SECOND_MEDICATION, MORNING).execute(model).getFeedbackToUser();
+            assertEquals("Updated medication 2 of " + patient.getName() + ": Aspirin 100mg (08:00)", message);
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     @Test
