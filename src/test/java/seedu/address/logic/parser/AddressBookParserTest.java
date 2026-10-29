@@ -415,6 +415,35 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_noBreakSpaceAfterCommandWord_parsedAsNormalSpace() throws Exception {
+        String nbsp = "\u00a0";
+        assertEquals(parser.parseCommand("delete 1"), parser.parseCommand("delete" + nbsp + "1"));
+        assertEquals(parser.parseCommand("view 1"), parser.parseCommand("view" + nbsp + "1"));
+        assertEquals(parser.parseCommand("due 1"), parser.parseCommand("due" + nbsp + "1"));
+        assertEquals(parser.parseCommand("editmed 1 2 t/08:00"),
+                parser.parseCommand("editmed" + nbsp + "1 2 t/08:00"));
+        assertTrue(parser.parseCommand("list" + nbsp) instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_noBreakSpaceAroundInput_parsedAsNormalSpace() throws Exception {
+        String nbsp = "\u00a0";
+        assertEquals(parser.parseCommand("delete 1"), parser.parseCommand(nbsp + "delete 1" + nbsp));
+        assertTrue(parser.parseCommand(nbsp + "list") instanceof ListCommand);
+        assertEquals(parser.parseCommand("delete 1"), parser.parseCommand("delete 1" + nbsp));
+        assertEquals(parser.parseCommand("editmed 1 2 t/08:00"),
+                parser.parseCommand("editmed 1" + nbsp + "2" + nbsp + "t/08:00"));
+        assertEquals(parser.parseCommand("deletemed 1 2"), parser.parseCommand("deletemed" + nbsp + "1" + nbsp + "2"));
+    }
+
+    @Test
+    public void parseCommand_tabAndOtherHorizontalSpaces_parsedAsNormalSpace() throws Exception {
+        assertEquals(parser.parseCommand("delete 1"), parser.parseCommand("delete\t1"));
+        assertEquals(parser.parseCommand("editmed 1 2 t/08:00"), parser.parseCommand("editmed\t1\t2\tt/08:00"));
+        assertEquals(parser.parseCommand("due 1"), parser.parseCommand("due\u20031\u3000"));
+    }
+
+    @Test
     public void parseCommand_unknownCommand_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("unknownCommand"));
     }

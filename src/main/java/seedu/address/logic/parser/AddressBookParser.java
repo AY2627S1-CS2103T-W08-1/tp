@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.AddApptCommand;
 import seedu.address.logic.commands.AddCareCommand;
 import seedu.address.logic.commands.AddCommand;
@@ -50,7 +51,17 @@ public class AddressBookParser {
      * Used for initial separation of command word and args.
      */
     private static final Pattern BASIC_COMMAND_FORMAT = Pattern.compile("(?<commandWord>\\S+)(?<arguments>.*)");
+    private static final Pattern HORIZONTAL_WHITESPACE = Pattern.compile("\\h");
     private static final Logger logger = LogsCenter.getLogger(AddressBookParser.class);
+
+    /**
+     * Returns {@code userInput} with every horizontal whitespace character, such as a tab or a no-break space
+     * copied from another app, replaced by a normal space, and without whitespace at both ends, so that the
+     * parsers only see normal spaces.
+     */
+    private static String normalizeWhitespace(String userInput) {
+        return StringUtil.stripUnicodeWhitespace(HORIZONTAL_WHITESPACE.matcher(userInput).replaceAll(" "));
+    }
 
     /**
      * Parses user input into command for execution.
@@ -60,7 +71,7 @@ public class AddressBookParser {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public Command parseCommand(String userInput) throws ParseException {
-        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(userInput.trim());
+        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(normalizeWhitespace(userInput));
         if (!matcher.matches()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
         }
