@@ -365,6 +365,16 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_sameAppointmentWithSpacesAroundProvider_throwsIllegalValueException() {
+        // addappt trims the provider, but a hand-edited file can keep spaces at either end
+        Appointment spacedCheckup = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), " Dr Tan ", "");
+        JsonAdaptedPatient duplicates = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
+                List.of(new JsonAdaptedAppointment(CHECKUP), new JsonAdaptedAppointment(spacedCheckup)), null);
+        assertThrows(IllegalValueException.class, Appointment.MESSAGE_DUPLICATE, duplicates::toModelType);
+    }
+
+    @Test
     public void toModelType_appointmentBeforeDob_throwsIllegalValueException() {
         // addappt, editappt and edit reject it, so a hand-edited data file or backup cannot hold it either
         Appointment beforeBirth = new Appointment(BENSON.getDob().value.minusDays(1), LocalTime.of(10, 0),
