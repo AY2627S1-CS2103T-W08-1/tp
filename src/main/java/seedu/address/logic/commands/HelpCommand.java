@@ -22,7 +22,8 @@ public class HelpCommand extends Command {
 
     public static final String COMMAND_WORD = "help";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Shows program usage instructions.\n"
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Opens the help window, which lists every "
+            + "command with its format and a one-line description.\n"
             + "Example: " + COMMAND_WORD;
 
     /** Separates the format of a command from its description in {@code COMMAND_SUMMARY}. */
@@ -92,7 +93,8 @@ public class HelpCommand extends Command {
                     formatEntry(CancelApptCommand.COMMAND_WORD + " INDEX APPT_INDEX",
                             "Cancels appointment APPT_INDEX of the patient at INDEX."),
                     formatEntry(ListApptCommand.COMMAND_WORD + " [INDEX]",
-                            "Lists all upcoming appointments, or every appointment of the patient at INDEX.")),
+                            "Lists the upcoming appointments of all active patients, or every appointment "
+                                    + "of the patient at INDEX.")),
             formatGroup("Data",
                     formatEntry(BackupCommand.COMMAND_WORD,
                             "Saves a copy of all patient data to data/backups."),
