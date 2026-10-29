@@ -25,6 +25,8 @@ class JsonAdaptedPatient {
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Patient's %s field is missing!";
     public static final String MESSAGE_NULL_APPOINTMENT = "Appointments must not be null.";
     public static final String MESSAGE_NULL_CARE_ENTRY = "Care entries must not be null.";
+    public static final String MESSAGE_DUPLICATE_MEDICATION =
+            "A patient cannot have duplicate medications, ignoring letter case.";
 
     private final String name;
     private final String phone;
@@ -145,7 +147,11 @@ class JsonAdaptedPatient {
             if (medication == null) {
                 throw new IllegalValueException("Medication entries must not be null.");
             }
-            modelMedications.add(medication.toModelType());
+            Medication modelMedication = medication.toModelType();
+            if (modelMedications.stream().anyMatch(modelMedication::isSameMedication)) {
+                throw new IllegalValueException(MESSAGE_DUPLICATE_MEDICATION);
+            }
+            modelMedications.add(modelMedication);
         }
 
         List<Contact> modelContacts = new ArrayList<>();

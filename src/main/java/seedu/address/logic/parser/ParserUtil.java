@@ -25,6 +25,12 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
     public static final String MESSAGE_NOT_TWO_INDEXES = "Exactly two indexes must be given.";
 
+    /*
+     * Apostrophes that phones, word processors and email programs type in names, e.g. in "O’Brien":
+     * the left and right single quotation marks and the modifier letter apostrophe.
+     */
+    private static final String TYPED_APOSTROPHES_REGEX = "[\\u2018\\u2019\\u02BC]";
+
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
      * trimmed.
@@ -57,13 +63,13 @@ public class ParserUtil {
     /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed, and multiple spaces between words reduced to one.
-     * Curly apostrophes (’) are replaced with straight ones (').
+     * Curly apostrophes (‘ and ’) and modifier letter apostrophes (ʼ) are replaced with straight ones (').
      *
      * @throws ParseException if the given {@code name} is invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        String trimmedName = name.trim().replaceAll("\\s+", " ").replace('’', '\'');
+        String trimmedName = name.trim().replaceAll("\\s+", " ").replaceAll(TYPED_APOSTROPHES_REGEX, "'");
         if (!Name.isValidName(trimmedName)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
@@ -120,7 +126,7 @@ public class ParserUtil {
      * Parses a {@code String description} into a medication description.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code description} is blank.
+     * @throws ParseException if the given {@code description} is blank or longer than the maximum length.
      */
     public static String parseMedicationDescription(String description) throws ParseException {
         requireNonNull(description);
@@ -128,19 +134,25 @@ public class ParserUtil {
         if (!Medication.isValidDescription(trimmedDescription)) {
             throw new ParseException(Medication.MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
+        if (!Medication.isDescriptionWithinMaxLength(Medication.normalizeDescription(trimmedDescription))) {
+            throw new ParseException(Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+        }
         return trimmedDescription;
     }
 
     /**
-     * Parses a {@code String time} in 24-hour HH:MM format into a {@code LocalTime}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Parses a {@code String time} in 24-hour HH:MM or H:MM format into a {@code LocalTime}.
+     * Leading and trailing whitespaces will be trimmed, and an hour of one digit is read as if it had a leading 0.
      *
-     * @throws ParseException if the given {@code time} is not exactly two digits, a colon and two digits,
+     * @throws ParseException if the given {@code time} is not one or two digits, a colon and two digits,
      *     or is not a valid time of day.
      */
     public static LocalTime parseTime(String time) throws ParseException {
         requireNonNull(time);
         String trimmedTime = time.trim();
+        if (trimmedTime.matches("\\d:\\d{2}")) {
+            trimmedTime = "0" + trimmedTime;
+        }
         if (!Medication.isValidTime(trimmedTime)) {
             throw new ParseException(Medication.MESSAGE_TIME_CONSTRAINTS);
         }

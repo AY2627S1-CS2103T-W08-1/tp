@@ -67,11 +67,6 @@ public class AddressBookParser {
         final String commandWord = matcher.group("commandWord");
         final String arguments = matcher.group("arguments");
 
-        // Note to developers: Change LOG_LEVEL in LogsCenter to enable lower level (i.e., FINE, FINER and lower)
-        // log messages such as the one below.
-        // Lower level log messages are used sparingly to minimize noise in the code.
-        logger.fine("Command word: " + commandWord);
-
         return switch (commandWord) {
             case AddContactCommand.COMMAND_WORD -> new AddContactCommandParser().parse(arguments);
             case EditContactCommand.COMMAND_WORD -> new EditContactCommandParser().parse(arguments);
@@ -103,7 +98,8 @@ public class AddressBookParser {
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommand();
             default -> {
-                logger.finer("Unknown command word: " + commandWord);
+                // The word is not logged, as a caregiver may have typed a patient's NRIC or name instead
+                logger.finer("Unknown command word");
                 throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
             }
         };

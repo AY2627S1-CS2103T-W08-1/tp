@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
+import java.util.Locale;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -49,8 +50,9 @@ public class FindCommand extends Command {
             return new CommandResult(MESSAGE_NO_PATIENTS_FOUND);
         }
 
-        return new CommandResult(
-                String.format(Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW, model.getFilteredPatientList().size()));
+        // Locale.ROOT, so that the count is in the same digits as in the panel on every computer
+        return new CommandResult(String.format(Locale.ROOT, Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW,
+                model.getFilteredPatientList().size()));
     }
 
     @Override

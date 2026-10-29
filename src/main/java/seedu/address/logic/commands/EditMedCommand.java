@@ -7,6 +7,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TIME;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import seedu.address.commons.core.index.Index;
@@ -31,7 +32,7 @@ public class EditMedCommand extends Command {
             + "Parameters: INDEX (must be a positive integer) MED_INDEX (must be a positive integer) "
             + "[" + PREFIX_MEDICATION + "DESCRIPTION] [" + PREFIX_TIME + "TIME]...\n"
             + "At least one of " + PREFIX_MEDICATION + " or " + PREFIX_TIME + " must be given. "
-            + "TIME is in HH:MM (24-hour). Any " + PREFIX_TIME + " given replaces all existing times; "
+            + "TIME is in H:MM or HH:MM (24-hour). Any " + PREFIX_TIME + " given replaces all existing times; "
             + PREFIX_TIME + " with nothing after it clears them and cannot be combined with another "
             + PREFIX_TIME + ".\n"
             + "Example: " + COMMAND_WORD + " 1 2 " + PREFIX_MEDICATION + "Metformin 850mg "
@@ -83,7 +84,8 @@ public class EditMedCommand extends Command {
         model.setPatient(patientToEdit, editedPatient);
         model.setViewedPatient(editedPatient);
 
-        return new CommandResult(String.format(Messages.MESSAGE_EDIT_MEDICATION_SUCCESS,
+        // Locale.ROOT, so that the number is in the same digits as in the panel on every computer
+        return new CommandResult(String.format(Locale.ROOT, Messages.MESSAGE_EDIT_MEDICATION_SUCCESS,
                 medicationIndex.getOneBased(), patientToEdit.getName(), editedMedication));
     }
 

@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
@@ -22,12 +23,13 @@ public class FindCommandParser implements Parser<FindCommand> {
      */
     public FindCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        String trimmedArgs = args.trim();
-        if (trimmedArgs.isEmpty()) {
+        // Unicode spaces, e.g. a no-break space copied from another application, separate the keywords too
+        String normalizedArgs = StringUtil.normalizeEntry(args);
+        if (normalizedArgs.isEmpty()) {
             throw new ParseException(MESSAGE_NO_KEYWORDS);
         }
 
-        String[] nameKeywords = trimmedArgs.split("\\s+");
+        String[] nameKeywords = normalizedArgs.split(" ");
 
         return new FindCommand(new NameContainsKeywordsPredicate(List.of(nameKeywords)));
     }

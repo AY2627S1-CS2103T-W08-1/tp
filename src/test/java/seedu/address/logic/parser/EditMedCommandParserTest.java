@@ -49,6 +49,12 @@ public class EditMedCommandParserTest {
     }
 
     @Test
+    public void parse_oneDigitHourTimes_success() {
+        assertParseSuccess(parser, " 1 2 t/8:00 t/20:00",
+                edit(Optional.empty(), Optional.of(List.of(MORNING, EVENING))));
+    }
+
+    @Test
     public void parse_descriptionAndTimes_success() {
         assertParseSuccess(parser, " 1 2 med/Aspirin t/20:00",
                 edit(Optional.of("Aspirin"), Optional.of(List.of(EVENING))));
@@ -118,7 +124,7 @@ public class EditMedCommandParserTest {
 
     @Test
     public void parse_invalidTime_throwsParseException() {
-        for (String time : new String[] {"24:00", "08:60", "8:30", "0830", "08:30:00", "abc", "-1:00", "08:30pm",
+        for (String time : new String[] {"24:00", "08:60", "9:60", "0830", "08:30:00", "abc", "-1:00", "08:30pm",
             "08:00 20:00", "08:00,20:00"}) {
             assertParseFailure(parser, " 1 2 t/" + time, Medication.MESSAGE_TIME_CONSTRAINTS);
         }
@@ -187,8 +193,22 @@ public class EditMedCommandParserTest {
     public void parse_specialCharactersAndLongDescription_success() {
         String special = "<b>\"';DROP TABLE--&é中文";
         assertParseSuccess(parser, " 1 2 med/" + special, edit(Optional.of(special), Optional.empty()));
-        String longText = "x".repeat(5000);
+        String longText = "x".repeat(Medication.MAX_DESCRIPTION_LENGTH);
         assertParseSuccess(parser, " 1 2 med/" + longText, edit(Optional.of(longText), Optional.empty()));
+    }
+
+    @Test
+    public void parse_overlongDescription_throwsParseException() {
+        String overlongText = "x".repeat(Medication.MAX_DESCRIPTION_LENGTH + 1);
+        assertParseFailure(parser, " 1 2 med/" + overlongText, Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+        assertParseFailure(parser, " 1 2 med/" + overlongText + " t/08:00",
+                Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+    }
+
+    @Test
+    public void parse_descriptionLongOnlyBeforeWhitespaceIsRemoved_success() {
+        String text = "x".repeat(Medication.MAX_DESCRIPTION_LENGTH);
+        assertParseSuccess(parser, " 1 2 med/  " + text + "   ", edit(Optional.of(text), Optional.empty()));
     }
 
     private static EditMedCommand edit(Optional<String> description, Optional<List<LocalTime>> times) {
