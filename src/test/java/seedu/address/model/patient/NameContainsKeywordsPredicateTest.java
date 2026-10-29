@@ -2,8 +2,10 @@ package seedu.address.model.patient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -70,6 +72,13 @@ public class NameContainsKeywordsPredicateTest {
         predicate = new NameContainsKeywordsPredicate(List.of("91234567", "S1234567A", "Main", "Street"));
         assertFalse(predicate.test(new PatientBuilder().withName("Alice").withPhone("91234567")
                 .withNric("S1234567A").withAddress("Main Street").build()));
+    }
+
+    @Test
+    public void constructor_nullKeywords_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new NameContainsKeywordsPredicate(null));
+        assertThrows(NullPointerException.class, () -> new NameContainsKeywordsPredicate(
+                Arrays.asList("Alice", null)));
     }
 
     @Test
