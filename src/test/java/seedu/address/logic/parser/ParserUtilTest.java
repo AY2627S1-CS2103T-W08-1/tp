@@ -286,6 +286,18 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseTime_noBreakSpaceAround_returnsLocalTime() throws Exception {
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("\u00a008:30"));
+        assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("08:30\u00a0"));
+        assertEquals(LocalTime.of(9, 30), ParserUtil.parseTime("\u2003\u00a09:30 \u00a0"));
+    }
+
+    @Test
+    public void parseTime_onlyNoBreakSpace_throwsParseException() {
+        assertThrows(ParseException.class, Medication.MESSAGE_TIME_CONSTRAINTS, () -> ParserUtil.parseTime("\u00a0"));
+    }
+
+    @Test
     public void parseTime_oneDigitHour_returnsLocalTime() throws Exception {
         assertEquals(LocalTime.of(9, 30), ParserUtil.parseTime("9:30"));
         assertEquals(LocalTime.of(8, 30), ParserUtil.parseTime("8:30"));
