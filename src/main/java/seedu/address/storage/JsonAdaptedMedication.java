@@ -15,6 +15,7 @@ import seedu.address.model.patient.Medication;
 /**
  * Jackson-friendly version of {@link Medication}.
  * The times are stored as "HH:MM" strings; a missing list of times is loaded as no times.
+ * A plain string, as saved by v1.3, is loaded as a description with no times.
  */
 class JsonAdaptedMedication {
 
@@ -43,6 +44,14 @@ class JsonAdaptedMedication {
         requireNonNull(source);
         description = source.getDescription();
         source.getTimes().forEach(time -> times.add(Medication.formatTime(time)));
+    }
+
+    /**
+     * Constructs a {@code JsonAdaptedMedication} from a v1.3 plain-string medication, which has no times.
+     */
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+    public static JsonAdaptedMedication fromDescription(String description) {
+        return new JsonAdaptedMedication(description, null);
     }
 
     /**

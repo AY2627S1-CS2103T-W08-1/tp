@@ -144,7 +144,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
   e.g., `Tan Ah Kow s/o Lim`, `Muthu a/l Ramasamy`, or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
-  A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
+  A curly apostrophe (`’` or `‘`) or `ʼ`, which phones and word processors may type, is saved as `'`.
+  Multiple spaces between words are reduced to one.
   Letters can be from any language, e.g., `Zoë Tan` or `陈大文`. A name cannot start or end with `s/o`, `d/o`,
   `c/o`, `a/l` or `a/p`, ignoring letter case.
 * `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
@@ -710,6 +711,16 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
 * Keyword order does not matter; for example, `Alex David` matches `David Alex`.
 * The search considers only names.
 * Only full words match; for example, `Ale` does not match `Alex`.
+* A name is split into words at spaces, hyphens (`-`), apostrophes (`'`) and dots (`.`). For example, `Mary`, `Jane`
+  and `Mary-Jane` all match `Mary-Jane Tan`, `Brien` and `O'Brien` match `Mary O'Brien`, and `Jr` matches
+  `Tan Ah Kow Jr.`. A keyword is split in the same way, and all its words must be next to each other in the name,
+  so `Mary-Jane` does not match `Mary Lim`.
+* A curly apostrophe (`‘` or `’`) or a modifier apostrophe (`ʼ`) in a keyword is treated as `'`, so `O’Brien` matches
+  `Mary O'Brien`.
+* Keywords are separated by any kind of space, including a no-break space copied from another application, so
+  `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
+* An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
+  accent mark matches a name with the single character `é`.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
@@ -1048,6 +1059,10 @@ Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also appl
 A file saved in another encoding, such as "ANSI" in Windows Notepad, is not valid UTF-8 if it contains letters
 outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`. For such
 a backup, `restore` says that it is not saved as UTF-8.
+
+A data file saved by v1.3 can be loaded. Its medications, which v1.3 saved as plain text, are loaded as medications with no daily times. Use [`editmed`](#editing-a-medication-editmed) to set their times.
+
+A patient who has two medications with the same description, ignoring letter case and spacing, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
 
 <box type="warning" seamless>
 
