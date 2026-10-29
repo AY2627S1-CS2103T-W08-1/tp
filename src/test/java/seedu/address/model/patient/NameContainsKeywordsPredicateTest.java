@@ -115,6 +115,35 @@ public class NameContainsKeywordsPredicateTest {
     }
 
     @Test
+    public void test_otherApostrophesInKeyword_matchStraightApostropheInName() {
+        Patient patient = new PatientBuilder().withName("Mary O'Brien").build();
+
+        // left and right single quotation marks and a modifier letter apostrophe
+        for (String apostrophe : new String[] {"\u2018", "\u2019", "\u02bc"}) {
+            assertTrue(new NameContainsKeywordsPredicate(List.of("O" + apostrophe + "Brien")).test(patient));
+            assertFalse(new NameContainsKeywordsPredicate(List.of("O" + apostrophe + "Brian")).test(patient));
+        }
+    }
+
+    @Test
+    public void test_unicodeSpaceInKeyword_treatedAsSpace() {
+        Patient alexTan = new PatientBuilder().withName("Alex Tan").build();
+        Patient alexYeoh = new PatientBuilder().withName("Alex Yeoh").build();
+        Patient bernice = new PatientBuilder().withName("Bernice Yu").build();
+
+        // a keyword with a no-break space needs its parts next to each other in the name
+        NameContainsKeywordsPredicate sameKeyword = new NameContainsKeywordsPredicate(List.of("Alex\u00a0Yeoh"));
+        assertTrue(sameKeyword.test(alexYeoh));
+        assertFalse(sameKeyword.test(alexTan));
+
+        // two keywords, as the parser makes them from "Alex\u00a0Yeoh", match either name (an OR search)
+        NameContainsKeywordsPredicate twoKeywords = new NameContainsKeywordsPredicate(List.of("Alex", "Yeoh"));
+        assertTrue(twoKeywords.test(alexTan));
+        assertTrue(twoKeywords.test(alexYeoh));
+        assertFalse(twoKeywords.test(bernice));
+    }
+
+    @Test
     public void test_keywordOfOnlySeparators_returnsFalse() {
         Patient patient = new PatientBuilder().withName("Mary-Jane Tan").build();
         assertFalse(new NameContainsKeywordsPredicate(List.of("-")).test(patient));

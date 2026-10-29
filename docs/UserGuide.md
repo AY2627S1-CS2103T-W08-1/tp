@@ -710,7 +710,10 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
   and `Mary-Jane` all match `Mary-Jane Tan`, `Brien` and `O'Brien` match `Mary O'Brien`, and `Jr` matches
   `Tan Ah Kow Jr.`. A keyword is split in the same way, and all its words must be next to each other in the name,
   so `Mary-Jane` does not match `Mary Lim`.
-* A curly apostrophe (`’`) in a keyword is treated as `'`, so `O’Brien` matches `Mary O'Brien`.
+* A curly apostrophe (`‘` or `’`) or a modifier apostrophe (`ʼ`) in a keyword is treated as `'`, so `O’Brien` matches
+  `Mary O'Brien`.
+* Keywords are separated by any kind of space, including a no-break space copied from another application, so
+  `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
 * An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
   accent mark matches a name with the single character `é`.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
