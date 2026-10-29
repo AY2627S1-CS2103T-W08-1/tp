@@ -20,6 +20,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.appointment.Appointment;
@@ -27,6 +28,17 @@ import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
 
 public class AddCommandTest {
+
+    @Test
+    public void execute_modelIgnoresAddition_failsInternalAssertion() {
+        Model model = new ModelManager() {
+            @Override
+            public void addPatient(Patient patient) {
+                // Simulate a model implementation that violates its add contract.
+            }
+        };
+        assertThrows(AssertionError.class, () -> new AddCommand(ALICE).execute(model));
+    }
 
     @Test
     public void constructor_nullPatient_throwsNullPointerException() {
@@ -252,7 +264,9 @@ public class AddCommandTest {
 
         @Override
         public ReadOnlyAddressBook getAddressBook() {
-            return new AddressBook();
+            AddressBook addressBook = new AddressBook();
+            patientsAdded.forEach(addressBook::addPatient);
+            return addressBook;
         }
     }
 

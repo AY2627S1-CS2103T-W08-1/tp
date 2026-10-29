@@ -144,7 +144,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
   e.g., `Tan Ah Kow s/o Lim`, `Muthu a/l Ramasamy`, or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
-  A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
+  A curly apostrophe (`’` or `‘`) or `ʼ`, which phones and word processors may type, is saved as `'`.
+  Multiple spaces between words are reduced to one.
   Letters can be from any language, e.g., `Zoë Tan` or `陈大文`. A name cannot start or end with `s/o`, `d/o`,
   `c/o`, `a/l` or `a/p`, ignoring letter case.
 * `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
@@ -171,6 +172,7 @@ NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sens
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` in front. Spaces and hyphens are ignored. Stored as the 8 digits only. | `91234567`, `+65 9123-4567`
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Medication description | `med/` | At most 500 characters after leading and trailing spaces are removed and repeated spaces are reduced to one. Cannot be blank. | `Metformin 500mg`
 
 Leading and trailing spaces in every field are ignored.
 Any kind of space, including no-break spaces copied from other apps, is treated as a normal space.
@@ -250,8 +252,10 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   same as another medication of the same patient, ignoring letter case, whitespace differences, and equivalent
   Unicode forms that look the same, is rejected.
   Changing only the letter case of the medication's own description is allowed.
-* `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), with two digits on each side of the colon,
-  e.g., `08:30`. Leading and trailing spaces are ignored.
+  A description longer than 500 characters, after the spaces are tidied, returns
+  `Medication descriptions cannot exceed 500 characters.`
+* `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), e.g., `08:30`. An hour of one digit is also
+  accepted and read with a leading 0, so `8:30` means `08:30`. Leading and trailing spaces are ignored.
   * Giving `t/` **replaces all** the existing times of the medication, so the new times are the only ones left.
     Repeat `t/` for more than one time, e.g., `t/08:00 t/20:00`.
   * Times are shown in ascending order, and a time given more than once is kept once.
@@ -292,7 +296,7 @@ A command that fails changes nothing. Errors are reported as follows:
 * A command with neither `med/` nor `t/` returns `At least one of med/ or t/ must be provided.`
 * A blank `med/` returns `Medication description cannot be blank.`
 * A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, returns
-  `Time must be in HH:MM (24-hour), e.g. 08:30.`
+  `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.`
 * A `t/` with nothing after it next to another `t/` (e.g., `t/08:00 t/`) returns
   `t/ with no time clears all times and cannot be combined with other times.`
 * A description that already belongs to another medication of the patient returns
@@ -462,7 +466,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`. It cannot be before the
   patient's date of birth, but can be on it.
-* `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
+* `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`. An hour of one digit is also accepted and read
+  with a leading 0, so `9:30` means `09:30`.
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank and has at most
   100 characters. Leading and trailing spaces are ignored, and multiple spaces between words are reduced to one.
   Special spaces, such as a no-break space copied from a web page, count as spaces.
@@ -503,7 +508,7 @@ Other errors are reported as follows:
   `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`
 * A date before the patient's date of birth returns
   `The appointment cannot be before the patient's date of birth, DOB.`
-* An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
+* An invalid time returns `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.`
 * A blank `WITH`, or one longer than 100 characters, returns
   `Who the appointment is with should not be blank, and should be one line of at most 100 characters.`
 * A `NOTE` longer than 500 characters returns `An appointment note should be one line of at most 500 characters.`
@@ -706,6 +711,16 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
 * Keyword order does not matter; for example, `Alex David` matches `David Alex`.
 * The search considers only names.
 * Only full words match; for example, `Ale` does not match `Alex`.
+* A name is split into words at spaces, hyphens (`-`), apostrophes (`'`) and dots (`.`). For example, `Mary`, `Jane`
+  and `Mary-Jane` all match `Mary-Jane Tan`, `Brien` and `O'Brien` match `Mary O'Brien`, and `Jr` matches
+  `Tan Ah Kow Jr.`. A keyword is split in the same way, and all its words must be next to each other in the name,
+  so `Mary-Jane` does not match `Mary Lim`.
+* A curly apostrophe (`‘` or `’`) or a modifier apostrophe (`ʼ`) in a keyword is treated as `'`, so `O’Brien` matches
+  `Mary O'Brien`.
+* Keywords are separated by any kind of space, including a no-break space copied from another application, so
+  `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
+* An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
+  accent mark matches a name with the single character `é`.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
@@ -1045,6 +1060,10 @@ A file saved in another encoding, such as "ANSI" in Windows Notepad, is not vali
 outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`. For such
 a backup, `restore` says that it is not saved as UTF-8.
 
+A data file saved by v1.3 can be loaded. Its medications, which v1.3 saved as plain text, are loaded as medications with no daily times. Use [`editmed`](#editing-a-medication-editmed) to set their times.
+
+A patient who has two medications with the same description, ignoring letter case and spacing, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
+
 <box type="warning" seamless>
 
 **Caution:**
@@ -1058,6 +1077,8 @@ the warning asks you to check the JSON format and file permissions; a patient po
 A misspelled property name, e.g., `careInstructons`, or a property given twice in the same entry also makes the
 file invalid, so that its value is not lost the next time the data is saved. The `Details:` line names a misspelled
 property, e.g., `Unknown property "careInstructons". Check its spelling.`
+A time in the file must be written as `HH:MM` with two digits, e.g., `08:30`, even though commands also accept
+`8:30`.
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
 To discard the unreadable data, use [clear confirm](#clearing-all-patients-clear). To recover from a valid backup,
 use [restore FILENAME](#restoring-data-from-a-backup-restore).

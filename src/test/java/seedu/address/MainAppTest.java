@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
@@ -57,6 +58,26 @@ public class MainAppTest {
 
     @TempDir
     public Path temporaryFolder;
+
+    @Test
+    public void initModelManager_nullPreferences_rejectedBeforeCreatingData() throws Exception {
+        StorageManager storage = createStorage(temporaryFolder.resolve("mediconnect.json"));
+        assertThrows(NullPointerException.class, () -> new MainApp().initModelManager(storage, null));
+        assertTrue(storage.readAddressBook().isEmpty());
+    }
+
+    @Test
+    public void initModelManager_storageReturnsNull_failsInternalAssertion() {
+        JsonAddressBookStorage brokenStorage = new JsonAddressBookStorage(temporaryFolder.resolve("mediconnect.json")) {
+            @Override
+            public Optional<ReadOnlyAddressBook> readAddressBook() {
+                return null;
+            }
+        };
+        StorageManager storage = new StorageManager(brokenStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
+        assertThrows(AssertionError.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+    }
 
     @Test
     public void initModelManager_missingDataFile_createsFileWithSampleData() throws Exception {

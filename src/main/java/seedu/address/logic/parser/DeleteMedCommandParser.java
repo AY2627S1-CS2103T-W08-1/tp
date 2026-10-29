@@ -3,6 +3,8 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
+import java.util.List;
+
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.DeleteMedCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -12,10 +14,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class DeleteMedCommandParser implements Parser<DeleteMedCommand> {
 
-    private static final int EXPECTED_INDEX_COUNT = 2;
     private static final int PATIENT_INDEX_POSITION = 0;
     private static final int MEDICATION_INDEX_POSITION = 1;
-    private static final String WHITESPACE_REGEX = "\\s+";
 
     /**
      * Parses the given {@code String} of arguments in the context of the {@code DeleteMedCommand}
@@ -27,15 +27,9 @@ public class DeleteMedCommandParser implements Parser<DeleteMedCommand> {
     @Override
     public DeleteMedCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        String[] tokens = args.trim().split(WHITESPACE_REGEX);
-        if (args.isBlank() || tokens.length != EXPECTED_INDEX_COUNT) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteMedCommand.MESSAGE_USAGE));
-        }
-
         try {
-            Index patientIndex = ParserUtil.parseIndex(tokens[PATIENT_INDEX_POSITION]);
-            Index medicationIndex = ParserUtil.parseIndex(tokens[MEDICATION_INDEX_POSITION]);
-            return new DeleteMedCommand(patientIndex, medicationIndex);
+            List<Index> indices = ParserUtil.parseTwoIndexes(args);
+            return new DeleteMedCommand(indices.get(PATIENT_INDEX_POSITION), indices.get(MEDICATION_INDEX_POSITION));
         } catch (ParseException pe) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteMedCommand.MESSAGE_USAGE),
                     pe);
