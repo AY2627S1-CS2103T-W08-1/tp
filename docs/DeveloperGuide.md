@@ -76,7 +76,7 @@ The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDi
 
 The main window shows two panels side by side:
 
-* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed. Its list cannot take the focus, and `DarkTheme.css` has no style for a selected card, so a click neither takes the focus from the command box nor highlights a patient that the detail panel, which only `view` changes, may not show. The click still selects the card inside the list, but nothing reads that selection. As a trade-off, `Tab` skips the list, so it cannot be scrolled with the keyboard. Before, the arrow keys scrolled it by selecting patients, which showed the same misleading highlight. The mouse wheel, the list's scroll bar and `find` still reach every patient.
+* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed. Its list cannot take the focus, and `DarkTheme.css` has no style for a selected card, so a click neither takes the focus from the command box nor highlights a patient that the detail panel, which only commands change, may not show. The click still selects the card inside the list, but nothing reads that selection. As a trade-off, `Tab` skips the list, so it cannot be scrolled with the keyboard. Before, the arrow keys scrolled it by selecting patients, which showed the same misleading highlight. The mouse wheel, the list's scroll bar and `find` still reach every patient.
 * `PatientDetailPanel` shows the full details of the patient being viewed, including their medications, allergens, care instructions, contacts and appointments. It observes `Logic#getViewedPatient()` and redraws itself whenever that value changes, showing a placeholder message when no patient is being viewed. See the [view patient feature](#view-patient-feature) for how the viewed patient is set and cleared.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
@@ -196,7 +196,7 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted. An existing file that cannot be written to, e.g., because it is read-only, is not replaced, although on macOS and Linux its folder may let the temporary file take its place.
 
-`JsonUtil#readJsonFile()` reads both files, and backups for `restore`. It reads the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
+`JsonUtil#readJsonFile()` reads `preferences.json`, and `JsonUtil#readJsonFileStrictly()`, described below, reads the patient data and backups for `restore`. Both read the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
 
 Before mapping the JSON to objects, `JsonUtil` also rejects a file in which a name or a text value has half of a surrogate pair on its own. Only a JSON escape of a surrogate, such as `\ud800`, in a hand-edited file can give such text. It cannot be written as UTF-8, so the next save would silently turn it into `?`.
 
@@ -290,13 +290,13 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 1. `ViewCommand` calls `Model#setViewedPatient()` with the selected patient.
 1. `PatientDetailPanel` listens to `Logic#getViewedPatient()` and redraws itself whenever the value changes. It shows a placeholder message when the value is `null`, and `None recorded` for an empty medication, allergen, care instruction, contact or appointment list. Each entry is shown on one line by `PatientFormatter#toSingleLine()`, which exported records also use, so that a line break stored in a hand-edited entry cannot look like another numbered entry.
 
-`ModelManager` keeps the viewed patient consistent with the address book:
+`ModelManager` keeps the viewed patient consistent with the patient data:
 
 * `setPatient(target, editedPatient)` replaces the viewed patient with `editedPatient` if `target` is being viewed, so the panel shows changes such as newly added care information. If the change archives the viewed patient, as `archive` does, it clears the viewed patient instead.
 * `deletePatient(target)` clears the viewed patient if `target` is being viewed.
 * `setAddressBook(...)`, which `clear confirm` and `restore` use, clears the viewed patient unless the new data has the same patient with the same details.
 
-Filtering the patient list (e.g., with `find`) does not change the viewed patient.
+Filtering the patient list (e.g., with `find`) does not change the viewed patient. Commands that change a patient's details or care information, e.g., `edit`, `addcare` and `addappt`, and `listappt INDEX` also call `Model#setViewedPatient()`, with the patient they changed or listed, so that the user can check the result in the panel.
 
 Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
 
@@ -437,13 +437,15 @@ The sequence diagram below shows a successful `restore old.json`.
 
 <puml src="diagrams/RestoreSequenceDiagram.puml" alt="Interactions for the `restore old.json` Command" />
 
-1. `RestoreCommandParser` returns a `ListBackupsCommand` if no `FILENAME` is given. It lists the `.json` files in `data/backups` by the time they were last changed, newest first, so that the user can copy a name. Files changed at the same time, e.g., after being copied together, are listed by name, last first, with numbers compared by value, so that `-10` comes before `-9`. Otherwise, it checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
+1. `RestoreCommandParser` returns a `ListBackupsCommand` if no `FILENAME` is given. That command lists the `.json` files in `data/backups` by the time they were last changed, newest first, so that the user can copy a name. Files changed at the same time, e.g., after being copied together, are listed by name, last first, with numbers compared by value, so that `-10` comes before `-9`. Otherwise, it checks that `FILENAME` is only a file name: it must not contain `/`, `\` or `:`, must not be `.` or `..`, and must be a name the operating system accepts. This keeps `restore` inside `data/backups` on every operating system.
 1. `RestoreCommand#execute()` first finds the file. If no file has the given name, but one with `.json` added does, e.g., for `restore mediconnect-20261020-083015`, it restores that file, and its messages give that file's name. It reads the whole file through a `JsonAddressBookStorage` for that file, which checks every patient the same way as loading `data/mediconnect.json` at startup. A missing file, a file that MediConnect is not allowed to read, a file that is not valid UTF-8, a damaged file and a file with invalid data each make the command throw a `CommandException` with its own message, before anything is changed.
 1. Only then does the command back up the current data, by calling `saveBackup` on a `BackupCommand` with the same clock and folder. If that fails, nothing is restored.
 1. The command replaces the data with `Model#setAddressBook()`, which also clears the viewed patient unless the restored data has the same patient with the same details, and shows the active patients again with `Model#updateFilteredPatientList()`. The result gives the number of patients restored, how many of them are archived, since only active patients are then listed, and the path of the automatic backup.
 1. `LogicManager` then saves the `Model`, replacing `data/mediconnect.json` even when the restored data equals
    the previous model, including an empty backup after startup recovery. A save failure restores the model's
    previous data, filter and viewed patient; the automatic backup is kept.
+
+If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
@@ -475,7 +477,7 @@ The `export INDEX` command saves the full record of a patient in the displayed l
 
 1. `ExportCommandParser` parses the index in the same way as `ViewCommandParser`. `ExportCommand#execute()` checks it against the filtered patient list, so `export` exports an active patient after `list` or `find`, and an archived patient after `listarchived`.
 1. `ExportCommand#createRecord()` builds the lines of the record: a title, `Exported on` with the date and time from the command's `Clock`, a blank line, then the lines from `PatientFormatter#formatRecord()`. These are the patient's name, the details from `PatientFormatter#formatDetails()`, with `Status: Archived` for an archived patient, and each list under its heading, numbered by `PatientFormatter#formatEntries()`. Appointments are ordered and marked `(past)` at the time of the export, through the same `PatientFormatter#formatAppointments()` that the detail panel uses.
-1. The file is named after the patient's NRIC, e.g., `S1234567A.txt`. Before writing, `ExportCommand#writeRecord()` creates the folder if it does not exist, and throws an `AccessDeniedException` if an earlier export of the patient is read-only, since the new record would otherwise replace it although the user made it read-only.
+1. The file is named after the patient's NRIC, e.g., `S1234567A.txt`. Before writing, `ExportCommand#writeRecord()` creates the folder if it does not exist. `FileUtil#writeThroughTemporaryFile()` then throws an `AccessDeniedException` if an earlier export of the patient is read-only, since the new record would otherwise replace it although the user made it read-only.
 1. The record is written through `FileUtil#writeThroughTemporaryFile()`, as backups are, so a failed write never leaves a partial record in place of an earlier one, and on macOS and Linux, only the current user can open the file. If writing fails, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 1. The command does not change the `Model`. It logs only the export folder, not the file, since the file name is the patient's NRIC. The date is formatted with `Locale.ROOT`, so that it uses the digits 0 to 9 whatever the computer's language settings are.
 
@@ -749,6 +751,26 @@ _{more aspects and alternatives to be added}_
 * [Testing guide](Testing.md)
 * [Logging guide](Logging.md)
 * [DevOps guide](DevOps.md)
+
+### Defensive programming
+
+`LogicManager` rejects null dependencies and command text, and asserts that commands return a non-null result.
+`MainApp#initModelManager()` rejects null storage or preferences before file access and asserts that storage
+returns a non-null `Optional`. An empty `Optional` is valid for a missing data file.
+
+The feature commands check their model postconditions before reporting success:
+
+* `AddCommand` asserts that the complete added patient is stored.
+* The contact commands assert that the exact replacement patient, including the updated contacts, is stored.
+* `ClearCommand` asserts that the complete patient list is empty and no patient remains viewed.
+
+These checks use unfiltered patient data, including archived patients, so filters do not cause false failures.
+Tests supply broken model, storage and command implementations to verify the contracts. Existing copy and command
+tests check that replacing a patient preserves unrelated details.
+
+Assertions diagnose programming errors; user-input and file failures use exceptions. See the
+[Testing guide](Testing.md) for assertion-enabled run configurations and the [Logging guide](Logging.md) for
+`LogsCenter` usage. Normal JAR launches leave assertions disabled, so runtime validation does not rely on them.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1207,7 +1229,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
-* 4b. The patient is deleted or archived later.
+* 4b. The patient is deleted or archived later, all patients are cleared, or a restore replaces the data with a backup that does not have the patient with the same details.
 
     * 4b1. MediConnect clears the detail panel.
 
@@ -1286,9 +1308,15 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-* 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, or MediConnect has no permission to read it.
+* 3c. The name is given without the `.json` at its end, and there is no file with exactly that name.
 
-    * 4a1. MediConnect shows an error message that the backup could not be read, or that it has no permission to read the backup, and that the data has not been changed.
+    * 3c1. MediConnect restores the backup whose name is the given name with `.json` added.
+
+      Use case resumes at step 4.
+
+* 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, is not saved as UTF-8, or MediConnect has no permission to read it.
+
+    * 4a1. MediConnect shows an error message that the backup could not be read, that it is not saved as UTF-8, or that it has no permission to read the backup, and that the data has not been changed.
 
       Use case ends.
 
@@ -1815,6 +1843,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   appointment passes.
 * **Archive**: To remove a patient's profile from the active patient list while keeping all of its records for future
   reference. Unlike deleting, archiving does not remove any data.
+* **Backup**: A copy of all patient data, saved by `backup` (or automatically before `clear confirm` and `restore`) as
+  a JSON file in `data/backups`, named after the date and time it was made. `restore` replaces the data with one.
 * **Care handover**: The transfer of responsibility for a patient's care from one person to another, e.g., from the
   main caregiver to a relative while the caregiver is travelling.
 * **Care information**: The care-related records in a patient's profile, i.e., allergies, medications, care
@@ -1830,6 +1860,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   GP, specialist, or pharmacist) or an emergency contact.
 * **Daily time**: A time of day, in 24-hour `HH:MM` format, at which a patient takes a medication every day, e.g.,
   `08:00`. A medication can have any number of daily times, or none.
+* **Detail panel**: The panel to the right of the patient list that shows the full details of one patient: the one
+  last shown with `view INDEX`, or by a command that changed them, e.g., `addcare`. It shows a placeholder message
+  when no patient is shown.
 * **Display scaling**: An operating system setting that enlarges text and other on-screen elements by a percentage
   (e.g., 125%) to make them easier to read.
 * **Dose**: One daily time of one medication of one patient. `due` lists one line for each dose.
@@ -2204,7 +2237,7 @@ testers are expected to do more *exploratory* testing.
    A new backup contains all previous active and archived patients. Note its file name for the recovery check below.
 
 1. Test case: `clear confirm` again<br>
-   Expected: The same success message and a new backup path. The empty address book is backed up without
+   Expected: The same success message and a new backup path. The empty patient data is backed up without
    overwriting the earlier backup.
 
 1. Test case: `restore FILENAME`, using the backup noted before the repeated clear<br>
