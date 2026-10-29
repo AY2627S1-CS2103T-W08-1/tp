@@ -42,7 +42,7 @@ public class PatientFormatter {
     /** Heading of the list of appointments. */
     public static final String HEADING_APPOINTMENTS = "Appointments";
 
-    /** Added after each past appointment. */
+    /** Added after the date and time of each past appointment. */
     public static final String PAST_MARK = " (past)";
 
     /** A line break inside an entry. */
@@ -105,8 +105,8 @@ public class PatientFormatter {
     }
 
     /**
-     * Returns the text of each of {@code appointments}, in the same order, with {@code PAST_MARK} after each
-     * appointment before {@code now}, e.g., "2026-10-02 10:00 with Dr Tan (past)".
+     * Returns the text of each of {@code appointments}, in the same order, with {@code PAST_MARK} after the date
+     * and time of each appointment before {@code now}, e.g., "2026-10-02 10:00 (past) with Dr Tan".
      *
      * @param appointments Appointments in the order they are numbered.
      * @param now Date and time that decides which appointments are past.
@@ -115,15 +115,25 @@ public class PatientFormatter {
     public static List<String> formatAppointments(List<Appointment> appointments, LocalDateTime now) {
         requireAllNonNull(appointments, now);
         return appointments.stream()
-                .map(appointment -> appointment + (appointment.isBefore(now) ? PAST_MARK : ""))
+                .map(appointment -> formatAppointment(appointment, now))
                 .toList();
+    }
+
+    /**
+     * Returns the text of {@code appointment}, with {@code PAST_MARK} after its date and time if it is before
+     * {@code now}. Only the app writes the date and time, so a note or {@code WITH} text, which come after
+     * them, cannot look like the mark.
+     */
+    private static String formatAppointment(Appointment appointment, LocalDateTime now) {
+        String mark = appointment.isBefore(now) ? PAST_MARK : "";
+        return appointment.getDateTimeText() + mark + " " + appointment.getDetailsText();
     }
 
     /**
      * Returns the full record of {@code patient}: the name and basic details, then each care list, the contacts
      * and the appointments under their headings, with a blank line before each heading.
      * Appointments are numbered as in the detail panel: upcoming ones (at or after {@code now}) first,
-     * then past ones, each marked with {@code PAST_MARK}.
+     * then past ones, each marked with {@code PAST_MARK} after its date and time.
      *
      * @param patient Patient whose record is formatted.
      * @param now Date and time that decides which appointments are upcoming.

@@ -15,6 +15,7 @@ import seedu.address.model.patient.Medication;
 /**
  * Jackson-friendly version of {@link Medication}.
  * The times are stored as "HH:MM" strings; a missing list of times is loaded as no times.
+ * A plain string, as saved by v1.3, is loaded as a description with no times.
  */
 class JsonAdaptedMedication {
 
@@ -46,6 +47,14 @@ class JsonAdaptedMedication {
     }
 
     /**
+     * Constructs a {@code JsonAdaptedMedication} from a v1.3 plain-string medication, which has no times.
+     */
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+    public static JsonAdaptedMedication fromDescription(String description) {
+        return new JsonAdaptedMedication(description, null);
+    }
+
+    /**
      * Converts this Jackson-friendly adapted medication object into the model's {@code Medication} object.
      *
      * @throws IllegalValueException if there were any data constraints violated in the adapted medication.
@@ -57,6 +66,9 @@ class JsonAdaptedMedication {
         if (!Medication.isValidDescription(description)) {
             throw new IllegalValueException(Medication.MESSAGE_DESCRIPTION_CONSTRAINTS);
         }
+        if (!Medication.isDescriptionWithinMaxLength(Medication.normalizeDescription(description))) {
+            throw new IllegalValueException(Medication.MESSAGE_DESCRIPTION_TOO_LONG);
+        }
 
         List<LocalTime> modelTimes = new ArrayList<>();
         for (String time : times) {
@@ -64,7 +76,7 @@ class JsonAdaptedMedication {
                 throw new IllegalValueException(NULL_TIME_MESSAGE);
             }
             if (!Medication.isValidTime(time)) {
-                throw new IllegalValueException(Medication.MESSAGE_TIME_CONSTRAINTS);
+                throw new IllegalValueException(Medication.MESSAGE_DATA_FILE_TIME_CONSTRAINTS);
             }
             modelTimes.add(Medication.toTime(time));
         }

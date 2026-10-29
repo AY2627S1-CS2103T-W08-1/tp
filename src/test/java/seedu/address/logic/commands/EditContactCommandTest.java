@@ -36,6 +36,52 @@ public class EditContactCommandTest {
     }
 
     @Test
+    public void execute_modelIgnoresContactUpdate_failsInternalAssertion() {
+        Patient patient = new PatientBuilder().withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs()) {
+            @Override
+            public void setPatient(Patient target, Patient editedPatient) {
+                // Simulate a model implementation that silently drops the contact update.
+            }
+        };
+        assertThrows(AssertionError.class, () -> new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                Optional.empty(), Optional.of("Emergency"),
+                Optional.empty(), Optional.empty()).execute(model));
+        assertEquals(patient, model.getAddressBook().getPatientList().get(0));
+    }
+
+    @Test
+    public void execute_canonicallyEquivalentContact_rejectedWithoutChanges() throws Exception {
+        Contact original = new Contact("Caf\u00e9", "GP", "123", "");
+        Contact other = new Contact("Other clinic", "GP", "123", "");
+        Patient patient = new PatientBuilder().withContacts(original, other).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        model.setViewedPatient(patient);
+        EditContactCommand duplicate = new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_SECOND_PATIENT,
+                Optional.of("Cafe\u0301"), Optional.empty(), Optional.empty(), Optional.empty());
+        assertThrows(CommandException.class, Contact.MESSAGE_DUPLICATE, () -> duplicate.execute(model));
+        assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertEquals(patient, model.getViewedPatient().getValue());
+
+        EditContactCommand sameContact = new EditContactCommand(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                Optional.of("Cafe\u0301"), Optional.empty(), Optional.empty(), Optional.empty());
+        sameContact.execute(model);
+        assertEquals("Cafe\u0301", model.getFilteredPatientList().get(0).getContacts().get(0).getName());
+    }
+
+    @Test
+    public void execute_overlongNote_rejectedWithoutChanges() {
+        Patient patient = new PatientBuilder().withContacts(GP).build();
+        Model model = new ModelManager(new AddressBookBuilder().withPatient(patient).build(), new UserPrefs());
+        model.setViewedPatient(patient);
+        EditContactCommand command = edit(INDEX_FIRST_PATIENT, INDEX_FIRST_PATIENT,
+                Optional.of("n".repeat(Contact.MAX_NOTE_LENGTH + 1)));
+        assertThrows(CommandException.class, Contact.MESSAGE_NOTE_CONSTRAINTS, () -> command.execute(model));
+        assertEquals(patient, model.getFilteredPatientList().get(0));
+        assertEquals(patient, model.getViewedPatient().getValue());
+    }
+
+    @Test
     public void execute_noteChangedAndCleared_otherFieldsPreserved() throws Exception {
         Patient patient = new PatientBuilder().withContacts(GP, GUARDIAN).withAllergens("Allergen")
                 .withMedications(new Medication("Medication", List.of(LocalTime.of(8, 0)))).build();

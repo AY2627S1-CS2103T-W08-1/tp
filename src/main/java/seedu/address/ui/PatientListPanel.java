@@ -27,6 +27,10 @@ public class PatientListPanel extends UiPart<Region> {
         super(FXML);
         patientListView.setItems(patientList);
         patientListView.setCellFactory(listView -> new PatientListViewCell());
+        // the list only shows patients, as commands, e.g., view INDEX, pick the one for the detail panel,
+        // so a click must not take the focus from the command box. DarkTheme.css does not highlight a
+        // clicked card either.
+        patientListView.setFocusTraversable(false);
     }
 
     /**

@@ -39,6 +39,11 @@ public class ClearCommand extends Command {
         backupCommand = new BackupCommand(clock, backupDir);
     }
 
+    @Override
+    public boolean requiresSaveWhenUnchanged() {
+        return true;
+    }
+
     /**
      * Backs up all patient data before clearing it, and returns the backup location with the success message.
      *
@@ -49,6 +54,8 @@ public class ClearCommand extends Command {
         requireNonNull(model);
         CommandResult backupResult = backupCommand.execute(model);
         model.setAddressBook(new AddressBook());
+        assert model.getAddressBook().getPatientList().isEmpty() : "Clear must remove all patients from the model.";
+        assert model.getViewedPatient().getValue() == null : "Clear must clear the viewed patient.";
         return new CommandResult(MESSAGE_SUCCESS + "\n" + backupResult.getFeedbackToUser());
     }
 }

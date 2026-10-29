@@ -45,6 +45,21 @@ public class JsonAdaptedPatientTest {
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
 
     @Test
+    public void toModelType_canonicallyEquivalentContacts_rejected() throws Exception {
+        JsonAdaptedContact composed = new JsonAdaptedContact("Caf\u00e9", "GP", "123", "");
+        JsonAdaptedContact decomposed = new JsonAdaptedContact("Cafe\u0301", "Guardian", "123", "Other note");
+        for (List<JsonAdaptedContact> contacts
+                : List.of(List.of(composed, decomposed), List.of(decomposed, composed))) {
+            JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                    VALID_ADDRESS, List.of(), List.of(), List.of(), contacts, null, null);
+            assertThrows(IllegalValueException.class, MESSAGE_DUPLICATE, patient::toModelType);
+        }
+        JsonAdaptedPatient singleContact = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(decomposed), null, null);
+        assertEquals("Cafe\u0301", singleContact.toModelType().getContacts().get(0).getName());
+    }
+
+    @Test
     public void toModelType_validPatientDetails_returnsPatient() throws Exception {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(BENSON);
         assertEquals(BENSON, patient.toModelType());
@@ -292,6 +307,16 @@ public class JsonAdaptedPatientTest {
     }
 
     @Test
+    public void toModelType_duplicateMedicationsIgnoringCase_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(new JsonAdaptedMedication("Aspirin", List.of("08:00")),
+                        new JsonAdaptedMedication("aspirin", List.of("20:00"))), List.of(), List.of(), null, null,
+                null);
+        assertThrows(IllegalValueException.class, JsonAdaptedPatient.MESSAGE_DUPLICATE_MEDICATION,
+                patient::toModelType);
+    }
+
+    @Test
     public void toModelType_contacts_preservedOrRejected() throws Exception {
         var contact = GP;
         var patient = new PatientBuilder(BENSON).withContacts(contact)
@@ -316,6 +341,17 @@ public class JsonAdaptedPatientTest {
                 VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
                 Arrays.asList((JsonAdaptedAppointment) null), null);
         assertThrows(IllegalValueException.class, MESSAGE_NULL_APPOINTMENT, nullEntry::toModelType);
+    }
+
+    @Test
+    public void toModelType_canonicallyEquivalentProviders_throwsIllegalValueException() {
+        // the same provider, with "é" stored as one character and as "e" followed by a combining accent
+        Appointment composed = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Caf\u00e9 clinic", "");
+        Appointment decomposed = new Appointment(CHECKUP.getDate(), CHECKUP.getTime(), "Cafe\u0301 clinic", "");
+        JsonAdaptedPatient duplicates = new JsonAdaptedPatient(VALID_NAME, VALID_NRIC, VALID_DOB, VALID_PHONE,
+                VALID_ADDRESS, List.of(), List.of(), List.of(), List.of(),
+                List.of(new JsonAdaptedAppointment(composed), new JsonAdaptedAppointment(decomposed)), null);
+        assertThrows(IllegalValueException.class, Appointment.MESSAGE_DUPLICATE, duplicates::toModelType);
     }
 
     @Test

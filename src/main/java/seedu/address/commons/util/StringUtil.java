@@ -1,11 +1,10 @@
 package seedu.address.commons.util;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
+import java.text.Normalizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,29 +35,19 @@ public class StringUtil {
     }
 
     /**
-     * Returns true if the {@code sentence} contains the {@code word}.
-     *   Ignores case, but a full word match is required.
-     *   <br>examples:<pre>
-     *       containsWordIgnoreCase("ABc def", "abc") == true
-     *       containsWordIgnoreCase("ABc def", "DEF") == true
-     *       containsWordIgnoreCase("ABc def", "AB") == false //not a full word match
+     * Returns {@code entry} with every run of whitespace, including Unicode whitespace such as a no-break space
+     * and line breaks, replaced by one space, without leading and trailing whitespace, and in Unicode form NFC,
+     * so that entries that look the same are the same. The letter case is kept.
+     * <br>examples:<pre>
+     *       normalizeEntry("  a \t b ") == "a b"
+     *       normalizeEntry("cafe" + combining acute accent) == "caf" + the single character e with acute accent
      *       </pre>
-     * @param sentence cannot be null
-     * @param word cannot be null, cannot be empty, must be a single word
+     * @throws NullPointerException if {@code entry} is null.
      */
-    public static boolean containsWordIgnoreCase(String sentence, String word) {
-        requireNonNull(sentence);
-        requireNonNull(word);
-
-        String preppedWord = word.trim();
-        checkArgument(!preppedWord.isEmpty(), "Word parameter cannot be empty");
-        checkArgument(preppedWord.split("\\s+").length == 1, "Word parameter should be a single word");
-
-        String preppedSentence = sentence;
-        String[] wordsInPreppedSentence = preppedSentence.split("\\s+");
-
-        return Arrays.stream(wordsInPreppedSentence)
-                .anyMatch(preppedWord::equalsIgnoreCase);
+    public static String normalizeEntry(String entry) {
+        requireNonNull(entry);
+        String normalizedWhitespace = entry.replaceAll("(?U)\\s+", " ").trim();
+        return Normalizer.normalize(normalizedWhitespace, Normalizer.Form.NFC);
     }
 
     /**
@@ -76,14 +65,18 @@ public class StringUtil {
      * e.g. 1, 2, 3, ..., {@code Integer.MAX_VALUE} <br>
      * Will return false for any other non-null string input
      * e.g. empty string, "-1", "0", "+1", and " 2 " (untrimmed), "3 0" (contains whitespace), "1 a" (contains letters)
+     * and a full-width "2" (only the digits 0-9 are allowed)
      * @throws NullPointerException if {@code s} is null.
      */
     public static boolean isNonZeroUnsignedInteger(String s) {
         requireNonNull(s);
 
+        // Integer#parseInt accepts digits of other scripts and a leading "+", so only 0-9 are allowed here
+        if (!s.matches("[0-9]+")) {
+            return false;
+        }
         try {
-            int value = Integer.parseInt(s);
-            return value > 0 && !s.startsWith("+"); // "+1" is successfully parsed by Integer#parseInt(String)
+            return Integer.parseInt(s) > 0;
         } catch (NumberFormatException nfe) {
             return false;
         }

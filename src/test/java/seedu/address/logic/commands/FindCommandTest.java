@@ -13,6 +13,7 @@ import static seedu.address.testutil.TypicalPatients.FIONA;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -74,6 +75,19 @@ public class FindCommandTest {
         expectedModel.updateFilteredPatientList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
         assertEquals(List.of(CARL, ELLE, FIONA), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void execute_localeWithOtherDigits_givesCountInPanelDigits() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // String.format writes 3 as an Arabic-Indic digit in Egyptian Arabic unless given Locale.ROOT
+            Locale.setDefault(Locale.forLanguageTag("ar-EG"));
+            FindCommand command = new FindCommand(preparePredicate("Kurz Elle Kunz"));
+            assertEquals("3 patient(s) listed!", command.execute(model).getFeedbackToUser());
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     @Test

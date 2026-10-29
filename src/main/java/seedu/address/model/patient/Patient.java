@@ -3,12 +3,12 @@ package seedu.address.model.patient;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.appointment.Appointment;
 
@@ -151,9 +151,7 @@ public class Patient {
      * Returns a care entry in NFC form, with Unicode whitespace collapsed and removed from both ends.
      */
     public static String normalizeCareEntry(String entry) {
-        Objects.requireNonNull(entry);
-        String normalizedWhitespace = entry.replaceAll("(?U)\\s+", " ").trim();
-        return Normalizer.normalize(normalizedWhitespace, Normalizer.Form.NFC);
+        return StringUtil.normalizeEntry(entry);
     }
 
     /**

@@ -23,8 +23,11 @@ MediConnect is a **desktop application for managing patient records and care inf
 1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
-   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands.<br>
+   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details on the right.<br>
    ![Ui](images/Ui.png)
+
+   Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
+   naming the data file and exits. Close the first window before opening it again.
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
@@ -141,7 +144,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
 * `NAME` must start with a letter and can only contain letters, spaces, `'`, `-`, `/` and `.`,
   e.g., `Tan Ah Kow s/o Lim`, `Muthu a/l Ramasamy`, or `Mary-Jane O'Brien`.
   Each `'`, `-` or `/` must be between two letters, and each `.` must come right after a letter.
-  A curly apostrophe (`’`) is treated as `'`. Multiple spaces between words are reduced to one.
+  A curly apostrophe (`’` or `‘`) or `ʼ`, which phones and word processors may type, is saved as `'`.
+  Multiple spaces between words are reduced to one.
   Letters can be from any language, e.g., `Zoë Tan` or `陈大文`. A name cannot start or end with `s/o`, `d/o`,
   `c/o`, `a/l` or `a/p`, ignoring letter case.
 * `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
@@ -168,8 +172,13 @@ NRIC    | `ic/`  | 1 letter (S, T, F, G or M), 7 digits, 1 letter. Not case-sens
 DOB     | `dob/` | A valid date in `YYYY-MM-DD` format, from `1900-01-01` to today. | `1950-04-12`
 Phone   | `p/`   | 8 digits, starting with 3, 6, 8 or 9, with an optional `+65` in front. Spaces and hyphens are ignored. Stored as the 8 digits only. | `91234567`, `+65 9123-4567`
 Address | `a/`   | At most 200 characters. Cannot be blank, including blank with special spaces such as an em space. | `Blk 12 Ang Mo Kio Ave 4, #05-10`
+Medication description | `med/` | At most 500 characters after leading and trailing spaces are removed and repeated spaces are reduced to one. Cannot be blank. | `Metformin 500mg`
 
 Leading and trailing spaces in every field are ignored.
+Any kind of space, including no-break spaces copied from other apps, is treated as a normal space.
+
+For [contact fields](#adding-a-contact-addcontact), names and roles have a limit of 100 characters each, and notes
+have a limit of 500. These limits apply after the whitespace handling described in that section.
 
 ### Adding care information: `addcare`
 
@@ -243,18 +252,21 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * At least one of `med/` or `t/` must be given.
 * `med/DESCRIPTION` replaces the description. Leading and trailing whitespace is removed, and consecutive internal
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
-  same as another medication of the same patient, ignoring letter case and whitespace differences, is rejected.
+  same as another medication of the same patient, ignoring letter case, whitespace differences, and equivalent
+  Unicode forms that look the same, is rejected.
   Changing only the letter case of the medication's own description is allowed.
-* `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), with two digits on each side of the colon,
-  e.g., `08:30`. Leading and trailing spaces are ignored.
+  A description longer than 500 characters, after the spaces are tidied, returns
+  `Medication descriptions cannot exceed 500 characters.`
+* `t/TIME` sets the daily times. `TIME` must be in `HH:MM` (24-hour), e.g., `08:30`. An hour of one digit is also
+  accepted and read with a leading 0, so `8:30` means `08:30`. Leading and trailing spaces are ignored.
   * Giving `t/` **replaces all** the existing times of the medication, so the new times are the only ones left.
     Repeat `t/` for more than one time, e.g., `t/08:00 t/20:00`.
   * Times are shown in ascending order, and a time given more than once is kept once.
   * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`: for example,
     `t/08:00 t/` is rejected.
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
-* The patient's other details and other medications are not changed. If the patient is shown in the details panel,
-  the panel updates.
+* The patient's other details and other medications are not changed. After a successful command, the detail panel
+  shows this patient with the updated medication, even if it showed another patient before.
 * The description follows the [slash-text rules](#slash-text-in-field-values): `mg/ml` and `units/day` are allowed.
   Reserved prefixes outside this command, such as `p/`, are rejected. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
@@ -287,7 +299,7 @@ A command that fails changes nothing. Errors are reported as follows:
 * A command with neither `med/` nor `t/` returns `At least one of med/ or t/ must be provided.`
 * A blank `med/` returns `Medication description cannot be blank.`
 * A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, returns
-  `Time must be in HH:MM (24-hour), e.g. 08:30.`
+  `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.`
 * A `t/` with nothing after it next to another `t/` (e.g., `t/08:00 t/`) returns
   `t/ with no time clears all times and cannot be combined with other times.`
 * A description that already belongs to another medication of the patient returns
@@ -366,21 +378,26 @@ Adds one contact to the patient at `INDEX` in the displayed patient list.
 Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
 
 * Name, role and phone are required. Each prefix can appear only once; fields can appear in any order.
-* Names are nonblank free text, so both people and organisations such as `Tan & Partners Clinic` are supported.
-  Leading/trailing Unicode whitespace, including copied no-break spaces, is removed. Repeated whitespace
-  inside a name becomes one ordinary space.
-* Role is nonblank free text. Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`;
-  other roles are allowed. Surrounding Unicode whitespace is removed; a whitespace-only role is rejected.
+* Names are nonblank free text of at most 100 characters after space cleanup. Both people and organisations,
+  such as `Tan & Partners Clinic`, are supported. Surrounding spaces are removed and repeated spaces become one,
+  including special spaces copied from documents.
+* Role is nonblank free text of at most 100 characters after surrounding spaces are removed. Internal spaces count.
+  Examples include `GP`, `specialist`, `pharmacist`, `emergency` and `guardian`; other roles are allowed.
 * Contact phones must contain 3 to 15 digits (`0`–`9`). Spaces and hyphens are allowed and do not count toward
   this limit. At most one `+` is allowed, at the start after trimming, e.g., `+44 20 7946 0958`.
   These differ from patient-phone rules so overseas and short clinic numbers such as `123` remain supported.
   Formatting is preserved after trimming. Extensions and parentheses are not supported.
-* The note is optional. An omitted or empty `nt/` creates a contact without a note.
-  Surrounding Unicode whitespace is removed from notes entered through commands. A whitespace-only `nt/`
-  gives an empty note; this also clears an existing note in `editcontact`. Internal note spacing is preserved.
-* A contact with the same name (ignoring case and Unicode whitespace differences) and phone (ignoring spaces and hyphens)
+* The note is optional, with at most 500 characters after surrounding spaces are removed. Internal spacing is kept.
+  An omitted or empty `nt/` creates a contact without a note; an empty or spaces-only `nt/` clears it in `editcontact`.
+  For all three text limits, a basic emoji such as 😀 counts as one character. A letter with a separately typed
+  accent, or an emoji made from several symbols, can count as more than one.
+* A contact with the same name (ignoring case and differences in spacing) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
-  country codes are not inferred. The same contact can belong to different patients.
+  country codes are not inferred. The same accented name counts as the same name even if the accent was typed
+  separately: for example, `Café` with a single `é` and `Café` with `e` followed by a separate accent.
+  Accents remain significant, so
+  `Cafe` and `Café` are different names. The entered name spelling is preserved for display and saving.
+  The same contact can belong to different patients.
 * Name, role and note follow the [slash-text rules](#slash-text-in-field-values); `and/or` and `mg/ml` are allowed.
   Standalone `s/o`, `d/o`, `c/o`, `a/l` and `a/p` are allowed, ignoring letter case, e.g., `n/Tan s/o Lim`.
   Keep these words separate from punctuation, e.g., write `Tan s/o Lim` rather than `Tan s/o, Lim`.
@@ -395,18 +412,19 @@ Example: `addcontact 1 n/Lim & Partners Clinic r/GP p/+65 6123-4567 nt/Call in t
 For patient `Alex Yeoh`, this returns:
 `Added contact for Alex Yeoh: Lim & Partners Clinic (GP); Phone: +65 6123-4567; Note: Call in the morning`
 
-Blank names/roles return `Contact name cannot be blank.` or `Contact role cannot be blank.`
-An invalid phone returns `Contact phone must contain 3 to 15 digits, with spaces and hyphens allowed, and at most one + at the start.`
+Blank names/roles, overlong text and invalid phones are rejected with the affected field's requirements.
 A duplicate returns `This contact (identified by name and phone) already exists.` No contact is added on failure,
 and the previously viewed patient is unchanged.
 
-The same phone rules apply to `editcontact` and saved data, including backups. Older files with contact phones
-that exceed 15 digits or contain misplaced `+` signs are rejected when loaded or restored. Correct those values
-in a copy of the file using the [data recovery instructions](#editing-the-data-file).
+The same field and duplicate rules apply to `editcontact` and saved data, including backups. Names and roles
+follow the same space cleanup when loaded. Saved notes keep their spaces, which count toward the 500-character
+limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored; repair a copy
+using the [data recovery instructions](#editing-the-data-file).
 
-Saved contact names and roles follow the same whitespace rules. Whitespace-only names or roles and contacts
-that become duplicates after name normalization are rejected when loaded or restored. Stored note formatting
-is preserved; Unicode trimming of notes applies only to values entered through commands.
+The same duplicate-name rules apply when loading data or restoring a backup. Older files containing contacts
+with the same accented name typed in these different ways and the same phone are rejected as duplicates.
+Remove the duplicate contact
+from a copy of the file using the [data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
@@ -451,7 +469,8 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
 * `INDEX` follows the same rules as `delete` and refers to the currently displayed patient list.
 * `DATE` must be a real date in `YYYY-MM-DD` format, from `1900-01-01`, e.g., `2026-11-05`. It cannot be before the
   patient's date of birth, but can be on it.
-* `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`.
+* `TIME` must be in `HH:MM` 24-hour format, e.g., `09:30` or `14:00`. An hour of one digit is also accepted and read
+  with a leading 0, so `9:30` means `09:30`.
 * `WITH` is who the appointment is with, e.g., `Dr Tan` or `Cardiology clinic`. It cannot be blank and has at most
   100 characters. Leading and trailing spaces are ignored, and multiple spaces between words are reduced to one.
   Special spaces, such as a no-break space copied from a web page, count as spaces.
@@ -462,7 +481,7 @@ Format: `addappt INDEX d/DATE t/TIME w/WITH [nt/NOTE]`
   `d/o`, `c/o`, `a/l`, `a/p` and `w/o` (without) are allowed and kept as text, ignoring letter case, e.g.,
   `nt/MRI w/o contrast`.
 * The patient's appointments are numbered in the detail panel of `view`, upcoming ones first, then past ones,
-  which are marked `(past)`.
+  which are marked `(past)` after their date and time.
   After `addappt`, the detail panel shows the patient. Scroll down to its Appointments section to check the new
   appointment and its number.
 
@@ -485,13 +504,14 @@ note. For example, the second example returns
 Other errors are reported as follows:
 
 * An appointment with the same date, time and `WITH` as one the patient already has, ignoring letter case and extra
-  spaces, returns `This appointment already exists for this patient.` and is not added.
+  spaces, returns `This appointment already exists for this patient.` and is not added. An accented letter counts
+  as the same whether it was typed as one character, e.g. `é`, or as a letter followed by an accent.
 * An index outside the displayed list returns `The patient index provided is invalid.`
 * An invalid date, or one before `1900-01-01`, returns
   `Appointment date should be a real date in YYYY-MM-DD format, from 1900-01-01, e.g. 2026-10-25.`
 * A date before the patient's date of birth returns
   `The appointment cannot be before the patient's date of birth, DOB.`
-* An invalid time returns `Time must be in HH:MM (24-hour), e.g. 08:30.`
+* An invalid time returns `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.`
 * A blank `WITH`, or one longer than 100 characters, returns
   `Who the appointment is with should not be blank, and should be one line of at most 100 characters.`
 * A `NOTE` longer than 500 characters returns `An appointment note should be one line of at most 500 characters.`
@@ -694,6 +714,16 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
 * Keyword order does not matter; for example, `Alex David` matches `David Alex`.
 * The search considers only names.
 * Only full words match; for example, `Ale` does not match `Alex`.
+* A name is split into words at spaces, hyphens (`-`), apostrophes (`'`) and dots (`.`). For example, `Mary`, `Jane`
+  and `Mary-Jane` all match `Mary-Jane Tan`, `Brien` and `O'Brien` match `Mary O'Brien`, and `Jr` matches
+  `Tan Ah Kow Jr.`. A keyword is split in the same way, and all its words must be next to each other in the name,
+  so `Mary-Jane` does not match `Mary Lim`.
+* A curly apostrophe (`‘` or `’`) or a modifier apostrophe (`ʼ`) in a keyword is treated as `'`, so `O’Brien` matches
+  `Mary O'Brien`.
+* Keywords are separated by any kind of space, including a no-break space copied from another application, so
+  `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
+* An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
+  accent mark matches a name with the single character `é`.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
@@ -728,8 +758,9 @@ Format: `deletemed INDEX MED_INDEX`
 * `INDEX` and `MED_INDEX` must both be given, in that order, and nothing else may follow them.
 * The other medications, allergens, care instructions, and details of the patient are not changed. The
   medications after the deleted one move up by one number, e.g., deleting medication 1 makes the old medication 2
-  the new medication 1. If the patient is shown in the details panel, the panel updates and renumbers its list.
-  When the last medication is deleted, the panel shows `None recorded`.
+  the new medication 1. After a successful command, the detail panel shows this patient, even if it showed another
+  patient before, with the medications renumbered. When the last medication is deleted, the panel shows
+  `None recorded`.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):
@@ -757,7 +788,7 @@ A command that fails changes nothing. Errors are reported as follows:
 
 ### Viewing a patient's full details: `view`
 
-Shows all the details of the specified patient in the panel to the right of the patient list.
+Shows all the details of the specified patient in the detail panel, to the right of the patient list.
 
 Format: `view INDEX`
 
@@ -768,18 +799,27 @@ Format: `view INDEX`
   list is numbered (`1.`, `2.`, ...), one entry per line. A medication with daily times shows them after its
   description, e.g., `Metformin 500mg (08:00, 20:00)`.
   Upcoming appointments are listed first, then past ones, each sorted by date, then time. Each past appointment is
-  marked `(past)`, e.g., on the sample data, `view 2` shows
-  `1. 2026-10-02 10:00 with Polyclinic nurse (Blood pressure normal) (past)`. Like the numbers, the marks stay as
+  marked `(past)` after its date and time, e.g., on the sample data, `view 2` shows
+  `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`. A note or `WITH` text that ends in
+  `(past)` does not mark an appointment as past. Like the numbers, the marks stay as
   shown until the patient is shown again.
   An empty list shows `None recorded`.
 * Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+* Clicking a patient in the patient list does not highlight or show them. Use `view INDEX` instead. A click on the
+  patient list does not move the cursor out of the command box, so you can keep typing.
+* The patient list can be scrolled with the mouse wheel, a trackpad or its scroll bar, but not with the keyboard:
+  `Tab` skips the patient list. To reach a patient in a long patient list quickly, use `find`.
 * A line break inside an entry, which only editing the data file by hand can add, is shown as a space, as in an
   exported record, so that each entry stays on its own numbered line.
-* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click it and choose
-  **Copy**. The whole line is copied, including its label, e.g., `NRIC: S1234567A`.
-* The panel keeps showing the patient after other commands, such as `list` or `find`, even if `find` hides the
-  patient from the list. It updates when the patient's care information changes, e.g., after `addcare`, and goes back
-  to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
+* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click its text and choose
+  **Copy**. A line of details is copied with its label, e.g., `NRIC: S1234567A`. A numbered entry is copied without
+  its number, e.g., `Penicillin`, so that it can be pasted into a command as it is; right-clicking the number itself
+  shows no menu. Clicking or right-clicking the panel does not move the cursor out of the command box, so you can
+  paste the copied text into a command straight away.
+* The panel keeps showing the patient after commands that do not change a patient, such as `list` or `find`, even
+  if `find` hides the patient from the list. A command that changes a patient's details or care information, e.g.,
+  `edit`, `addcare` or `addappt`, shows that patient instead, with the change, as does `listappt INDEX`. The panel goes
+  back to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
   replaces your data with a backup that does not have this patient with the same details.
 * Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
   `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
@@ -788,6 +828,8 @@ Format: `view INDEX`
   `listarchived` for an archived patient.
 * When a different patient is viewed, the panel scrolls back to the top, so their name is shown first. When the same
   patient is shown again, e.g., after `addcare`, the panel stays where it was scrolled to.
+* The panel can be scrolled with the mouse wheel, a trackpad or its scroll bar, but not with the keyboard, since the
+  cursor stays in the command box.
 
 Examples:
 
@@ -812,9 +854,13 @@ Format: `due [INDEX]`
   them from the patient list. Archived patients are not included.
 * With `INDEX`, `due` lists only the doses of the patient at that index in the displayed patient list. `INDEX` is
   the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
-  number (1, 2, 3, ...).
+  number (1, 2, 3, ...). If that patient is archived, `due` returns
+  `This patient is archived. Unarchive them to list their medication times.`
 * Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
   with several times has one line for each time.
+* If two or more patients in the result have the same name, ignoring letter case, their lines also show the NRIC,
+  as `HH:MM PATIENT_NAME (NRIC): DESCRIPTION`, so that you can tell them apart. A name that belongs to only one
+  patient in the result is shown without the NRIC.
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
   patient at the same time are listed in the order of the patient's medications.
 * A time that is earlier than the current time of your computer (in its time zone) is followed by
@@ -835,6 +881,10 @@ Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh
 * `due 2` returns `No medications are due today for Bernice Yu.`
 
 Run before 08:00, the same `due` returns the three lines without ` (earlier today)`.
+
+If two patients named Amy Tan, with NRICs S1111111A and S2222222B, both take Aspirin at 08:00, `due` returns<br>
+`08:00 Amy Tan (S1111111A): Aspirin`<br>
+`08:00 Amy Tan (S2222222B): Aspirin`
 
 If there is nothing to list, `due` returns `No medications are due today.` and `due INDEX` returns
 `No medications are due today for PATIENT_NAME.`
@@ -859,7 +909,9 @@ Format: `clear confirm`
   and collision handling as `backup`. If the backup fails, no patients are cleared.
 * The success message gives the backup's full path. Run `restore` to list backups, then `restore FILENAME`
   using that file's name to recover the data. There is no undo command.
-* An empty address book is backed up too. Existing backups are never overwritten.
+* The backup is made even when there are no patients. Existing backups are never overwritten.
+* A successful clear writes an empty data file even if the app already shows no patients. After an unreadable-file
+  startup warning, this lets you discard the unreadable data and start empty; the recovery copy is kept.
 * If saving the cleared data fails, the patients are restored automatically in the app and the backup is kept.
 
 Returns `All patients have been cleared.`, followed by `Backup saved to: PATH`, including when there are no
@@ -872,7 +924,10 @@ Saves a copy of all patient data to the `data/backups` folder, inside the folder
 Format: `backup`
 
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
-* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name, so no backup is overwritten. This also holds when two backups are made at the same moment, e.g., in two MediConnect windows, or when `restore` or `clear confirm` backs up your data while you make a backup. To let such backups take turns, MediConnect keeps an empty file named `.backup.lock` in `data/backups`; it is not a backup, and `restore` does not list it.
+* If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name,
+  so no backup is overwritten. Backups written to the same folder at the same time take turns, including
+  automatic backups made by `restore` and `clear confirm`. MediConnect keeps an empty file named `.backup.lock`
+  in `data/backups` for this purpose; it is not a backup, and `restore` does not list it.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
@@ -901,14 +956,17 @@ Format: `restore [FILENAME]`
 * `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
 * `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
+* The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
+  `data/backups` also has a file with exactly the name given, that file is restored instead.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
   For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
   counting from 1, and the validation reason.
-* The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
-  `data/backups` also has a file with exactly the name given, that file is restored instead.
 * Before replacing your data, MediConnect backs up your current data to `data/backups`, the same way `backup` does. If that backup cannot be saved, nothing is restored. To undo a restore, restore that backup.
 * MediConnect never deletes backups, including the automatic ones. You can delete old files in `data/backups` by hand when you no longer need them.
-* After a restore, the list shows all active restored patients. The view panel is cleared, unless the patient shown there is also in the backup with the same details.
+* After a restore, the list shows all active restored patients. The detail panel is cleared, unless the patient shown there is also in the backup with the same details.
+* A successful `restore FILENAME` writes the selected data even if it matches the data already shown. Restoring
+  an empty backup after an unreadable-file startup warning replaces the data file with valid empty data.
+  If the replacement cannot be saved, the restore fails and the app returns to its previous state.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
@@ -916,7 +974,7 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
 
-`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there.
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 
@@ -929,7 +987,7 @@ Format: `export INDEX`
 * The index **must be a positive integer** 1, 2, 3, ...
 * The file is named after the patient's NRIC, e.g., `data/exports/S1234567A.txt`. Exporting the same patient again replaces that file. If the patient's NRIC has been changed since an earlier export, e.g., with `edit`, the new export gets a new file, and the earlier file is kept unchanged. Delete it by hand if it is no longer needed.
 * The file has a title and the date and time of the export, then the patient's details, with `Status: Archived` after the address for an archived patient, and their numbered lists of medications (with their daily times, if any), allergens, care instructions, contacts and appointments. An empty list shows `None recorded`.
-* Appointments are ordered and marked the same way as in the detail panel: upcoming ones first, then past ones marked `(past)`. Upcoming and past are decided at the time of the export, so an appointment that has passed since the panel last showed the patient is listed as past, and the numbers can differ from the panel's until the patient is shown again.
+* Appointments are ordered and marked the same way as in the detail panel: upcoming ones first, then past ones marked `(past)` after their date and time. Upcoming and past are decided at the time of the export, so an appointment that has passed since the panel last showed the patient is listed as past, and the numbers can differ from the panel's until the patient is shown again.
 * MediConnect creates the `data/exports` folder if it does not exist yet. Exporting does not change your patient data.
 * On macOS and Linux, only your user account can open the file, since it holds medical details.
 
@@ -978,19 +1036,36 @@ Format: `exit`
 
 ### Saving the data
 
-MediConnect automatically saves data after every command that changes it. You do not need to save manually.
+MediConnect handles saving automatically. You do not need to save manually.
+See [clear](#clearing-all-patients-clear) and [restore](#restoring-data-from-a-backup-restore) for how these commands
+replace your saved data.
+
+MediConnect prevents two windows launched from the same app folder from using its data together.
+Its small lock files are in `.mediconnect/locks` inside the folder you launch MediConnect from;
+they contain no patient records. They can remain after exit and do not need to be removed after a crash.
+Do not delete them while MediConnect is running. The app needs permission to create and write these files.
+If the lock folder cannot be used, a startup error names it and the app exits; see the [FAQ](#faq) for recovery steps.
+
+Do not make different app folders share the same `data` folder, including through linked folders. This setup
+is unsupported: each app folder has its own lock files, so one app can overwrite the other's changes.
+Use one app folder for each set of patient data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
-`Could not save data ...` followed by `Nothing was changed.` Commands that do not change the data, such as `list`,
-`view`, `help` and `exit`, still work.
+`Could not save data ...` followed by `Nothing was changed.` You can still run `list`, `view`, `help` and `exit`.
 
 ### Editing the data file
 
 MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
+Close MediConnect before editing, replacing or moving its data file or home folder. Otherwise, an open window
+can overwrite external edits from its older in-memory data. Restart the app to load the edited file.
 Save the file as UTF-8. Either "UTF-8" or "UTF-8 with BOM" works. This also applies to backups in `data/backups`.
 A file saved in another encoding, such as "ANSI" in Windows Notepad, is not valid UTF-8 if it contains letters
 outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`. For such
 a backup, `restore` says that it is not saved as UTF-8.
+
+A data file saved by v1.3 can be loaded. Its medications, which v1.3 saved as plain text, are loaded as medications with no daily times. Use [`editmed`](#editing-a-medication-editmed) to set their times.
+
+A patient who has two medications with the same description, ignoring letter case and spacing, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
 
 <box type="warning" seamless>
 
@@ -1005,7 +1080,11 @@ the warning asks you to check the JSON format and file permissions; a patient po
 A misspelled property name, e.g., `careInstructons`, or a property given twice in the same entry also makes the
 file invalid, so that its value is not lost the next time the data is saved. The `Details:` line names a misspelled
 property, e.g., `Unknown property "careInstructons". Check its spelling.`
+A time in the file must be written as `HH:MM` with two digits, e.g., `08:30`, even though commands also accept
+`8:30`.
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
+To discard the unreadable data, use [clear confirm](#clearing-all-patients-clear). To recover from a valid backup,
+use [restore FILENAME](#restoring-data-from-a-backup-restore).
 If the recovery copy cannot be created, the main window does not open. An error dialog headed
 `MediConnect could not start` shows the data-file path, a reason, and what to check. Closing the dialog exits
 the app without changing patient data. This also happens if `data/mediconnect.json` is a folder rather than a file.
@@ -1023,7 +1102,19 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 ## FAQ
 
 **Q**: Where is my data saved?<br>
-**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. If this file does not exist, MediConnect creates it with sample patients when it starts. After that, it saves to the file after every command that changes the data.
+**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. On first launch, MediConnect tries
+to create this file with sample patients. After startup, it saves after commands that change patient data.
+If the app opens with a warning that sample patients are not saved, the initial data file could not be created.
+The warning names the data file and a failure reason. Close the app, check that the parent path is a writable
+folder with enough free disk space, then restart. Move the app to a writable folder if needed. Until the problem
+is fixed, commands that cannot save their changes fail and are undone; closing the app does not save the samples.
+Other startup errors may prevent the main window from opening at all.
+
+**Q**: Why does startup say it could not protect the data file?<br>
+**A**: MediConnect could not create or open its lock files in `.mediconnect/locks`.
+Close all MediConnect windows. Check that `.mediconnect` and `.mediconnect/locks` are folders and that you can
+write to them; move aside any file occupying either folder's path. If needed, move the entire app folder,
+including `data`, to a writable location, then launch MediConnect from there.
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.

@@ -2,6 +2,7 @@ package seedu.address;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -21,6 +22,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
+import seedu.address.logic.Messages;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -28,6 +30,7 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
+import seedu.address.storage.DataFileLock;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
@@ -45,6 +48,10 @@ public class MainApp extends Application {
             "The data file could not be loaded. Starting with no patients.\nRecovery copy: %1$s\nDetails: %2$s";
     public static final String MESSAGE_UNREADABLE_DATA =
             "The file could not be read as MediConnect patient data. Check its JSON format and file permissions.";
+    public static final String MESSAGE_DATA_CREATION_FAILED =
+            "The data file could not be created. The sample patients are not saved.\nData file: %1$s\nReason: %2$s.\n"
+            + "Close MediConnect, check that the parent path is a writable folder with free disk space, then restart.";
+
     public static final String MESSAGE_STARTUP_FAILURE =
             "MediConnect could not start safely.\nData file: %1$s\nReason: %2$s\n"
             + "Check that this path is a file and that you can read it and write to its folder, then try again. "
@@ -54,10 +61,17 @@ public class MainApp extends Application {
             "MediConnect does not have permission to read the data file or create its recovery copy.";
     public static final String MESSAGE_DATA_PRESERVATION_FAILED =
             "The data file could not be read or copied for recovery. Check permissions and available disk space.";
+    public static final String MESSAGE_DATA_IN_USE =
+            "MediConnect is already using this data file:\n%s\nClose the other window before opening it again.";
+    public static final String MESSAGE_DATA_LOCK_FAILED =
+            "MediConnect could not protect the data file from simultaneous use.\nData file: %1$s\n"
+            + "Lock folder: %2$s\nReason: %3$s.\nCheck that the lock folder is writable, then try again. "
+            + "No patient data was changed.";
 
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
     private static final Path ADDRESS_BOOK_FILE_PATH = Paths.get("data", "mediconnect.json");
+    private static final Path LOCK_DIRECTORY = Paths.get(".mediconnect", "locks");
     private static final String RECOVERY_FILE_PREFIX = "mediconnect-unreadable-";
 
     protected Ui ui;
@@ -67,8 +81,10 @@ public class MainApp extends Application {
 
     private final Path dataFilePath;
     private final Path prefsFilePath;
+    private final Path lockDirectory;
     private final Consumer<String> startupErrorPresenter;
     private final Runnable exitAction;
+    private DataFileLock dataFileLock;
     private String dataLoadWarning = "";
     private String startupFailure = "";
 
@@ -80,7 +96,7 @@ public class MainApp extends Application {
     }
 
     /**
-     * Creates the application with the given paths so startup can be tested in a temporary folder.
+     * Creates the application with the preferences file's parent as its app folder, allowing isolated startup tests.
      */
     MainApp(Path dataFilePath, Path prefsFilePath) {
         this(dataFilePath, prefsFilePath, UiManager::showStartupError, Platform::exit);
@@ -93,6 +109,7 @@ public class MainApp extends Application {
         requireAllNonNull(dataFilePath, prefsFilePath, startupErrorPresenter, exitAction);
         this.dataFilePath = dataFilePath;
         this.prefsFilePath = prefsFilePath;
+        this.lockDirectory = prefsFilePath.toAbsolutePath().resolveSibling(LOCK_DIRECTORY);
         this.startupErrorPresenter = startupErrorPresenter;
         this.exitAction = exitAction;
     }
@@ -102,6 +119,20 @@ public class MainApp extends Application {
         logger.info("=============================[ Initializing MediConnect ]===========================");
         super.init();
 
+        try {
+            dataFileLock = DataFileLock.tryAcquire(dataFilePath, lockDirectory).orElse(null);
+            if (dataFileLock == null) {
+                startupFailure = String.format(MESSAGE_DATA_IN_USE, dataFilePath.toAbsolutePath());
+                logger.warning(startupFailure);
+                return;
+            }
+        } catch (IOException e) {
+            startupFailure = String.format(MESSAGE_DATA_LOCK_FAILED, dataFilePath.toAbsolutePath(),
+                    lockDirectory.toAbsolutePath(), Messages.describeWriteFailure(e));
+            logger.warning(startupFailure);
+            return;
+        }
+
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(prefsFilePath);
         UserPrefs userPrefs = initPrefs(userPrefsStorage);
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(dataFilePath);
@@ -110,6 +141,7 @@ public class MainApp extends Application {
         try {
             model = initModelManager(storage, userPrefs);
         } catch (IOException e) {
+            releaseDataFileLock();
             startupFailure = String.format(MESSAGE_STARTUP_FAILURE, dataFilePath.toAbsolutePath(),
                     describeDataStartupFailure(dataFilePath, e));
             logger.warning(startupFailure);
@@ -133,13 +165,14 @@ public class MainApp extends Application {
 
     /**
      * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
-     * The data from the sample address book will be used instead, and saved to a new data file,
-     * if {@code storage}'s address book is not found,
-     * or an empty address book will be used after preserving an unreadable data file.
+     * Sample data is used if {@code storage}'s address book is not found, with an initial save attempt.
+     * A failed initial save produces a startup warning. An empty address book is used after preserving
+     * an unreadable data file.
      *
      * @throws IOException If an unreadable data file cannot be preserved.
      */
     protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) throws IOException {
+        requireAllNonNull(storage, userPrefs);
         Path dataFilePath = storage.getAddressBookFilePath();
         logger.info("Using data file : " + dataFilePath);
 
@@ -147,6 +180,7 @@ public class MainApp extends Application {
         ReadOnlyAddressBook initialData;
         try {
             addressBookOptional = storage.readAddressBook();
+            assert addressBookOptional != null : "Storage must return an Optional instead of null.";
             if (addressBookOptional.isEmpty()) {
                 logger.info("Creating a new data file " + dataFilePath
                         + " populated with sample data.");
@@ -171,6 +205,7 @@ public class MainApp extends Application {
 
     /**
      * Saves {@code data} to {@code storage}'s data file if the file does not exist yet.
+     * Records a startup warning if the initial data cannot be saved.
      */
     private void createDataFileIfMissing(Storage storage, ReadOnlyAddressBook data) {
         if (Files.exists(storage.getAddressBookFilePath())) {
@@ -179,6 +214,8 @@ public class MainApp extends Application {
         try {
             storage.saveAddressBook(data);
         } catch (IOException e) {
+            dataLoadWarning = String.format(MESSAGE_DATA_CREATION_FAILED,
+                    storage.getAddressBookFilePath().toAbsolutePath(), Messages.describeWriteFailure(e));
             logger.warning("Could not create the data file " + storage.getAddressBookFilePath()
                     + ": " + StringUtil.getDetails(e));
         }
@@ -240,13 +277,32 @@ public class MainApp extends Application {
     @Override
     public void stop() {
         logger.info("============================ [ Stopping MediConnect ] =============================");
-        if (model == null) {
-            return;
-        }
         try {
-            storage.saveUserPrefs(model.getUserPrefs());
+            if (model != null) {
+                storage.saveUserPrefs(model.getUserPrefs());
+            }
         } catch (IOException e) {
             logger.severe("Failed to save preferences " + StringUtil.getDetails(e));
+        } finally {
+            releaseDataFileLock();
+        }
+    }
+
+    /**
+     * Closes a lock without letting an I/O failure interrupt application shutdown.
+     */
+    static void closeDataFileLock(Closeable lock) {
+        try {
+            lock.close();
+        } catch (IOException e) {
+            logger.warning("Could not release the data-file lock: " + StringUtil.getDetails(e));
+        }
+    }
+
+    private void releaseDataFileLock() {
+        if (dataFileLock != null) {
+            closeDataFileLock(dataFileLock);
+            dataFileLock = null;
         }
     }
 }
