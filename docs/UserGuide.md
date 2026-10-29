@@ -1045,6 +1045,10 @@ A file saved in another encoding, such as "ANSI" in Windows Notepad, is not vali
 outside English, such as `é`, so MediConnect cannot load it, rather than loading those letters as `�`. For such
 a backup, `restore` says that it is not saved as UTF-8.
 
+A data file saved by v1.3 can be loaded. Its medications, which v1.3 saved as plain text, are loaded as medications with no daily times. Use [`editmed`](#editing-a-medication-editmed) to set their times.
+
+A patient who has two medications with the same description, ignoring letter case and spacing, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
+
 <box type="warning" seamless>
 
 **Caution:**
