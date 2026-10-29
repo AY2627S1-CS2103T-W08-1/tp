@@ -49,9 +49,10 @@ public class Messages {
     public static final String MESSAGE_NOTHING_DUE_TODAY_FOR_PATIENT = "No medications are due today for %1$s.";
     public static final String MESSAGE_DUE_PATIENT_ARCHIVED =
             "This patient is archived. Unarchive them to list their medication times.";
-    public static final String MESSAGE_DUE_ENTRY = "%1$s %2$s: %3$s";
-    public static final String MESSAGE_DUE_ENTRY_WITH_NRIC = "%1$s %2$s (%4$s): %3$s";
-    public static final String MESSAGE_DUE_EARLIER_TODAY_SUFFIX = " (earlier today)";
+    public static final String MESSAGE_DUE_ENTRY = "%1$s%5$s %2$s: %3$s";
+    public static final String MESSAGE_DUE_ENTRY_WITH_NRIC = "%1$s%5$s %2$s (%4$s): %3$s";
+    // Follows the time, where the text of a medication cannot be, so that the text cannot imitate the marker
+    public static final String MESSAGE_DUE_EARLIER_TODAY_MARKER = " (earlier today)";
     public static final String MESSAGE_INVALID_MEDICATION_DISPLAYED_INDEX =
             "The medication index provided is invalid.";
     public static final String MESSAGE_NO_MEDICATION_FIELD_TO_EDIT =
