@@ -955,7 +955,7 @@ Format: `backup`
 
 Returns `Backup saved to: ` followed by the full path of the backup file.
 
-If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows `Could not save the backup to ` followed by the folder and the reason, and your data is not changed.
+If the backup cannot be saved (e.g., a file named `backups` or `data` is where that folder should be, or MediConnect does not have permission to write there), MediConnect shows `Could not save the backup to ` followed by the folder and the reason, and your data is not changed.
 
 <box type="warning" seamless>
 
@@ -976,7 +976,7 @@ Format: `restore [FILENAME]`
 
 * `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. They are ordered by the time each file was last changed, not by the date in its name, so a backup copied into `data/backups` from elsewhere can be listed first. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
-* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as part of the name. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
+* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as part of the name. MediConnect reads special spaces you type, e.g., no-break spaces, as normal spaces, so a backup whose name has special spaces instead of normal ones is found too, as long as no other backup's name differs from it only in its spaces. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
 * The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
   `data/backups` also has a file with exactly the name given, that file is restored instead.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
@@ -995,7 +995,7 @@ Examples:
 
 Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number of patients is followed by, e.g., `(2 archived, shown by listarchived)`, as in `Restored 7 patients (2 archived, shown by listarchived) from ...`, since the list after a restore shows only active patients.
 
-`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
+`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 

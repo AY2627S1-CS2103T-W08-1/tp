@@ -10,10 +10,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.parser.Prefix;
 import seedu.address.model.appointment.Appointment;
 import seedu.address.model.patient.Name;
@@ -145,10 +147,26 @@ public class Messages {
             Path fileName = Paths.get(existsException.getFile()).getFileName();
             return String.format(MESSAGE_FILE_IN_PLACE_OF_FOLDER, fileName);
         }
+        // the file system only says "Not a directory" when a file has the name of a folder above, e.g., data
+        Optional<Path> fileAbove = findFileInPlaceOfFolderAbove(ioe);
+        if (fileAbove.isPresent()) {
+            return String.format(MESSAGE_FILE_IN_PLACE_OF_FOLDER, fileAbove.get().getFileName());
+        }
 
         String reason = getReportedReason(ioe);
         String trimmedReason = reason == null ? "" : stripTrailingSpacesAndFullStops(reason).strip();
         return trimmedReason.isEmpty() ? getFallbackReason(ioe) : trimmedReason;
+    }
+
+    /**
+     * Returns the nearest folder above the file that {@code ioe} names that is a file instead, if {@code ioe} is a
+     * file system exception that names a file.
+     */
+    private static Optional<Path> findFileInPlaceOfFolderAbove(IOException ioe) {
+        if (!(ioe instanceof FileSystemException fileSystemException) || fileSystemException.getFile() == null) {
+            return Optional.empty();
+        }
+        return FileUtil.findFileInPlaceOfFolder(Paths.get(fileSystemException.getFile()));
     }
 
     /**

@@ -43,7 +43,7 @@ import seedu.address.ui.UiManager;
  */
 public class MainApp extends Application {
 
-    public static final String VERSION = "V1.5.0";
+    public static final String VERSION = "V1.6.0";
     public static final String MESSAGE_DATA_RECOVERY =
             "The data file could not be loaded. Starting with no patients.\nRecovery copy: %1$s\nDetails: %2$s";
     public static final String MESSAGE_UNREADABLE_DATA =

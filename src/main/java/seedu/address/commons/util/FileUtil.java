@@ -10,6 +10,7 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -34,6 +35,24 @@ public class FileUtil {
         if (parentDir != null) {
             Files.createDirectories(parentDir);
         }
+    }
+
+    /**
+     * Returns the nearest folder above {@code path} that is a file instead, e.g., {@code data} for
+     * {@code data/backups} when {@code data} is a file, which stops any folder from being made at {@code path}.
+     * {@code path} itself is not checked, as a file there is reported where it is made.
+     *
+     * @param path File or folder whose enclosing folders are checked. It need not exist.
+     * @return the enclosing path that is not a folder, or an empty {@code Optional} if each one that exists is one.
+     */
+    public static Optional<Path> findFileInPlaceOfFolder(Path path) {
+        requireNonNull(path);
+        for (Path folder = path.getParent(); folder != null; folder = folder.getParent()) {
+            if (Files.exists(folder) && !Files.isDirectory(folder)) {
+                return Optional.of(folder);
+            }
+        }
+        return Optional.empty();
     }
 
     /**
