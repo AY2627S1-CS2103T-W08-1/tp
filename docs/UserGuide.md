@@ -268,6 +268,8 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
 * The patient's other details and other medications are not changed. After a successful command, the detail panel
   shows this patient with the updated medication, even if it showed another patient before.
+* The patient can be archived (shown by `listarchived`). The medication is updated without making the patient active
+  again.
 * The description follows the [slash-text rules](#slash-text-in-field-values): `mg/ml` and `units/day` are allowed.
   Reserved prefixes outside this command, such as `p/`, are rejected. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
@@ -299,7 +301,7 @@ A command that fails changes nothing. Errors are reported as follows:
   than two, returns `Invalid command format!`, followed by the command usage.
 * A command with neither `med/` nor `t/` returns `At least one of med/ or t/ must be provided.`
 * A blank `med/` returns `Medication description cannot be blank.`
-* A time that is not valid, such as `24:00`, `08:60`, `8:30`, or `noon`, returns
+* A time that is not valid, such as `24:00`, `08:60`, or `noon`, returns
   `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.`
 * A `t/` with nothing after it next to another `t/` (e.g., `t/08:00 t/`) returns
   `t/ with no time clears all times and cannot be combined with other times.`
@@ -732,6 +734,11 @@ Examples:
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
   <img src="images/findAlexDavidResult.png" alt="result of find alex david: 2 patient(s) listed, Alex Yeoh and David Li" width="560" />
 
+A successful command returns `N patient(s) listed!`, e.g., `2 patient(s) listed!` for `find alex david`. If no active
+patient matches, it returns `No patients found matching the given keyword(s).` and the patient list is empty. A
+command without any keyword returns `Please provide at least one keyword to search for.` and the patient list does
+not change.
+
 ### Deleting a patient: `delete`
 
 Deletes the specified patient from MediConnect.
@@ -745,6 +752,11 @@ Format: `delete INDEX`
 Examples:
 * `list` followed by `delete 2` deletes the 2nd patient in MediConnect.
 * `find Alex` followed by `delete 1` deletes the 1st patient in the results of the `find` command.
+
+A successful command returns `Deleted patient: NAME; NRIC: NRIC`, e.g., `Deleted patient: Alex Yeoh; NRIC: S0000001A`.
+An `INDEX` outside the displayed list returns `The patient index provided is invalid.` A missing, zero, negative,
+non-numeric or excessively large `INDEX`, or extra words after it, returns `Invalid command format!` followed by the
+command usage.
 
 ### Deleting a medication: `deletemed`
 
@@ -762,6 +774,8 @@ Format: `deletemed INDEX MED_INDEX`
   the new medication 1. After a successful command, the detail panel shows this patient, even if it showed another
   patient before, with the medications renumbered. When the last medication is deleted, the panel shows
   `None recorded`.
+* The patient can be archived (shown by `listarchived`). The medication is deleted without making the patient active
+  again.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):
