@@ -124,8 +124,9 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
-* Command words are matched case-sensitively by `AddressBookParser`; field prefixes are also case-sensitive.
-  Both use lowercase spellings. For example, `LIST` produces `Unknown command.` rather than running `list`.
+* `AddressBookParser` lowercases only the command word with `Locale.ROOT` before dispatch, so `LIST`, `List`
+  and `list` select the same command regardless of the computer's language. Arguments are unchanged: field
+  prefixes remain case-sensitive and lowercase, while field values and other arguments keep their own rules.
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 * Field parsers use `ArgumentTokenizer#verifyNoInvalidPrefixes` before tokenization, declaring their free-text
@@ -2001,16 +2002,25 @@ testers are expected to do more *exploratory* testing.
    1. Test case: Press `F1`, or choose **Help** in the menu bar. Click the help window, then press `Esc`.<br>
       Expected: `F1` and the menu open the help window as `help` does, and `Esc` in the help window closes it.
 
-### Command case sensitivity
+### Command letter case
 
-1. Test cases: `LIST`, `List`, `Add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
-   Expected: Each returns `Unknown command.` without changing patient data or the displayed list.
+1. Prerequisites: Use sample data in a disposable app folder, with no patient whose NRIC is `S1234567A`.
 
-1. Test case: `list`<br>
-   Expected: The lowercase command succeeds and shows all active patients.
+1. Test cases: `LIST`, `List` and `list`.<br>
+   Expected: Each shows all active patients, without changing patient data.
 
-1. Test case: `add N/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`<br>
+1. Test cases: `View 1`, then `EXPORT 1`.<br>
+   Expected: The detail panel shows the first patient, and the export succeeds as with `export 1`.
+
+1. Test case: `Add n/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`.<br>
+   Expected: John Tan is added with the entered name and address, as with lowercase `add`.
+
+1. Test case: `ADD N/John Tan ic/S1234567A dob/1950-04-12 p/91234567 a/Blk 1`.<br>
    Expected: No patient is added. The command reports `Unrecognized parameter: N/. Please check the command format.`
+
+1. Test case: `CLEAR CONFIRM`.<br>
+   Expected: Invalid command format; no patients are cleared. Only the command word ignores letter case,
+   so clearing still requires lowercase `confirm`.
 
 ### Entering a blank command
 
