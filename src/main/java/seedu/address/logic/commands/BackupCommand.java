@@ -132,7 +132,7 @@ public class BackupCommand extends Command {
     private Path saveUnderNextFreeName(ReadOnlyAddressBook addressBook) throws IOException {
         // a FileLock keeps out other processes, but a process may hold it only once, so threads take turns
         synchronized (backupLock) {
-            // null if the lock file cannot be used, which try-with-resources then does not close
+            // null if the lock file cannot be opened, which try-with-resources then does not close
             try (FileChannel lockedFile = lockBackupFolder()) {
                 Path backupFile = getBackupFilePath();
                 FileUtil.writeThroughTemporaryFile(backupFile, temporaryFile ->
@@ -144,28 +144,23 @@ public class BackupCommand extends Command {
 
     /**
      * Opens and locks {@code LOCK_FILE_NAME} in the backup folder, which makes backups in other processes
-     * wait, and returns its channel, whose closing releases the lock. Returns null if the lock file cannot
-     * be opened or locked, e.g., because it is read-only or a folder, so that the backup is still made.
-     * Only one MediConnect can use an app folder at a time, so the backups of its folder still take turns,
-     * through the {@code synchronized} block of {@code saveUnderNextFreeName}.
+     * wait, and returns its channel for the caller to close, which releases the lock. If the lock file
+     * cannot be opened, e.g., because it is read-only or a folder, returns null, and if it cannot be locked,
+     * returns its channel unlocked, so that the backup is still made. Only one MediConnect can use an app
+     * folder at a time, so the backups of its folder still take turns, through the {@code synchronized}
+     * block of {@code saveUnderNextFreeName}.
      */
     private FileChannel lockBackupFolder() {
         Path lockFile = backupDir.resolve(LOCK_FILE_NAME);
+        FileChannel channel = null;
         try {
-            FileChannel channel =
-                    FileChannel.open(lockFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-            try {
-                channel.lock();
-                return channel;
-            } catch (IOException ioe) {
-                channel.close();
-                throw ioe;
-            }
+            channel = FileChannel.open(lockFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            channel.lock();
         } catch (IOException ioe) {
             logger.warning("Could not lock " + lockFile + ", so the backup is made without it: "
                     + ioe.getClass().getSimpleName());
-            return null;
         }
+        return channel;
     }
 
     /**
