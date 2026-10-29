@@ -80,6 +80,8 @@
         "checking-slash-text-and-field-boundaries": "Checking slash text and field boundaries",
         "adding-a-patient-with-a-blank-address": "Adding a patient with a blank address",
         "adding-care-information": "Adding care information",
+        "editing-and-deleting-medications": "Editing and deleting medications",
+        "listing-today-s-medication-times": "Listing today's medication times",
         "managing-patient-contacts": "Managing patient contacts",
         "listing-active-patients": "Listing active patients",
         "clearing-all-patients-2": "Clearing all patients",
