@@ -35,7 +35,7 @@ public class DueCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists today's medication times, sorted by time, "
             + "for all active patients, or only for the patient identified by the index number used in the displayed "
             + "patient list. Medications without times are not listed. A time earlier than the current time is "
-            + "marked" + Messages.MESSAGE_DUE_EARLIER_TODAY_SUFFIX + ".\n"
+            + "followed by" + Messages.MESSAGE_DUE_EARLIER_TODAY_MARKER + ".\n"
             + "Parameters: [INDEX] (must be a positive integer)\n"
             + "Examples: " + COMMAND_WORD + "\n"
             + "          " + COMMAND_WORD + " 1";
@@ -149,12 +149,12 @@ public class DueCommand extends Command {
      * Returns the line of {@code dose}, which shows the NRIC of the patient if the name is in {@code sharedNames}.
      */
     private static String formatDose(Dose dose, LocalTime now, Set<String> sharedNames) {
-        String suffix = dose.time().isBefore(now) ? Messages.MESSAGE_DUE_EARLIER_TODAY_SUFFIX : "";
+        String marker = dose.time().isBefore(now) ? Messages.MESSAGE_DUE_EARLIER_TODAY_MARKER : "";
         String format = sharedNames.contains(toNameKey(dose.patient()))
                 ? Messages.MESSAGE_DUE_ENTRY_WITH_NRIC
                 : Messages.MESSAGE_DUE_ENTRY;
         return String.format(format, Medication.formatTime(dose.time()), dose.patient().getName(),
-                dose.medication().getDescription(), dose.patient().getNric()) + suffix;
+                dose.medication().getDescription(), dose.patient().getNric(), marker);
     }
 
     private String createNothingDueMessage(List<Patient> candidates) {

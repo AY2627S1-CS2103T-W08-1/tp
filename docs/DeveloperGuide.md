@@ -628,8 +628,10 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
    Archived patients are always left out.
 1. It reads the current time as `LocalTime.now(clock)`, cut to the minute, and turns every time of every medication
    into a dose. The doses are sorted by time, then by patient name, then by NRIC.
-1. It writes one line per dose, as `HH:MM NAME: DESCRIPTION`, and adds ` (earlier today)` to a dose whose time is
-   before now. If there are no doses, it returns `No medications are due today.`, or
+1. It writes one line per dose, as `HH:MM NAME: DESCRIPTION`, and adds ` (earlier today)` straight after the time of
+   a dose whose time is before now. The mark is there, not at the end of the line, because the description is free
+   text and could end in `(earlier today)` itself, whereas a name cannot contain brackets.
+   If there are no doses, it returns `No medications are due today.`, or
    `No medications are due today for NAME.` when an index was given.
 
 `due` does not change the patient data, so `LogicManager` does not save after it.

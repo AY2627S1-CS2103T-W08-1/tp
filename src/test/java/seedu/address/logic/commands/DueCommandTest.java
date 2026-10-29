@@ -74,8 +74,8 @@ public class DueCommandTest {
     public void execute_midday_onlyPastDosesAreMarkedEarlierToday() throws Exception {
         Model model = createModel(alex, bernice);
         assertDue(new DueCommand(clockAt(12, 0, 0)), model,
-                "08:00 Alex Yeoh: Aspirin 100mg" + EARLIER,
-                "08:00 Alex Yeoh: Metformin 500mg" + EARLIER,
+                "08:00" + EARLIER + " Alex Yeoh: Aspirin 100mg",
+                "08:00" + EARLIER + " Alex Yeoh: Metformin 500mg",
                 "13:30 Bernice Yu: Amlodipine 5mg",
                 "20:00 Alex Yeoh: Metformin 500mg");
     }
@@ -84,10 +84,10 @@ public class DueCommandTest {
     public void execute_evening_everyDoseIsMarkedEarlierToday() throws Exception {
         Model model = createModel(alex, bernice);
         assertDue(new DueCommand(clockAt(21, 0, 0)), model,
-                "08:00 Alex Yeoh: Aspirin 100mg" + EARLIER,
-                "08:00 Alex Yeoh: Metformin 500mg" + EARLIER,
-                "13:30 Bernice Yu: Amlodipine 5mg" + EARLIER,
-                "20:00 Alex Yeoh: Metformin 500mg" + EARLIER);
+                "08:00" + EARLIER + " Alex Yeoh: Aspirin 100mg",
+                "08:00" + EARLIER + " Alex Yeoh: Metformin 500mg",
+                "13:30" + EARLIER + " Bernice Yu: Amlodipine 5mg",
+                "20:00" + EARLIER + " Alex Yeoh: Metformin 500mg");
     }
 
     @Test
@@ -112,8 +112,8 @@ public class DueCommandTest {
     public void execute_oneMinuteAfterDose_markedEarlierToday() throws Exception {
         Model model = createModel(alex);
         assertDue(new DueCommand(clockAt(8, 1, 0)), model,
-                "08:00 Alex Yeoh: Aspirin 100mg" + EARLIER,
-                "08:00 Alex Yeoh: Metformin 500mg" + EARLIER,
+                "08:00" + EARLIER + " Alex Yeoh: Aspirin 100mg",
+                "08:00" + EARLIER + " Alex Yeoh: Metformin 500mg",
                 "20:00 Alex Yeoh: Metformin 500mg");
     }
 
@@ -132,7 +132,17 @@ public class DueCommandTest {
         assertDue(new DueCommand(clockAt(0, 0, 0)), model,
                 "00:00 Zed Tan: Night Dose", "23:59 Zed Tan: Night Dose");
         assertDue(new DueCommand(clockAt(23, 59, 30)), model,
-                "00:00 Zed Tan: Night Dose" + EARLIER, "23:59 Zed Tan: Night Dose");
+                "00:00" + EARLIER + " Zed Tan: Night Dose", "23:59 Zed Tan: Night Dose");
+    }
+
+    @Test
+    public void execute_descriptionEndsLikeStatusMarker_stillDistinguishableFromRealMarker() throws Exception {
+        Model model = createModel(patient("Zed Tan", "S0000009A",
+                medication("Dose (earlier today)", 8, 0), medication("Later dose (earlier today)", 20, 0)));
+        // the real marker is right after the time, where the text of a medication cannot be
+        assertDue(new DueCommand(clockAt(10, 30, 0)), model,
+                "08:00" + EARLIER + " Zed Tan: Dose (earlier today)",
+                "20:00 Zed Tan: Later dose (earlier today)");
     }
 
     @Test
@@ -144,7 +154,7 @@ public class DueCommandTest {
         assertDue(new DueCommand(utc), model, "08:00 Zed Tan: Dose");
         assertDue(new DueCommand(singapore), model, "08:00 Zed Tan: Dose");
         assertDue(new DueCommand(Clock.fixed(Instant.parse("2026-10-19T00:01:00Z"), ZoneOffset.ofHours(8))), model,
-                "08:00 Zed Tan: Dose" + EARLIER);
+                "08:00" + EARLIER + " Zed Tan: Dose");
     }
 
     @Test
@@ -194,8 +204,8 @@ public class DueCommandTest {
                 patient("Amy Tan", "S1111111A", medication("Aspirin", 8, 0), medication("Zinc", 9, 0)),
                 patient("Amy Tan", "S2222222B", medication("Aspirin", 8, 0)));
         assertDue(new DueCommand(clockAt(8, 30, 0)), model,
-                "08:00 Amy Tan (S1111111A): Aspirin (earlier today)",
-                "08:00 Amy Tan (S2222222B): Aspirin (earlier today)",
+                "08:00 (earlier today) Amy Tan (S1111111A): Aspirin",
+                "08:00 (earlier today) Amy Tan (S2222222B): Aspirin",
                 "09:00 Amy Tan (S1111111A): Zinc");
     }
 
@@ -245,7 +255,7 @@ public class DueCommandTest {
     @Test
     public void execute_allDosesEarlierToday_stillListedNotTreatedAsNothingDue() throws Exception {
         assertDue(new DueCommand(clockAt(23, 0, 0)), createModel(bernice),
-                "13:30 Bernice Yu: Amlodipine 5mg" + EARLIER);
+                "13:30" + EARLIER + " Bernice Yu: Amlodipine 5mg");
     }
 
     @Test
@@ -272,8 +282,8 @@ public class DueCommandTest {
         assertDue(new DueCommand(INDEX_SECOND_PATIENT, clockAt(7, 0, 0)), model,
                 "13:30 Bernice Yu: Amlodipine 5mg");
         assertDue(new DueCommand(INDEX_FIRST_PATIENT, clockAt(12, 0, 0)), model,
-                "08:00 Alex Yeoh: Aspirin 100mg" + EARLIER,
-                "08:00 Alex Yeoh: Metformin 500mg" + EARLIER,
+                "08:00" + EARLIER + " Alex Yeoh: Aspirin 100mg",
+                "08:00" + EARLIER + " Alex Yeoh: Metformin 500mg",
                 "20:00 Alex Yeoh: Metformin 500mg");
     }
 

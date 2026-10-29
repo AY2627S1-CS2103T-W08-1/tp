@@ -853,7 +853,8 @@ Format: `due [INDEX]`
   the number of the patient in the currently displayed patient list, as for `delete`. It must be a positive whole
   number (1, 2, 3, ...). If that patient is archived, `due` returns
   `This patient is archived. Unarchive them to list their medication times.`
-* Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`. A medication
+* Each line has the form `HH:MM PATIENT_NAME: DESCRIPTION`, e.g., `08:00 Alex Yeoh: Aspirin 100mg`, unless the time is
+  marked as earlier today (see below). A medication
   with several times has one line for each time.
 * If two or more patients in the result have the same name, ignoring letter case, their lines also show the NRIC,
   as `HH:MM PATIENT_NAME (NRIC): DESCRIPTION`, so that you can tell them apart. A name that belongs to only one
@@ -861,8 +862,10 @@ Format: `due [INDEX]`
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
   patient at the same time are listed in the order of the patient's medications.
 * A time that is earlier than the current time of your computer (in its time zone) is followed by
-  ` (earlier today)`. A time in the current minute is not marked. Every time is a daily time, so the same times
-  are listed each day.
+  ` (earlier today)` straight after the time, as in `08:00 (earlier today) Alex Yeoh: Aspirin 100mg`. A time in the
+  current minute is not marked. Every time is a daily time, so the same times are listed each day.
+* Only the text right after the time is the mark from MediConnect. A description is free text, so it can itself end
+  in `(earlier today)`, e.g., `20:00 Alex Yeoh: Aspirin (earlier today)`, which is not marked and is still to come.
 * Medications without times are not listed.
 * The result is shown in the result box. The patient list and the details panel are not changed, and no data is
   changed.
@@ -871,13 +874,13 @@ Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh
 `2. Amlodipine 5mg (08:00, 20:00)`, and the other patients have no times):
 
 * `due` returns<br>
-  `08:00 Alex Yeoh: Aspirin 100mg (earlier today)`<br>
-  `08:00 Alex Yeoh: Amlodipine 5mg (earlier today)`<br>
+  `08:00 (earlier today) Alex Yeoh: Aspirin 100mg`<br>
+  `08:00 (earlier today) Alex Yeoh: Amlodipine 5mg`<br>
   `20:00 Alex Yeoh: Amlodipine 5mg`
 * `due 1` returns the same three lines, because only Alex Yeoh has times.
 * `due 2` returns `No medications are due today for Bernice Yu.`
 
-Run before 08:00, the same `due` returns the three lines without ` (earlier today)`.
+Run before 08:00, the same `due` returns the three lines without `(earlier today)`.
 
 If two patients named Amy Tan, with NRICs S1111111A and S2222222B, both take Aspirin at 08:00, `due` returns<br>
 `08:00 Amy Tan (S1111111A): Aspirin`<br>
