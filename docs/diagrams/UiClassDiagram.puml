@@ -52,6 +52,8 @@ HelpWindow --|> UiPart
 
 PatientCard ..> Model
 PatientDetailPanel ..> Model
+PatientDetailPanel ..> Logic
+HelpWindow ..> Logic
 UiManager -right-> Logic
 MainWindow -left-> Logic
 
