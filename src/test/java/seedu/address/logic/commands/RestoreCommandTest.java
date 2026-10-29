@@ -340,6 +340,17 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_fileInPlaceOfBackupFolder_throwsCommandExceptionWithNotFound() throws Exception {
+        // a file where the backup folder should be also makes whether a backup in it exists unknown, but it is
+        // not a folder that MediConnect may not open
+        Path fileInPlaceOfFolder = Files.createFile(temporaryFolder.resolve("backups"));
+        RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, fileInPlaceOfFolder);
+
+        assertCommandFailure(restoreCommand, model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, fileInPlaceOfFolder));
+    }
+
+    @Test
     public void execute_nameTooLongForFileSystemInMissingFolder_throwsCommandExceptionWithNotFound() {
         Path missingFolder = temporaryFolder.resolve("missing");
         String tooLongName = "a".repeat(300) + ".json";

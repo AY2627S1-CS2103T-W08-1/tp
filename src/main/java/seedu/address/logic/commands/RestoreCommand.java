@@ -196,7 +196,7 @@ public class RestoreCommand extends Command {
         // neither holds if the folder may not be opened, e.g., after chmod 000 or chmod 444 on it, but also for a
         // name too long for the file system, so the folder itself is checked as well
         boolean isExistenceUnknown = !Files.exists(backupFile) && !Files.notExists(backupFile);
-        boolean isFolderUnreadable = isExistenceUnknown && Files.isDirectory(backupDir)
+        boolean isFolderUnreadable = isExistenceUnknown
                 && !(Files.isReadable(backupDir) && Files.isExecutable(backupDir));
         return isFolderUnreadable
                 ? String.format(MESSAGE_NO_FOLDER_READ_PERMISSION, backupDir.toAbsolutePath().normalize())
