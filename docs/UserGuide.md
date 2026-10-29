@@ -814,9 +814,12 @@ Format: `view INDEX`
   exported record, so that each entry stays on its own numbered line.
 * To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click its text and choose
   **Copy**. A line of details is copied with its label, e.g., `NRIC: S1234567A`. A numbered entry is copied without
-  its number, e.g., `Penicillin`, so that it can be pasted into a command as it is; right-clicking the number itself
-  shows no menu. Clicking or right-clicking the panel does not move the cursor out of the command box, so you can
-  paste the copied text into a command straight away.
+  its number, e.g., `Penicillin`, so that an allergen or a care instruction can be pasted into a command as it is.
+  A medication is copied with its daily times, e.g., `Aspirin 100mg (08:00)`, a contact with its role, phone and
+  note, and an appointment with its date, time and any `(past)` mark, so remove those parts before pasting the text
+  into a field, e.g., after `editmed 1 1 med/`. The number of an entry, the headings, e.g., `Medications`, the
+  `List index:` line and `None recorded` show no menu. Clicking or right-clicking the panel does not move the cursor
+  out of the command box, so you can paste the copied text into a command straight away.
 * The panel keeps showing the patient after commands that do not change a patient, such as `list` or `find`, even
   if `find` hides the patient from the list. A command that changes a patient's details or care information, e.g.,
   `edit`, `addcare` or `addappt`, shows that patient instead, with the change, as does `listappt INDEX`. The panel goes
@@ -957,9 +960,9 @@ Replaces all patient data with the data in a backup file from the `data/backups`
 
 Format: `restore [FILENAME]`
 
-* `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
+* `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. They are ordered by the time each file was last changed, not by the date in its name, so a backup copied into `data/backups` from elsewhere can be listed first. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
-* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
+* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as part of the name. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
 * The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
   `data/backups` also has a file with exactly the name given, that file is restored instead.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
@@ -976,7 +979,7 @@ Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
 * `restore mediconnect-20261020-083015` does the same.
 
-Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number is followed by, e.g., `(2 archived, shown by listarchived)`, since the list after a restore shows only active patients.
+Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number of patients is followed by, e.g., `(2 archived, shown by listarchived)`, as in `Restored 7 patients (2 archived, shown by listarchived) from ...`, since the list after a restore shows only active patients.
 
 `restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
