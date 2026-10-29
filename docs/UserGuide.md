@@ -57,8 +57,9 @@ MediConnect is a **desktop application for managing patient records and care inf
 * Pressing Enter when the command box is empty or contains only whitespace does nothing.
   The text in the command box and the previous result remain unchanged.
 
-* Command words and field prefixes are case-sensitive and must be lowercase, e.g., `list` rather than `LIST`,
-  and `n/` rather than `N/`. Field values follow their own rules; for example, NRIC input is not case-sensitive.
+* Command words can be typed in any letter case: `list`, `LIST` and `List` do the same thing.
+  Field prefixes must still be lowercase, e.g., `n/` rather than `N/`. Field values and other arguments keep their
+  own rules: NRIC input is not case-sensitive, but `confirm` in `clear confirm` must be lowercase.
 
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
@@ -201,6 +202,9 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
 * Duplicate entries, ignoring letter case, whitespace differences, and equivalent Unicode forms that look the same,
   are not added again. Other unique entries in the same command are still added.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
+  `addcare` does not accept `t/`: `addcare 1 med/Paracetamol 500mg t/08:00` returns
+  `Unrecognized parameter: t/. Please check the command format.` Add the medication first, check its number with
+  `view`, then run `editmed INDEX MED_INDEX t/08:00`.
 * After a successful command, the detail panel shows the updated patient so the new entry numbers can be checked.
 
 Examples:
@@ -726,7 +730,7 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
 Examples:
 * `find Bernice` returns `Bernice Yu`
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
+  <img src="images/findAlexDavidResult.png" alt="result of find alex david: 2 patient(s) listed, Alex Yeoh and David Li" width="560" />
 
 ### Deleting a patient: `delete`
 

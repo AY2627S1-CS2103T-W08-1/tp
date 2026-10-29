@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -28,6 +29,18 @@ public class PatientCardTest {
         PatientCard card = new PatientCard(new PatientBuilder().build(), 1);
 
         assertEquals(PatientBuilder.DEFAULT_NAME, ((Label) card.getRoot().lookup("#name")).getText());
+    }
+
+    @Test
+    public void constructor_nullPatient_throwsNullPointerException() {
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        assertThrows(NullPointerException.class, () -> new PatientCard(null, 1));
+    }
+
+    @Test
+    public void constructor_displayedIndexBelowOne_failsAssertion() {
+        assumeTrue(isToolkitAvailable, "JavaFX toolkit is not available");
+        assertThrows(AssertionError.class, () -> new PatientCard(new PatientBuilder().build(), 0));
     }
 
     @Test

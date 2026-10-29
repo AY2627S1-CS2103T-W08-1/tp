@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_DUE_PATIENT_ARCHIVED;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_NOTHING_DUE_TODAY;
@@ -30,6 +31,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.LogCollector;
 import seedu.address.testutil.PatientBuilder;
 
 public class DueCommandTest {
@@ -214,6 +216,20 @@ public class DueCommandTest {
         Model model = createModel(patient("Amy Tan", "S0000001A",
                 medication("Aspirin\n20:00 Amy Tan: Warfarin", 8, 0)));
         assertDue(new DueCommand(clockAt(0, 0, 0)), model, "08:00 Amy Tan: Aspirin 20:00 Amy Tan: Warfarin");
+    }
+
+    @Test
+    public void execute_logsDoseCountButNotPatientData() throws Exception {
+        Model model = createModel(alex, bernice);
+        List<String> messages;
+        try (LogCollector logs = new LogCollector(DueCommand.class)) {
+            new DueCommand(clockAt(7, 0, 0)).execute(model);
+            messages = logs.getMessages();
+        }
+
+        assertTrue(messages.stream().anyMatch(message -> message.contains("4")));
+        assertFalse(messages.stream().anyMatch(message -> message.contains("Alex")
+                || message.contains("Aspirin") || message.contains("S0000001A")));
     }
 
     @Test

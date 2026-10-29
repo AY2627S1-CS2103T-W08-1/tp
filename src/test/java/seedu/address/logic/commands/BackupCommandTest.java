@@ -222,15 +222,11 @@ public class BackupCommandTest {
 
     @Test
     public void saveBackup_manyBackupsAtSameTime_eachSavedToOwnFile() throws Exception {
-        // Equivalence partitioning: backups made at the same moment, e.g., in two MediConnect windows, all
-        // wanting the same name, since the clock is fixed
+        // Equivalence partitioning: backups made at the same moment, all wanting the same name, since the
+        // clock is fixed
         AddressBook data = getTypicalAddressBook();
-        List<Callable<Path>> backups = new ArrayList<>();
-        for (int i = 0; i < SIMULTANEOUS_COMMANDS; i++) {
-            backups.add(() -> new BackupCommand(FIXED_CLOCK, temporaryFolder).saveBackup(data));
-        }
 
-        List<Path> backupFiles = runAtSameTime(backups);
+        List<Path> backupFiles = saveBackupsAtSameTime(data);
 
         assertEquals(SIMULTANEOUS_COMMANDS, new HashSet<>(backupFiles).size());
         assertEquals(new HashSet<>(backupFiles), new HashSet<>(listBackups()));
@@ -302,6 +298,36 @@ public class BackupCommandTest {
             assertCommandFailure(new BackupCommand(FIXED_CLOCK, backupDir), model, expectedMessage);
             assertEquals(List.of(), listFiles(backupDir));
         });
+    }
+
+    @Test
+    public void execute_readOnlyLockFile_savesBackup() throws Throwable {
+        // Equivalence partitioning: the lock file cannot be opened for writing, e.g., after the Read-only box
+        // of the folder's Properties is ticked on Windows, although the folder can still be written to
+        Path lockFile = Files.createFile(temporaryFolder.resolve(BackupCommand.LOCK_FILE_NAME));
+
+        runWhileReadOnly(lockFile, () -> assertCommandSucceedsAndCreates(new BackupCommand(FIXED_CLOCK,
+                temporaryFolder), temporaryFolder.resolve(EXPECTED_FILE_NAME)));
+    }
+
+    @Test
+    public void execute_folderInPlaceOfLockFile_savesBackup() throws Exception {
+        // Equivalence partitioning: the lock file's name is taken by a folder, which cannot be locked
+        Files.createDirectory(temporaryFolder.resolve(BackupCommand.LOCK_FILE_NAME));
+
+        assertCommandSucceedsAndCreates(new BackupCommand(FIXED_CLOCK, temporaryFolder),
+                temporaryFolder.resolve(EXPECTED_FILE_NAME));
+    }
+
+    @Test
+    public void saveBackup_manyBackupsAtSameTimeWithoutLockFile_eachSavedToOwnFile() throws Exception {
+        // Equivalence partitioning: without the lock file, the backups of one MediConnect still take turns
+        Files.createDirectory(temporaryFolder.resolve(BackupCommand.LOCK_FILE_NAME));
+
+        List<Path> backupFiles = saveBackupsAtSameTime(getTypicalAddressBook());
+
+        assertEquals(SIMULTANEOUS_COMMANDS, new HashSet<>(backupFiles).size());
+        assertEquals(new HashSet<>(backupFiles), new HashSet<>(listBackups()));
     }
 
     @Test
@@ -393,6 +419,18 @@ public class BackupCommandTest {
      */
     private static AddressBook readBackup(Path backupFile) throws Exception {
         return new AddressBook(new JsonAddressBookStorage(backupFile).readAddressBook().orElseThrow());
+    }
+
+    /**
+     * Saves {@code data} as {@code SIMULTANEOUS_COMMANDS} backups to the temporary folder at the same moment,
+     * all with {@code FIXED_CLOCK}, and returns the paths of the backup files.
+     */
+    private List<Path> saveBackupsAtSameTime(AddressBook data) throws Exception {
+        List<Callable<Path>> backups = new ArrayList<>();
+        for (int i = 0; i < SIMULTANEOUS_COMMANDS; i++) {
+            backups.add(() -> new BackupCommand(FIXED_CLOCK, temporaryFolder).saveBackup(data));
+        }
+        return runAtSameTime(backups);
     }
 
     /**

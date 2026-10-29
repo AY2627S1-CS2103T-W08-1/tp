@@ -4,7 +4,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,7 +52,7 @@ public class BackupCommand extends Command {
 
     private static final Logger logger = LogsCenter.getLogger(BackupCommand.class);
 
-    /** Lets the threads of this MediConnect take turns to lock {@code LOCK_FILE_NAME}. */
+    /** Lets the backups of this MediConnect take turns, even when {@code LOCK_FILE_NAME} cannot be locked. */
     private static final Object backupLock = new Object();
 
     private final Clock clock;
@@ -124,24 +123,44 @@ public class BackupCommand extends Command {
 
     /**
      * Saves {@code addressBook} under the next free backup name, while holding the lock on
-     * {@code LOCK_FILE_NAME} in the backup folder, and returns the file's path. Another backup made at the
-     * same time, e.g., in another MediConnect window, or by {@code restore} or {@code clear confirm}, waits
+     * {@code LOCK_FILE_NAME} in the backup folder if it can be used, and returns the file's path.
+     * Another backup made at the same time, e.g., by {@code restore} or {@code clear confirm}, waits
      * until this one is saved, so that it cannot choose the same name.
      *
-     * @throws IOException if the lock file or the backup cannot be written.
+     * @throws IOException if the backup cannot be written.
      */
     private Path saveUnderNextFreeName(ReadOnlyAddressBook addressBook) throws IOException {
         // a FileLock keeps out other processes, but a process may hold it only once, so threads take turns
         synchronized (backupLock) {
-            try (FileChannel lockFile = FileChannel.open(backupDir.resolve(LOCK_FILE_NAME),
-                    StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-                    FileLock lock = lockFile.lock()) {
+            // null if the lock file cannot be opened, which try-with-resources then does not close
+            try (FileChannel lockedFile = lockBackupFolder()) {
                 Path backupFile = getBackupFilePath();
                 FileUtil.writeThroughTemporaryFile(backupFile, temporaryFile ->
                         new JsonAddressBookStorage(temporaryFile).saveAddressBook(addressBook));
                 return backupFile;
             }
         }
+    }
+
+    /**
+     * Opens and locks {@code LOCK_FILE_NAME} in the backup folder, which makes backups in other processes
+     * wait, and returns its channel for the caller to close, which releases the lock. If the lock file
+     * cannot be opened, e.g., because it is read-only or a folder, returns null, and if it cannot be locked,
+     * returns its channel unlocked, so that the backup is still made. Only one MediConnect can use an app
+     * folder at a time, so the backups of its folder still take turns, through the {@code synchronized}
+     * block of {@code saveUnderNextFreeName}.
+     */
+    private FileChannel lockBackupFolder() {
+        Path lockFile = backupDir.resolve(LOCK_FILE_NAME);
+        FileChannel channel = null;
+        try {
+            channel = FileChannel.open(lockFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            channel.lock();
+        } catch (IOException ioe) {
+            logger.warning("Could not lock " + lockFile + ", so the backup is made without it: "
+                    + ioe.getClass().getSimpleName());
+        }
+        return channel;
     }
 
     /**

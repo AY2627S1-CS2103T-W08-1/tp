@@ -13,9 +13,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -41,6 +43,7 @@ public class DueCommand extends Command {
             + "          " + COMMAND_WORD + " 1";
 
     private static final String LINE_SEPARATOR = "\n";
+    private static final Logger logger = LogsCenter.getLogger(DueCommand.class);
 
     private final Optional<Index> patientIndex;
     private final Clock clock;
@@ -78,6 +81,8 @@ public class DueCommand extends Command {
                         .thenComparing(dose -> dose.patient().getName().fullName, String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(dose -> dose.patient().getNric().value))
                 .collect(Collectors.toList());
+        // Only the number of doses is logged, as a dose has the name and the medication of a patient
+        logger.info("Found " + doses.size() + " dose(s) due today");
 
         if (doses.isEmpty()) {
             return new CommandResult(createNothingDueMessage(candidates));
