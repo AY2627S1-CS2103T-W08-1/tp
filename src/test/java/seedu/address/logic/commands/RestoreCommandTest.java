@@ -270,6 +270,54 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_nameWithSpecialSpaceTypedWithNormalSpace_restoresThatBackup() throws Exception {
+        // Equivalence partitioning: a backup whose name has an ideographic space, which AddressBookParser makes a
+        // normal space in the typed name
+        String nameWithSpecialSpace = "old　backup.json";
+        AddressBook backupData = createAddressBook(HOON);
+        new JsonAddressBookStorage(temporaryFolder.resolve(nameWithSpecialSpace)).saveAddressBook(backupData);
+        String expectedMessage = String.format(Locale.ROOT, RestoreCommand.MESSAGE_SUCCESS, 1, "patient", "",
+                nameWithSpecialSpace, temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
+
+        assertCommandSuccess(createRestoreCommand("old backup.json"), model, expectedMessage,
+                new ModelManager(backupData, new UserPrefs()));
+    }
+
+    @Test
+    public void execute_nameWithSpecialSpaceWithoutExtension_restoresThatBackup() throws Exception {
+        // Equivalence partitioning: the same, with ".json" left out and a no-break space in the file's name
+        String nameWithSpecialSpace = "old backup.json";
+        AddressBook backupData = createAddressBook(IDA);
+        new JsonAddressBookStorage(temporaryFolder.resolve(nameWithSpecialSpace)).saveAddressBook(backupData);
+        String expectedMessage = String.format(Locale.ROOT, RestoreCommand.MESSAGE_SUCCESS, 1, "patient", "",
+                nameWithSpecialSpace, temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
+
+        assertCommandSuccess(createRestoreCommand("old backup"), model, expectedMessage,
+                new ModelManager(backupData, new UserPrefs()));
+    }
+
+    @Test
+    public void execute_twoNamesMatchWithNormalSpaces_throwsCommandException() throws Exception {
+        // Boundary value: two backups match once their special spaces are normal spaces, so neither is chosen
+        writeBackup(createAddressBook(HOON));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+
+        assertCommandFailure(createRestoreCommand("old backup.json"), model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, "old backup.json", temporaryFolder));
+    }
+
+    @Test
+    public void execute_missingBackupFolder_throwsCommandException() {
+        // the backup folder cannot be listed for a name with special spaces, so the backup is reported missing
+        Path missingFolder = temporaryFolder.resolve("missing");
+        RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, missingFolder);
+
+        assertCommandFailure(restoreCommand, model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, missingFolder));
+    }
+
+    @Test
     public void execute_missingBackupInRelativeFolder_showsFullFolderPath() {
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
                 toPathRelativeToWorkingDir(temporaryFolder));

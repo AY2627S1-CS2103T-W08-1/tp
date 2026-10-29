@@ -8,11 +8,17 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class MessagesTest {
+
+    @TempDir
+    private Path temporaryFolder;
 
     @Test
     public void describeWriteFailure_nullException_throwsNullPointerException() {
@@ -45,6 +51,17 @@ public class MessagesTest {
         IOException exception = new FileAlreadyExistsException("/data/backups");
 
         assertEquals(String.format(Messages.MESSAGE_FILE_IN_PLACE_OF_FOLDER, "backups"),
+                Messages.describeWriteFailure(exception));
+    }
+
+    @Test
+    public void describeWriteFailure_fileInPlaceOfFolderAbove_namesFile() throws Exception {
+        // Equivalence partitioning: the exception that creating a folder throws when a folder above it is a file
+        Path dataFile = Files.createFile(temporaryFolder.resolve("data"));
+        IOException exception = new FileSystemException(dataFile.resolve("backups").toString(), null,
+                "Not a directory");
+
+        assertEquals(String.format(Messages.MESSAGE_FILE_IN_PLACE_OF_FOLDER, "data"),
                 Messages.describeWriteFailure(exception));
     }
 

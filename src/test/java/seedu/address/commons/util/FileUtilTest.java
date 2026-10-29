@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -27,6 +28,31 @@ public class FileUtilTest {
 
     @TempDir
     private Path temporaryFolder;
+
+    @Test
+    public void findFileInPlaceOfFolder_fileAboveMissingFolder_returnsFile() throws Exception {
+        // Equivalence partitioning: a file where a folder above the path should be, e.g., data for data/backups
+        Path dataFile = Files.createFile(temporaryFolder.resolve("data"));
+
+        assertEquals(Optional.of(dataFile),
+                FileUtil.findFileInPlaceOfFolder(dataFile.resolve("backups").resolve("backup.json")));
+    }
+
+    @Test
+    public void findFileInPlaceOfFolder_onlyFoldersAbove_returnsEmpty() {
+        // Equivalence partitioning: every folder above that exists is a folder, and the rest are missing
+        Path missingFolder = temporaryFolder.resolve("data").resolve("backups");
+
+        assertEquals(Optional.empty(), FileUtil.findFileInPlaceOfFolder(missingFolder));
+    }
+
+    @Test
+    public void findFileInPlaceOfFolder_pathItselfIsFile_returnsEmpty() throws Exception {
+        // Boundary value: only the folders above the path are checked, not the path itself
+        Path file = Files.createFile(temporaryFolder.resolve("backups"));
+
+        assertEquals(Optional.empty(), FileUtil.findFileInPlaceOfFolder(file));
+    }
 
     @Test
     public void readFromFile_multiByteUtf8_returnsText() throws Exception {

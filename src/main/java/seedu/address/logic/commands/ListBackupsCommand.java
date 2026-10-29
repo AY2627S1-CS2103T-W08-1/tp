@@ -13,12 +13,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -101,6 +103,7 @@ public class ListBackupsCommand extends Command {
      */
     private List<Path> findBackupsNewestFirst(Path shownBackupDir) throws CommandException {
         if (!Files.exists(backupDir)) {
+            checkNoFileInPlaceOfFolderAbove();
             return List.of();
         }
         if (!Files.isDirectory(backupDir)) {
@@ -114,6 +117,21 @@ public class ListBackupsCommand extends Command {
         } catch (IOException | UncheckedIOException ioe) {
             logger.warning("Could not list the backups in " + backupDir + ": " + ioe.getClass().getSimpleName());
             throw new CommandException(String.format(describeListingFailure(ioe), shownBackupDir), ioe);
+        }
+    }
+
+    /**
+     * Throws a {@code CommandException} if a folder above the missing backup folder is a file, e.g., {@code data},
+     * since saying there are no backups would suggest running backup, which cannot make the folder while it is there.
+     *
+     * @throws CommandException if a folder above the backup folder is a file.
+     */
+    private void checkNoFileInPlaceOfFolderAbove() throws CommandException {
+        Optional<Path> fileAbove = FileUtil.findFileInPlaceOfFolder(backupDir);
+        if (fileAbove.isPresent()) {
+            logger.warning("A folder above the backup folder " + backupDir + " is a file");
+            Path shownFile = fileAbove.get().toAbsolutePath().normalize();
+            throw new CommandException(String.format(MESSAGE_NOT_A_FOLDER, shownFile));
         }
     }
 

@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PATIENTS;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -12,7 +13,10 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
@@ -53,6 +57,9 @@ public class RestoreCommand extends Command {
             + "Your data has not been changed.\nDetails: %2$s";
     public static final String MESSAGE_BACKUP_FAILED = "Could not back up the current data to %1$s: %2$s. "
             + "Nothing was restored, and your data has not been changed.";
+
+    /** A special space, e.g., a tab or a no-break space, which {@code AddressBookParser} makes a normal space. */
+    private static final Pattern SPECIAL_SPACE_PATTERN = Pattern.compile("\\h");
 
     private static final Logger logger = LogsCenter.getLogger(RestoreCommand.class);
 
@@ -121,12 +128,38 @@ public class RestoreCommand extends Command {
     /**
      * Returns the name of the backup file to restore: {@code fileName}, or, if there is no such file but
      * there is one with ".json" added, that name, so that a backup can be restored without typing its ending.
+     * If neither file exists, the only backup whose name matches once its special spaces are normal spaces is
+     * restored, since {@code AddressBookParser} turns every special space typed in a command into a normal space.
      */
     private String findBackupName() {
         String nameWithExtension = fileName + ListBackupsCommand.BACKUP_EXTENSION;
-        boolean isExtensionLeftOut = !Files.isRegularFile(backupDir.resolve(fileName))
-                && Files.isRegularFile(backupDir.resolve(nameWithExtension));
-        return isExtensionLeftOut ? nameWithExtension : fileName;
+        if (Files.isRegularFile(backupDir.resolve(fileName))) {
+            return fileName;
+        }
+        if (Files.isRegularFile(backupDir.resolve(nameWithExtension))) {
+            return nameWithExtension;
+        }
+        return findNameWithSpecialSpaces(fileName)
+                .or(() -> findNameWithSpecialSpaces(nameWithExtension))
+                .orElse(fileName);
+    }
+
+    /**
+     * Returns the name of the only file in the backup folder that is {@code typedName} once each special space in
+     * it, e.g., a no-break or ideographic space, is a normal space. Returns an empty {@code Optional} if no file or
+     * more than one has such a name, or the backup folder cannot be listed.
+     */
+    private Optional<String> findNameWithSpecialSpaces(String typedName) {
+        try (Stream<Path> files = Files.list(backupDir)) {
+            List<String> matchingNames = files.filter(Files::isRegularFile)
+                    .map(file -> file.getFileName().toString())
+                    .filter(name -> SPECIAL_SPACE_PATTERN.matcher(name).replaceAll(" ").equals(typedName))
+                    .toList();
+            return matchingNames.size() == 1 ? Optional.of(matchingNames.get(0)) : Optional.empty();
+        } catch (IOException | UncheckedIOException e) {
+            // the missing backup is then reported, with the folder's permission if that is the cause
+            return Optional.empty();
+        }
     }
 
     /**
