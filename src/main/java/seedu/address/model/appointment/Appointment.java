@@ -167,8 +167,8 @@ public class Appointment implements Comparable<Appointment> {
 
     /**
      * Returns true if both appointments are at the same date and time with the same provider,
-     * ignoring letter case, repeated spaces, including Unicode spaces, and how accented letters are stored
-     * in the provider. Notes are not compared.
+     * ignoring letter case, spaces at either end, repeated spaces, including Unicode spaces, and how accented
+     * letters are stored in the provider, as {@code addappt} does. Notes are not compared.
      * This defines a weaker notion of equality between two appointments.
      */
     public boolean isSameAppointment(Appointment otherAppointment) {
@@ -177,12 +177,13 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
-     * Returns {@code provider} in Unicode NFC form, with each run of whitespace as one space. In NFC form, an
-     * accented letter typed as one character, e.g. "é", and as a letter followed by a combining accent are the
-     * same text, as for contact names.
+     * Returns {@code provider} in Unicode NFC form, with each run of whitespace as one space and none at either
+     * end, as {@code ParserUtil#parseProvider} saves it. A hand-edited data file can still hold spaces there.
+     * In NFC form, an accented letter typed as one character, e.g. "é", and as a letter followed by a combining
+     * accent are the same text, as for contact names.
      */
     private static String toComparableProvider(String provider) {
-        return Normalizer.normalize(provider, Normalizer.Form.NFC).replaceAll(WHITESPACE_REGEX, " ");
+        return Normalizer.normalize(provider, Normalizer.Form.NFC).replaceAll(WHITESPACE_REGEX, " ").strip();
     }
 
     /**

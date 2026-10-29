@@ -126,8 +126,10 @@ public class AppointmentTest {
     public void isSameAppointment() {
         Appointment appointment = new Appointment(DATE, TIME, "Dr Tan", "");
 
-        // same provider, ignoring case, repeated spaces and note -> returns true
+        // same provider, ignoring case, spaces at either end, repeated spaces and note -> returns true
         assertTrue(appointment.isSameAppointment(new Appointment(DATE, TIME, "dr  TAN", "Fasting")));
+        assertTrue(appointment.isSameAppointment(new Appointment(DATE, TIME, " Dr Tan ", "")));
+        assertTrue(new Appointment(DATE, TIME, "  dr  tan ", "").isSameAppointment(appointment));
         assertTrue(appointment.isSameAppointment(new Appointment(DATE, TIME, "Dr Tan", ""))); // no-break space
 
         // null -> returns false
