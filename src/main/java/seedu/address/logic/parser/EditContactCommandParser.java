@@ -6,6 +6,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROLE;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -32,15 +33,9 @@ public class EditContactCommandParser implements Parser<EditContactCommand> {
         ArgumentMultimap fields = ArgumentTokenizer.tokenize(args,
                 PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);
         fields.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_ROLE, PREFIX_PHONE, PREFIX_NOTE);
-        String[] indices = fields.getPreamble().split("\\s+");
-        Index patientIndex;
-        Index contactIndex;
+        List<Index> indices;
         try {
-            if (indices.length != 2) {
-                throw new ParseException(ParserUtil.MESSAGE_INVALID_INDEX);
-            }
-            patientIndex = ParserUtil.parseIndex(indices[0]);
-            contactIndex = ParserUtil.parseIndex(indices[1]);
+            indices = ParserUtil.parseTwoIndexes(fields.getPreamble());
         } catch (ParseException e) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditContactCommand.MESSAGE_USAGE), e);
@@ -54,7 +49,7 @@ public class EditContactCommandParser implements Parser<EditContactCommand> {
         validateField(fields.getValue(PREFIX_PHONE), Contact::isValidPhone, Contact.MESSAGE_PHONE_CONSTRAINTS);
         Optional<String> note = fields.getValue(PREFIX_NOTE).map(StringUtil::stripUnicodeWhitespace);
         validateField(note, Contact::isValidNote, Contact.MESSAGE_NOTE_CONSTRAINTS);
-        return new EditContactCommand(patientIndex, contactIndex, fields.getValue(PREFIX_NAME),
+        return new EditContactCommand(indices.get(0), indices.get(1), fields.getValue(PREFIX_NAME),
                 fields.getValue(PREFIX_ROLE), fields.getValue(PREFIX_PHONE), note);
     }
 
