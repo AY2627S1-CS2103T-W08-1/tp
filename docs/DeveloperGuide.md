@@ -72,11 +72,11 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, `PatientDetailPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+The UI consists of a `MainWindow`, its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, `PatientDetailPanel`, and `StatusBarFooter`, and a `HelpWindow` that lists the commands. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
 
 The main window shows two panels side by side:
 
-* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed. Its list cannot take the focus, and `DarkTheme.css` has no style for a selected card, so a click neither takes the focus from the command box nor highlights a patient that the detail panel, which only commands change, may not show. The click still selects the card inside the list, but nothing reads that selection. As a trade-off, `Tab` skips the list, so it cannot be scrolled with the keyboard. Before, the arrow keys scrolled it by selecting patients, which showed the same misleading highlight. The mouse wheel, the list's scroll bar and `find` still reach every patient.
+* `PatientListPanel` shows the displayed patient list, with one `PatientCard` per patient. It observes `Logic#getFilteredPatientList()`, so it updates when the list is filtered or changed. A click on the list does not take the focus from the command box or highlight a patient; see the [view patient feature](#view-patient-feature).
 * `PatientDetailPanel` shows the full details of the patient being viewed, including their medications, allergens, care instructions, contacts and appointments. It observes `Logic#getViewedPatient()` and redraws itself whenever that value changes, showing a placeholder message when no patient is being viewed. See the [view patient feature](#view-patient-feature) for how the viewed patient is set and cleared.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-W08-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
@@ -197,9 +197,7 @@ The patient data is saved in `data/mediconnect.json` and the user preferences in
 
 `JsonUtil#saveJsonFile()` writes both files through `FileUtil#writeThroughTemporaryFile()`: the JSON is written to a new temporary file in the same folder, which then replaces the file in one step. A save that fails partway, e.g., on a full disk, therefore leaves the last complete file in place, and the temporary file is deleted. An existing file that cannot be written to, e.g., because it is read-only, is not replaced, although on macOS and Linux its folder may let the temporary file take its place.
 
-`JsonUtil#readJsonFile()` reads `preferences.json`, and `JsonUtil#readJsonFileStrictly()`, described below, reads the patient data and backups for `restore`. Both read the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
-
-Before mapping the JSON to objects, `JsonUtil` also rejects a file in which a name or a text value has half of a surrogate pair on its own. Only a JSON escape of a surrogate, such as `\ud800`, in a hand-edited file can give such text. It cannot be written as UTF-8, so the next save would silently turn it into `?`.
+`JsonUtil#readJsonFile()` reads `preferences.json`, and `JsonUtil#readJsonFileStrictly()`, described below, reads the patient data and backups for `restore`. Both reject a file whose text would change if it were saved again, e.g., one that is not valid UTF-8, as described in [Reading data files](#reading-data-files).
 
 As the diagram shows, `JsonSerializableAddressBook` holds a list of `JsonAdaptedPatient` objects, and each
 `JsonAdaptedPatient` holds lists of `JsonAdaptedMedication`, `JsonAdaptedContact` and `JsonAdaptedAppointment`
@@ -284,9 +282,9 @@ The `view INDEX` command shows the full details of a patient in the `PatientDeta
 
 `ModelManager` keeps the patient being viewed in an `ObjectProperty<Patient>`. It is exposed through `Model#getViewedPatient()` and `Logic#getViewedPatient()` as a read-only `ObservableValue<Patient>`, whose value is `null` when no patient is being viewed.
 
-The sequence diagram below shows how `view 1` goes through the `Logic` component.
+The sequence diagram below shows how `view 1` goes through the `Logic` and `Model` components.
 
-<puml src="diagrams/ViewSequenceDiagram.puml" alt="Interactions Inside the Logic Component for the `view 1` Command" />
+<puml src="diagrams/ViewSequenceDiagram.puml" alt="Interactions Inside the Logic and Model Components for the `view 1` Command" />
 
 1. `ViewCommandParser` parses the index in the same way as `DeleteCommandParser`, so `view` accepts the same `INDEX` values as `delete`.
 1. `ViewCommand#execute()` checks the index against the filtered patient list. An index beyond the list size produces the same invalid-index message as `delete`.
@@ -302,6 +300,8 @@ The sequence diagram below shows how `view 1` goes through the `Logic` component
 Filtering the patient list (e.g., with `find`) does not change the viewed patient. Commands that change a patient's details or care information, e.g., `edit`, `addcare` and `addappt`, and `listappt INDEX` also call `Model#setViewedPatient()`, with the patient they changed or listed, so that the user can check the result in the panel.
 
 Since the viewed patient can be filtered out of the list, `PatientDetailPanel` also observes `Logic#getFilteredPatientList()`. Under the name, it shows the viewed patient's one-based index in that list, which is the `INDEX` that commands use, or `Not in the displayed list`, and updates it whenever the list or the viewed patient changes. When it shows a patient with a different NRIC from the last one shown, it scrolls back to the top, so that the new patient's name is visible. The same patient redrawn, e.g., after `addcare`, keeps the scroll position.
+
+The patient list cannot take the focus either: `PatientListPanel` makes its `ListView` not focus-traversable, and `DarkTheme.css` has no style for a selected card, so a click neither takes the focus from the command box nor highlights a patient that the detail panel, which only commands change, may not show. The click still selects the card inside the list, but nothing reads that selection. As a trade-off, `Tab` skips the list, so it cannot be scrolled with the keyboard. The mouse wheel, the list's scroll bar and `find` still reach every patient.
 
 The panel's root is an `UnfocusableScrollPane`, whose `requestFocus()` does nothing. A plain `ScrollPane` takes the focus on every mouse press, even though `Tab` cannot reach it, so a click, or a right-click to copy a line, would leave the user typing into nothing until they clicked the command box. As a trade-off, the panel cannot be scrolled with the keyboard. The mouse wheel and its scroll bar still work.
 
@@ -428,13 +428,29 @@ is a duplicate, the command fails without changing the patient.
   * Pros: The operation has simpler all-or-nothing behavior.
   * Cons: One duplicate prevents all valid new entries in the same command from being added.
 
+### Reading data files
+
+Data files and backups can be edited by hand, so `JsonUtil` rejects text that MediConnect would change without a warning when it saves the file again.
+
+`JsonUtil#readJsonFile()`, which reads `preferences.json`, and `JsonUtil#readJsonFileStrictly()`, which reads the patient data and backups for `restore`, both read the text with `FileUtil#readFromFile()`, which decodes it as strict UTF-8: a byte that is not valid UTF-8 makes the read fail, instead of being replaced by `�` and then saved into patient data. `JsonUtil` then ignores a UTF-8 byte-order mark at the start of the file, which some editors add when saving as UTF-8. It rejects a file with anything other than whitespace after its JSON data, so that text added to a file by mistake is not silently dropped on the next save.
+
+Before mapping the JSON to objects, `JsonUtil` also rejects a file in which a name or a text value has half of a surrogate pair on its own. Only a JSON escape of a surrogate, such as `\ud800`, in a hand-edited file can give such text. It cannot be written as UTF-8, so the next save would silently turn it into `?`.
+
 ### Backup and restore feature
 
 The `backup` command saves a copy of all patient data to the `data/backups` folder, and `restore FILENAME` replaces all patient data with one of those copies.
 
 #### Implementation
 
-`BackupCommand#saveBackup(ReadOnlyAddressBook)` writes the given data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name and returns the path of the file. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed. The file is named after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten. Checking whether a name is free and then saving under it are two steps, so two backups targeting the same folder at the same moment could otherwise choose the same name, and one would replace the other. `BackupCommand#saveUnderNextFreeName()` therefore does both while it holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first. If the lock file cannot be opened or locked, e.g., because it is read-only or a folder, `BackupCommand#lockBackupFolder()` logs a warning and the backup is saved with only the `synchronized` block. Since only one MediConnect can use an app folder at a time, as described in the [Storage component](#storage-component), that block still makes the backups of its folder take turns, and a damaged lock file does not stop `backup`, `restore` or `clear confirm`. `BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message. When a file has the name of the backup folder or a folder above it, e.g., `data`, the reason names that file, which `FileUtil#findFileInPlaceOfFolder()` finds, as the file system's own reason is only "Not a directory". `ListBackupsCommand` reports such a file the same way, instead of saying that there are no backups.
+`BackupCommand#saveBackup(ReadOnlyAddressBook)` saves a backup of the given data and returns the path of the file, in these steps:
+
+1. `BackupCommand#saveUnderNextFreeName()` first makes other backups to the same folder wait. Checking whether a name is free and then saving under it are two steps, so two backups at the same moment could otherwise choose the same name, and one would replace the other. It holds a `FileLock` on the empty file `.backup.lock` in the backup folder, which makes backups in other processes wait. A process can hold that lock only once, so the backups of one MediConnect also take turns through a `synchronized` block first.
+1. It names the backup after the current time, as `mediconnect-YYYYMMDD-HHMMSS.json`. If a file with that name already exists, `-1`, `-2` and so on are added to the name, so no backup is overwritten.
+1. It writes the data to a new temporary file in the backup folder through `JsonAddressBookStorage`, the same class that saves `data/mediconnect.json`, then renames it to the backup's name. A backup that fails partway therefore never leaves a cut-off file under a backup's name, and `FileUtil#deleteTemporaryFile()` removes the temporary file. On macOS and Linux, a new temporary file can be opened only by the current user, and the backup keeps that when it is renamed.
+
+If the lock file cannot be opened or locked, e.g., because it is read-only or a folder, `BackupCommand#lockBackupFolder()` logs a warning and the backup is saved with only the `synchronized` block. Since only one MediConnect can use an app folder at a time, as described in the [Storage component](#storage-component), that block still makes the backups of its folder take turns, and a damaged lock file does not stop `backup`, `restore` or `clear confirm`.
+
+`BackupCommand#execute()` calls `saveBackup` with the data in the `Model` and reports the path. If the file cannot be written, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message. When a file has the name of the backup folder or a folder above it, e.g., `data`, the reason names that file, which `FileUtil#findFileInPlaceOfFolder()` finds, as the file system's own reason is only "Not a directory". `ListBackupsCommand` reports such a file the same way, instead of saying that there are no backups.
 
 The sequence diagram below shows a successful `restore old.json`.
 
@@ -462,6 +478,15 @@ Both commands have a second constructor that takes a `java.time.Clock` and the b
 * **Alternative 2:** Ask the user to confirm the restore, and keep no automatic backup.
   * Pros: No extra files.
   * Cons: Adds a step to every restore, and a restore confirmed by mistake cannot be undone.
+
+**Aspect: How two backups made at the same moment avoid the same name**
+
+* **Alternative 1 (current choice):** Choose the name and save the backup while holding a `FileLock` on `.backup.lock`, after a `synchronized` block.
+  * Pros: Backups wait for each other, whether they run in this MediConnect, e.g., `backup` and the automatic backup of `restore`, or in another process, so no backup can replace another. Each backup is written to a name that no file has, so nothing is replaced, which works the same way on every operating system.
+  * Cons: Needs an extra empty file in `data/backups`, and a fallback for when that file cannot be used.
+* **Alternative 2:** Reserve the name by creating an empty file with it, which fails if the name is taken, then replace that file with the written backup.
+  * Pros: Needs no lock file.
+  * Cons: Fails on Windows when many backups are made at once. There, a file that is being replaced is briefly pending deletion, so creating or checking another file of that name reports that access is denied, which cannot be told apart from a folder MediConnect may not write to.
 
 **Aspect: What a backup copies**
 
@@ -838,6 +863,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | view a patient's appointment history | see their past visits at a glance |
 | `* *`    | caregiver                                  | back up all my data to a local file | avoid losing information if something goes wrong |
 | `* *`    | caregiver                                  | restore my data from a local backup | recover my records if data is lost |
+| `* *`    | caregiver                                  | see which backups I have | choose the right one to restore |
 | `* *`    | caregiver                                  | export a single patient's information to a text file | print it or hand it over during a hospital visit |
 | `* *`    | caregiver                                  | edit a medication's description or daily times | keep the schedule correct when the doctor changes a prescription |
 | `* *`    | caregiver                                  | clear all the daily times of a medication | stop it from being listed as due while I wait for the doctor's new instructions |
@@ -849,6 +875,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients |
 | `*`      | caregiver                                  | see a daily summary of everything due today across all patients | check all my responsibilities in one place |
 | `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
+| `*`      | caregiver                                  | copy an entry from a patient's details | paste it into a command without retyping it |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
 | `*`      | caregiver                                  | set a reminder for an appointment | remember to bring the patient to it |
@@ -966,6 +993,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
+* 1b. The patient is archived.
+
+    * 1b1. Caregiver requests to list archived patients instead.
+
+    * 1b2. MediConnect shows a list of archived patients.
+
+      Use case resumes at step 3.
+
 * 2a. The list is empty.
 
   Use case ends.
@@ -988,15 +1023,27 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 2.
 
-* 3d. Some of the given entries already exist in the patient's record.
+* 3d. A parameter that the command does not take is given, e.g., a time for a medication.
 
-    * 3d1. MediConnect adds only the new entries and tells the caregiver which entries were not added again.
+    * 3d1. MediConnect shows an error message naming the unrecognized parameter, and adds nothing.
+
+      Use case resumes at step 2.
+
+* 3e. One of the given entries is longer than its limit.
+
+    * 3e1. MediConnect shows an error message with the limit, and adds nothing.
+
+      Use case resumes at step 2.
+
+* 3f. Some of the given entries already exist in the patient's record.
+
+    * 3f1. MediConnect adds only the new entries and tells the caregiver which entries were not added again.
 
       Use case ends.
 
-* 3e. All the given entries already exist in the patient's record.
+* 3g. All the given entries already exist in the patient's record.
 
-    * 3e1. MediConnect shows an error message naming the entries, and adds nothing.
+    * 3g1. MediConnect shows an error message naming the entries, and adds nothing.
 
       Use case resumes at step 2.
 
@@ -1218,7 +1265,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1.  Caregiver requests to list patients.
 2.  MediConnect shows a list of patients.
 3.  Caregiver requests to view a specific patient in the list.
-4.  MediConnect shows the patient's details in the detail panel, with their medications, allergens, care instructions, contacts and appointments numbered, and a message with the patient's name.
+4.  MediConnect shows the patient's full details, with their medications, allergens, care instructions, contacts and appointments numbered.
 
     Use case ends.
 
@@ -1250,19 +1297,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 3b. The index is missing, or is not a positive integer.
 
-    * 3b1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
+    * 3b1. MediConnect shows an error message with the correct usage of the command.
 
       Use case resumes at step 2.
 
 * 4a. The patient's details are changed later, e.g., care information is added.
 
-    * 4a1. MediConnect updates the detail panel to show the changed details.
+    * 4a1. MediConnect shows the changed details.
 
       Use case ends.
 
 * 4b. The patient is deleted or archived later, all patients are cleared, or a restore replaces the data with a backup that does not have the patient with the same details.
 
-    * 4b1. MediConnect clears the detail panel.
+    * 4b1. MediConnect stops showing the patient's details.
 
       Use case ends.
 
@@ -1325,6 +1372,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
+* 2c. MediConnect cannot read `data/backups`, or `data/backups` or the `data` folder is a file.
+
+    * 2c1. MediConnect shows an error message saying so.
+
+      Use case ends.
+
 * 3a. A path is given instead of only the name of a file.
 
     * 3a1. MediConnect shows an error message asking for only the name of a backup file.
@@ -1339,7 +1392,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 3c. The name is given without the `.json` at its end, and there is no file with exactly that name.
 
-    * 3c1. MediConnect restores the backup whose name is the given name with `.json` added.
+    * 3c1. MediConnect uses the backup whose name is the given name with `.json` added.
 
       Use case resumes at step 4.
 
@@ -1389,35 +1442,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. Caregiver searches for the patient by name instead.
-
-    * 1a1. MediConnect shows the patients whose names match.
-
-      Use case resumes at step 3.
-
-* 1b. The patient is archived.
-
-    * 1b1. Caregiver requests to list archived patients instead.
-
-    * 1b2. MediConnect shows a list of archived patients.
-
-      Use case resumes at step 3.
-
-* 2a. The list is empty.
-
-  Use case ends.
-
-* 3a. The given index is invalid.
-
-    * 3a1. MediConnect shows an error message that the patient index is invalid.
-
-      Use case resumes at step 2.
-
-* 3b. The index is missing, or is not a positive integer.
-
-    * 3b1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
-
-      Use case resumes at step 2.
+* 1a, 1b, 2a, 3a and 3b are the same as in UC7, with the record exported instead of viewed.
 
 * 4a. The patient's record was exported before.
 
@@ -1889,6 +1914,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
 8. A user who types at least 60 words per minute should be able to add a patient, add a medication and delete a patient each in under 30 seconds using commands.
 9. MediConnect's GUI should work without resolution-related inconvenience at resolutions of 1920x1080 or higher with 100% or 125% display scaling. All functions must remain accessible at resolutions of 1280x720 or higher with display scaling up to 150%.
+10. A save of the data file, a backup or an exported record that fails partway, e.g., because the disk is full, must keep the earlier version of that file unchanged, and must not leave a partly written file in its place.
+11. On macOS and Linux, the data file, backups and exported records, which hold patients' medical details, must be readable only by the user's own account.
 
 ### Glossary
 
@@ -1902,6 +1929,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   appointment passes.
 * **Archive**: To remove a patient's profile from the active patient list while keeping all of its records for future
   reference. Unlike deleting, archiving does not remove any data.
+* **Automatic backup**: A backup that MediConnect saves by itself before `clear confirm` and `restore` change
+  the data, so that the change can be undone by restoring it.
 * **Backup**: A copy of all patient data, saved by `backup` (or automatically before `clear confirm` and `restore`) as
   a JSON file in `data/backups`, named after the date and time it was made. `restore` replaces the data with one.
 * **Care handover**: The transfer of responsibility for a patient's care from one person to another, e.g., from the
@@ -1920,7 +1949,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Daily time**: A time of day, in 24-hour `HH:MM` format, at which a patient takes a medication every day, e.g.,
   `08:00`. A medication can have any number of daily times, or none.
 * **Detail panel**: The panel to the right of the patient list that shows the full details of one patient: the one
-  last shown with `view INDEX`, or by a command that changed them, e.g., `addcare`. It shows a placeholder message
+  last shown with `view INDEX` or `listappt INDEX`, or by a command that changed them, e.g., `addcare`. It shows a placeholder message
   when no patient is shown.
 * **Display scaling**: An operating system setting that enlarges text and other on-screen elements by a percentage
   (e.g., 125%) to make them easier to read.
@@ -1953,6 +1982,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   date of birth, phone number, and address) and their care information.
 * **Sample data**: Example patient profiles that MediConnect displays when it is launched for the first time, so that
   new users can see what a complete record looks like.
+* **Special space**: A character that looks like a normal space but is a different character, e.g., a no-break
+  space copied from a web page or a chat app. MediConnect reads every special space typed in a command as a
+  normal space.
+* **UTF-8**: The most common way of saving text in a file, which can hold the letters of every language. Data
+  files and backups must be saved as UTF-8.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -2456,10 +2490,10 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `view 1`<br>
-      Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
+      Expected: The detail panel shows all fields of the first patient. The status message shows `Showing patient:` followed by the patient's name.
 
    1. Test case: `view 2` on the sample data<br>
-      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`.
+      Expected: The detail panel shows `None recorded` under Medications and Contacts, which Bernice Yu has none of, and her appointment as `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`.
 
    1. Test case: `view 0`<br>
       Expected: The detail panel is unchanged. The status message shows the invalid command format error.
@@ -2629,6 +2663,19 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect restore commands to try: `restore .`, `restore data/backups/bad.json`<br>
       Expected: The data is unchanged. The status message shows an error.
+
+1. Restoring with unusual names
+
+   1. Prerequisites: In `data/backups`, copy a backup to a file named `my backup.json`, but type the space in the name as a no-break space (`Option`+`Space` on macOS, `Alt`+`0160` on Windows).<br>
+      Test case: `restore my backup.json`, typed with a normal space<br>
+      Expected: The backup is restored, and the status message gives its name.
+
+   1. Test case: `restore` followed by a name of 300 letters, e.g., `aaa…a`<br>
+      Expected: The data is unchanged. The status message says that no backup with that name was found, not that MediConnect may not read the folder.
+
+   1. Prerequisites: The app is closed. Move the `data` folder elsewhere, and create an empty file named `data` (with no extension) in its place. Launch the app, which warns that the sample patients are not saved.<br>
+      Test case: `restore`, then `backup`<br>
+      Expected: `restore` says that `data` is a file, not a folder. `backup` says that there is a file named `data` where that folder should be. Afterwards, close the app, delete the file named `data` and move the `data` folder back.
 
 ### Exporting a patient's record
 
