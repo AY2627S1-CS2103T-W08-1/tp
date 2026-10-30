@@ -217,18 +217,14 @@ public class MainAppTest {
         StorageManager storage = createStorageWithSampleData(dataFile);
         String editedData = Files.readString(dataFile).replace("Geylang", "\\ud800 Geylang");
         Files.writeString(dataFile, editedData);
-        MainApp mainApp = new MainApp();
-        UiStub uiStub = new UiStub();
-        mainApp.ui = uiStub;
 
-        Model model = mainApp.initModelManager(storage, new UserPrefs());
-        mainApp.start(null);
+        StartedApp app = startWithStubUi(storage);
 
-        assertEquals(new AddressBook(), model.getAddressBook());
+        assertEquals(new AddressBook(), app.model().getAddressBook());
         Path recoveryFile = getRecoveryFiles().get(0);
         assertEquals(editedData, Files.readString(recoveryFile));
         assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(),
-                MainApp.MESSAGE_UNREADABLE_DATA), uiStub.warningMessage);
+                MainApp.MESSAGE_UNREADABLE_DATA), app.uiStub().warningMessage);
     }
 
     @Test
@@ -238,16 +234,12 @@ public class MainAppTest {
         Path dataFile = temporaryFolder.resolve("mediconnect.json");
         StorageManager storage = createStorageWithSampleData(dataFile);
         addUtf8ByteOrderMark(dataFile);
-        MainApp mainApp = new MainApp();
-        UiStub uiStub = new UiStub();
-        mainApp.ui = uiStub;
 
-        Model model = mainApp.initModelManager(storage, new UserPrefs());
-        mainApp.start(null);
+        StartedApp app = startWithStubUi(storage);
 
-        assertEquals(SampleDataUtil.getSampleAddressBook(), model.getAddressBook());
+        assertEquals(SampleDataUtil.getSampleAddressBook(), app.model().getAddressBook());
         assertTrue(getRecoveryFiles().isEmpty());
-        assertNull(uiStub.warningMessage);
+        assertNull(app.uiStub().warningMessage);
     }
 
     @Test
@@ -257,19 +249,15 @@ public class MainAppTest {
         Path dataFile = temporaryFolder.resolve("mediconnect.json");
         StorageManager storage = createStorageWithInvalidUtf8Data(dataFile);
         byte[] invalidData = Files.readAllBytes(dataFile);
-        MainApp mainApp = new MainApp();
-        UiStub uiStub = new UiStub();
-        mainApp.ui = uiStub;
 
-        Model model = mainApp.initModelManager(storage, new UserPrefs());
-        mainApp.start(null);
+        StartedApp app = startWithStubUi(storage);
 
-        assertEquals(new AddressBook(), model.getAddressBook());
+        assertEquals(new AddressBook(), app.model().getAddressBook());
         Path recoveryFile = getRecoveryFiles().get(0);
         assertArrayEquals(invalidData, Files.readAllBytes(dataFile));
         assertArrayEquals(invalidData, Files.readAllBytes(recoveryFile));
         assertEquals(String.format(MainApp.MESSAGE_DATA_RECOVERY, recoveryFile.toAbsolutePath(),
-                MainApp.MESSAGE_UNREADABLE_DATA), uiStub.warningMessage);
+                MainApp.MESSAGE_UNREADABLE_DATA), app.uiStub().warningMessage);
     }
 
     @Test
@@ -643,6 +631,25 @@ public class MainAppTest {
         replaceWithInvalidUtf8Byte(dataFile, "Geylang");
         return storage;
     }
+
+    /**
+     * Initializes the model of a new {@code MainApp} from {@code storage}, with a {@code UiStub} as its UI, then starts
+     * the app, and returns the model and the stub, so that a test can check the loaded data and any startup warning.
+     */
+    private StartedApp startWithStubUi(StorageManager storage) throws IOException {
+        MainApp mainApp = new MainApp();
+        UiStub uiStub = new UiStub();
+        mainApp.ui = uiStub;
+
+        Model model = mainApp.initModelManager(storage, new UserPrefs());
+        mainApp.start(null);
+        return new StartedApp(model, uiStub);
+    }
+
+    /**
+     * The model and the stub UI of a {@code MainApp} started by {@code startWithStubUi}.
+     */
+    private record StartedApp(Model model, UiStub uiStub) {}
 
     private List<Path> getRecoveryFiles() throws IOException {
         try (var files = Files.list(temporaryFolder)) {
