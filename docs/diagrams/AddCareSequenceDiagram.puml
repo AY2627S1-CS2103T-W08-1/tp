@@ -65,12 +65,24 @@ AddCareCommand -> Model : setPatient(patientToEdit, editedPatient)
 activate Model
 
 opt patientToEdit is currently viewed
-Model --> PatientDetailPanel : viewedPatient listener fires
+Model -> PatientDetailPanel : viewedPatient listener fires
 activate PatientDetailPanel
 
 PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
 deactivate PatientDetailPanel
 end
+
+Model --> AddCareCommand
+deactivate Model
+
+AddCareCommand -> Model : setViewedPatient(editedPatient)
+activate Model
+
+Model -> PatientDetailPanel : viewedPatient listener fires
+activate PatientDetailPanel
+
+PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
+deactivate PatientDetailPanel
 
 Model --> AddCareCommand
 deactivate Model
