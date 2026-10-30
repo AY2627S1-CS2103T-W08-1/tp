@@ -479,6 +479,15 @@ Both commands have a second constructor that takes a `java.time.Clock` and the b
   * Pros: No extra files.
   * Cons: Adds a step to every restore, and a restore confirmed by mistake cannot be undone.
 
+**Aspect: How two backups made at the same moment avoid the same name**
+
+* **Alternative 1 (current choice):** Choose the name and save the backup while holding a `FileLock` on `.backup.lock`, after a `synchronized` block.
+  * Pros: Backups wait for each other, whether they run in this MediConnect, e.g., `backup` and the automatic backup of `restore`, or in another process, so no backup can replace another. Each backup is written to a name that no file has, so nothing is replaced, which works the same way on every operating system.
+  * Cons: Needs an extra empty file in `data/backups`, and a fallback for when that file cannot be used.
+* **Alternative 2:** Reserve the name by creating an empty file with it, which fails if the name is taken, then replace that file with the written backup.
+  * Pros: Needs no lock file.
+  * Cons: Fails on Windows when many backups are made at once. There, a file that is being replaced is briefly pending deletion, so creating or checking another file of that name reports that access is denied, which cannot be told apart from a folder MediConnect may not write to.
+
 **Aspect: What a backup copies**
 
 * **Alternative 1 (current choice):** Save the patient data currently loaded in MediConnect, through `JsonAddressBookStorage`.
@@ -1433,35 +1442,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. Caregiver searches for the patient by name instead.
-
-    * 1a1. MediConnect shows the patients whose names match.
-
-      Use case resumes at step 3.
-
-* 1b. The patient is archived.
-
-    * 1b1. Caregiver requests to list archived patients instead.
-
-    * 1b2. MediConnect shows a list of archived patients.
-
-      Use case resumes at step 3.
-
-* 2a. The list is empty.
-
-  Use case ends.
-
-* 3a. The given index is invalid.
-
-    * 3a1. MediConnect shows an error message that the patient index is invalid.
-
-      Use case resumes at step 2.
-
-* 3b. The index is missing, or is not a positive integer.
-
-    * 3b1. MediConnect shows an error message with the correct usage of the command.
-
-      Use case resumes at step 2.
+* 1a, 1b, 2a, 3a and 3b are the same as in UC7, with the record exported instead of viewed.
 
 * 4a. The patient's record was exported before.
 
@@ -1933,6 +1914,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 7. MediConnect should complete common commands, including listing, finding, adding, editing, and deleting records, and `due`, and update the displayed results within one second when managing up to 100 patient records, each with up to 10 medications, on a computer with a 4-core CPU and 8 GB of RAM.
 8. A user who types at least 60 words per minute should be able to add a patient, add a medication and delete a patient each in under 30 seconds using commands.
 9. MediConnect's GUI should work without resolution-related inconvenience at resolutions of 1920x1080 or higher with 100% or 125% display scaling. All functions must remain accessible at resolutions of 1280x720 or higher with display scaling up to 150%.
+10. A save of the data file, a backup or an exported record that fails partway, e.g., because the disk is full, must keep the earlier version of that file unchanged, and must not leave a partly written file in its place.
+11. On macOS and Linux, the data file, backups and exported records, which hold patients' medical details, must be readable only by the user's own account.
 
 ### Glossary
 
