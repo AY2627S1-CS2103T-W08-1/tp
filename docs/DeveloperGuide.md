@@ -2490,10 +2490,10 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all active patients using the `list` command, with multiple patients in the list.
 
    1. Test case: `view 1`<br>
-      Expected: The detail panel shows all fields of the first patient, with `None recorded` under each empty care list. The status message shows `Showing patient:` followed by the patient's name.
+      Expected: The detail panel shows all fields of the first patient. The status message shows `Showing patient:` followed by the patient's name.
 
    1. Test case: `view 2` on the sample data<br>
-      Expected: The detail panel shows Bernice Yu's appointment as `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`.
+      Expected: The detail panel shows `None recorded` under Medications and Contacts, which Bernice Yu has none of, and her appointment as `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`.
 
    1. Test case: `view 0`<br>
       Expected: The detail panel is unchanged. The status message shows the invalid command format error.

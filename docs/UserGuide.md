@@ -108,7 +108,7 @@ care information, contacts, appointments, data and other commands. The top of th
 
 Format: `help`
 
-* You can also open the help window with the `Help` menu or by pressing `F1`.
+* You can also open the help window with the **Help** menu or by pressing `F1`.
 * Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
 * The help window stays in front of the main window, and you can keep typing commands in the main window while it
   is open. When you switch to another app, such as a browser, the help window goes behind that app's windows.
@@ -954,7 +954,7 @@ patients to clear.
 
 ### Backing up data: `backup`
 
-Saves a copy of all patient data to the `data/backups` folder, inside the folder you launch MediConnect from. MediConnect creates the folder if it does not exist yet.
+Saves a copy of all patient data to the `data/backups` folder, inside your home folder, the folder you launch MediConnect from. MediConnect creates the folder if it does not exist yet.
 
 Format: `backup`
 
