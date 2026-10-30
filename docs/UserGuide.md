@@ -1018,7 +1018,7 @@ Examples:
 
 Returns, for example:
 
-```
+```{.wrap}
 Restored 7 patients (2 archived, shown by listarchived) from mediconnect-20261020-083015.json. Your previous data was backed up to: /Users/alex/MediConnect/data/backups/mediconnect-20261021-090000.json
 ```
 
@@ -1034,7 +1034,8 @@ mediconnect-20261020-083015.json
 Restore one with: restore FILENAME
 ```
 
-If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
+If there are none, it returns, for example,
+`No backups found in /Users/alex/MediConnect/data/backups. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 
