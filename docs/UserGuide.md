@@ -996,7 +996,8 @@ Format: `restore [FILENAME]`
     `data/backups/mediconnect-20261020-083015.json`.
   * Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as
     part of the name.
-  * Spaces before and after the name are ignored.
+  * Spaces before and after the name are ignored, so a backup whose name starts with a space cannot be restored,
+    and the space is hard to see in the list. Remove it from the file's name first, e.g., in your file manager.
   * Some spaces look like normal spaces but are different characters, e.g., spaces in a name copied from a web page or
     a chat app. MediConnect reads every space you type as a normal space, so a backup whose name has such a space is
     still found, unless another backup's name differs from it only in its spaces.
@@ -1010,7 +1011,8 @@ Format: `restore [FILENAME]`
 * After a restore, the list shows all active restored patients. The detail panel is cleared, unless the patient shown there is also in the backup with the same details.
 * A successful `restore FILENAME` writes the selected data even if it matches the data already shown. Restoring
   an empty backup after an unreadable-file startup warning replaces the data file with valid empty data.
-  If the replacement cannot be saved, the restore fails and the app returns to its previous state.
+  If the replacement cannot be saved, the restore fails and the app returns to its previous state. The automatic
+  backup of your current data is still kept in `data/backups`.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
