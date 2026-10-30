@@ -1,13 +1,12 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
-' an opaque ref frame, so that the lifelines behind it do not cross its text
+' opaque ref frames, so that the lifelines behind them do not cross their text
 skinparam sequenceReferenceBackgroundColor #FFFFFF
 
 box Logic LOGIC_COLOR_T1
 participant ":LogicManager" as LogicManager LOGIC_COLOR
 participant "c:RestoreCommand" as RestoreCommand LOGIC_COLOR
-participant "b:BackupCommand" as BackupCommand LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
 
@@ -17,7 +16,6 @@ end box
 
 box Storage STORAGE_COLOR_T1
 participant ":JsonAddressBookStorage" as JsonAddressBookStorage STORAGE_COLOR
-participant ":JsonAddressBookStorage" as BackupStorage STORAGE_COLOR
 end box
 
 [-> LogicManager : execute("restore old.json")
@@ -45,43 +43,17 @@ activate JsonAddressBookStorage
 JsonAddressBookStorage --> RestoreCommand : restoredData
 deactivate JsonAddressBookStorage
 
-create BackupCommand
-RestoreCommand -> BackupCommand
-activate BackupCommand
-
-BackupCommand --> RestoreCommand
-deactivate BackupCommand
-
-RestoreCommand -> Model : getAddressBook()
-activate Model
-
-Model --> RestoreCommand : currentData
-deactivate Model
-
-RestoreCommand -> BackupCommand : saveBackup(currentData)
-activate BackupCommand
-
-create BackupStorage
-BackupCommand -> BackupStorage
-activate BackupStorage
-
-BackupStorage --> BackupCommand
-deactivate BackupStorage
-
-BackupCommand -> BackupStorage : saveAddressBook(currentData)
-activate BackupStorage
-
-BackupStorage --> BackupCommand
-deactivate BackupStorage
-
-BackupCommand --> RestoreCommand : automaticBackupFile
-deactivate BackupCommand
+ref over RestoreCommand, Model
+c backs up the current data of m to a new
+file in data/backups through a BackupCommand,
+as backup does, and gets its path
+end ref
 
 note right of RestoreCommand
 If the backup is missing, cannot be read
-or is invalid, or the automatic backup cannot
-be saved, c throws a CommandException before
-this point, so the data is not changed.
+or is invalid, or the current data cannot
+be backed up, c throws a CommandException
+before this point, so the data is not changed.
 end note
 
 RestoreCommand -> Model : setAddressBook(restoredData)
