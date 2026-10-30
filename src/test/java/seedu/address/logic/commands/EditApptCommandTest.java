@@ -159,9 +159,10 @@ public class EditApptCommandTest {
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("Seen"), clock);
         Appointment editedSoon = new Appointment(soon.getDate(), soon.getTime(), "Dr Tan", "Seen");
 
-        // number 1 is still the appointment at 12:01 shown in the panel, which is now past and numbered 2
-        assertCommandSuccess(command, model, String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), editedSoon)
-                + "\n" + MESSAGE_PAST_APPOINTMENT, createViewedModelWithAppointments(editedSoon, CARDIOLOGY));
+        // number 1 is still the appointment at 12:01 shown in the panel, which is now past and numbered 2;
+        // only its note changed, so there is no past note
+        assertCommandSuccess(command, model, String.format(MESSAGE_SUCCESS, 2, ALICE.getName(), editedSoon),
+                createViewedModelWithAppointments(editedSoon, CARDIOLOGY));
     }
 
     @Test
@@ -198,9 +199,9 @@ public class EditApptCommandTest {
         EditApptCommand command = createCommand(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.of(""));
 
+        // only the note changed, so the clash with Dr Lim is not warned about again
         assertCommandSuccess(command, createModelWithAppointments(CHECKUP, clash),
-                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedCheckup)
-                + "\n" + String.format(MESSAGE_CLASH, ALICE.getName(), "Dr Lim"),
+                String.format(MESSAGE_SUCCESS, 1, ALICE.getName(), editedCheckup),
                 createViewedModelWithAppointments(editedCheckup, clash));
     }
 
