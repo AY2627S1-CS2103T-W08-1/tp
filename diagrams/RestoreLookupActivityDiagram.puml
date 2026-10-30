@@ -1,0 +1,44 @@
+@startuml
+skin rose
+skinparam ActivityFontSize 15
+skinparam ArrowFontSize 12
+start
+:Get FILENAME, whose special spaces
+AddressBookParser has made normal;
+
+'Since the beta syntax does not support placing the condition outside the
+'diamond we place it as the true branch instead.
+
+if () then ([a file in data/backups
+is named FILENAME])
+    :Choose that file;
+else ([else])
+    if () then ([a file is named
+    FILENAME.json])
+        :Choose that file;
+    else ([else])
+        :Find the files whose names are
+        FILENAME once their special
+        spaces are made normal;
+        if () then ([no file found])
+            :Find the files whose names are
+            FILENAME.json in the same way;
+        else ([else])
+        endif
+        if () then ([exactly one
+        file found])
+            :Choose that file;
+        else ([else])
+            :Report that no backup
+            named FILENAME was found;
+            note right
+                If MediConnect may not open
+                data/backups, it says so instead.
+            end note
+            stop
+        endif
+    endif
+endif
+:Check and restore the chosen file;
+stop
+@enduml
