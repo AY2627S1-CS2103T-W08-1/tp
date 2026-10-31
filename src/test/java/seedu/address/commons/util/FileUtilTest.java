@@ -10,6 +10,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -152,13 +153,15 @@ public class FileUtilTest {
     }
 
     @Test
-    public void writeThroughTemporaryFile_replaceFails_deletesTemporaryFile() throws Exception {
-        // a folder that is not empty cannot be replaced by a file
+    public void writeThroughTemporaryFile_folderInPlaceOfFile_throwsWithoutTemporaryFile() throws Exception {
+        // a file cannot replace a folder, so the folder is reported before any temporary file is made
         Path file = Files.createDirectory(temporaryFolder.resolve("record.txt"));
         Path insideFile = Files.write(file.resolve("inside.txt"), List.of("inside"));
 
-        Assertions.assertThrows(IOException.class, () ->
+        FileSystemException exception = Assertions.assertThrows(FileSystemException.class, () ->
                 FileUtil.writeThroughTemporaryFile(file, temporaryFile -> Files.write(temporaryFile, List.of("new"))));
+
+        assertEquals(FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE, exception.getReason());
 
         assertEquals(List.of("inside"), Files.readAllLines(insideFile));
         assertEquals(List.of(file), listFolder());
