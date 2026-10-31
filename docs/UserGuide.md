@@ -421,13 +421,10 @@ and the previously viewed patient is unchanged.
 
 The same field and duplicate rules apply to `editcontact` and saved data, including backups. Names and roles
 follow the same space cleanup when loaded. Saved notes keep their spaces, which count toward the 500-character
-limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored; repair a copy
-using the [data recovery instructions](#editing-the-data-file).
-
-The same duplicate-name rules apply when loading data or restoring a backup. Older files containing contacts
-with the same accented name typed in these different ways and the same phone are rejected as duplicates.
-Remove the duplicate contact
-from a copy of the file using the [data recovery instructions](#editing-the-data-file).
+limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored. This includes
+older files with the same phone and equivalent accented names, as in the `Café` and `Café` example above.
+Repair invalid fields or remove duplicate contacts from a copy of the file using the
+[data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
