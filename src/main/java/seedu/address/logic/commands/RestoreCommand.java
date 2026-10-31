@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -20,6 +21,7 @@ import java.util.stream.Stream;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -48,6 +50,9 @@ public class RestoreCommand extends Command {
             "MediConnect does not have permission to read %1$s. Your data has not been changed.";
     public static final String MESSAGE_NO_FOLDER_READ_PERMISSION = "MediConnect does not have permission to "
             + "read the backup folder %1$s. Your data has not been changed.";
+    public static final String MESSAGE_FILE_IN_PLACE_OF_FOLDER = "No backup named %1$s can be found, as "
+            + "%2$s is a file, not a folder. Move or rename that file, so that backup can make the folder. "
+            + "Your data has not been changed.";
     public static final String MESSAGE_UNREADABLE = "The backup %1$s could not be read. It may be damaged, "
             + "or not a MediConnect data file. Your data has not been changed.";
     public static final String MESSAGE_NOT_UTF8 = "The backup %1$s could not be read, as it is not saved as "
@@ -190,9 +195,15 @@ public class RestoreCommand extends Command {
     /**
      * Returns the reason to give when {@code backupFile}, the backup to restore, is not found: that
      * MediConnect may not read the backup folder, if it cannot even tell whether the file exists and the folder
-     * cannot be opened, or else {@code notFoundMessage}.
+     * cannot be opened, or else {@code notFoundMessage}. A file in place of the backup folder, or of a folder
+     * above it, is named instead, since backup cannot make the folder while that file is there.
      */
     private String describeMissingBackup(Path backupFile, String notFoundMessage) {
+        Optional<Path> fileAbove = FileUtil.findFileInPlaceOfFolder(backupFile);
+        if (fileAbove.isPresent()) {
+            return String.format(MESSAGE_FILE_IN_PLACE_OF_FOLDER, fileName,
+                    fileAbove.get().toAbsolutePath().normalize());
+        }
         // neither holds if the folder may not be opened, e.g., after chmod 000 or chmod 444 on it, but also for a
         // name too long for the file system, so the folder itself is checked as well
         boolean isExistenceUnknown = !Files.exists(backupFile) && !Files.notExists(backupFile);
