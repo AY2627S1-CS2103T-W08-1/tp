@@ -1038,7 +1038,7 @@ Restore one with: restore FILENAME
 ```
 
 If there are none, it returns, for example,
-`No backups found in /Users/alex/MediConnect/data/backups. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
+`No backups found in /Users/alex/MediConnect/data/backups. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, `restore` says so instead, with or without `FILENAME`, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 
@@ -1065,8 +1065,9 @@ Returns, for example, `Exported Alex Yeoh's record to: ` followed by the full pa
 If `INDEX` is larger than the number of patients in the displayed list, the command is rejected with
 `The patient index provided is invalid.` If `INDEX` is missing, is not a positive integer, is too large to be a valid
 number, or is followed by extra words, the command is rejected with `Invalid command format!` followed by the usage
-and example. If the file cannot be saved, e.g., because an earlier export of the patient is read-only, MediConnect
-shows `Could not export NAME's record to PATH: ` followed by the reason, and keeps any earlier file unchanged.
+and example. If the file cannot be saved, e.g., because an earlier export of the patient is read-only, or a folder
+has the file's name, MediConnect shows `Could not export NAME's record to PATH: ` followed by the reason, and keeps
+any earlier file unchanged.
 
 The file for Alex Yeoh in the sample data looks like this:
 

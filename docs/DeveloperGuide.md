@@ -466,7 +466,7 @@ The sequence diagram below shows a successful `restore old.json`.
    the previous model, including an empty backup after startup recovery. A save failure restores the model's
    previous data, filter and viewed patient; the automatic backup is kept.
 
-If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing. `RestoreCommand` also checks with `Files#isReadable()` and `Files#isExecutable()` that the backup folder itself cannot be opened, e.g., because it or a folder above it is not readable, since both methods are also false for a name too long for the file system, e.g., of 300 characters. Such a name is reported as not found.
+If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing. `RestoreCommand` also checks with `Files#isReadable()` and `Files#isExecutable()` that the backup folder itself cannot be opened, e.g., because it or a folder above it is not readable, since both methods are also false for a name too long for the file system, e.g., of 300 characters. Such a name is reported as not found. Before these checks, `RestoreCommand` uses `FileUtil#findFileInPlaceOfFolder()` to name a file that is where the backup folder, or a folder above it, should be, as `ListBackupsCommand` does, since `backup` cannot make the folder while that file is there.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
@@ -2676,8 +2676,8 @@ testers are expected to do more *exploratory* testing.
       Expected: The data is unchanged. The status message says that no backup with that name was found, not that MediConnect may not read the folder.
 
    1. Prerequisites: The app is closed. Move the `data` folder elsewhere, and create an empty file named `data` (with no extension) in its place. Launch the app, which warns that the sample patients are not saved.<br>
-      Test case: `restore`, then `backup`<br>
-      Expected: `restore` says that `data` is a file, not a folder. `backup` says that there is a file named `data` where that folder should be. Afterwards, close the app, delete the file named `data` and move the `data` folder back.
+      Test case: `restore`, `restore old.json`, then `backup`<br>
+      Expected: Both forms of `restore` say that `data` is a file, not a folder. `backup` says that there is a file named `data` where that folder should be. Afterwards, close the app, delete the file named `data` and move the `data` folder back.
 
 ### Exporting a patient's record
 
