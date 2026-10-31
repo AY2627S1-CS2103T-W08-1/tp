@@ -6,6 +6,9 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSucces
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import seedu.address.logic.commands.ListBackupsCommand;
 import seedu.address.logic.commands.RestoreCommand;
@@ -66,7 +69,21 @@ public class RestoreCommandParserTest {
 
     @Test
     public void parse_nameRejectedByOperatingSystem_throwsParseException() {
-        // every operating system rejects the null character in file names
-        assertParseFailure(parser, "backup\0.json", RestoreCommand.MESSAGE_INVALID_FILE_NAME);
+        // every operating system rejects the null character in file names, which is not a path
+        assertParseFailure(parser, "backup\0.json", RestoreCommand.MESSAGE_INVALID_CHARACTER);
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    public void parse_quotedNameOnWindows_throwsParseExceptionAboutCharacter() {
+        // Windows does not allow quotes in file names, so a quoted name is not taken for a path
+        assertParseFailure(parser, "\"my backup.json\"", RestoreCommand.MESSAGE_INVALID_CHARACTER);
+    }
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    public void parse_quotedName_keepsQuotesInName() {
+        // macOS and Linux allow quotes in file names, so they are taken as part of the name, as the UG says
+        assertParseSuccess(parser, "\"my backup.json\"", new RestoreCommand("\"my backup.json\""));
     }
 }

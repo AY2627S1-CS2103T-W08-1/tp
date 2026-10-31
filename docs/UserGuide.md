@@ -995,7 +995,8 @@ Format: `restore [FILENAME]`
   * Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than
     `data/backups/mediconnect-20261020-083015.json`.
   * Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as
-    part of the name.
+    part of the name. On Windows, where file names cannot have quotes, a name in quotes is rejected with
+    `The backup name has a character that file names cannot have on this computer, …`.
   * Spaces before and after the name are ignored, so a backup whose name starts with a space cannot be restored,
     and the space is hard to see in the list. Remove it from the file's name first, e.g., in your file manager.
   * Some spaces look like normal spaces but are different characters, e.g., spaces in a name copied from a web page or

@@ -39,6 +39,9 @@ public class RestoreCommand extends Command {
 
     public static final String MESSAGE_INVALID_FILE_NAME = "Give only the name of a backup file in data/backups, "
             + "not a path, e.g., " + COMMAND_WORD + " mediconnect-20261020-083015.json";
+    public static final String MESSAGE_INVALID_CHARACTER = "The backup name has a character that file names "
+            + "cannot have on this computer, e.g., \" or * on Windows. Type the name without quotes, e.g., "
+            + COMMAND_WORD + " my backup.json";
 
     public static final String MESSAGE_SUCCESS =
             "Restored %1$d %2$s%3$s from %4$s. Your previous data was backed up to: %5$s";
