@@ -6,7 +6,7 @@
 
 # MediConnect User Guide
 
-MediConnect is a **desktop application for managing patient records and care information, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, MediConnect can help you manage patient records faster than traditional GUI applications.
+MediConnect is a **desktop application for managing patient records and care information, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). It is mainly for patients and family caregivers in Singapore who coordinate the care of an elderly or chronically ill person, and also for community nurses on home visits. It keeps each patient's details, medications, allergens, care instructions, contacts and appointments in one place, so that they are quick to find during daily care, appointments and handovers. If you type quickly, MediConnect can help you manage patient records faster than traditional GUI applications.
 
 <!-- * Table of Contents -->
 <page-nav-print />
