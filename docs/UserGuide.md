@@ -68,8 +68,11 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 * Items followed by `...` can appear zero or more times.<br>
 
-* Parameters can be in any order.<br>
+* Parameters with a prefix, such as `n/NAME`, can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+
+* Parameters without a prefix, such as `INDEX` and `MED_INDEX`, must come first, in the order shown in the format.<br>
+  For example, `editmed 1 2 t/08:00` is accepted, but `editmed t/08:00 1 2` and `editmed 1 t/08:00 2` are not.
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`
   and `backup`, are ignored.<br>
