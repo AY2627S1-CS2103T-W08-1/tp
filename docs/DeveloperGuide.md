@@ -2781,3 +2781,46 @@ testers are expected to do more *exploratory* testing.
 
    1. Incorrect commands to try: `listappt 9`, `listappt 0`<br>
       Expected: The status message shows `The patient index provided is invalid.` and the invalid command format respectively.
+
+--------------------------------------------------------------------------------------------------------------------
+
+## **Appendix: Effort**
+
+MediConnect started from AB3. Most of the work went into a deeper patient model, safer handling of the data, and
+input handling that suits fast typists entering real-world text. For scale, in non-blank lines of Java, measured
+in the last week of the project:
+
+| | AB3 | MediConnect |
+|---|---|---|
+| User commands | 8 | 29 |
+| Functional code (`src/main`) | 3,868 lines | about 10,000 lines |
+| Test code (`src/test`) | 3,659 lines, 241 tests | about 15,400 lines, over 1,200 tests |
+
+**Difficulty**: AB3 manages one entity type, a person with a few single-valued fields and tags. A MediConnect patient
+has a profile and five lists: medications with daily times, allergens, care instructions, contacts and appointments,
+three of which have structured entries of their own. Most commands therefore act on an entry inside a patient, e.g.,
+`editmed INDEX MED_INDEX`, and each list needed its own validation, duplicate detection, numbering, and display in
+the detail panel and in exported records. Patients can also be archived and restored.
+
+**Challenges**:
+
+* Time-dependent behavior: `due` marks doses that were due earlier today, appointments are split into upcoming and
+  past ones, and appointment numbers stay as shown until the patient is shown again, so that `editappt` and
+  `cancelappt` act on the appointment the user sees. Commands that depend on the time take a `java.time.Clock`, so
+  that their tests do not depend on when they run.
+* Real-world text: free-text fields accept slash text such as `and/or` and `s/o` while reserved prefixes still act
+  as syntax, special spaces copied from web pages count as spaces, and accented text typed in different ways counts
+  as the same in duplicate checks.
+* Data safety: every write of the data file, a backup or an exported record goes through a temporary file, so a
+  failure partway never leaves a damaged file. `restore` and `clear` back up the current data first, a failed save
+  restores the previous model, only one window may use an app folder at a time, and an unreadable data file is kept
+  as a recovery copy, with the position and reason of the first invalid entry.
+* User interface: a detail panel that tracks the patient's index in the displayed list and lets lines be copied
+  while the keyboard focus stays in the command box, a help window that lists every command, and a main window that
+  fits small or scaled screens.
+
+**Reuse**: no libraries were added to AB3's JavaFX, Jackson and JUnit 5. The project builds on AB3's design and code,
+as acknowledged in [Acknowledgements](#acknowledgements).
+
+**Achievements**: every command has its own automated tests, and all of them run on Windows, macOS and Linux in
+continuous integration.
