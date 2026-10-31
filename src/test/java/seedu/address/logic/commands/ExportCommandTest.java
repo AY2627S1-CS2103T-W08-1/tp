@@ -377,6 +377,17 @@ public class ExportCommandTest {
     }
 
     @Test
+    public void execute_fileInPlaceOfFolderAboveExportFolder_throwsCommandException() throws Exception {
+        Path dataFile = Files.createFile(temporaryFolder.resolve("data"));
+        Path exportDir = dataFile.resolve("exports");
+        String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                exportDir.resolve("S0000001A.txt"), String.format(Messages.MESSAGE_FILE_IN_PLACE_OF_FOLDER, "data"));
+
+        assertCommandFailure(new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir), model, expectedMessage);
+        assertTrue(Files.isRegularFile(dataFile));
+    }
+
+    @Test
     public void execute_folderInPlaceOfExportFile_throwsCommandException() throws Exception {
         Path exportFile = Files.createDirectory(temporaryFolder.resolve("S0000001A.txt"));
         ExportCommand exportCommand = createExportCommand(INDEX_FIRST_PATIENT);

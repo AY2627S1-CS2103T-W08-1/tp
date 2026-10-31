@@ -270,6 +270,97 @@ public class RestoreCommandTest {
     }
 
     @Test
+    public void execute_nameWithSpecialSpaceTypedWithNormalSpace_restoresThatBackup() throws Exception {
+        // Equivalence partitioning: a backup whose name has an ideographic space, which AddressBookParser makes a
+        // normal space in the typed name
+        String nameWithSpecialSpace = "old　backup.json";
+        AddressBook backupData = createAddressBook(HOON);
+        new JsonAddressBookStorage(temporaryFolder.resolve(nameWithSpecialSpace)).saveAddressBook(backupData);
+        String expectedMessage = String.format(Locale.ROOT, RestoreCommand.MESSAGE_SUCCESS, 1, "patient", "",
+                nameWithSpecialSpace, temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
+
+        assertCommandSuccess(createRestoreCommand("old backup.json"), model, expectedMessage,
+                new ModelManager(backupData, new UserPrefs()));
+    }
+
+    @Test
+    public void execute_nameWithSpecialSpaceWithoutExtension_restoresThatBackup() throws Exception {
+        // Equivalence partitioning: the same, with ".json" left out and a no-break space in the file's name
+        String nameWithSpecialSpace = "old backup.json";
+        AddressBook backupData = createAddressBook(IDA);
+        new JsonAddressBookStorage(temporaryFolder.resolve(nameWithSpecialSpace)).saveAddressBook(backupData);
+        String expectedMessage = String.format(Locale.ROOT, RestoreCommand.MESSAGE_SUCCESS, 1, "patient", "",
+                nameWithSpecialSpace, temporaryFolder.resolve(AUTOMATIC_BACKUP_NAME));
+
+        assertCommandSuccess(createRestoreCommand("old backup"), model, expectedMessage,
+                new ModelManager(backupData, new UserPrefs()));
+    }
+
+    @Test
+    public void execute_twoNamesMatchWithNormalSpaces_throwsCommandException() throws Exception {
+        // Boundary value: two backups match once their special spaces are normal spaces, so neither is chosen
+        writeBackup(createAddressBook(HOON));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+
+        assertCommandFailure(createRestoreCommand("old backup.json"), model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, "old backup.json", temporaryFolder));
+    }
+
+    @Test
+    public void execute_twoNamesMatchAndOneWithExtensionAdded_throwsCommandException() throws Exception {
+        // Boundary value: the name as given is unclear, so a backup with ".json" added is not restored instead
+        writeBackup(createAddressBook(HOON));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json"));
+        Files.copy(temporaryFolder.resolve(BACKUP_NAME), temporaryFolder.resolve("old backup.json.json"));
+
+        assertCommandFailure(createRestoreCommand("old backup.json"), model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, "old backup.json", temporaryFolder));
+    }
+
+    @Test
+    public void execute_missingBackupFolder_throwsCommandException() {
+        // the backup folder cannot be listed for a name with special spaces, so the backup is reported missing
+        Path missingFolder = temporaryFolder.resolve("missing");
+        RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, missingFolder);
+
+        assertCommandFailure(restoreCommand, model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, missingFolder));
+    }
+
+    @Test
+    public void execute_nameTooLongForFileSystem_throwsCommandExceptionWithNotFound() {
+        // Boundary value: a name longer than the 255 characters that file systems allow, which makes whether the
+        // file exists unknown although the backup folder can be read
+        String tooLongName = "a".repeat(300) + ".json";
+
+        assertCommandFailure(createRestoreCommand(tooLongName), model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, tooLongName, temporaryFolder));
+    }
+
+    @Test
+    public void execute_fileInPlaceOfBackupFolder_throwsCommandExceptionWithNotFound() throws Exception {
+        // a file where the backup folder should be also makes whether a backup in it exists unknown, but it is
+        // not a folder that MediConnect may not open
+        Path fileInPlaceOfFolder = Files.createFile(temporaryFolder.resolve("backups"));
+        RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, fileInPlaceOfFolder);
+
+        assertCommandFailure(restoreCommand, model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, fileInPlaceOfFolder));
+    }
+
+    @Test
+    public void execute_nameTooLongForFileSystemInMissingFolder_throwsCommandExceptionWithNotFound() {
+        Path missingFolder = temporaryFolder.resolve("missing");
+        String tooLongName = "a".repeat(300) + ".json";
+        RestoreCommand restoreCommand = new RestoreCommand(tooLongName, FIXED_CLOCK, missingFolder);
+
+        assertCommandFailure(restoreCommand, model,
+                String.format(RestoreCommand.MESSAGE_NOT_FOUND, tooLongName, missingFolder));
+    }
+
+    @Test
     public void execute_missingBackupInRelativeFolder_showsFullFolderPath() {
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK,
                 toPathRelativeToWorkingDir(temporaryFolder));
@@ -370,6 +461,27 @@ public class RestoreCommandTest {
 
             assertRestoreFailure(String.format(RestoreCommand.MESSAGE_NO_FOLDER_READ_PERMISSION,
                     temporaryFolder.toAbsolutePath().normalize()));
+        } finally {
+            folder.setExecutable(true);
+            folder.setReadable(true);
+        }
+    }
+
+    @Test
+    @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Windows ignores the read-only flags used here")
+    public void execute_unopenableFolderAboveBackupFolder_throwsCommandExceptionNamingFolder() throws Exception {
+        // e.g., after chmod 000 on data, which makes data/backups and the backup in it unreachable
+        Path dataFolder = Files.createDirectory(temporaryFolder.resolve("data"));
+        Path backupDir = Files.createDirectory(dataFolder.resolve("backups"));
+        new JsonAddressBookStorage(backupDir.resolve(BACKUP_NAME)).saveAddressBook(createAddressBook(HOON));
+        File folder = dataFolder.toFile();
+        assertTrue(folder.setReadable(false) && folder.setExecutable(false));
+        try {
+            // users with admin rights (e.g., root) can still read it, so the test only applies to others
+            assumeFalse(Files.isReadable(dataFolder));
+
+            assertCommandFailure(new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, backupDir), model,
+                    String.format(RestoreCommand.MESSAGE_NO_FOLDER_READ_PERMISSION, backupDir));
         } finally {
             folder.setExecutable(true);
             folder.setReadable(true);

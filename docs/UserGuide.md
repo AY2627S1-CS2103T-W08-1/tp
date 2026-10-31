@@ -23,7 +23,7 @@ MediConnect is a **desktop application for managing patient records and care inf
 1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
-   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details on the right.<br>
+   A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details in the *detail panel* on the right.<br>
    ![Ui](images/Ui.png)
 
    Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
@@ -108,7 +108,7 @@ care information, contacts, appointments, data and other commands. The top of th
 
 Format: `help`
 
-* You can also open the help window with the `Help` menu or by pressing `F1`.
+* You can also open the help window with the **Help** menu or by pressing `F1`.
 * Any text after `help` is ignored. For example, `help add` is interpreted as `help`.
 * The help window stays in front of the main window, and you can keep typing commands in the main window while it
   is open. When you switch to another app, such as a browser, the help window goes behind that app's windows.
@@ -803,51 +803,65 @@ A command that fails changes nothing. Errors are reported as follows:
 
 ### Viewing a patient's full details: `view`
 
-Shows all the details of the specified patient in the detail panel, to the right of the patient list.
+Shows all the details of the specified patient in the detail panel, to the right of the patient list. The picture in
+[Quick start](#quick-start) shows the panel after `view 1`.
 
 Format: `view INDEX`
 
 * Shows the patient at the specified `INDEX`, which refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
-* The panel shows the patient's name, NRIC, date of birth, phone number, and address, then `Status: Archived` if the
-  patient is archived, followed by their medications, allergens, care instructions, contacts and appointments. Each
-  list is numbered (`1.`, `2.`, ...), one entry per line. A medication with daily times shows them after its
+
+**What the panel shows**
+
+* The patient's name, their `List index:` (see below), NRIC, date of birth, phone number and address, then
+  `Status: Archived` if the patient is archived.
+* Their medications, allergens, care instructions, contacts and appointments. Each list is numbered (`1.`, `2.`, ...),
+  one entry per line, and an empty list shows `None recorded`. A medication with daily times shows them after its
   description, e.g., `Metformin 500mg (08:00, 20:00)`.
-  Upcoming appointments are listed first, then past ones, each sorted by date, then time. Each past appointment is
+* Upcoming appointments are listed first, then past ones, each sorted by date, then time. Each past appointment is
   marked `(past)` after its date and time, e.g., on the sample data, `view 2` shows
   `1. 2026-10-02 10:00 (past) with Polyclinic nurse (Blood pressure normal)`. A note or `WITH` text that ends in
-  `(past)` does not mark an appointment as past. Like the numbers, the marks stay as
-  shown until the patient is shown again.
-  An empty list shows `None recorded`.
-* Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
-* Clicking a patient in the patient list does not highlight or show them. Use `view INDEX` instead. A click on the
-  patient list does not move the cursor out of the command box, so you can keep typing.
-* The patient list can be scrolled with the mouse wheel, a trackpad or its scroll bar, but not with the keyboard:
-  `Tab` skips the patient list. To reach a patient in a long patient list quickly, use `find`.
+  `(past)` does not mark an appointment as past. Like the numbers, the marks stay as shown until the patient is shown
+  again.
 * A line break inside an entry, which only editing the data file by hand can add, is shown as a space, as in an
   exported record, so that each entry stays on its own numbered line.
-* To copy a line of the panel, e.g., a care instruction to change with `editcare`, right-click its text and choose
-  **Copy**. A line of details is copied with its label, e.g., `NRIC: S1234567A`. A numbered entry is copied without
-  its number, e.g., `Penicillin`, so that an allergen or a care instruction can be pasted into a command as it is.
-  A medication is copied with its daily times, e.g., `Aspirin 100mg (08:00)`, a contact with its role, phone and
-  note, and an appointment with its date, time and any `(past)` mark, so remove those parts before pasting the text
-  into a field, e.g., after `editmed 1 1 med/`. The number of an entry, the headings, e.g., `Medications`, the
-  `List index:` line and `None recorded` show no menu. Clicking or right-clicking the panel does not move the cursor
-  out of the command box, so you can paste the copied text into a command straight away.
-* The panel keeps showing the patient after commands that do not change a patient, such as `list` or `find`, even
-  if `find` hides the patient from the list. A command that changes a patient's details or care information, e.g.,
-  `edit`, `addcare` or `addappt`, shows that patient instead, with the change, as does `listappt INDEX`. The panel goes
-  back to the message above when the patient is deleted or archived, when all patients are cleared, or when `restore`
-  replaces your data with a backup that does not have this patient with the same details.
-* Under the name, the panel shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the
-  `INDEX` that commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If
-  the list does not show the patient, e.g., after `find` hides them, or after `list` while an archived patient is
-  viewed, it shows `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
+* Before any patient is viewed, the panel shows `Enter 'view INDEX' to see a patient's full details here.`
+
+**When the panel changes**
+
+* The panel keeps showing the patient after commands that do not change a patient, such as `list` or `find`, even if
+  `find` hides the patient from the list.
+* A command that changes a patient's details or care information, e.g., `edit`, `addcare` or `addappt`, shows that
+  patient instead, with the change, as does `listappt INDEX`.
+* The panel goes back to the message above when the patient is deleted or archived, when all patients are cleared, or
+  when `restore` replaces your data with a backup that does not have this patient with the same details.
+* `List index:` shows the patient's index in the displayed patient list, e.g., `List index: 1`. This is the `INDEX` that
+  commands such as `addcare` use for the patient. It updates when the list changes, e.g., after `find`. If the list
+  does not show the patient, e.g., after `find` hides them, or after `list` while an archived patient is viewed, it
+  shows `Not in the displayed list`. To show the patient again before changing them, run `list` or `find`, or
   `listarchived` for an archived patient.
 * When a different patient is viewed, the panel scrolls back to the top, so their name is shown first. When the same
   patient is shown again, e.g., after `addcare`, the panel stays where it was scrolled to.
-* The panel can be scrolled with the mouse wheel, a trackpad or its scroll bar, but not with the keyboard, since the
-  cursor stays in the command box.
+
+**Copying text from the panel**
+
+* To copy a line, e.g., a care instruction to change with `editcare`, right-click its text and choose **Copy**.
+  Clicking or right-clicking the panel does not move the cursor out of the command box, so you can paste the copied
+  text into a command straight away.
+  * A line of details is copied with its label, e.g., `NRIC: S1234567A`.
+  * An allergen or a care instruction is copied without its number, e.g., `Penicillin`, ready to paste into a command.
+  * A medication is copied with its daily times, a contact with its role, phone and note, and an appointment with its
+    date, time and any `(past)` mark. Remove those parts before pasting the text into a field. For example, pasting
+    `Aspirin 100mg (08:00)` after `editmed 1 1 med/` saves `(08:00)` as part of the description.
+  * The number of an entry, the headings, e.g., `Medications`, the `List index:` line and `None recorded` show no menu.
+
+**Scrolling and clicking**
+
+* The patient list and the panel can be scrolled with the mouse wheel, a trackpad or their scroll bars, but not with
+  the keyboard, since the cursor stays in the command box: `Tab` skips them. To reach a patient in a long patient list
+  quickly, use `find`.
+* Clicking a patient in the patient list does not highlight or show them. Use `view INDEX` instead. A click on the
+  patient list does not move the cursor out of the command box, so you can keep typing.
 
 Examples:
 
@@ -940,7 +954,7 @@ patients to clear.
 
 ### Backing up data: `backup`
 
-Saves a copy of all patient data to the `data/backups` folder, inside the folder you launch MediConnect from. MediConnect creates the folder if it does not exist yet.
+Saves a copy of all patient data to the `data/backups` folder, inside your home folder, the folder you launch MediConnect from. MediConnect creates the folder if it does not exist yet.
 
 Format: `backup`
 
@@ -953,9 +967,10 @@ Format: `backup`
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
 
-Returns `Backup saved to: ` followed by the full path of the backup file.
+Returns `Backup saved to: ` followed by the full path of the backup file, e.g.,
+`Backup saved to: /Users/alex/MediConnect/data/backups/mediconnect-20261020-083015.json`.
 
-If the backup cannot be saved (e.g., the folder is read-only), MediConnect shows `Could not save the backup to ` followed by the folder and the reason, and your data is not changed.
+If the backup cannot be saved (e.g., a file named `backups` or `data` is where that folder should be, or MediConnect does not have permission to write there), MediConnect shows `Could not save the backup to ` followed by the folder and the reason, and your data is not changed.
 
 <box type="warning" seamless>
 
@@ -976,7 +991,16 @@ Format: `restore [FILENAME]`
 
 * `restore` without `FILENAME` lists the backups in `data/backups`, newest first, so you can copy the name you need. They are ordered by the time each file was last changed, not by the date in its name, so a backup copied into `data/backups` from elsewhere can be listed first. At most 10 are listed, followed by how many older ones there are. Your data is not changed.
 * The list shows every `.json` file in `data/backups`, including ones that were not made by `backup`. The data in a file is checked only when you restore it, so a listed file can still be rejected, e.g., if it is damaged.
-* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`. Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than `data/backups/mediconnect-20261020-083015.json`. Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as part of the name. Spaces around the name are ignored, including no-break spaces, which a name copied from a web page or a chat app can have.
+* `FILENAME` is the name of a file in `data/backups`, such as one made by `backup`.
+  * Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than
+    `data/backups/mediconnect-20261020-083015.json`.
+  * Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as
+    part of the name.
+  * Spaces before and after the name are ignored, so a backup whose name starts with a space cannot be restored,
+    and the space is hard to see in the list. Remove it from the file's name first, e.g., in your file manager.
+  * Some spaces look like normal spaces but are different characters, e.g., spaces in a name copied from a web page or
+    a chat app. MediConnect reads every space you type as a normal space, so a backup whose name has such a space is
+    still found, unless another backup's name differs from it only in its spaces.
 * The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
   `data/backups` also has a file with exactly the name given, that file is restored instead.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
@@ -987,15 +1011,33 @@ Format: `restore [FILENAME]`
 * After a restore, the list shows all active restored patients. The detail panel is cleared, unless the patient shown there is also in the backup with the same details.
 * A successful `restore FILENAME` writes the selected data even if it matches the data already shown. Restoring
   an empty backup after an unreadable-file startup warning replaces the data file with valid empty data.
-  If the replacement cannot be saved, the restore fails and the app returns to its previous state.
+  If the replacement cannot be saved, the restore fails and the app returns to its previous state. The automatic
+  backup of your current data is still kept in `data/backups`.
 
 Examples:
 * `restore mediconnect-20261020-083015.json` replaces your data with the backup made at 8:30:15 am on 20 Oct 2026.
 * `restore mediconnect-20261020-083015` does the same.
 
-Returns, for example, `Restored 7 patients from mediconnect-20261020-083015.json. Your previous data was backed up to: ` followed by the full path of the automatic backup. If some restored patients are archived, the number of patients is followed by, e.g., `(2 archived, shown by listarchived)`, as in `Restored 7 patients (2 archived, shown by listarchived) from ...`, since the list after a restore shows only active patients.
+Returns, for example:
 
-`restore` alone returns, for example, `Backups in ` followed by the full path of the folder, `, newest first:`, one backup name per line, and `Restore one with: restore FILENAME`. If there are none, it returns `No backups found in ` followed by the folder and `. Make one with backup.` If `data/backups` is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
+```{.wrap}
+Restored 7 patients (2 archived, shown by listarchived) from mediconnect-20261020-083015.json. Your previous data was backed up to: /Users/alex/MediConnect/data/backups/mediconnect-20261021-090000.json
+```
+
+The part in brackets appears only if some restored patients are archived, since the list after a restore shows only
+active patients.
+
+`restore` alone returns the list of backups, for example:
+
+```
+Backups in /Users/alex/MediConnect/data/backups, newest first:
+mediconnect-20261021-090000.json
+mediconnect-20261020-083015.json
+Restore one with: restore FILENAME
+```
+
+If there are none, it returns, for example,
+`No backups found in /Users/alex/MediConnect/data/backups. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 
@@ -1018,6 +1060,12 @@ Examples:
 * `listarchived` followed by `export 1` exports the 1st archived patient.
 
 Returns, for example, `Exported Alex Yeoh's record to: ` followed by the full path of the file.
+
+If `INDEX` is larger than the number of patients in the displayed list, the command is rejected with
+`The patient index provided is invalid.` If `INDEX` is missing, is not a positive integer, is too large to be a valid
+number, or is followed by extra words, the command is rejected with `Invalid command format!` followed by the usage
+and example. If the file cannot be saved, e.g., because an earlier export of the patient is read-only, MediConnect
+shows `Could not export NAME's record to PATH: ` followed by the reason, and keeps any earlier file unchanged.
 
 The file for Alex Yeoh in the sample data looks like this:
 
