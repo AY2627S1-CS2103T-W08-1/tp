@@ -29,7 +29,7 @@ MediConnect is a **desktop application for managing patient records and care inf
    Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
    naming the data file and exits. Close the first window before opening it again.
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
+1. Type a command in the command box and press Enter to execute it. MediConnect shows its response in the *result box*, just below the command box. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
 
    * `list` : Lists all active patients.
@@ -905,7 +905,7 @@ Format: `due [INDEX]`
 * Only the text right after the time is the mark from MediConnect. A description is free text, so it can itself end
   in `(earlier today)`, e.g., `20:00 Alex Yeoh: Aspirin (earlier today)`, which is not marked and is still to come.
 * Medications without times are not listed.
-* The result is shown in the result box. The patient list and the details panel are not changed, and no data is
+* The result is shown in the result box. The patient list and the detail panel are not changed, and no data is
   changed.
 
 Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
@@ -936,7 +936,7 @@ Errors are reported as follows:
 ### Clearing all patients: `clear`
 
 Backs up, then clears all active and archived patients and their care information from MediConnect, and clears
-any patient details in the view panel. This includes patients hidden by `find` or the current list filter.
+any patient details in the detail panel. This includes patients hidden by `find` or the current list filter.
 
 Format: `clear confirm`
 

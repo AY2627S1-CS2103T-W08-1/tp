@@ -1994,7 +1994,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ## **Appendix: Instructions for manual testing**
 
-Given below are instructions to test the app manually.
+Given below are instructions to test the app manually. In the expected results, the *status message* is the
+message shown in the result box, just below the command box.
 
 <box type="info" seamless>
 
