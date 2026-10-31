@@ -466,7 +466,7 @@ The sequence diagram below shows a successful `restore old.json`.
    the previous model, including an empty backup after startup recovery. A save failure restores the model's
    previous data, filter and viewed patient; the automatic backup is kept.
 
-If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing. `RestoreCommand` also checks with `Files#isReadable()` and `Files#isExecutable()` that the backup folder itself cannot be opened, e.g., because it or a folder above it is not readable, since both methods are also false for a name too long for the file system, e.g., of 300 characters. Such a name is reported as not found.
+If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing. `RestoreCommand` also checks with `Files#isReadable()` and `Files#isExecutable()` that the backup folder itself cannot be opened, e.g., because it or a folder above it is not readable, since both methods are also false for a name too long for the file system, e.g., of 300 characters. Such a name is reported as not found. Before these checks, `RestoreCommand` uses `FileUtil#findFileInPlaceOfFolder()` to name a file that is where the backup folder, or a folder above it, should be, as `ListBackupsCommand` does, since `backup` cannot make the folder while that file is there.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
@@ -507,7 +507,7 @@ The `export INDEX` command saves the full record of a patient in the displayed l
 
 1. `ExportCommandParser` parses the index in the same way as `ViewCommandParser`. `ExportCommand#execute()` checks it against the filtered patient list, so `export` exports an active patient after `list` or `find`, and an archived patient after `listarchived`.
 1. `ExportCommand#createRecord()` builds the lines of the record: a title, `Exported on` with the date and time from the command's `Clock`, a blank line, then the lines from `PatientFormatter#formatRecord()`. These are the patient's name, the details from `PatientFormatter#formatDetails()`, with `Status: Archived` for an archived patient, and each list under its heading, numbered by `PatientFormatter#formatEntries()`. Appointments are ordered and marked `(past)` at the time of the export, through the same `PatientFormatter#formatAppointments()` that the detail panel uses.
-1. The file is named after the patient's NRIC, e.g., `S1234567A.txt`. Before writing, `ExportCommand#writeRecord()` creates the folder if it does not exist. `FileUtil#writeThroughTemporaryFile()` then throws an `AccessDeniedException` if an earlier export of the patient is read-only, since the new record would otherwise replace it although the user made it read-only.
+1. The file is named after the patient's NRIC, e.g., `S1234567A.txt`. Before writing, `ExportCommand#writeRecord()` creates the folder if it does not exist. `FileUtil#writeThroughTemporaryFile()` then throws an `AccessDeniedException` if an earlier export of the patient is read-only, since the new record would otherwise replace it although the user made it read-only. It also throws a `FileSystemException` whose reason names the folder if a folder has the file's name, since a file cannot replace a folder, and the file system's own reason, e.g., "Is a directory", differs between operating systems.
 1. The record is written through `FileUtil#writeThroughTemporaryFile()`, as backups are, so a failed write never leaves a partial record in place of an earlier one, and on macOS and Linux, only the current user can open the file. If writing fails, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 1. The command does not change the `Model`. It logs only the export folder, not the file, since the file name is the patient's NRIC. The date is formatted with `Locale.ROOT`, so that it uses the digits 0 to 9 whatever the computer's language settings are.
 
@@ -1397,6 +1397,18 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 3c1. MediConnect uses the backup whose name is the given name with `.json` added.
 
       Use case resumes at step 4.
+
+* 3d. The name has a character that the operating system does not allow in file names, e.g., `"` on Windows.
+
+    * 3d1. MediConnect shows an error message saying so, and that the name should be typed without quotes.
+
+      Use case resumes at step 3.
+
+* 3e. MediConnect cannot read `data/backups`, or `data/backups` or the `data` folder is a file.
+
+    * 3e1. MediConnect shows an error message saying so, and that the data has not been changed.
+
+      Use case ends.
 
 * 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, is not saved as UTF-8, or MediConnect has no permission to read it.
 
@@ -2676,8 +2688,8 @@ testers are expected to do more *exploratory* testing.
       Expected: The data is unchanged. The status message says that no backup with that name was found, not that MediConnect may not read the folder.
 
    1. Prerequisites: The app is closed. Move the `data` folder elsewhere, and create an empty file named `data` (with no extension) in its place. Launch the app, which warns that the sample patients are not saved.<br>
-      Test case: `restore`, then `backup`<br>
-      Expected: `restore` says that `data` is a file, not a folder. `backup` says that there is a file named `data` where that folder should be. Afterwards, close the app, delete the file named `data` and move the `data` folder back.
+      Test case: `restore`, `restore old.json`, then `backup`<br>
+      Expected: Both forms of `restore` say that `data` is a file, not a folder. `backup` says that there is a file named `data` where that folder should be. Afterwards, close the app, delete the file named `data` and move the `data` folder back.
 
 ### Exporting a patient's record
 

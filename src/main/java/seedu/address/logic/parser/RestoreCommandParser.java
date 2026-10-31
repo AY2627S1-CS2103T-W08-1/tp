@@ -35,6 +35,9 @@ public class RestoreCommandParser implements Parser<Command> {
         if (!isPlainFileName(fileName)) {
             throw new ParseException(RestoreCommand.MESSAGE_INVALID_FILE_NAME);
         }
+        if (!isAllowedByOperatingSystem(fileName)) {
+            throw new ParseException(RestoreCommand.MESSAGE_INVALID_CHARACTER);
+        }
         return new RestoreCommand(fileName);
     }
 
@@ -46,7 +49,14 @@ public class RestoreCommandParser implements Parser<Command> {
                 || PATH_CHARACTERS.stream().anyMatch(fileName::contains)) {
             return false;
         }
+        return true;
+    }
 
+    /**
+     * Returns true if the operating system allows {@code fileName} as the name of a file, e.g., not with
+     * {@code "} or {@code *} on Windows, so that such a name is not reported as a path.
+     */
+    private static boolean isAllowedByOperatingSystem(String fileName) {
         try {
             // the operating system rejects some characters, e.g., * and ? on Windows
             Paths.get(fileName);

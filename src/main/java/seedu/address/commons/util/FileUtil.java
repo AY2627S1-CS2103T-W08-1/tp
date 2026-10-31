@@ -7,6 +7,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -19,6 +20,11 @@ import seedu.address.commons.core.LogsCenter;
  * Writes and reads files
  */
 public class FileUtil {
+
+    /** Reason given when a folder has the name of the file to write, since a file cannot replace a folder. */
+    public static final String MESSAGE_FOLDER_IN_PLACE_OF_FILE =
+            "there is a folder named %1$s where that file should be. Move or rename the folder, "
+            + "so that the file can be saved";
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String TEMPORARY_FILE_SUFFIX = ".tmp";
@@ -88,6 +94,7 @@ public class FileUtil {
      * @param file File to write. Its folder must exist.
      * @param writer Writes the content of {@code file} to the temporary file.
      * @throws AccessDeniedException if {@code file} exists and cannot be written to.
+     * @throws FileSystemException if {@code file} is a folder.
      * @throws IOException if the temporary file cannot be created or written, or cannot replace {@code file}.
      */
     public static void writeThroughTemporaryFile(Path file, TemporaryFileWriter writer) throws IOException {
@@ -116,8 +123,13 @@ public class FileUtil {
      * it is read-only, so that a temporary file does not replace it although the user made it read-only.
      *
      * @throws AccessDeniedException if {@code file} exists and cannot be written to.
+     * @throws FileSystemException if {@code file} is a folder, with a reason that says so.
      */
-    private static void checkWritableIfExists(Path file) throws AccessDeniedException {
+    private static void checkWritableIfExists(Path file) throws FileSystemException {
+        if (Files.isDirectory(file)) {
+            throw new FileSystemException(file.toString(), null,
+                    String.format(MESSAGE_FOLDER_IN_PLACE_OF_FILE, file.getFileName()));
+        }
         if (Files.exists(file) && !Files.isWritable(file)) {
             throw new AccessDeniedException(file.toString());
         }

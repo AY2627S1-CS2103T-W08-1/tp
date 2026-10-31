@@ -995,7 +995,8 @@ Format: `restore [FILENAME]`
   * Give only the file name, not a path, e.g., `mediconnect-20261020-083015.json` rather than
     `data/backups/mediconnect-20261020-083015.json`.
   * Type the name without quotes, even if it has spaces, e.g., `restore my backup.json`, since quotes are taken as
-    part of the name.
+    part of the name. On Windows, where file names cannot have quotes, a name in quotes is rejected with
+    `The backup name has a character that file names cannot have on this computer, …`.
   * Spaces before and after the name are ignored, so a backup whose name starts with a space cannot be restored,
     and the space is hard to see in the list. Remove it from the file's name first, e.g., in your file manager.
   * Some spaces look like normal spaces but are different characters, e.g., spaces in a name copied from a web page or
@@ -1037,7 +1038,7 @@ Restore one with: restore FILENAME
 ```
 
 If there are none, it returns, for example,
-`No backups found in /Users/alex/MediConnect/data/backups. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, it says so instead, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
+`No backups found in /Users/alex/MediConnect/data/backups. Make one with backup.` If `data/backups`, or the `data` folder, is a file rather than a folder, `restore` says so instead, with or without `FILENAME`, since `backup` cannot make the folder while that file is there. If MediConnect does not have permission to read `data/backups`, `restore` says so, with or without `FILENAME`.
 
 ### Exporting a patient's record: `export`
 
@@ -1064,8 +1065,9 @@ Returns, for example, `Exported Alex Yeoh's record to: ` followed by the full pa
 If `INDEX` is larger than the number of patients in the displayed list, the command is rejected with
 `The patient index provided is invalid.` If `INDEX` is missing, is not a positive integer, is too large to be a valid
 number, or is followed by extra words, the command is rejected with `Invalid command format!` followed by the usage
-and example. If the file cannot be saved, e.g., because an earlier export of the patient is read-only, MediConnect
-shows `Could not export NAME's record to PATH: ` followed by the reason, and keeps any earlier file unchanged.
+and example. If the file cannot be saved, e.g., because an earlier export of the patient is read-only, or a folder
+has the file's name, MediConnect shows `Could not export NAME's record to PATH: ` followed by the reason, and keeps
+any earlier file unchanged.
 
 The file for Alex Yeoh in the sample data looks like this:
 
