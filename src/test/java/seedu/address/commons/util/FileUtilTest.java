@@ -161,7 +161,8 @@ public class FileUtilTest {
         FileSystemException exception = Assertions.assertThrows(FileSystemException.class, () ->
                 FileUtil.writeThroughTemporaryFile(file, temporaryFile -> Files.write(temporaryFile, List.of("new"))));
 
-        assertEquals(FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE, exception.getReason());
+        assertEquals(String.format(FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE, "record.txt"),
+                exception.getReason());
 
         assertEquals(List.of("inside"), Files.readAllLines(insideFile));
         assertEquals(List.of(file), listFolder());

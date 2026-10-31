@@ -182,7 +182,7 @@ public class ExportCommandTest {
         Path exportFile = Files.createDirectory(exportDir.resolve("S0000001A.txt"));
         Path keptFile = Files.write(exportFile.resolve("kept.txt"), List.of("kept"));
         String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
-                exportFile, FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE);
+                exportFile, String.format(FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE, "S0000001A.txt"));
 
         CommandException exception = Assertions.assertThrows(CommandException.class, () ->
                 new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir).execute(model));
@@ -397,7 +397,7 @@ public class ExportCommandTest {
 
         // the folder is found before any temporary file is made, on every operating system
         assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName, exportFile,
-                FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE), message);
+                String.format(FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE, "S0000001A.txt")), message);
         assertTrue(Files.isDirectory(exportFile));
         assertNoTemporaryFiles(temporaryFolder);
     }

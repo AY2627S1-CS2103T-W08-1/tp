@@ -23,7 +23,8 @@ public class FileUtil {
 
     /** Reason given when a folder has the name of the file to write, since a file cannot replace a folder. */
     public static final String MESSAGE_FOLDER_IN_PLACE_OF_FILE =
-            "there is a folder with that name. Move or rename the folder, so that the file can be saved";
+            "there is a folder named %1$s where that file should be. Move or rename the folder, "
+            + "so that the file can be saved";
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String TEMPORARY_FILE_SUFFIX = ".tmp";
@@ -126,7 +127,8 @@ public class FileUtil {
      */
     private static void checkWritableIfExists(Path file) throws FileSystemException {
         if (Files.isDirectory(file)) {
-            throw new FileSystemException(file.toString(), null, MESSAGE_FOLDER_IN_PLACE_OF_FILE);
+            throw new FileSystemException(file.toString(), null,
+                    String.format(MESSAGE_FOLDER_IN_PLACE_OF_FILE, file.getFileName()));
         }
         if (Files.exists(file) && !Files.isWritable(file)) {
             throw new AccessDeniedException(file.toString());
