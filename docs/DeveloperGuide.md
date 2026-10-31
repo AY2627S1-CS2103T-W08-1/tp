@@ -1905,6 +1905,46 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC22 - Clear all patient records**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to clear all patient records, explicitly confirming the request.
+2.  MediConnect backs up all current patient data (UC8), even if there are no patients.
+3.  MediConnect removes all active and archived patients and their care information, including patients hidden by a search, and saves the empty records.
+4.  MediConnect confirms that all patients have been cleared and gives the backup's location.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Confirmation is missing or incorrect, or extra arguments are given.
+
+    * 1a1. MediConnect explains that explicit confirmation is required and shows the correct format. No data is changed and no backup is made.
+
+      Use case ends.
+
+* 2a. The automatic backup cannot be saved.
+
+    * 2a1. MediConnect shows a backup-failure message and leaves all patient records unchanged.
+
+      Use case ends.
+
+* 3a. The cleared data cannot be saved.
+
+    * 3a1. MediConnect restores the previous patient data and viewing state, keeps the automatic backup, and shows a save-failure message.
+
+      Use case ends.
+
+* 4a. Caregiver wants to recover the cleared records.
+
+    * 4a1. Caregiver restores the automatic backup using UC9.
+
+      Use case ends.
+
 ### Non-Functional Requirements
 
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation. Only one running instance may use a given app folder's data at a time. Sharing data between different app folders is unsupported.
