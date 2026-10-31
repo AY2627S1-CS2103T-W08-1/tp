@@ -28,7 +28,7 @@ Refer to the guide [_Setting up and getting started_](SettingUp.md).
 
 ### Architecture
 
-<puml src="diagrams/ArchitectureDiagram.puml" width="280" />
+<puml src="diagrams/ArchitectureDiagram.puml" width="280" alt="Architecture of MediConnect: Main, UI, Logic, Model, Storage and Commons" />
 
 The ***Architecture Diagram*** given above explains the high-level design of the App.
 
@@ -53,7 +53,7 @@ The bulk of the app's work is done by the following four components:
 
 The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
 
-<puml src="diagrams/ArchitectureSequenceDiagram.puml" width="574" />
+<puml src="diagrams/ArchitectureSequenceDiagram.puml" width="574" alt="Interactions between the UI, Logic, Model and Storage components for the command delete 1" />
 
 Each of the four main components (also shown in the diagram above),
 
@@ -62,7 +62,7 @@ Each of the four main components (also shown in the diagram above),
 
 For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
-<puml src="diagrams/ComponentManagers.puml" width="300" />
+<puml src="diagrams/ComponentManagers.puml" width="300" alt="LogicManager, ModelManager and StorageManager implementing the Logic, Model and Storage interfaces" />
 
 The sections below give more details of each component.
 
@@ -94,7 +94,7 @@ The `UI` component,
 
 Here's a (partial) class diagram of the `Logic` component:
 
-<puml src="diagrams/LogicClassDiagram.puml" width="550"/>
+<puml src="diagrams/LogicClassDiagram.puml" width="550" alt="Partial structure of the Logic component" />
 
 The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
 
@@ -121,7 +121,7 @@ How the `Logic` component works:
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
-<puml src="diagrams/ParserClasses.puml" width="600"/>
+<puml src="diagrams/ParserClasses.puml" width="600" alt="Classes in the Logic component that parse a command" />
 
 How the parsing works:
 * `AddressBookParser` lowercases only the command word with `Locale.ROOT` before dispatch, so `LIST`, `List`
@@ -145,11 +145,11 @@ How the parsing works:
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
-<puml src="diagrams/ModelClassDiagram.puml" width="450" />
+<puml src="diagrams/ModelClassDiagram.puml" width="450" alt="Structure of the Model component" />
 
 The diagram below shows the `Patient` class in more detail.
 
-<puml src="diagrams/PatientClassDiagram.puml" width="450" />
+<puml src="diagrams/PatientClassDiagram.puml" width="450" alt="Structure of the Patient class and the details it holds" />
 
 
 The `Model` component,
@@ -186,7 +186,7 @@ is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; di
 
 **API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
-<puml src="diagrams/StorageClassDiagram.puml" width="550" />
+<puml src="diagrams/StorageClassDiagram.puml" width="550" alt="Structure of the Storage component" />
 
 The `Storage` component,
 * can save both patient data and user preference data in JSON format, and read them back into corresponding objects.
@@ -763,7 +763,7 @@ Step 6. The caregiver executes `clear confirm`, which calls `Model#commitPatient
 
 The following activity diagram summarizes what happens when a caregiver executes a new command:
 
-<puml src="diagrams/CommitActivityDiagram.puml" width="250" />
+<puml src="diagrams/CommitActivityDiagram.puml" width="250" alt="What happens to the saved states when a command is executed" />
 
 #### Design considerations:
 
@@ -1994,7 +1994,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ## **Appendix: Instructions for manual testing**
 
-Given below are instructions to test the app manually.
+Given below are instructions to test the app manually. In the expected results, the *status message* is the
+message shown in the result box, just below the command box.
 
 <box type="info" seamless>
 
