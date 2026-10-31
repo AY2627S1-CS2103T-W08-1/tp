@@ -2000,6 +2000,10 @@ Given below are instructions to test the app manually.
 
 **Note:** These instructions only provide a starting point for testers to work on;
 testers are expected to do more *exploratory* testing.
+
+Use disposable home folders, not real patient data, for tests that delete records or change data files and folders.
+Start each section with its stated prerequisites; when fresh sample data is required, launch the JAR from a new
+empty home folder. Run dependent test cases in the order given and complete any cleanup before continuing.
 </box>
 
 ### Launch and shutdown
@@ -2417,11 +2421,14 @@ testers are expected to do more *exploratory* testing.
    `clear confirm`.<br>
    Expected: A backup failure message. All patients and the viewed patient remain unchanged.
 
+   Cleanup: Close MediConnect and remove the test file named `backups` from `data`. Relaunch the app before
+   running further commands in this home folder, so that backups can be created again.
+
 1. Replacing unreadable data with an empty address book
 
-   1. Prerequisites: Use a disposable app folder. Run `clear confirm`, then `backup` and note that empty backup's
-      name. Close the app and replace `data/mediconnect.json` with malformed JSON, such as `{"persons": [`. Keep
-      the backup folder. Launch the app from that disposable folder.
+   1. Prerequisites: Launch MediConnect from a new, empty disposable home folder. Run `clear confirm`, then `backup`
+      and note that empty backup's name. Close the app and replace `data/mediconnect.json` with malformed JSON,
+      such as `{"persons": [`. Keep the backup folder. Launch the app from that disposable folder.
 
    1. Test case: After the recovery warning, run `list`, then inspect the data file.<br>
       Expected: The list is empty and the malformed data file remains unchanged. The warning's recovery copy
