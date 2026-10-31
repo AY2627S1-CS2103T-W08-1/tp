@@ -24,7 +24,7 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details in the *detail panel* on the right.<br>
-   ![Ui](images/Ui.png)
+   ![MediConnect window: the command box and the result box at the top, the patient list on the left and the detail panel on the right, showing Alex Yeoh](images/Ui.png)
 
    Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
    naming the data file and exits. Close the first window before opening it again.
