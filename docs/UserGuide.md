@@ -15,12 +15,13 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
+1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
 1. Download `mediconnect.jar` from the [Releases page](https://github.com/AY2627S1-CS2103T-W08-1/tp/releases).
 
 1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
+   MediConnect needs permission to create and write files in this folder, where it keeps patient data and support files.
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details in the *detail panel* on the right.<br>
