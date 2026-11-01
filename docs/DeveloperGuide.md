@@ -2569,7 +2569,7 @@ empty home folder. Run dependent test cases in the order given and complete any 
       Expected: The click does not highlight the first patient, and the detail panel still shows the second patient. The typed `list` goes into the command box and lists all active patients.
 
    1. Test case: click the command box, then press `Tab` repeatedly<br>
-      Expected: The focus moves between the command box and the status message, and never reaches the patient list.
+      Expected: The focus moves between the command box and the result box, and never reaches the patient list.
 
 1. Filtering out the patient being viewed
 
