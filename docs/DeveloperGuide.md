@@ -19,6 +19,7 @@
 **Notable uses of AI:**
 
 * @KohKoh-Nut used OpenAI Codex to help draft implementation and documentation changes, design tests, audit the repository, and perform preliminary pull request reviews. The resulting changes were reviewed and tested before use.
+* @nraisa0408 used Claude Code to help draft implementation and documentation changes, design tests, audit the repository, and perform preliminary pull request reviews. The resulting changes were reviewed and tested before use.
 
 --------------------------------------------------------------------------------------------------------------------
 
