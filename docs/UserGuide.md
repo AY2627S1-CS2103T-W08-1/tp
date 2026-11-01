@@ -153,6 +153,8 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   Multiple spaces between words are reduced to one.
   Letters can be from any language, e.g., `Zoë Tan` or `陈大文`. A name cannot start or end with `s/o`, `d/o`,
   `c/o`, `a/l` or `a/p`, ignoring letter case.
+  Brackets and commas cannot be used, so type `Tan Ah Kow (Alan)` as `Tan Ah Kow Alan`, and `Lim, Ah Kow` as
+  `Lim Ah Kow`.
 * `PHONE` must be 8 digits starting with 3, 6, 8 or 9, with an optional `+65` in front,
   e.g., `91234567` or `+6591234567`. Spaces and hyphens are ignored, so `9123 4567` and `+65 9123-4567` are
   also accepted.
@@ -1130,7 +1132,7 @@ must still be writable.
 
 ### Editing the data file
 
-MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
+MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside your home folder, the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
 The patients are in the file's `persons` list. The name is kept from earlier versions, so that their data files still
 load. Do not rename it, or MediConnect cannot load the file.
 Close MediConnect before editing, replacing or moving its data file or home folder. Otherwise, an open window
@@ -1159,6 +1161,11 @@ file invalid, so that its value is not lost the next time the data is saved. The
 property, e.g., `Unknown property "careInstructons". Check its spelling.`
 A time in the file must be written as `HH:MM` with two digits, e.g., `08:30`, even though commands also accept
 `8:30`.
+Names, phones and addresses in the file are not tidied the way commands tidy them, so write them as MediConnect
+saves them: a name with single spaces between words, no spaces at either end and straight apostrophes (`'`); a
+phone with no spaces or hyphens, e.g., `91234567` or `+6591234567`; and an address that does not start with a space
+and has no line breaks. An address that starts with a space or has a line break is reported with the message for a
+blank address, `Addresses cannot be blank.`
 Commands that change patient data save to `data/mediconnect.json`; the recovery copy is kept separately.
 To discard the unreadable data, use [clear confirm](#clearing-all-patients-clear). To recover from a valid backup,
 use [restore FILENAME](#restoring-data-from-a-backup-restore).
@@ -1194,7 +1201,7 @@ write to them; move aside any file occupying either folder's path. If needed, mo
 including `data`, to a writable location, then launch MediConnect from there.
 
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder.
+**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous MediConnect home folder. Or run `backup`, copy the new file in `data/backups` to a `data/backups` folder in the other computer's home folder, creating the folder if needed, and run `restore FILENAME` there. `restore` checks the whole file first and backs up the data it replaces. See [Restoring data from a backup](#restoring-data-from-a-backup-restore).
 
 --------------------------------------------------------------------------------------------------------------------
 
