@@ -28,6 +28,7 @@ You can reach us with the email `e1591059@u.nus.edu`
 [[github](http://github.com/KohKoh-Nut)]
 
 * Role: Developer
+* Responsibilities: Care information + Patient archiving + Profile editing
 
 ### Raisa Nishat
 
