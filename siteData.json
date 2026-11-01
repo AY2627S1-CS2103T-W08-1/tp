@@ -80,11 +80,14 @@
         "adding-a-patient-with-punctuation-after-a-slash-word": "Adding a patient with punctuation after a slash word",
         "checking-slash-text-and-field-boundaries": "Checking slash text and field boundaries",
         "adding-a-patient-with-a-blank-address": "Adding a patient with a blank address",
+        "editing-a-patient": "Editing a patient",
         "adding-care-information": "Adding care information",
+        "editing-and-deleting-care-entries": "Editing and deleting care entries",
         "editing-and-deleting-medications": "Editing and deleting medications",
         "listing-today-s-medication-times": "Listing today's medication times",
         "managing-patient-contacts": "Managing patient contacts",
         "listing-active-patients": "Listing active patients",
+        "archiving-and-restoring-a-patient": "Archiving and restoring a patient",
         "clearing-all-patients-2": "Clearing all patients",
         "deleting-a-patient": "Deleting a patient",
         "finding-patients": "Finding patients",
@@ -185,14 +188,6 @@
       "title": "",
       "headings": {
         "mediconnect": "MediConnect"
-      },
-      "headingKeywords": {}
-    },
-    {
-      "src": "team/johndoe.md",
-      "title": "John Doe's Project Portfolio Page",
-      "headings": {
-        "project-addressbook-level-3": "Project: AddressBook Level 3"
       },
       "headingKeywords": {}
     }
