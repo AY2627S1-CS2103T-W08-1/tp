@@ -2519,7 +2519,7 @@ empty home folder. Run dependent test cases in the order given and complete any 
 1. Prerequisites: Have active and archived patients, and run `view 1`.
 
 1. Test cases: `clear`, `clear 1`, `clear CONFIRM`, `clear confirm extra`<br>
-   Expected: `Invalid command format!` followed by the clearing warning and `Format: clear confirm`.
+   Expected: `Invalid command format!` followed by the clearing warning and `Parameters: clear confirm`.
    All patients and the viewed patient remain unchanged, and no backup is created.
 
 1. Test case: `clear confirm`<br>
