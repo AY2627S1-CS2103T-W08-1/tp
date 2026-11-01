@@ -2017,9 +2017,10 @@ These are known limitations of the current version, with the changes we plan to 
 1. **Find patients by NRIC.** `find` now matches names only, so `find S0000001A` finds no one. We plan to also return
    the patient whose NRIC equals a keyword, ignoring letter case, e.g., `find s0000001a` returns Alex Yeoh, while
    names are still matched as now.
-1. **Accept digits and commas in patient names.** Names may now contain only letters and a few joining symbols, so a
-   name as registered, e.g., `Baby 2 Tan` or `Tan, Mary`, is rejected with `Names should be words of letters, ...`.
-   We plan to also accept digits and commas in names, as long as the name starts with a letter.
+1. **Accept digits and brackets in patient names.** Names may now contain only letters and a few joining symbols, so
+   a name as registered or as commonly written, e.g., `Baby 2 Tan` or `Tan Ah Kow (Alan)`, is rejected with
+   `Names should be words of letters, ...`. We plan to also accept digits and brackets in names, as long as the name
+   starts with a letter.
 
 --------------------------------------------------------------------------------------------------------------------
 
