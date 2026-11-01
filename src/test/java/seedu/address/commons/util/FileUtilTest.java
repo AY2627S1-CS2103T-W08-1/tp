@@ -182,6 +182,27 @@ public class FileUtilTest {
     }
 
     @Test
+    public void writeThroughTemporaryFile_folderMadeWhileWriting_failsReplacementAndDeletesTemporaryFile()
+            throws Exception {
+        // Equivalence partitioning: the content is written, but the final replacement fails, as a folder that
+        // is not empty, which no operating system lets a file replace, appears at the file's path meanwhile
+        Path file = temporaryFolder.resolve("record.txt");
+        Path insideFile = file.resolve("inside.txt");
+
+        FileUtil.TemporaryFileWriter writerThatMakesFolder = temporaryFile -> {
+            Files.write(temporaryFile, List.of("new"));
+            Files.createDirectory(file);
+            Files.write(insideFile, List.of("inside"));
+        };
+
+        Assertions.assertThrows(IOException.class, () ->
+                FileUtil.writeThroughTemporaryFile(file, writerThatMakesFolder));
+
+        assertEquals(List.of("inside"), Files.readAllLines(insideFile));
+        assertEquals(List.of(file), listFolder());
+    }
+
+    @Test
     public void deleteTemporaryFile_nullFile_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> FileUtil.deleteTemporaryFile(null));
     }

@@ -6,7 +6,7 @@
 
 # MediConnect User Guide
 
-MediConnect is a **desktop application for managing patient records and care information, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, MediConnect can help you manage patient records faster than traditional GUI applications.
+MediConnect is a **desktop application for managing patient records and care information, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). It is mainly for patients and family caregivers in Singapore who coordinate the care of an elderly or chronically ill person, and also for community nurses on home visits. It keeps each patient's details, medications, allergens, care instructions, contacts and appointments in one place, so that they are quick to find during daily care, appointments and handovers. If you type quickly, MediConnect can help you manage patient records faster than traditional GUI applications.
 
 <!-- * Table of Contents -->
 <page-nav-print />
@@ -15,21 +15,22 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
+1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
 1. Download `mediconnect.jar` from the [Releases page](https://github.com/AY2627S1-CS2103T-W08-1/tp/releases).
 
 1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
+   MediConnect needs permission to create and write files in this folder, where it keeps patient data and support files.
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details in the *detail panel* on the right.<br>
-   ![Ui](images/Ui.png)
+   ![MediConnect window: the command box and the result box at the top, the patient list on the left and the detail panel on the right, showing Alex Yeoh](images/Ui.png)
 
    Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
    naming the data file and exits. Close the first window before opening it again.
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
+1. Type a command in the command box and press Enter to execute it. MediConnect shows its response in the *result box*, just below the command box. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order:
 
    * `list` : Lists all active patients.
@@ -68,8 +69,11 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 * Items followed by `...` can appear zero or more times.<br>
 
-* Parameters can be in any order.<br>
+* Parameters with a prefix, such as `n/NAME`, can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+
+* Parameters without a prefix, such as `INDEX` and `MED_INDEX`, must come first, in the order shown in the format.<br>
+  For example, `editmed 1 2 t/08:00` is accepted, but `editmed t/08:00 1 2` and `editmed 1 t/08:00 2` are not.
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `listarchived`, `exit`
   and `backup`, are ignored.<br>
@@ -180,6 +184,16 @@ Any kind of space, including no-break spaces copied from other apps, is treated 
 
 For [contact fields](#adding-a-contact-addcontact), names and roles have a limit of 100 characters each, and notes
 have a limit of 500. These limits apply after the whitespace handling described in that section.
+
+#### How characters are counted
+
+The limits above, and those of the other fields, count characters as follows:
+
+* A letter, digit, space or symbol counts as one character, and so does a basic emoji, e.g., 😀.
+* An emoji made from several symbols, e.g., a family emoji or a flag, counts as more than one character.
+* An accented letter typed as one character, e.g., `é`, counts as one. A letter followed by a separately typed accent,
+  which some keyboards and copied text produce, counts as two in names, addresses, contacts and appointments, but as
+  one in medications, allergens and care instructions, which MediConnect saves with the accent combined into the letter.
 
 ### Adding care information: `addcare`
 
@@ -392,8 +406,7 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   Formatting is preserved after trimming. Extensions and parentheses are not supported.
 * The note is optional, with at most 500 characters after surrounding spaces are removed. Internal spacing is kept.
   An omitted or empty `nt/` creates a contact without a note; an empty or spaces-only `nt/` clears it in `editcontact`.
-  For all three text limits, a basic emoji such as 😀 counts as one character. A letter with a separately typed
-  accent, or an emoji made from several symbols, can count as more than one.
+  For all three text limits, characters are counted as described in [How characters are counted](#how-characters-are-counted).
 * A contact with the same name (ignoring case and differences in spacing) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same accented name counts as the same name even if the accent was typed
@@ -421,13 +434,10 @@ and the previously viewed patient is unchanged.
 
 The same field and duplicate rules apply to `editcontact` and saved data, including backups. Names and roles
 follow the same space cleanup when loaded. Saved notes keep their spaces, which count toward the 500-character
-limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored; repair a copy
-using the [data recovery instructions](#editing-the-data-file).
-
-The same duplicate-name rules apply when loading data or restoring a backup. Older files containing contacts
-with the same accented name typed in these different ways and the same phone are rejected as duplicates.
-Remove the duplicate contact
-from a copy of the file using the [data recovery instructions](#editing-the-data-file).
+limit. Files with invalid, overlong or duplicate contacts are rejected when loaded or restored. This includes
+older files with the same phone and equivalent accented names, as in the `Café` and `Café` example above.
+Repair invalid fields or remove duplicate contacts from a copy of the file using the
+[data recovery instructions](#editing-the-data-file).
 
 ### Editing a contact: `editcontact`
 
@@ -902,7 +912,7 @@ Format: `due [INDEX]`
 * Only the text right after the time is the mark from MediConnect. A description is free text, so it can itself end
   in `(earlier today)`, e.g., `20:00 Alex Yeoh: Aspirin (earlier today)`, which is not marked and is still to come.
 * Medications without times are not listed.
-* The result is shown in the result box. The patient list and the details panel are not changed, and no data is
+* The result is shown in the result box. The patient list and the detail panel are not changed, and no data is
   changed.
 
 Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
@@ -933,7 +943,7 @@ Errors are reported as follows:
 ### Clearing all patients: `clear`
 
 Backs up, then clears all active and archived patients and their care information from MediConnect, and clears
-any patient details in the view panel. This includes patients hidden by `find` or the current list filter.
+any patient details in the detail panel. This includes patients hidden by `find` or the current list filter.
 
 Format: `clear confirm`
 
@@ -960,9 +970,11 @@ Format: `backup`
 
 * The backup is named after the date and time it was made, as `mediconnect-YYYYMMDD-HHMMSS.json` (e.g., `mediconnect-20261020-083015.json` for 20 Oct 2026, 8:30:15 am).
 * If you make more than one backup within the same second, MediConnect adds `-1`, `-2` and so on to the name,
-  so no backup is overwritten. Backups written to the same folder at the same time take turns, including
-  automatic backups made by `restore` and `clear confirm`. MediConnect keeps an empty file named `.backup.lock`
-  in `data/backups` for this purpose; it is not a backup, and `restore` does not list it.
+  so no backup is overwritten. This also applies to backups made at the same moment, including automatic
+  backups made by `restore` and `clear confirm`.
+* MediConnect keeps an empty file named `.backup.lock` in `data/backups` to help protect backups from being
+  overwritten. It is not a backup, and `restore` does not list it. Leave this file in place while MediConnect
+  is running.
 * Any text after `backup` is ignored. For example, `backup now` is interpreted as `backup`.
 * On macOS and Linux, only your user account can open a backup, since it holds every patient's medical details.
 * A backup is first written to a temporary file, and only gets its name when it is complete, so a backup that fails partway, e.g., because the disk is full, does not leave a damaged backup behind.
@@ -1122,7 +1134,10 @@ is unsupported: each app folder has its own lock files, so one app can overwrite
 Use one app folder for each set of patient data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
-`Could not save data ...` followed by `Nothing was changed.` You can still run `list`, `view`, `help` and `exit`.
+`Could not save data ...` followed by `Nothing was changed.` Commands that do not change patient data, such as
+`list`, `view`, `find`, `due`, `backup` and `export`, can still be used. This includes running `restore` without
+a filename to list backups. To keep a copy of your data, use `backup` or `export`; their destination folders
+must still be writable.
 
 ### Editing the data file
 

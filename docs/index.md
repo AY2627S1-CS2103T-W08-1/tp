@@ -8,7 +8,7 @@
 [![CI Status](https://github.com/AY2627S1-CS2103T-W08-1/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103T-W08-1/tp/actions)
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W08-1/tp/graph/badge.svg?token=K8DNXQ1NCC)](https://codecov.io/gh/AY2627S1-CS2103T-W08-1/tp)
 
-![Ui](images/Ui.png)
+![MediConnect window: the command box and the result box at the top, the patient list on the left and the detail panel on the right, showing Alex Yeoh](images/Ui.png)
 
 **MediConnect is a desktop patient-care coordination application for chronically ill patients and their
 caregivers.** It helps family caregivers in Singapore keep each patient's care information in one place instead of
