@@ -13,7 +13,7 @@ You can reach us with the email `e1591059@u.nus.edu`
 
 ### Ming Xuan
 
-<img src="images/jellehbelleh.png" width="200px">
+<img src="images/jellehbelleh.png" alt="Ming Xuan" width="200px">
 
 [[github](https://github.com/JellehBelleh)]
 
@@ -22,16 +22,17 @@ You can reach us with the email `e1591059@u.nus.edu`
 
 ### Solomon
 
-<img src="images/kohkoh-nut.png" width="200px">
+<img src="images/kohkoh-nut.png" alt="Solomon" width="200px">
 
 [[homepage](https://kohkohnut.org/)]
 [[github](http://github.com/KohKoh-Nut)]
 
 * Role: Developer
+* Responsibilities: Care information + Patient archiving + Profile editing
 
 ### Raisa Nishat
 
-<img src="images/nraisa0408.png" width="200px">
+<img src="images/nraisa0408.png" alt="Raisa Nishat" width="200px">
 
 [[github](https://github.com/nraisa0408)]
 
@@ -40,7 +41,7 @@ You can reach us with the email `e1591059@u.nus.edu`
 
 ### Romy Ako
 
-<img src="images/akoromy.png" width="200px">
+<img src="images/akoromy.png" alt="Romy Ako" width="200px">
 
 [[github](http://github.com/akoromy)]
 
@@ -49,7 +50,7 @@ You can reach us with the email `e1591059@u.nus.edu`
 
 ### Gauhet Poddar
 
-<img src="images/gauhet.png" width="200px">
+<img src="images/gauhet.png" alt="Gauhet Poddar" width="200px">
 
 [[github](https://github.com/Gauhet)]
 
