@@ -135,8 +135,10 @@ How the parsing works:
   `CliSyntax#RESERVED_PREFIXES` contains all field prefixes, including ones unsupported by the current command;
   update this set when adding a prefix. Reservation checks lowercase candidates with `Locale.ROOT`, so
   wrong-case reserved prefixes are rejected with the existing unrecognized-parameter message. Tokenization
-  still recognizes only the exact lowercase prefix. Literal `N/A` (optionally followed by punctuation) remains
-  allowed in free text. Existing standalone slash-word exceptions and their punctuation corrections still apply.
+  still recognizes only the exact lowercase prefix. The literal `N/A` exception is case-sensitive: uppercase
+  `N/A` (optionally followed by punctuation) is allowed in free text. Other spellings follow the usual prefix
+  rules; lowercase `n/` may start a name field in commands that support it. Existing standalone slash-word
+  exceptions and their punctuation corrections still apply.
   The validator also checks the first value word attached to a recognized prefix, carrying its free-text context
   but allowing no nested field prefixes: `a/x/123` is text, whereas `a/p/123` is rejected. This nested validation
   cannot recurse again because its set of valid prefixes is empty. Context switches follow tokenization's space
@@ -2210,6 +2212,10 @@ empty home folder. Run dependent test cases in the order given and complete any 
 
 1. Test case: `editcontact 1 1 nt/N/A, call first`.<br>
    Expected: The note becomes `N/A, call first`. `N/A` remains text despite the reserved `n/` prefix.
+
+1. Test cases: `addcare 1 ci/Rest n/a`, `addcare 1 ci/Rest N/a`, and `addcare 1 ci/Rest n/A`.<br>
+   Expected: Each reports an unrecognized-parameter error naming `n/`, `N/`, and `n/`, respectively.
+   No care instruction is added. Retry with `addcare 1 ci/Rest N/A`; the instruction is added as `Rest N/A`.
 
 1. Test case: `edit 1 a/s/o,`.<br>
    Expected: `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.` Nothing changes.

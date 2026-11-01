@@ -100,7 +100,9 @@ A reserved prefix cannot be embedded at the start of a field value: `a/p/123` is
 Each command's existing standalone slash-word exceptions still apply; keep those words separate from punctuation.
 Write field prefixes in lowercase. Incorrect capitalisation such as `NT/bring scans`, `Nt/bring scans`, or
 `T/08:00` is rejected even inside free text; use `nt/bring scans` or `t/08:00` instead.
-The literal `N/A` remains allowed in free text, including when followed by punctuation.
+For “not applicable”, write `N/A` in uppercase. It is allowed in free-text fields, including when followed by
+punctuation, for example, `nt/N/A, call first`. Other spellings such as `n/a`, `N/a` and `n/A` do not have this
+exception and may be rejected or interpreted as a name field.
 
 ### Viewing help: `help`
 
