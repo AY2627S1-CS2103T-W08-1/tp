@@ -14,10 +14,6 @@ box Model MODEL_COLOR_T1
 participant "m:Model" as Model MODEL_COLOR
 end box
 
-box UI UI_COLOR_T1
-participant "p:PatientDetailPanel" as PatientDetailPanel UI_COLOR
-end box
-
 [-> LogicManager : execute("addcontact 1 n/Clinic r/GP p/123")
 activate LogicManager
 
@@ -64,27 +60,22 @@ AddContactCommand -> AddContactCommand : check duplicate and append contact
 AddContactCommand -> Model : setPatient(patient, editedPatient)
 activate Model
 
-opt patient is currently viewed
-Model -> PatientDetailPanel : viewedPatient listener fires
-activate PatientDetailPanel
-
-PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
-deactivate PatientDetailPanel
-end
-
 Model --> AddContactCommand
 deactivate Model
 
 AddContactCommand -> Model : setViewedPatient(editedPatient)
 activate Model
 
-Model -> PatientDetailPanel : viewedPatient listener fires
-activate PatientDetailPanel
-PatientDetailPanel -> PatientDetailPanel : showPatient(editedPatient)
-deactivate PatientDetailPanel
-
 Model --> AddContactCommand
 deactivate Model
+
+note over AddContactCommand, Model
+setPatient updates the viewed value if this patient
+is already shown. setViewedPatient refreshes the
+appointment-ordering time and, if already viewed,
+clears the value before setting it again to force
+a redraw. Listener callbacks are omitted here.
+end note
 
 create CommandResult
 AddContactCommand -> CommandResult

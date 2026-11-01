@@ -28,7 +28,7 @@ Refer to the guide [_Setting up and getting started_](SettingUp.md).
 
 ### Architecture
 
-<puml src="diagrams/ArchitectureDiagram.puml" width="280" />
+<puml src="diagrams/ArchitectureDiagram.puml" width="280" alt="Architecture of MediConnect: Main, UI, Logic, Model, Storage and Commons" />
 
 The ***Architecture Diagram*** given above explains the high-level design of the App.
 
@@ -53,7 +53,7 @@ The bulk of the app's work is done by the following four components:
 
 The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
 
-<puml src="diagrams/ArchitectureSequenceDiagram.puml" width="574" />
+<puml src="diagrams/ArchitectureSequenceDiagram.puml" width="574" alt="Interactions between the UI, Logic, Model and Storage components for the command delete 1" />
 
 Each of the four main components (also shown in the diagram above),
 
@@ -62,7 +62,7 @@ Each of the four main components (also shown in the diagram above),
 
 For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
-<puml src="diagrams/ComponentManagers.puml" width="300" />
+<puml src="diagrams/ComponentManagers.puml" width="300" alt="LogicManager, ModelManager and StorageManager implementing the Logic, Model and Storage interfaces" />
 
 The sections below give more details of each component.
 
@@ -94,7 +94,7 @@ The `UI` component,
 
 Here's a (partial) class diagram of the `Logic` component:
 
-<puml src="diagrams/LogicClassDiagram.puml" width="550"/>
+<puml src="diagrams/LogicClassDiagram.puml" width="550" alt="Partial structure of the Logic component" />
 
 The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
 
@@ -121,7 +121,7 @@ How the `Logic` component works:
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
-<puml src="diagrams/ParserClasses.puml" width="600"/>
+<puml src="diagrams/ParserClasses.puml" width="600" alt="Classes in the Logic component that parse a command" />
 
 How the parsing works:
 * `AddressBookParser` lowercases only the command word with `Locale.ROOT` before dispatch, so `LIST`, `List`
@@ -145,11 +145,11 @@ How the parsing works:
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
-<puml src="diagrams/ModelClassDiagram.puml" width="450" />
+<puml src="diagrams/ModelClassDiagram.puml" width="450" alt="Structure of the Model component" />
 
 The diagram below shows the `Patient` class in more detail.
 
-<puml src="diagrams/PatientClassDiagram.puml" width="450" />
+<puml src="diagrams/PatientClassDiagram.puml" width="450" alt="Structure of the Patient class and the details it holds" />
 
 
 The `Model` component,
@@ -186,7 +186,7 @@ is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; di
 
 **API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
-<puml src="diagrams/StorageClassDiagram.puml" width="550" />
+<puml src="diagrams/StorageClassDiagram.puml" width="550" alt="Structure of the Storage component" />
 
 The `Storage` component,
 * can save both patient data and user preference data in JSON format, and read them back into corresponding objects.
@@ -763,7 +763,7 @@ Step 6. The caregiver executes `clear confirm`, which calls `Model#commitPatient
 
 The following activity diagram summarizes what happens when a caregiver executes a new command:
 
-<puml src="diagrams/CommitActivityDiagram.puml" width="250" />
+<puml src="diagrams/CommitActivityDiagram.puml" width="250" alt="What happens to the saved states when a command is executed" />
 
 #### Design considerations:
 
@@ -1994,12 +1994,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ## **Appendix: Instructions for manual testing**
 
-Given below are instructions to test the app manually.
+Given below are instructions to test the app manually. In the expected results, the *status message* is the
+message shown in the result box, just below the command box.
 
 <box type="info" seamless>
 
 **Note:** These instructions only provide a starting point for testers to work on;
 testers are expected to do more *exploratory* testing.
+
+Use disposable home folders, not real patient data, for tests that delete records or change data files and folders.
+Start each section with its stated prerequisites; when fresh sample data is required, launch the JAR from a new
+empty home folder. Run dependent test cases in the order given and complete any cleanup before continuing.
 </box>
 
 ### Launch and shutdown
@@ -2151,6 +2156,21 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
    Expected: No patient is added. The status message shows `Addresses cannot be blank.`
 
+### Editing a patient
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run `find Bernice`, then `view 1`.
+   Bernice Yu is the only displayed patient and is therefore at index 1.
+
+1. Test case: `edit 1 p/91234567`<br>
+   Expected: Bernice Yu's phone changes to `91234567`. The active-patient list is reset and shows all four sample
+   patients, while the detail panel shows Bernice Yu. Her allergen `Latex`, care instruction and appointment are
+   unchanged.
+
+1. Test case: `edit 2 ic/S0000001A`<br>
+   Expected: Nothing changes. The status message shows
+   `This patient (identified by NRIC) already exists in MediConnect.` Bernice Yu keeps her original NRIC and the
+   edited phone number.
+
 ### Adding care information
 
 1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh's existing care information.
@@ -2168,6 +2188,27 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `addcare 999 med/Ibuprofen`<br>
    Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
+
+### Editing and deleting care entries
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run
+   `addcare 1 al/Latex al/Shellfish ci/Check blood sugar before breakfast ci/Turn every 2 hours`, then `view 1`.
+   Alex Yeoh now has three allergens and three care instructions. The following test cases build on one another.
+
+1. Test case: `editcare 1 2 ci/Check blood sugar after breakfast`<br>
+   Expected: Care instruction 2 is replaced in place. The status message shows
+   `Updated care instruction for Alex Yeoh: Check blood sugar after breakfast`.
+
+1. Test case: `deletecare 1 1`<br>
+   Expected: `Monitor blood pressure every morning` is deleted. The edited instruction becomes number 1 and
+   `Turn every 2 hours` becomes number 2.
+
+1. Test case: `deleteallergy 1 2`<br>
+   Expected: `Latex` is deleted. `Penicillin` remains allergen 1 and `Shellfish` becomes allergen 2.
+
+1. Test cases: `editcare 1 9 ci/Test`, `deletecare 1 9`, and `deleteallergy 1 9`.<br>
+   Expected: The commands report an invalid care-instruction or allergen index and change nothing. Alex Yeoh's
+   medications, contact and appointments remain unchanged throughout this section.
 
 ### Editing and deleting medications
 
@@ -2392,6 +2433,24 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No active patients found.`
 
+### Archiving and restoring a patient
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run `find Bernice`, then `view 1`.
+   Bernice Yu is the only displayed patient and is therefore at index 1.
+
+1. Test case: `archive 1`<br>
+   Expected: The status message shows `Archived patient: Bernice Yu; NRIC: S0000002A`. Bernice Yu disappears from
+   the displayed active results and the detail panel returns to its placeholder.
+
+1. Test case: `listarchived`, then `view 1`.<br>
+   Expected: Bernice Yu is archived patient 1. Her phone, `Latex` allergen, care instruction and appointment are
+   unchanged, and her patient card is marked `(Archived)`.
+
+1. Test case: `unarchive 1`.<br>
+   Expected: The status message shows `Unarchived patient: Bernice Yu; NRIC: S0000002A`. She disappears from the
+   archived list while the detail panel keeps showing her restored record. Run `list`; all four active sample
+   patients are shown again and Bernice Yu's complete record is unchanged.
+
 ### Clearing all patients
 
 1. Prerequisites: Have active and archived patients, and run `view 1`.
@@ -2417,11 +2476,14 @@ testers are expected to do more *exploratory* testing.
    `clear confirm`.<br>
    Expected: A backup failure message. All patients and the viewed patient remain unchanged.
 
+   Cleanup: Close MediConnect and remove the test file named `backups` from `data`. Relaunch the app before
+   running further commands in this home folder, so that backups can be created again.
+
 1. Replacing unreadable data with an empty address book
 
-   1. Prerequisites: Use a disposable app folder. Run `clear confirm`, then `backup` and note that empty backup's
-      name. Close the app and replace `data/mediconnect.json` with malformed JSON, such as `{"persons": [`. Keep
-      the backup folder. Launch the app from that disposable folder.
+   1. Prerequisites: Launch MediConnect from a new, empty disposable home folder. Run `clear confirm`, then `backup`
+      and note that empty backup's name. Close the app and replace `data/mediconnect.json` with malformed JSON,
+      such as `{"persons": [`. Keep the backup folder. Launch the app from that disposable folder.
 
    1. Test case: After the recovery warning, run `list`, then inspect the data file.<br>
       Expected: The list is empty and the malformed data file remains unchanged. The warning's recovery copy
