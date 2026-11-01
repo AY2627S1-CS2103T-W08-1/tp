@@ -1123,7 +1123,10 @@ is unsupported: each app folder has its own lock files, so one app can overwrite
 Use one app folder for each set of patient data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
-`Could not save data ...` followed by `Nothing was changed.` You can still run `list`, `view`, `help` and `exit`.
+`Could not save data ...` followed by `Nothing was changed.` Commands that do not change patient data, such as
+`list`, `view`, `find`, `due`, `backup` and `export`, can still be used. This includes running `restore` without
+a filename to list backups. To keep a copy of your data, use `backup` or `export`; their destination folders
+must still be writable.
 
 ### Editing the data file
 
