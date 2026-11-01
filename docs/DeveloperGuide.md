@@ -1992,6 +1992,37 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 --------------------------------------------------------------------------------------------------------------------
 
+## **Appendix: Planned Enhancements**
+
+Team size: 5
+
+These are known limitations of the current version, with the changes we plan to make to remove them.
+
+1. **Accept overseas and second phone numbers for patients.** A patient's phone must now be one 8-digit Singapore
+   number, so `edit 1 p/+44 20 7946 0958` is rejected with `Phone numbers should be 8 digits, starting with 3, 6, 8
+   or 9, ...`, and a second number, e.g., for home, cannot be recorded. We plan to accept the same formats as contact
+   phones (3 to 15 digits, with spaces, hyphens and one `+` at the start), showing a warning instead of an error for
+   a number that is not a Singapore number, and to let `p/` be given more than once.
+1. **Accept extensions and labels in contact phones.** A contact's phone may now contain only digits, spaces,
+   hyphens and a leading `+`, so `addcontact 1 n/Clinic r/GP p/6123 4567 ext 12` and `p/(65) 6123 4567` are
+   rejected. We plan to also accept parentheses, an extension after `ext` or `x`, and a short label in brackets,
+   e.g., `6123 4567 ext 12` or `9123 4567 (HP)`, and to keep ignoring them when checking for duplicate contacts.
+1. **Allow medications that are not taken every day.** Every medication time is now a daily time, so `due` lists a
+   weekly medication every day. We plan to let `editmed` also take the days of the week on which a medication is
+   taken, e.g., `editmed 1 2 t/08:00 days/MON,THU`, and to have `due` list such a medication only on those days.
+1. **Back up the data before deleting a patient.** `delete` now removes a patient and all their care information at
+   once, and only a backup made earlier can bring them back. We plan to have `delete` save an automatic backup first,
+   as `clear confirm` does, and to give the backup's path in its message, so that a patient deleted by mistake can be
+   restored with `restore`.
+1. **Find patients by NRIC.** `find` now matches names only, so `find S0000001A` finds no one. We plan to also return
+   the patient whose NRIC equals a keyword, ignoring letter case, e.g., `find s0000001a` returns Alex Yeoh, while
+   names are still matched as now.
+1. **Accept digits and commas in patient names.** Names may now contain only letters and a few joining symbols, so a
+   name as registered, e.g., `Baby 2 Tan` or `Tan, Mary`, is rejected with `Names should be words of letters, ...`.
+   We plan to also accept digits and commas in names, as long as the name starts with a letter.
+
+--------------------------------------------------------------------------------------------------------------------
+
 ## **Appendix: Instructions for manual testing**
 
 Given below are instructions to test the app manually. In the expected results, the *status message* is the
