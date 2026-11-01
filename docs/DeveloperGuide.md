@@ -617,13 +617,15 @@ are omitted for clarity.
 1. `AddApptCommandParser` requires `d/`, `t/` and `w/` once each, with `w/` and `nt/` declared as free text for
    slash validation. It parses the index, the date, the time (with `ParserUtil#parseTime`, as for medication times) and who the appointment is with, and
    creates the `Appointment` `toAdd`, with an empty note if `nt/` is not given.
-1. `AddApptCommand#execute()` resolves the index against the filtered patient list. It rejects `toAdd` if the patient
-   already has an appointment at the same date and time with the same person, ignoring case and extra spaces.
+1. `AddApptCommand#execute()` resolves the index against the filtered patient list. It rejects `toAdd` if it is
+   before the patient's date of birth, or if the patient already has an appointment at the same date and time with
+   the same person, ignoring case and extra spaces.
 1. The command creates a replacement immutable `Patient` with `toAdd` added, which keeps its appointments sorted by
    date, then time. `Model#setPatient()` stores it, and `Model#setViewedPatient()` shows it in the detail panel, so
    the new appointment and its number can be checked.
-1. The command adds a note to the result if `toAdd` is in the past, and a warning for each of the patient's other
-   appointments at the same date and time. The current time comes from a `java.time.Clock` given to the command:
+1. The command adds a note to the result if `toAdd` is in the past or on a date more than 2 years from today, which
+   may be a mistyped year, and a warning for each of the patient's other appointments at the same date and time.
+   The current time comes from a `java.time.Clock` given to the command:
    the system clock by default, and a fixed one in tests, so that the tests do not depend on when they run.
    `Appointment#isBefore` ignores seconds, so an appointment in the current minute is not in the past.
 
@@ -1691,7 +1693,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-* 3a. The edited appointment is in the past, more than 2 years ahead, or at the same date and time as another appointment of the patient.
+* 3a. The edit moves the appointment into the past, to more than 2 years ahead, or to the same date and time as another appointment of the patient.
 
     * 3a1. MediConnect also shows the same note or warning as when adding the appointment (UC14).
 
@@ -1963,6 +1965,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * **Allergy**: A harmful reaction a patient has to a substance, such as a drug or a food. Each allergy is recorded by
   the name of the substance that causes it (the *allergen*), e.g., `Penicillin`.
+* **ALLERGY_INDEX**: The number shown beside an allergen in the numbered allergen list of the patient's details,
+  starting from 1. `deleteallergy` uses it, together with the patient's index, to refer to an allergen. It can change
+  when an allergen before it is deleted.
 * **Appointment**: A scheduled visit by a patient to a healthcare provider, recorded with its date, time, and provider.
   Notes on what was discussed can be added after the visit.
 * **APPT_INDEX**: The number shown beside an appointment in the numbered appointment list of the patient's details,
@@ -1983,11 +1988,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   breakfast".
 * **Caregiver**: A person who uses MediConnect to coordinate a patient's care, typically a family member of the
   patient. A caregiver is not necessarily a healthcare professional.
+* **CI_INDEX**: The number shown beside a care instruction in the numbered care instruction list of the patient's
+  details, starting from 1. `editcare` and `deletecare` use it, together with the patient's index, to refer to a care
+  instruction. It can change when a care instruction before it is deleted.
 * **CLI (Command Line Interface)**: A way of using an application by typing text commands rather than by clicking on
   elements with a mouse.
 * **Community nurse**: A nurse who cares for patients through scheduled home visits.
 * **Contact**: A person or organisation linked to a patient's profile, which is either a healthcare provider (e.g., a
   GP, specialist, or pharmacist) or an emergency contact.
+* **CONTACT_INDEX**: The number shown beside a contact in the numbered contact list of the patient's details,
+  starting from 1. `editcontact` and `deletecontact` use it, together with the patient's index, to refer to a
+  contact. It can change when a contact before it is deleted.
 * **Daily time**: A time of day, in 24-hour `HH:MM` format, at which a patient takes a medication every day, e.g.,
   `08:00`. A medication can have any number of daily times, or none.
 * **Detail panel**: The panel to the right of the patient list that shows the full details of one patient: the one
