@@ -42,6 +42,7 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.Messages;
 import seedu.address.logic.PatientFormatter;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -180,13 +181,12 @@ public class ExportCommandTest {
         Path exportDir = Files.createDirectory(temporaryFolder.resolve("exports"));
         Path exportFile = Files.createDirectory(exportDir.resolve("S0000001A.txt"));
         Path keptFile = Files.write(exportFile.resolve("kept.txt"), List.of("kept"));
-        // the reason given by the file system differs between operating systems, so only the start is checked
-        String expectedStart = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
-                exportFile, "");
+        String expectedMessage = String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName,
+                exportFile, String.format(FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE, "S0000001A.txt"));
 
         CommandException exception = Assertions.assertThrows(CommandException.class, () ->
                 new ExportCommand(INDEX_FIRST_PATIENT, FIXED_CLOCK, exportDir).execute(model));
-        assertTrue(exception.getMessage().startsWith(expectedStart.substring(0, expectedStart.length() - 1)));
+        assertEquals(expectedMessage, exception.getMessage());
         assertEquals(List.of("kept"), Files.readAllLines(keptFile, StandardCharsets.UTF_8));
         try (Stream<Path> files = Files.list(exportDir)) {
             assertEquals(List.of(exportFile), files.toList());
@@ -395,10 +395,10 @@ public class ExportCommandTest {
         String message = Assertions.assertThrows(CommandException.class, () -> exportCommand.execute(model))
                 .getMessage();
 
-        assertReadableReason(message, "Could not export Alice Pauline's record to " + exportFile + ": ", ".",
-                exportFile);
+        // the folder is found before any temporary file is made, on every operating system
+        assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, ALICE.getName().fullName, exportFile,
+                String.format(FileUtil.MESSAGE_FOLDER_IN_PLACE_OF_FILE, "S0000001A.txt")), message);
         assertTrue(Files.isDirectory(exportFile));
-        // the temporary file was written before the move failed, and is deleted again
         assertNoTemporaryFiles(temporaryFolder);
     }
 
