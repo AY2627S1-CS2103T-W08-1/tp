@@ -2151,6 +2151,21 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
    Expected: No patient is added. The status message shows `Addresses cannot be blank.`
 
+### Editing a patient
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run `find Bernice`, then `view 1`.
+   Bernice Yu is the only displayed patient and is therefore at index 1.
+
+1. Test case: `edit 1 p/91234567`<br>
+   Expected: Bernice Yu's phone changes to `91234567`. The active-patient list is reset and shows all four sample
+   patients, while the detail panel shows Bernice Yu. Her allergen `Latex`, care instruction and appointment are
+   unchanged.
+
+1. Test case: `edit 2 ic/S0000001A`<br>
+   Expected: Nothing changes. The status message shows
+   `This patient (identified by NRIC) already exists in MediConnect.` Bernice Yu keeps her original NRIC and the
+   edited phone number.
+
 ### Adding care information
 
 1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh's existing care information.
@@ -2168,6 +2183,27 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `addcare 999 med/Ibuprofen`<br>
    Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
+
+### Editing and deleting care entries
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run
+   `addcare 1 al/Latex al/Shellfish ci/Check blood sugar before breakfast ci/Turn every 2 hours`, then `view 1`.
+   Alex Yeoh now has three allergens and three care instructions. The following test cases build on one another.
+
+1. Test case: `editcare 1 2 ci/Check blood sugar after breakfast`<br>
+   Expected: Care instruction 2 is replaced in place. The status message shows
+   `Updated care instruction for Alex Yeoh: Check blood sugar after breakfast`.
+
+1. Test case: `deletecare 1 1`<br>
+   Expected: `Monitor blood pressure every morning` is deleted. The edited instruction becomes number 1 and
+   `Turn every 2 hours` becomes number 2.
+
+1. Test case: `deleteallergy 1 2`<br>
+   Expected: `Latex` is deleted. `Penicillin` remains allergen 1 and `Shellfish` becomes allergen 2.
+
+1. Test cases: `editcare 1 9 ci/Test`, `deletecare 1 9`, and `deleteallergy 1 9`.<br>
+   Expected: The commands report an invalid care-instruction or allergen index and change nothing. Alex Yeoh's
+   medications, contact and appointments remain unchanged throughout this section.
 
 ### Editing and deleting medications
 
@@ -2391,6 +2427,24 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No active patients found.`
+
+### Archiving and restoring a patient
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run `find Bernice`, then `view 1`.
+   Bernice Yu is the only displayed patient and is therefore at index 1.
+
+1. Test case: `archive 1`<br>
+   Expected: The status message shows `Archived patient: Bernice Yu; NRIC: S0000002A`. Bernice Yu disappears from
+   the displayed active results and the detail panel returns to its placeholder.
+
+1. Test case: `listarchived`, then `view 1`.<br>
+   Expected: Bernice Yu is archived patient 1. Her phone, `Latex` allergen, care instruction and appointment are
+   unchanged, and her patient card is marked `(Archived)`.
+
+1. Test case: `unarchive 1`.<br>
+   Expected: The status message shows `Unarchived patient: Bernice Yu; NRIC: S0000002A`. She disappears from the
+   archived list while the detail panel keeps showing her restored record. Run `list`; all four active sample
+   patients are shown again and Bernice Yu's complete record is unchanged.
 
 ### Clearing all patients
 
