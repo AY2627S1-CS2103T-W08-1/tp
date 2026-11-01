@@ -933,7 +933,7 @@ Errors are reported as follows:
 ### Clearing all patients: `clear`
 
 Backs up, then clears all active and archived patients and their care information from MediConnect, and clears
-any patient details in the view panel. This includes patients hidden by `find` or the current list filter.
+any patient details in the detail panel. This includes patients hidden by `find` or the current list filter.
 
 Format: `clear confirm`
 
@@ -1120,7 +1120,10 @@ is unsupported: each app folder has its own lock files, so one app can overwrite
 Use one app folder for each set of patient data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
-`Could not save data ...` followed by `Nothing was changed.` You can still run `list`, `view`, `help` and `exit`.
+`Could not save data ...` followed by `Nothing was changed.` Commands that do not change patient data, such as
+`list`, `view`, `find`, `due`, `backup` and `export`, can still be used. This includes running `restore` without
+a filename to list backups. To keep a copy of your data, use `backup` or `export`; their destination folders
+must still be writable.
 
 ### Editing the data file
 
