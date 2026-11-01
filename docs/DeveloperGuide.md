@@ -1693,7 +1693,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-* 3a. The edited appointment is in the past, more than 2 years ahead, or at the same date and time as another appointment of the patient.
+* 3a. The edit moves the appointment into the past, to more than 2 years ahead, or to the same date and time as another appointment of the patient.
 
     * 3a1. MediConnect also shows the same note or warning as when adding the appointment (UC14).
 

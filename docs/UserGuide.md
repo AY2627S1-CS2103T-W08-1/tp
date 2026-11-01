@@ -185,6 +185,16 @@ Any kind of space, including no-break spaces copied from other apps, is treated 
 For [contact fields](#adding-a-contact-addcontact), names and roles have a limit of 100 characters each, and notes
 have a limit of 500. These limits apply after the whitespace handling described in that section.
 
+#### How characters are counted
+
+The limits above, and those of the other fields, count characters as follows:
+
+* A letter, digit, space or symbol counts as one character, and so does a basic emoji, e.g., 😀.
+* An emoji made from several symbols, e.g., a family emoji or a flag, counts as more than one character.
+* An accented letter typed as one character, e.g., `é`, counts as one. A letter followed by a separately typed accent,
+  which some keyboards and copied text produce, counts as two in names, addresses, contacts and appointments, but as
+  one in medications, allergens and care instructions, which MediConnect saves with the accent combined into the letter.
+
 ### Adding care information: `addcare`
 
 Appends medications, allergens, or care instructions to the patient at the displayed index.
@@ -396,8 +406,7 @@ Format: `addcontact INDEX n/NAME r/ROLE p/PHONE [nt/NOTE]`
   Formatting is preserved after trimming. Extensions and parentheses are not supported.
 * The note is optional, with at most 500 characters after surrounding spaces are removed. Internal spacing is kept.
   An omitted or empty `nt/` creates a contact without a note; an empty or spaces-only `nt/` clears it in `editcontact`.
-  For all three text limits, a basic emoji such as 😀 counts as one character. A letter with a separately typed
-  accent, or an emoji made from several symbols, can count as more than one.
+  For all three text limits, characters are counted as described in [How characters are counted](#how-characters-are-counted).
 * A contact with the same name (ignoring case and differences in spacing) and phone (ignoring spaces and hyphens)
   already on this patient is rejected. Role and note do not distinguish duplicates. `+` remains significant;
   country codes are not inferred. The same accented name counts as the same name even if the accent was typed
