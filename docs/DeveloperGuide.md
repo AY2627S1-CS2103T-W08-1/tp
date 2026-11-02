@@ -737,7 +737,9 @@ Step 1. The caregiver launches MediConnect for the first time. The `VersionedPat
 
 <puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
 
-Step 2. The caregiver executes `delete 5` to delete the 5th patient in the patient list. The `delete` command calls `Model#commitPatientData()`, causing the modified patient data after the `delete 5` command executes to be saved in the `patientDataStateList`, and the `currentStatePointer` is shifted to the newly inserted state.
+Step 2. The caregiver executes `delete 4` to delete the 4th patient in the patient list. The `delete` command
+calls `Model#commitPatientData()`, causing the modified patient data after the `delete 4` command executes to
+be saved in the `patientDataStateList`, and the `currentStatePointer` is shifted to the newly inserted state.
 
 <puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
 
