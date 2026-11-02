@@ -222,8 +222,9 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
   `Unrecognized parameter: p/. Please check the command format.`
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
   punctuation attached.
-* Duplicate entries, ignoring letter case, whitespace differences, and equivalent Unicode forms that look the same,
-  are not added again. Other unique entries in the same command are still added.
+* Duplicate entries, ignoring letter case, repeated or special spaces, and equivalent Unicode forms that look the same,
+  are not added again. Other unique entries in the same command are still added. Adding or removing a space between
+  characters still makes a different entry, so `Amlodipine 5 mg` is added next to `Amlodipine 5mg`.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
   `addcare` does not accept `t/`: `addcare 1 med/Paracetamol 500mg t/08:00` returns
   `Unrecognized parameter: t/. Please check the command format.` Add the medication first, check its number with
@@ -276,8 +277,9 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * At least one of `med/` or `t/` must be given.
 * `med/DESCRIPTION` replaces the description. Leading and trailing whitespace is removed, and consecutive internal
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
-  same as another medication of the same patient, ignoring letter case, whitespace differences, and equivalent
-  Unicode forms that look the same, is rejected.
+  same as another medication of the same patient, ignoring letter case, repeated or special spaces, and equivalent
+  Unicode forms that look the same, is rejected. Adding or removing a space between characters still makes a
+  different description, so `Amlodipine 5 mg` is not a duplicate of `Amlodipine 5mg`.
   Changing only the letter case of the medication's own description is allowed.
   A description longer than 500 characters, after the spaces are tidied, returns
   `Medication descriptions cannot exceed 500 characters.`
@@ -355,7 +357,7 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
   panel. Both must be positive integers.
 * `NEW_TEXT` is free text with leading and trailing whitespace removed and consecutive internal whitespace collapsed
   to one space. It cannot be blank or exceed 500 characters after normalization.
-* An edit that would duplicate another care instruction, ignoring letter case, whitespace differences, and
+* An edit that would duplicate another care instruction, ignoring letter case, repeated or special spaces, and
   equivalent Unicode forms that look the same, is rejected. Editing an instruction to its current text is allowed.
 * `ci/` must appear exactly once. Its value follows the [slash-text rules](#slash-text-in-field-values), with the same
   standalone slash-word exceptions as `addcare`. Other reserved prefixes and unknown prefixes before `ci/` are
@@ -1183,7 +1185,7 @@ a backup, `restore` says that it is not saved as UTF-8.
 
 A data file saved by v1.3 can be loaded. Its medications, which v1.3 saved as plain text, are loaded as medications with no daily times. Use [`editmed`](#editing-a-medication-editmed) to set their times.
 
-A patient who has two medications with the same description, ignoring letter case and spacing, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
+A patient who has two medications with the same description, ignoring letter case, repeated or special spaces, and equivalent Unicode forms, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
 
 <box type="warning" seamless>
 

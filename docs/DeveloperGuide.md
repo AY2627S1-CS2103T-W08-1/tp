@@ -228,9 +228,9 @@ The list of patients is saved under the JSON key `persons`, kept from AB3. When 
 their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
 an NRIC, a patient has duplicate contacts or appointments, two medications of a patient have the same description,
 or an allergen or care instruction is blank or duplicated, the whole file is rejected. Care-entry and medication
-duplicates ignore letter case and whitespace differences, as the care commands do. A medication saved by v1.3, as a
-plain string, is loaded as a medication with no times, as is a medication without a `times` list. A saved time must
-be written as `HH:MM`, so `8:30` makes the file invalid.
+duplicates ignore letter case, repeated or special spaces, and equivalent Unicode forms, as the care commands do.
+A medication saved by v1.3, as a plain string, is loaded as a medication with no times, as is a medication without a
+`times` list. A saved time must be written as `HH:MM`, so `8:30` makes the file invalid.
 
 `JsonAddressBookStorage` reads the file with `JsonUtil#readJsonFileStrictly()`, which also rejects a property that the
 JSON class does not have, e.g., a misspelled `careInstructons`, and a property given twice. Ignoring them, as Jackson
