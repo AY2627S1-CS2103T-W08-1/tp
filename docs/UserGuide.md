@@ -109,6 +109,11 @@ For “not applicable”, write `N/A` in uppercase. It is allowed in free-text f
 punctuation, for example, `nt/N/A, call first`. Other spellings such as `n/a`, `N/a` and `n/A` do not have this
 exception and may be rejected or interpreted as a name field.
 
+**Take care when editing:** after a space, lowercase `n/` starts a name field, even inside an address or contact
+note. For example, `edit 1 a/Flat n/a lift` changes the address to `Flat` **and the patient's name to `a lift`**.
+Similarly, `editcontact 1 1 nt/Call n/a first` changes the note to `Call` **and the contact's name to `a first`**.
+Use `N/A` for “not applicable”, for example, `edit 1 a/Flat N/A lift`, and check the updated details after editing.
+
 ### Viewing help: `help`
 
 Opens a help window that lists every command with its format and a one-line description, grouped as patients,
