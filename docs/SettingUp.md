@@ -62,7 +62,7 @@ If you use another editor, or only the command line:
 
 1. **Set up CI**
 
-   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs CI automatically for every push and pull request. No setup is required.
+   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs CI automatically for every push and pull request, including in your fork, and the build and tests need no setup. Uploading coverage to Codecov is optional; see [Code coverage](DevOps.md#code-coverage) in the DevOps guide.
 
 1. **Learn the design**
 
