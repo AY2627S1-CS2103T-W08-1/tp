@@ -78,4 +78,22 @@ public class FindCommandParserTest {
         assertParseSuccess(parser, "123", expectedFindCommand);
     }
 
+    @Test
+    public void parse_commaOrSemicolonSeparatedKeywords_returnsFindCommand() {
+        FindCommand alexAndBernice =
+                new FindCommand(new NameContainsKeywordsPredicate(List.of("alex", "bernice")));
+        assertParseSuccess(parser, "alex, bernice", alexAndBernice);
+        assertParseSuccess(parser, "alex;bernice", alexAndBernice);
+        assertParseSuccess(parser, "alex ,; bernice", alexAndBernice);
+        assertParseSuccess(parser, "alex ,\u3000bernice", alexAndBernice);
+        assertParseSuccess(parser, ", alex ;", new FindCommand(new NameContainsKeywordsPredicate(List.of("alex"))));
+    }
+
+    @Test
+    public void parse_onlyCommasOrSemicolons_throwsParseException() {
+        for (String args : new String[] {",", ";", " , ; ", ",,,"}) {
+            assertParseFailure(parser, args, FindCommandParser.MESSAGE_NO_KEYWORDS);
+        }
+    }
+
 }
