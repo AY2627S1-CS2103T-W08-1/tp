@@ -16,6 +16,14 @@
 * This project is based on the [AddressBook-Level3](https://se-education.org/addressbook-level3/) project created by the [SE-EDU initiative](https://se-education.org).
 * Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit5](https://github.com/junit-team/junit5)
 
+**Notable uses of AI:**
+
+* @KohKoh-Nut used OpenAI Codex to help draft implementation and documentation changes, design tests, audit the repository, and perform preliminary pull request reviews. The resulting changes were reviewed and tested before use.
+* @nraisa0408 used Claude Code to help draft implementation and documentation changes, design tests, audit the repository, and perform preliminary pull request reviews. The resulting changes were reviewed and tested before use.
+* @JellehBelleh used OpenAI Codex to generate and refine implementation changes and tests, investigate bugs,
+  perform preliminary pull request reviews, and draft and revise the User Guide and Developer Guide,
+  including UML diagrams. Codex also generated the MediConnect website favicon.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
