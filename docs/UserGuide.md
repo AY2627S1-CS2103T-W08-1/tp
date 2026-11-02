@@ -764,9 +764,8 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
   `Mary O'Brien`.
 * Keywords are separated by any kind of space, including a no-break space copied from another application, so
   `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
-* Separate keywords with spaces only. A comma or semicolon stays part of the keyword, so `find alex, bernice` lists
-  only Bernice Yu. Use `find alex bernice` instead. Accepting commas and semicolons between keywords is planned for
-  a future version.
+* Commas (`,`) and semicolons (`;`) also separate keywords, so `find alex, bernice` and `find alex;bernice` both
+  search for `alex` and `bernice`.
 * An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
   accent mark matches a name with the single character `é`.
 * Accents are not ignored: `find zoe` does not find `Zoë Tan`. Type the accented letter, e.g., `find zoë`, or
@@ -778,11 +777,12 @@ Examples:
 * `find Bernice` returns `Bernice Yu`
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
   <img src="images/findAlexDavidResult.png" alt="result of find alex david: 2 patient(s) listed, Alex Yeoh and David Li" width="560" />
+* `find alex, bernice` returns `Alex Yeoh`, `Bernice Yu`
 
 A successful command returns `N patient(s) listed!`, e.g., `2 patient(s) listed!` for `find alex david`. If no active
 patient matches, it returns `No patients found matching the given keyword(s).` and the patient list is empty. A
-command without any keyword returns `Please provide at least one keyword to search for.` and the patient list does
-not change.
+command without any keyword, e.g., `find` or `find ,`, returns `Please provide at least one keyword to search for.`
+and the patient list does not change.
 
 ### Deleting a patient: `delete`
 

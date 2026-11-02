@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Arrays;
 import java.util.List;
 
 import seedu.address.commons.util.StringUtil;
@@ -16,6 +17,9 @@ public class FindCommandParser implements Parser<FindCommand> {
 
     public static final String MESSAGE_NO_KEYWORDS = "Please provide at least one keyword to search for.";
 
+    /** Spaces, commas and semicolons separate keywords. */
+    private static final String KEYWORD_SEPARATORS = "[ ,;]+";
+
     /**
      * Parses the given {@code String} of arguments in the context of the FindCommand
      * and returns a FindCommand object for execution.
@@ -29,9 +33,14 @@ public class FindCommandParser implements Parser<FindCommand> {
             throw new ParseException(MESSAGE_NO_KEYWORDS);
         }
 
-        String[] nameKeywords = normalizedArgs.split(" ");
+        List<String> nameKeywords = Arrays.stream(normalizedArgs.split(KEYWORD_SEPARATORS))
+                .filter(keyword -> !keyword.isEmpty())
+                .toList();
+        if (nameKeywords.isEmpty()) {
+            throw new ParseException(MESSAGE_NO_KEYWORDS);
+        }
 
-        return new FindCommand(new NameContainsKeywordsPredicate(List.of(nameKeywords)));
+        return new FindCommand(new NameContainsKeywordsPredicate(nameKeywords));
     }
 
 }

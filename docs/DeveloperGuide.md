@@ -2650,10 +2650,13 @@ empty home folder. Run dependent test cases in the order given and complete any 
    1. Test case: `find alex david`<br>
       Expected: `Alex Yeoh` and `David Li` are shown. The status message shows `2 patient(s) listed!`
 
+   1. Test case: `find alex, bernice`<br>
+      Expected: `Alex Yeoh` and `Bernice Yu` are shown. The status message shows `2 patient(s) listed!`
+
    1. Test case: `find Zebra`<br>
       Expected: The patient list is empty. The status message shows `No patients found matching the given keyword(s).`
 
-   1. Test case: `find`<br>
+   1. Test cases: `find` and `find ,`<br>
       Expected: The patient list is unchanged. The status message shows `Please provide at least one keyword to search for.`
 
 ### Viewing a patient
