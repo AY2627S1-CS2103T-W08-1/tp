@@ -20,14 +20,14 @@ MediConnect is a **desktop application for managing patient records and care inf
 
 1. Download `mediconnect.jar` from the [Releases page](https://github.com/AY2627S1-CS2103T-W08-1/tp/releases).
 
-1. Copy the file to an empty folder. This folder will be the _home folder_ for your MediConnect data.
+1. Copy the file to an empty folder. This is MediConnect's _home folder_: the folder you launch it from.
    MediConnect needs permission to create and write files in this folder, where it keeps patient data and support files.
 
 1. Open a terminal, `cd` to that folder, and run `java -jar mediconnect.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. On first launch, the patient list is filled with sample patients so you can try out the commands. The picture shows the window after `view 1`, which shows the first patient's details in the *detail panel* on the right.<br>
    ![MediConnect window: the command box and the result box at the top, the patient list on the left and the detail panel on the right, showing Alex Yeoh](images/Ui.png)
 
-   Only one MediConnect window can use the data in this app folder at a time. A second launch shows an error
+   Only one MediConnect window can use the data in this home folder at a time. A second launch shows an error
    naming the data file and exits. Close the first window before opening it again.
 
 1. Type a command in the command box and press Enter to execute it. MediConnect shows its response in the *result box*, just below the command box. For example, type **`help`** and press Enter to open the help window.<br>
@@ -970,7 +970,7 @@ patients to clear.
 
 ### Backing up data: `backup`
 
-Saves a copy of all patient data to the `data/backups` folder, inside your home folder, the folder you launch MediConnect from. MediConnect creates the folder if it does not exist yet.
+Saves a copy of all patient data to the `data/backups` folder, inside your home folder. MediConnect creates the folder if it does not exist yet.
 
 Format: `backup`
 
@@ -1129,15 +1129,15 @@ MediConnect handles saving automatically. You do not need to save manually.
 See [clear](#clearing-all-patients-clear) and [restore](#restoring-data-from-a-backup-restore) for how these commands
 replace your saved data.
 
-MediConnect prevents two windows launched from the same app folder from using its data together.
-Its small lock files are in `.mediconnect/locks` inside the folder you launch MediConnect from;
+MediConnect prevents two windows launched from the same home folder from using its data together.
+Its small lock files are in `.mediconnect/locks` inside your home folder;
 they contain no patient records. They can remain after exit and do not need to be removed after a crash.
 Do not delete them while MediConnect is running. The app needs permission to create and write these files.
 If the lock folder cannot be used, a startup error names it and the app exits; see the [FAQ](#faq) for recovery steps.
 
-Do not make different app folders share the same `data` folder, including through linked folders. This setup
-is unsupported: each app folder has its own lock files, so one app can overwrite the other's changes.
-Use one app folder for each set of patient data.
+Do not make different home folders share the same `data` folder, including through linked folders. This setup
+is unsupported: each home folder has its own lock files, so one app can overwrite the other's changes.
+Use one home folder for each set of patient data.
 
 If the data cannot be saved, e.g., because the data file is read-only, the command is undone and MediConnect shows
 `Could not save data ...` followed by `Nothing was changed.` Commands that do not change patient data, such as
@@ -1147,7 +1147,7 @@ must still be writable.
 
 ### Editing the data file
 
-MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside your home folder, the folder you launch MediConnect from. Advanced users are welcome to update data directly by editing that data file.
+MediConnect data is saved automatically as a JSON file `data/mediconnect.json`, inside your home folder. Advanced users are welcome to update data directly by editing that data file.
 The patients are in the file's `persons` list. The name is kept from earlier versions, so that their data files still
 load. Do not rename it, or MediConnect cannot load the file.
 Close MediConnect before editing, replacing or moving its data file or home folder. Otherwise, an open window
@@ -1201,7 +1201,7 @@ Furthermore, certain edits can cause MediConnect to behave in unexpected ways (e
 ## FAQ
 
 **Q**: Where is my data saved?<br>
-**A**: In `data/mediconnect.json`, inside the folder you launch MediConnect from. On first launch, MediConnect tries
+**A**: In `data/mediconnect.json`, inside your home folder. On first launch, MediConnect tries
 to create this file with sample patients. After startup, it saves after commands that change patient data.
 If the app opens with a warning that sample patients are not saved, the initial data file could not be created.
 The warning names the data file and a failure reason. Close the app, check that the parent path is a writable
@@ -1212,7 +1212,7 @@ Other startup errors may prevent the main window from opening at all.
 **Q**: Why does startup say it could not protect the data file?<br>
 **A**: MediConnect could not create or open its lock files in `.mediconnect/locks`.
 Close all MediConnect windows. Check that `.mediconnect` and `.mediconnect/locks` are folders and that you can
-write to them; move aside any file occupying either folder's path. If needed, move the entire app folder,
+write to them; move aside any file occupying either folder's path. If needed, move the entire home folder,
 including `data`, to a writable location, then launch MediConnect from there.
 
 **Q**: How do I transfer my data to another computer?<br>
