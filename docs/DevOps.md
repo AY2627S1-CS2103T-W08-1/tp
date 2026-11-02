@@ -47,7 +47,7 @@ As part of CI, Gradle generates JaCoCo coverage reports from the tests, and CI u
 
 However, because Codecov is known to run into intermittent problems (e.g., report upload fails) due to issues on the Codecov service side, the CI is configured to pass even if the Codecov task failed. Therefore, developers are advised to check the code coverage levels periodically and take corrective actions if the coverage level falls below desired levels.
 
-To enable Codecov for forks of this project, follow the steps given in [this se-edu guide](https://se-education.org/guides/tutorials/codecov.html).
+To enable Codecov for forks of this project, follow the steps given in [this se-edu guide](https://se-education.org/guides/tutorials/codecov.html). Codecov is optional: without a `CODECOV_TOKEN` secret in the fork, the upload does not fail the build, and the other CI checks still run.
 
 ### Repository-wide checks
 
