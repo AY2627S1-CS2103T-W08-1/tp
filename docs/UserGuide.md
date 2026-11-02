@@ -227,8 +227,9 @@ Format: `addcare INDEX [med/MEDICATION]... [al/ALLERGEN]... [ci/CARE_INSTRUCTION
   `Unrecognized parameter: p/. Please check the command format.`
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
   punctuation attached.
-* Duplicate entries, ignoring letter case, whitespace differences, and equivalent Unicode forms that look the same,
-  are not added again. Other unique entries in the same command are still added.
+* Duplicate entries, ignoring letter case, repeated or special spaces, and equivalent Unicode forms that look the same,
+  are not added again. Other unique entries in the same command are still added. Adding or removing a space between
+  characters still makes a different entry, so `Amlodipine 5 mg` is added next to `Amlodipine 5mg`.
 * A medication added with `med/` has no daily times yet. Use [`editmed`](#editing-a-medication-editmed) to set them.
   `addcare` does not accept `t/`: `addcare 1 med/Paracetamol 500mg t/08:00` returns
   `Unrecognized parameter: t/. Please check the command format.` Add the medication first, check its number with
@@ -281,8 +282,9 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * At least one of `med/` or `t/` must be given.
 * `med/DESCRIPTION` replaces the description. Leading and trailing whitespace is removed, and consecutive internal
   whitespace is collapsed to one space. It cannot be blank and can be given only once. A description that is the
-  same as another medication of the same patient, ignoring letter case, whitespace differences, and equivalent
-  Unicode forms that look the same, is rejected.
+  same as another medication of the same patient, ignoring letter case, repeated or special spaces, and equivalent
+  Unicode forms that look the same, is rejected. Adding or removing a space between characters still makes a
+  different description, so `Amlodipine 5 mg` is not a duplicate of `Amlodipine 5mg`.
   Changing only the letter case of the medication's own description is allowed.
   A description longer than 500 characters, after the spaces are tidied, returns
   `Medication descriptions cannot exceed 500 characters.`
@@ -293,6 +295,10 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   * Times are shown in ascending order, and a time given more than once is kept once.
   * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`: for example,
     `t/08:00 t/` is rejected.
+* If a time is not valid, the error does not say which `t/` value is wrong. For example,
+  `editmed 1 1 t/08:00, t/20:00` returns `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.` because `08:00,`
+  ends with a comma. Check each `t/` value and separate the times with spaces only, e.g.,
+  `editmed 1 1 t/08:00 t/20:00`. Naming the invalid value in the message is planned for a future version.
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
 * The patient's other details and other medications are not changed. After a successful command, the detail panel
   shows this patient with the updated medication, even if it showed another patient before.
@@ -303,6 +309,11 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
   punctuation attached. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
+* Put a space before `t/`. Without one, the time is read as part of the description:
+  `editmed 1 1 med/Aspirin 75mgt/09:00` saves the description `Aspirin 75mgt/09:00` and keeps the old time. Check the
+  times in the result message, and if needed run the command again with the space, e.g.,
+  `editmed 1 1 med/Aspirin 75mg t/09:00`. A warning for a time joined to the description is planned for a future
+  version.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):
@@ -355,7 +366,7 @@ Format: `editcare INDEX CI_INDEX ci/NEW_TEXT`
   panel. Both must be positive integers.
 * `NEW_TEXT` is free text with leading and trailing whitespace removed and consecutive internal whitespace collapsed
   to one space. It cannot be blank or exceed 500 characters after normalization.
-* An edit that would duplicate another care instruction, ignoring letter case, whitespace differences, and
+* An edit that would duplicate another care instruction, ignoring letter case, repeated or special spaces, and
   equivalent Unicode forms that look the same, is rejected. Editing an instruction to its current text is allowed.
 * `ci/` must appear exactly once. Its value follows the [slash-text rules](#slash-text-in-field-values), with the same
   standalone slash-word exceptions as `addcare`. Other reserved prefixes and unknown prefixes before `ci/` are
@@ -753,8 +764,14 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
   `Mary O'Brien`.
 * Keywords are separated by any kind of space, including a no-break space copied from another application, so
   `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
+* Separate keywords with spaces only. A comma or semicolon stays part of the keyword, so `find alex, bernice` lists
+  only Bernice Yu. Use `find alex bernice` instead. Accepting commas and semicolons between keywords is planned for
+  a future version.
 * An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
   accent mark matches a name with the single character `é`.
+* Accents are not ignored: `find zoe` does not find `Zoë Tan`. Type the accented letter, e.g., `find zoë`, or
+  search for another word of the name, e.g., `find tan`. Matching names without their accents is planned for a
+  future version.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
@@ -912,7 +929,7 @@ showed before.
 
 ### Listing today's medication times: `due`
 
-Lists the times at which medications are taken today, one line per dose, in the order they are due.
+Lists the times at which medications are to be taken today, one line per dose, in the order they are due.
 
 Format: `due [INDEX]`
 
@@ -928,11 +945,17 @@ Format: `due [INDEX]`
 * If two or more patients in the result have the same name, ignoring letter case, their lines also show the NRIC,
   as `HH:MM PATIENT_NAME (NRIC): DESCRIPTION`, so that you can tell them apart. A name that belongs to only one
   patient in the result is shown without the NRIC.
+* Apart from letter case, names count as the same here only if their letters are stored the same way. An accented
+  letter can be stored as one character or as a letter followed by a separate accent mark. Text pasted from another
+  application can use the second form. Two names that look the same but are stored differently, e.g., two `José Tan`,
+  are shown without their NRICs. To tell such patients apart, use `due INDEX` for each one.
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
   patient at the same time are listed in the order of the patient's medications.
 * A time that is earlier than the current time of your computer (in its time zone) is followed by
   ` (earlier today)` straight after the time, as in `08:00 (earlier today) Alex Yeoh: Aspirin 100mg`. A time in the
   current minute is not marked. Every time is a daily time, so the same times are listed each day.
+* `(earlier today)` only means that the time has passed. MediConnect does not record whether a dose was taken or
+  missed, and it does not send reminders.
 * Only the text right after the time is the mark from MediConnect. A description is free text, so it can itself end
   in `(earlier today)`, e.g., `20:00 Alex Yeoh: Aspirin (earlier today)`, which is not marked and is still to come.
 * Medications without times are not listed.
@@ -1177,7 +1200,7 @@ a backup, `restore` says that it is not saved as UTF-8.
 
 A data file saved by v1.3 can be loaded. Its medications, which v1.3 saved as plain text, are loaded as medications with no daily times. Use [`editmed`](#editing-a-medication-editmed) to set their times.
 
-A patient who has two medications with the same description, ignoring letter case and spacing, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
+A patient who has two medications with the same description, ignoring letter case, repeated or special spaces, and equivalent Unicode forms, is invalid, as `addcare` and `editmed` do not allow this either. MediConnect then handles the file as other invalid data: it saves a recovery copy and starts with no patients. Remove the repeated medication from the file before restarting.
 
 <box type="warning" seamless>
 
