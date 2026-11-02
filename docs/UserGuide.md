@@ -100,6 +100,8 @@ A reserved prefix cannot be embedded at the start of a field value: `a/p/123` is
 Each command's existing standalone slash-word exceptions still apply; keep those words separate from punctuation.
 Write field prefixes in lowercase. Incorrect capitalisation such as `NT/bring scans`, `Nt/bring scans`, or
 `T/08:00` is rejected even inside free text; use `nt/bring scans` or `t/08:00` instead.
+This also applies to ordinary text such as `A/B`, because `A/` matches the reserved `a/` prefix ignoring case.
+Write `A or B` instead.
 The literal `N/A` remains allowed in free text, including when followed by punctuation.
 
 ### Viewing help: `help`
@@ -134,7 +136,7 @@ Format: `add n/NAME ic/NRIC dob/DOB p/PHONE a/ADDRESS`
   `Multiple values specified for a single-valued field: n/`.
 * Unknown slash prefixes outside the address, such as `x/123` before the first field, are rejected with
   `Unrecognized parameter: x/. Please check the command format.` The address follows the [slash-text rules](#slash-text-in-field-values);
-  for example, `a/Block A/B` is allowed, but `a/med/Aspirin` is rejected because `med/` is reserved.
+  for example, `a/Block 21/3` is allowed, but `a/med/Aspirin` is rejected because `med/` is reserved.
 * Standalone `s/o`, `d/o`, `c/o`, `a/l`, and `a/p` are allowed anywhere in the `add` arguments, ignoring letter case.
   Other field rules still apply. Keep them separate from other text or punctuation: `s/o,` is not allowed.
   For example, `s/o,` gives `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.`
