@@ -23,6 +23,10 @@
 * @JellehBelleh used OpenAI Codex to generate and refine implementation changes and tests, investigate bugs,
   perform preliminary pull request reviews, and draft and revise the User Guide and Developer Guide,
   including UML diagrams. Codex also generated the MediConnect website favicon.
+* @Gauhet used Claude Code to help implement and debug changes, write tests, beta-test the app, draft
+  User Guide and Developer Guide text and UML diagrams, draft issues, commit messages and pull request
+  descriptions, and perform preliminary pull request reviews. The resulting changes were reviewed and
+  tested before use.
 
 --------------------------------------------------------------------------------------------------------------------
 
