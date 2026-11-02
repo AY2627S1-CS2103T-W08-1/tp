@@ -1,9 +1,11 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.Messages.MESSAGE_CLEAR_TIMES_CANNOT_BE_COMBINED;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_NO_MEDICATION_FIELD_TO_EDIT;
+import static seedu.address.logic.Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICATION;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.EditMedCommand;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Medication;
 
 public class EditMedCommandParserTest {
@@ -205,6 +208,62 @@ public class EditMedCommandParserTest {
         assertParseSuccess(parser, " 1 2 med/Dose 1/2 tablet", edit(Optional.of("Dose 1/2 tablet"), Optional.empty()));
         assertParseSuccess(parser, " 1 2 med/See https://clinic.example/guide",
                 edit(Optional.of("See https://clinic.example/guide"), Optional.empty()));
+    }
+
+    @Test
+    public void parse_standaloneSlashWords_success() {
+        for (String word : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o", "W/O")) {
+            String description = "Paracetamol 1g " + word + " food";
+            assertParseSuccess(parser, " 1 2 med/" + description, edit(Optional.of(description), Optional.empty()));
+        }
+        assertParseSuccess(parser, " 1 2 med/w/o food", edit(Optional.of("w/o food"), Optional.empty()));
+    }
+
+    @Test
+    public void parse_otherSlashWords_unchanged() {
+        assertParseSuccess(parser, " 1 2 med/Take f/o g/d", edit(Optional.of("Take f/o g/d"), Optional.empty()));
+        assertParseFailure(parser, " 1 2 med/Take A/B", String.format(MESSAGE_UNKNOWN_PREFIX, "A/"));
+        assertParseFailure(parser, " 1 2 med/Take n/a", String.format(MESSAGE_UNKNOWN_PREFIX, "n/"));
+    }
+
+    @Test
+    public void parse_notApplicable_success() {
+        assertParseSuccess(parser, " 1 2 med/Take N/A", edit(Optional.of("Take N/A"), Optional.empty()));
+        assertParseSuccess(parser, " 1 2 med/Take N/A, then rest",
+                edit(Optional.of("Take N/A, then rest"), Optional.empty()));
+    }
+
+    @Test
+    public void parse_realPrefixesAfterSlashWord_stillDetected() {
+        assertParseSuccess(parser, " 1 2 med/Take w/o food t/08:00",
+                edit(Optional.of("Take w/o food"), Optional.of(List.of(MORNING))));
+        assertParseFailure(parser, " 1 2 med/Take w/o food p/123", String.format(MESSAGE_UNKNOWN_PREFIX, "p/"));
+        assertParseFailure(parser, " 1 2 med/Take w/o food T/08:00", String.format(MESSAGE_UNKNOWN_PREFIX, "T/"));
+        assertParseFailure(parser, " 1 2 med/Take w/o food med/Aspirin",
+                getErrorMessageForDuplicatePrefixes(PREFIX_MEDICATION));
+        assertParseFailure(parser, " 1 2 med/x w/ y", String.format(MESSAGE_UNKNOWN_PREFIX, "w/"));
+    }
+
+    @Test
+    public void parse_punctuatedOrMisplacedSlashWord_throwsParseException() {
+        for (String word : List.of("c/o", "s/o", "w/o")) {
+            assertParseFailure(parser, " 1 2 med/Take " + word + ", daughter",
+                    String.format(MESSAGE_PUNCTUATED_SLASH_TOKEN, word + ",", word));
+        }
+        assertParseFailure(parser, " 1 2 w/o t/08:00", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, " 1 2 t/08:00 w/o", Medication.MESSAGE_TIME_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_slashWordOutsideDescription_sameMessageAsOtherStrayWord() {
+        assertSameFailure(" 1 2 w/o t/08:00", " 1 2 hello t/08:00");
+        assertSameFailure(" 1 2 t/08:00 w/o", " 1 2 t/08:00 hello");
+    }
+
+    private void assertSameFailure(String slashWordInput, String strayWordInput) {
+        ParseException slashWordError = assertThrows(ParseException.class, () -> parser.parse(slashWordInput));
+        ParseException strayWordError = assertThrows(ParseException.class, () -> parser.parse(strayWordInput));
+        assertEquals(strayWordError.getMessage(), slashWordError.getMessage());
     }
 
     @Test

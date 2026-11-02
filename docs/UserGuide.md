@@ -100,7 +100,7 @@ A reserved prefix cannot be embedded at the start of a field value: `a/p/123` is
 Each command's existing standalone slash-word exceptions still apply; keep those words separate from punctuation.
 In `add` and `edit` addresses and in contact names, roles and notes, write `without` instead of `w/o`.
 For example, use `a/Flat without lift` or `nt/MRI without contrast`; `w/o` is rejected in these fields.
-`addcare`, `editcare`, `addappt` and `editappt` allow the standalone word `w/o`.
+`addcare`, `editmed`, `editcare`, `addappt` and `editappt` allow the standalone word `w/o`.
 Write field prefixes in lowercase. Incorrect capitalisation such as `NT/bring scans`, `Nt/bring scans`, or
 `T/08:00` is rejected even inside free text; use `nt/bring scans` or `t/08:00` instead.
 This also applies to ordinary text such as `A/B`, because `A/` matches the reserved `a/` prefix ignoring case.
@@ -299,7 +299,9 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
 * The patient can be archived (shown by `listarchived`). The medication is updated without making the patient active
   again.
 * The description follows the [slash-text rules](#slash-text-in-field-values): `mg/ml` and `units/day` are allowed.
-  Reserved prefixes outside this command, such as `p/`, are rejected. Only lowercase `med/` and `t/` start fields;
+  Reserved prefixes outside this command, such as `p/`, are rejected.
+  Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
+  punctuation attached. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
@@ -315,6 +317,8 @@ Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1.
   Returns `Updated medication 2 of Alex Yeoh: Amlodipine 5mg`
 * `editmed 1 1 t/20:00 t/08:00 t/20:00` sorts the times and keeps `20:00` once.<br>
   Returns `Updated medication 1 of Alex Yeoh: Aspirin 100mg (08:00, 20:00)`
+* `editmed 1 1 med/Aspirin 100mg w/o food` keeps `w/o` as text.<br>
+  Returns `Updated medication 1 of Alex Yeoh: Aspirin 100mg w/o food (08:00)`
 
 A successful command returns `Updated medication MED_INDEX of PATIENT_NAME: MEDICATION`, where `MEDICATION` is the
 description followed by the times in brackets. The brackets are left out when there are no times.

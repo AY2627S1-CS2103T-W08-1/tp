@@ -35,7 +35,7 @@ public class EditMedCommandParser implements Parser<EditMedCommand> {
     @Override
     public EditMedCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        ArgumentTokenizer.verifyNoInvalidPrefixes(args, Set.of(), Set.of(PREFIX_MEDICATION),
+        ArgumentTokenizer.verifyNoInvalidPrefixes(args, CliSyntax.ALLOWED_SLASH_WORDS, Set.of(PREFIX_MEDICATION),
                 PREFIX_MEDICATION, PREFIX_TIME);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_MEDICATION, PREFIX_TIME);
 

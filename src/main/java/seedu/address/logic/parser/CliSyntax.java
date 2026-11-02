@@ -27,4 +27,7 @@ public class CliSyntax {
             PREFIX_DOB, PREFIX_MEDICATION, PREFIX_ALLERGEN, PREFIX_CARE_INSTRUCTION, PREFIX_ROLE,
             PREFIX_DATE, PREFIX_TIME, PREFIX_WITH, PREFIX_NOTE);
 
+    /** Standalone slash words that addcare and editmed keep as text, ignoring letter case. */
+    public static final Set<String> ALLOWED_SLASH_WORDS = Set.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o");
+
 }
