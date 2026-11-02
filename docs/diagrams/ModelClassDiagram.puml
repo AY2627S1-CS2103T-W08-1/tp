@@ -40,6 +40,6 @@ Patient -[hidden]up--> I
 UniquePatientList -[hidden]right-> I
 
 
-ModelManager --> "0..*\n" Patient : filtered patients
-ModelManager --> "0..1\n" Patient : viewed patient
+ModelManager --> "      0..*\n" Patient : filtered patients
+ModelManager --> "0..1      \n\n\n" Patient : viewed patient
 @enduml

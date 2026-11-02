@@ -120,7 +120,40 @@ public class NameContainsKeywordsPredicateTest {
         assertTrue(new NameContainsKeywordsPredicate(List.of("Jose\u0301")).test(composed));
         assertTrue(new NameContainsKeywordsPredicate(List.of("Jos\u00e9")).test(decomposed));
         assertTrue(new NameContainsKeywordsPredicate(List.of("JOSE\u0301")).test(composed));
-        assertFalse(new NameContainsKeywordsPredicate(List.of("Jose")).test(composed));
+    }
+
+    @Test
+    public void test_unaccentedKeyword_matchesAccentedName() {
+        Patient zoe = new PatientBuilder().withName("Zo\u00eb Tan").build();
+        for (String keyword : List.of("zoe", "ZOE", "zo\u00eb", "ZO\u00cb", "zoe\u0308")) {
+            assertTrue(new NameContainsKeywordsPredicate(List.of(keyword)).test(zoe));
+        }
+
+        Patient composed = new PatientBuilder().withName("Jos\u00e9 Tan").build();
+        Patient decomposed = new PatientBuilder().withName("Jose\u0301 Tan").build();
+        Patient unaccented = new PatientBuilder().withName("Jose Tan").build();
+        assertTrue(new NameContainsKeywordsPredicate(List.of("jose")).test(composed));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("jose")).test(decomposed));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("jos\u00e9")).test(unaccented));
+
+        // accents do not make a partial word match
+        assertFalse(new NameContainsKeywordsPredicate(List.of("zo")).test(zoe));
+    }
+
+    @Test
+    public void test_lettersThatAreNotAccentMarks_notIgnored() {
+        assertFalse(new NameContainsKeywordsPredicate(List.of("soren")).test(
+                new PatientBuilder().withName("S\u00f8ren Lim").build()));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("strasse")).test(
+                new PatientBuilder().withName("Stra\u00dfe Ng").build()));
+    }
+
+    @Test
+    public void test_marksOutsideAccentBlock_kept() {
+        // a Tamil vowel sign is a mark, but not an accent mark, so it is not removed
+        Patient patient = new PatientBuilder().withName("\u0b95\u0bae\u0bb2\u0bbe Devi").build();
+        assertFalse(new NameContainsKeywordsPredicate(List.of("\u0b95\u0bae\u0bb2")).test(patient));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("\u0b95\u0bae\u0bb2\u0bbe")).test(patient));
     }
 
     @Test
