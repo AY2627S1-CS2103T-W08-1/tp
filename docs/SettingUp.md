@@ -20,6 +20,8 @@
 
 First, **fork** this repo, and **clone** the fork into your computer.
 
+You need **JDK 25**. JavaFX comes with the project's Gradle dependencies, so a JDK without JavaFX works.
+
 If you plan to use IntelliJ IDEA (highly recommended):
 
 1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure Intellij is configured to use **JDK 25**.
@@ -34,6 +36,15 @@ If you plan to use IntelliJ IDEA (highly recommended):
 1. **Verify the setup**:
    1. Run the `MediConnect` run configuration and try a few commands.
    1. [Run the tests](Testing.md) to ensure they all pass.
+
+If you use another editor, or only the command line:
+
+1. **Check the JDK**: in the repository folder, run `gradlew --version` (Mac/Linux: `./gradlew --version`) and check
+   that `Launcher JVM` is version 25.
+1. **Run MediConnect**: run `gradlew run` (Mac/Linux: `./gradlew run`).
+1. **Verify the setup**: run `gradlew check` (Mac/Linux: `./gradlew check`), which runs the tests and Checkstyle.
+   The Gradle `run` and `test` tasks enable assertions. To run all the checks that CI runs, see
+   [Running the checks that CI runs](Testing.md#running-the-checks-that-ci-runs).
 
 --------------------------------------------------------------------------------------------------------------------
 
