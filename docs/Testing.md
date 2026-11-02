@@ -30,6 +30,21 @@ You can run tests in two ways.
 
 --------------------------------------------------------------------------------------------------------------------
 
+## Running the checks that CI runs
+
+`gradlew clean test` runs only the tests. CI runs `gradlew check coverage` (Mac/Linux: `./gradlew check coverage`),
+which also runs Checkstyle and creates a coverage report:
+
+* The coverage report is in `build/reports/jacoco/coverage/`: open `html/index.html` in a browser, or read
+  `coverage.xml`.
+* The GUI tests need a display. Without one, e.g., on a Linux machine with no desktop, they are skipped instead of
+  failing. To run them there, install Xvfb and use `xvfb-run -a ./gradlew check coverage`, as CI does on Linux.
+* To see whether any test was skipped, open the test report, `build/reports/tests/test/index.html`.
+* CI also runs repository-wide checks, such as line endings. See
+  [Repository-wide checks](DevOps.md#repository-wide-checks) in the DevOps guide.
+
+--------------------------------------------------------------------------------------------------------------------
+
 ## Types of tests
 
 This project has three types of tests:
