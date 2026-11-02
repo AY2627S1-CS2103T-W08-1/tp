@@ -2244,6 +2244,14 @@ empty home folder. Run dependent test cases in the order given and complete any 
 1. Test case: `edit 1 a/s/o,`.<br>
    Expected: `Unrecognized word: 's/o,'. Write s/o as a separate word without punctuation.` Nothing changes.
 
+1. Test case: `edit 1 a/Flat n/a lift`.<br>
+   Expected: The command succeeds, changing patient 1's address to `Flat` and name to `a lift`.
+   `n/` starts a name field; `n/a` is not treated as “not applicable”.
+
+1. Test case: `editcontact 1 1 nt/Call n/a first`.<br>
+   Expected: The command succeeds, changing contact 1's note to `Call` and name to `a first`.
+   These last two checks deliberately change names in the disposable data.
+
 ### Adding a patient with a blank address
 
 1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
