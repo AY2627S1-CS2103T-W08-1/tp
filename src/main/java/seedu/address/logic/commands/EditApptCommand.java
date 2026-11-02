@@ -126,9 +126,13 @@ public class EditApptCommand extends Command {
         assert newPosition >= 0 : "the edited appointment must be among the patient's appointments";
         // Locale.ROOT, so that the number is in the same digits as in the panel on every computer
         String message = String.format(Locale.ROOT, MESSAGE_SUCCESS, Index.fromZeroBased(newPosition).getOneBased(),
-                patientToEdit.getName(), editedAppointment)
-                + Messages.formatAppointmentWarnings(patientToEdit.getName(), editedAppointment,
-                        otherAppointments, LocalDateTime.now(clock));
+                patientToEdit.getName(), editedAppointment);
+        // Only a new date or time is checked, so that editing just WITH or NOTE, e.g., after a visit, does not
+        // repeat the notes and warnings given when the appointment was added or moved.
+        if (!editedAppointment.isAtSameTimeAs(appointmentToEdit)) {
+            message += Messages.formatAppointmentWarnings(patientToEdit.getName(), editedAppointment,
+                    otherAppointments, LocalDateTime.now(clock));
+        }
         return new CommandResult(message);
     }
 

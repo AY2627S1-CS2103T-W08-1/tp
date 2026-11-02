@@ -340,14 +340,26 @@ public class RestoreCommandTest {
     }
 
     @Test
-    public void execute_fileInPlaceOfBackupFolder_throwsCommandExceptionWithNotFound() throws Exception {
+    public void execute_fileInPlaceOfBackupFolder_throwsCommandExceptionNamingFile() throws Exception {
         // a file where the backup folder should be also makes whether a backup in it exists unknown, but it is
-        // not a folder that MediConnect may not open
+        // not a folder that MediConnect may not open, so the file is named instead
         Path fileInPlaceOfFolder = Files.createFile(temporaryFolder.resolve("backups"));
         RestoreCommand restoreCommand = new RestoreCommand(BACKUP_NAME, FIXED_CLOCK, fileInPlaceOfFolder);
 
-        assertCommandFailure(restoreCommand, model,
-                String.format(RestoreCommand.MESSAGE_NOT_FOUND, BACKUP_NAME, fileInPlaceOfFolder));
+        String expectedMessage = String.format(RestoreCommand.MESSAGE_FILE_IN_PLACE_OF_FOLDER, BACKUP_NAME,
+                fileInPlaceOfFolder);
+
+        assertCommandFailure(restoreCommand, model, expectedMessage);
+    }
+
+    @Test
+    public void execute_fileInPlaceOfFolderAbove_throwsCommandExceptionNamingFile() throws Exception {
+        // e.g., a file named data where the data folder should be, above data/backups
+        Path fileInPlaceOfFolder = Files.createFile(temporaryFolder.resolve("data"));
+        Path backupDir = fileInPlaceOfFolder.resolve("backups");
+
+        assertCommandFailure(new RestoreCommand("old", FIXED_CLOCK, backupDir), model,
+                String.format(RestoreCommand.MESSAGE_FILE_IN_PLACE_OF_FOLDER, "old", fileInPlaceOfFolder));
     }
 
     @Test
