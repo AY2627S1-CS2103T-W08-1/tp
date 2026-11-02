@@ -123,7 +123,7 @@ How the `Logic` component works:
 1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
 1. The command can communicate with the `Model` when it is executed (e.g. to delete a patient).<br>
-   Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
+   Note that the diagram above shows only the main interactions with the `Model` for simplicity; the code can require more interactions between the command object and the `Model` to complete the operation.
 1. `LogicManager` saves through `Storage` if patient data changed or the command's
    `requiresSaveWhenUnchanged()` returns `true` (`clear confirm` and `restore FILENAME`). Before executing the
    command, it takes a `Model.Snapshot` of the patient data, filter and viewed patient. If saving fails, it restores
