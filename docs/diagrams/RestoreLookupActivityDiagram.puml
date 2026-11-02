@@ -32,7 +32,8 @@ else ([else])
             :Report that no backup
             named FILENAME was found;
             note right
-                If MediConnect may not open
+                If data/backups or data is a file,
+                or MediConnect may not open
                 data/backups, it says so instead.
             end note
             stop

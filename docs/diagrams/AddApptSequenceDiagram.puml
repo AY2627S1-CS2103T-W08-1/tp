@@ -55,7 +55,7 @@ activate Model
 Model --> AddApptCommand : patients
 deactivate Model
 
-AddApptCommand -> AddApptCommand : check that toAdd is not a duplicate
+AddApptCommand -> AddApptCommand : check that toAdd is not before the DOB or a duplicate
 activate AddApptCommand
 deactivate AddApptCommand
 
