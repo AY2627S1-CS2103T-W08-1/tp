@@ -804,6 +804,7 @@ The following activity diagram summarizes what happens when a caregiver executes
 * [Testing guide](Testing.md)
 * [Logging guide](Logging.md)
 * [DevOps guide](DevOps.md)
+* [Configuration guide](Configuration.md)
 
 ### Defensive programming
 
