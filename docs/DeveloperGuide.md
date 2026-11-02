@@ -36,7 +36,7 @@ Refer to the guide [_Setting up and getting started_](SettingUp.md).
 
 ### Architecture
 
-<puml src="diagrams/ArchitectureDiagram.puml" width="280" />
+<puml src="diagrams/ArchitectureDiagram.puml" width="280" alt="Architecture of MediConnect: Main, UI, Logic, Model, Storage and Commons" />
 
 The ***Architecture Diagram*** given above explains the high-level design of the App.
 
@@ -61,7 +61,7 @@ The bulk of the app's work is done by the following four components:
 
 The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
 
-<puml src="diagrams/ArchitectureSequenceDiagram.puml" width="574" />
+<puml src="diagrams/ArchitectureSequenceDiagram.puml" width="574" alt="Interactions between the UI, Logic, Model and Storage components for the command delete 1" />
 
 Each of the four main components (also shown in the diagram above),
 
@@ -70,7 +70,7 @@ Each of the four main components (also shown in the diagram above),
 
 For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
-<puml src="diagrams/ComponentManagers.puml" width="300" />
+<puml src="diagrams/ComponentManagers.puml" width="300" alt="LogicManager, ModelManager and StorageManager implementing the Logic, Model and Storage interfaces" />
 
 The sections below give more details of each component.
 
@@ -102,7 +102,7 @@ The `UI` component,
 
 Here's a (partial) class diagram of the `Logic` component:
 
-<puml src="diagrams/LogicClassDiagram.puml" width="550"/>
+<puml src="diagrams/LogicClassDiagram.puml" width="550" alt="Partial structure of the Logic component" />
 
 The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
 
@@ -129,7 +129,7 @@ How the `Logic` component works:
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
-<puml src="diagrams/ParserClasses.puml" width="600"/>
+<puml src="diagrams/ParserClasses.puml" width="600" alt="Classes in the Logic component that parse a command" />
 
 How the parsing works:
 * `AddressBookParser` lowercases only the command word with `Locale.ROOT` before dispatch, so `LIST`, `List`
@@ -153,11 +153,11 @@ How the parsing works:
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
-<puml src="diagrams/ModelClassDiagram.puml" width="450" />
+<puml src="diagrams/ModelClassDiagram.puml" width="450" alt="Structure of the Model component" />
 
 The diagram below shows the `Patient` class in more detail.
 
-<puml src="diagrams/PatientClassDiagram.puml" width="450" />
+<puml src="diagrams/PatientClassDiagram.puml" width="450" alt="Structure of the Patient class and the details it holds" />
 
 
 The `Model` component,
@@ -194,7 +194,7 @@ is case-insensitive. `UniquePatientList` rejects patients with the same NRIC; di
 
 **API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
-<puml src="diagrams/StorageClassDiagram.puml" width="550" />
+<puml src="diagrams/StorageClassDiagram.puml" width="550" alt="Structure of the Storage component" />
 
 The `Storage` component,
 * can save both patient data and user preference data in JSON format, and read them back into corresponding objects.
@@ -474,7 +474,7 @@ The sequence diagram below shows a successful `restore old.json`.
    the previous model, including an empty backup after startup recovery. A save failure restores the model's
    previous data, filter and viewed patient; the automatic backup is kept.
 
-If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing. `RestoreCommand` also checks with `Files#isReadable()` and `Files#isExecutable()` that the backup folder itself cannot be opened, e.g., because it or a folder above it is not readable, since both methods are also false for a name too long for the file system, e.g., of 300 characters. Such a name is reported as not found.
+If MediConnect cannot tell whether a file in the backup folder exists, i.e., both `Files#exists()` and `Files#notExists()` are false, as when it may not open the folder, `ListBackupsCommand` and `RestoreCommand` say that it does not have permission to read the folder. Otherwise, a folder that cannot be opened would look like one without backups, and a backup in it would look missing. `RestoreCommand` also checks with `Files#isReadable()` and `Files#isExecutable()` that the backup folder itself cannot be opened, e.g., because it or a folder above it is not readable, since both methods are also false for a name too long for the file system, e.g., of 300 characters. Such a name is reported as not found. Before these checks, `RestoreCommand` uses `FileUtil#findFileInPlaceOfFolder()` to name a file that is where the backup folder, or a folder above it, should be, as `ListBackupsCommand` does, since `backup` cannot make the folder while that file is there.
 
 Both commands have a second constructor that takes a `java.time.Clock` and the backup folder. The usual constructor passes the system clock and `data/backups`, while tests pass a fixed clock and a temporary folder, so that file names and folders are predictable.
 
@@ -515,7 +515,7 @@ The `export INDEX` command saves the full record of a patient in the displayed l
 
 1. `ExportCommandParser` parses the index in the same way as `ViewCommandParser`. `ExportCommand#execute()` checks it against the filtered patient list, so `export` exports an active patient after `list` or `find`, and an archived patient after `listarchived`.
 1. `ExportCommand#createRecord()` builds the lines of the record: a title, `Exported on` with the date and time from the command's `Clock`, a blank line, then the lines from `PatientFormatter#formatRecord()`. These are the patient's name, the details from `PatientFormatter#formatDetails()`, with `Status: Archived` for an archived patient, and each list under its heading, numbered by `PatientFormatter#formatEntries()`. Appointments are ordered and marked `(past)` at the time of the export, through the same `PatientFormatter#formatAppointments()` that the detail panel uses.
-1. The file is named after the patient's NRIC, e.g., `S1234567A.txt`. Before writing, `ExportCommand#writeRecord()` creates the folder if it does not exist. `FileUtil#writeThroughTemporaryFile()` then throws an `AccessDeniedException` if an earlier export of the patient is read-only, since the new record would otherwise replace it although the user made it read-only.
+1. The file is named after the patient's NRIC, e.g., `S1234567A.txt`. Before writing, `ExportCommand#writeRecord()` creates the folder if it does not exist. `FileUtil#writeThroughTemporaryFile()` then throws an `AccessDeniedException` if an earlier export of the patient is read-only, since the new record would otherwise replace it although the user made it read-only. It also throws a `FileSystemException` whose reason names the folder if a folder has the file's name, since a file cannot replace a folder, and the file system's own reason, e.g., "Is a directory", differs between operating systems.
 1. The record is written through `FileUtil#writeThroughTemporaryFile()`, as backups are, so a failed write never leaves a partial record in place of an earlier one, and on macOS and Linux, only the current user can open the file. If writing fails, `Messages#describeWriteFailure()` turns the `IOException` into a short reason for the error message.
 1. The command does not change the `Model`. It logs only the export folder, not the file, since the file name is the patient's NRIC. The date is formatted with `Locale.ROOT`, so that it uses the digits 0 to 9 whatever the computer's language settings are.
 
@@ -625,13 +625,15 @@ are omitted for clarity.
 1. `AddApptCommandParser` requires `d/`, `t/` and `w/` once each, with `w/` and `nt/` declared as free text for
    slash validation. It parses the index, the date, the time (with `ParserUtil#parseTime`, as for medication times) and who the appointment is with, and
    creates the `Appointment` `toAdd`, with an empty note if `nt/` is not given.
-1. `AddApptCommand#execute()` resolves the index against the filtered patient list. It rejects `toAdd` if the patient
-   already has an appointment at the same date and time with the same person, ignoring case and extra spaces.
+1. `AddApptCommand#execute()` resolves the index against the filtered patient list. It rejects `toAdd` if it is
+   before the patient's date of birth, or if the patient already has an appointment at the same date and time with
+   the same person, ignoring case and extra spaces.
 1. The command creates a replacement immutable `Patient` with `toAdd` added, which keeps its appointments sorted by
    date, then time. `Model#setPatient()` stores it, and `Model#setViewedPatient()` shows it in the detail panel, so
    the new appointment and its number can be checked.
-1. The command adds a note to the result if `toAdd` is in the past, and a warning for each of the patient's other
-   appointments at the same date and time. The current time comes from a `java.time.Clock` given to the command:
+1. The command adds a note to the result if `toAdd` is in the past or on a date more than 2 years from today, which
+   may be a mistyped year, and a warning for each of the patient's other appointments at the same date and time.
+   The current time comes from a `java.time.Clock` given to the command:
    the system clock by default, and a fixed one in tests, so that the tests do not depend on when they run.
    `Appointment#isBefore` ignores seconds, so an appointment in the current minute is not in the past.
 
@@ -771,7 +773,7 @@ Step 6. The caregiver executes `clear confirm`, which calls `Model#commitPatient
 
 The following activity diagram summarizes what happens when a caregiver executes a new command:
 
-<puml src="diagrams/CommitActivityDiagram.puml" width="250" />
+<puml src="diagrams/CommitActivityDiagram.puml" width="250" alt="What happens to the saved states when a command is executed" />
 
 #### Design considerations:
 
@@ -1406,6 +1408,18 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 4.
 
+* 3d. The name has a character that the operating system does not allow in file names, e.g., `"` on Windows.
+
+    * 3d1. MediConnect shows an error message saying so, and that the name should be typed without quotes.
+
+      Use case resumes at step 3.
+
+* 3e. MediConnect cannot read `data/backups`, or `data/backups` or the `data` folder is a file.
+
+    * 3e1. MediConnect shows an error message saying so, and that the data has not been changed.
+
+      Use case ends.
+
 * 4a. The backup cannot be read, e.g., it is damaged, is not a MediConnect data file, is not saved as UTF-8, or MediConnect has no permission to read it.
 
     * 4a1. MediConnect shows an error message that the backup could not be read, that it is not saved as UTF-8, or that it has no permission to read the backup, and that the data has not been changed.
@@ -1699,7 +1713,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-* 3a. The edited appointment is in the past, more than 2 years ahead, or at the same date and time as another appointment of the patient.
+* 3a. The edit moves the appointment into the past, to more than 2 years ahead, or to the same date and time as another appointment of the patient.
 
     * 3a1. MediConnect also shows the same note or warning as when adding the appointment (UC14).
 
@@ -1913,6 +1927,46 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC22 - Clear all patient records**
+
+**System**: MediConnect<br>
+**Actor**: Caregiver
+
+**MSS**
+
+1.  Caregiver requests to clear all patient records, explicitly confirming the request.
+2.  MediConnect backs up all current patient data (UC8), even if there are no patients.
+3.  MediConnect removes all active and archived patients and their care information, including patients hidden by a search, and saves the empty records.
+4.  MediConnect confirms that all patients have been cleared and gives the backup's location.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Confirmation is missing or incorrect, or extra arguments are given.
+
+    * 1a1. MediConnect explains that explicit confirmation is required and shows the correct format. No data is changed and no backup is made.
+
+      Use case ends.
+
+* 2a. The automatic backup cannot be saved.
+
+    * 2a1. MediConnect shows a backup-failure message and leaves all patient records unchanged.
+
+      Use case ends.
+
+* 3a. The cleared data cannot be saved.
+
+    * 3a1. MediConnect restores the previous patient data and viewing state, keeps the automatic backup, and shows a save-failure message.
+
+      Use case ends.
+
+* 4a. Caregiver wants to recover the cleared records.
+
+    * 4a1. Caregiver restores the automatic backup using UC9.
+
+      Use case ends.
+
 ### Non-Functional Requirements
 
 1. MediConnect must operate as a single-user application. Its data file must not be accessed by another user during regular operation. Only one running instance may use a given app folder's data at a time. Sharing data between different app folders is unsupported.
@@ -1931,6 +1985,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * **Allergy**: A harmful reaction a patient has to a substance, such as a drug or a food. Each allergy is recorded by
   the name of the substance that causes it (the *allergen*), e.g., `Penicillin`.
+* **ALLERGY_INDEX**: The number shown beside an allergen in the numbered allergen list of the patient's details,
+  starting from 1. `deleteallergy` uses it, together with the patient's index, to refer to an allergen. It can change
+  when an allergen before it is deleted.
 * **Appointment**: A scheduled visit by a patient to a healthcare provider, recorded with its date, time, and provider.
   Notes on what was discussed can be added after the visit.
 * **APPT_INDEX**: The number shown beside an appointment in the numbered appointment list of the patient's details,
@@ -1951,11 +2008,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   breakfast".
 * **Caregiver**: A person who uses MediConnect to coordinate a patient's care, typically a family member of the
   patient. A caregiver is not necessarily a healthcare professional.
+* **CI_INDEX**: The number shown beside a care instruction in the numbered care instruction list of the patient's
+  details, starting from 1. `editcare` and `deletecare` use it, together with the patient's index, to refer to a care
+  instruction. It can change when a care instruction before it is deleted.
 * **CLI (Command Line Interface)**: A way of using an application by typing text commands rather than by clicking on
   elements with a mouse.
 * **Community nurse**: A nurse who cares for patients through scheduled home visits.
 * **Contact**: A person or organisation linked to a patient's profile, which is either a healthcare provider (e.g., a
   GP, specialist, or pharmacist) or an emergency contact.
+* **CONTACT_INDEX**: The number shown beside a contact in the numbered contact list of the patient's details,
+  starting from 1. `editcontact` and `deletecontact` use it, together with the patient's index, to refer to a
+  contact. It can change when a contact before it is deleted.
 * **Daily time**: A time of day, in 24-hour `HH:MM` format, at which a patient takes a medication every day, e.g.,
   `08:00`. A medication can have any number of daily times, or none.
 * **Detail panel**: The panel to the right of the patient list that shows the full details of one patient: the one
@@ -2002,12 +2065,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ## **Appendix: Instructions for manual testing**
 
-Given below are instructions to test the app manually.
+Given below are instructions to test the app manually. In the expected results, the *status message* is the
+message shown in the result box, just below the command box.
 
 <box type="info" seamless>
 
 **Note:** These instructions only provide a starting point for testers to work on;
 testers are expected to do more *exploratory* testing.
+
+Use disposable home folders, not real patient data, for tests that delete records or change data files and folders.
+Start each section with its stated prerequisites; when fresh sample data is required, launch the JAR from a new
+empty home folder. Run dependent test cases in the order given and complete any cleanup before continuing.
 </box>
 
 ### Launch and shutdown
@@ -2126,8 +2194,12 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `editmed 1 1 med/Amoxicillin 250 mg/ml t/08:00`.<br>
    Expected: The first medication has that description and the time `08:00`.
 
-1. Test case: `addcontact 1 n/Clinic A/B r/GP nt/Ask clinic and/or GP p/123`.<br>
+1. Test case: `addcontact 1 n/Clinic A or B r/GP nt/Ask clinic and/or GP p/123`.<br>
    Expected: The contact is added with its complete name and note, and phone `123`.
+
+1. Test cases: `edit 1 a/Block A/B` and `addcontact 1 n/Clinic A/B r/GP p/123`.<br>
+   Expected: Each reports `Unrecognized parameter: A/. Please check the command format.` Nothing changes.
+   `A/` is rejected as a wrongly capitalised reserved prefix even inside free text.
 
 1. Test case: `addappt 1 d/2027-01-02 t/10:00 w/Dr Tan nt/dose 2 mg/ml`.<br>
    Expected: The appointment is added with note `dose 2 mg/ml`.
@@ -2159,6 +2231,21 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `add n/Ben Ng ic/S1111111B dob/1950-01-01 p/91111111 a/`<br>
    Expected: No patient is added. The status message shows `Addresses cannot be blank.`
 
+### Editing a patient
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run `find Bernice`, then `view 1`.
+   Bernice Yu is the only displayed patient and is therefore at index 1.
+
+1. Test case: `edit 1 p/91234567`<br>
+   Expected: Bernice Yu's phone changes to `91234567`. The active-patient list is reset and shows all four sample
+   patients, while the detail panel shows Bernice Yu. Her allergen `Latex`, care instruction and appointment are
+   unchanged.
+
+1. Test case: `edit 2 ic/S0000001A`<br>
+   Expected: Nothing changes. The status message shows
+   `This patient (identified by NRIC) already exists in MediConnect.` Bernice Yu keeps her original NRIC and the
+   edited phone number.
+
 ### Adding care information
 
 1. Prerequisites: The sample data is loaded. Run `view 1` to show Alex Yeoh's existing care information.
@@ -2176,6 +2263,27 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `addcare 999 med/Ibuprofen`<br>
    Expected: Nothing is added. The status message shows `The patient index provided is invalid.`
+
+### Editing and deleting care entries
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run
+   `addcare 1 al/Latex al/Shellfish ci/Check blood sugar before breakfast ci/Turn every 2 hours`, then `view 1`.
+   Alex Yeoh now has three allergens and three care instructions. The following test cases build on one another.
+
+1. Test case: `editcare 1 2 ci/Check blood sugar after breakfast`<br>
+   Expected: Care instruction 2 is replaced in place. The status message shows
+   `Updated care instruction for Alex Yeoh: Check blood sugar after breakfast`.
+
+1. Test case: `deletecare 1 1`<br>
+   Expected: `Monitor blood pressure every morning` is deleted. The edited instruction becomes number 1 and
+   `Turn every 2 hours` becomes number 2.
+
+1. Test case: `deleteallergy 1 2`<br>
+   Expected: `Latex` is deleted. `Penicillin` remains allergen 1 and `Shellfish` becomes allergen 2.
+
+1. Test cases: `editcare 1 9 ci/Test`, `deletecare 1 9`, and `deleteallergy 1 9`.<br>
+   Expected: The commands report an invalid care-instruction or allergen index and change nothing. Alex Yeoh's
+   medications, contact and appointments remain unchanged throughout this section.
 
 ### Editing and deleting medications
 
@@ -2400,12 +2508,30 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list`<br>
       Expected: The patient list is empty. The status message shows `No active patients found.`
 
+### Archiving and restoring a patient
+
+1. Prerequisites: Start with fresh sample data in a disposable app folder. Run `find Bernice`, then `view 1`.
+   Bernice Yu is the only displayed patient and is therefore at index 1.
+
+1. Test case: `archive 1`<br>
+   Expected: The status message shows `Archived patient: Bernice Yu; NRIC: S0000002A`. Bernice Yu disappears from
+   the displayed active results and the detail panel returns to its placeholder.
+
+1. Test case: `listarchived`, then `view 1`.<br>
+   Expected: Bernice Yu is archived patient 1. Her phone, `Latex` allergen, care instruction and appointment are
+   unchanged, and her patient card is marked `(Archived)`.
+
+1. Test case: `unarchive 1`.<br>
+   Expected: The status message shows `Unarchived patient: Bernice Yu; NRIC: S0000002A`. She disappears from the
+   archived list while the detail panel keeps showing her restored record. Run `list`; all four active sample
+   patients are shown again and Bernice Yu's complete record is unchanged.
+
 ### Clearing all patients
 
 1. Prerequisites: Have active and archived patients, and run `view 1`.
 
 1. Test cases: `clear`, `clear 1`, `clear CONFIRM`, `clear confirm extra`<br>
-   Expected: `Invalid command format!` followed by the clearing warning and `Format: clear confirm`.
+   Expected: `Invalid command format!` followed by the clearing warning and `Parameters: clear confirm`.
    All patients and the viewed patient remain unchanged, and no backup is created.
 
 1. Test case: `clear confirm`<br>
@@ -2425,11 +2551,14 @@ testers are expected to do more *exploratory* testing.
    `clear confirm`.<br>
    Expected: A backup failure message. All patients and the viewed patient remain unchanged.
 
+   Cleanup: Close MediConnect and remove the test file named `backups` from `data`. Relaunch the app before
+   running further commands in this home folder, so that backups can be created again.
+
 1. Replacing unreadable data with an empty address book
 
-   1. Prerequisites: Use a disposable app folder. Run `clear confirm`, then `backup` and note that empty backup's
-      name. Close the app and replace `data/mediconnect.json` with malformed JSON, such as `{"persons": [`. Keep
-      the backup folder. Launch the app from that disposable folder.
+   1. Prerequisites: Launch MediConnect from a new, empty disposable home folder. Run `clear confirm`, then `backup`
+      and note that empty backup's name. Close the app and replace `data/mediconnect.json` with malformed JSON,
+      such as `{"persons": [`. Keep the backup folder. Launch the app from that disposable folder.
 
    1. Test case: After the recovery warning, run `list`, then inspect the data file.<br>
       Expected: The list is empty and the malformed data file remains unchanged. The warning's recovery copy
@@ -2515,7 +2644,7 @@ testers are expected to do more *exploratory* testing.
       Expected: The click does not highlight the first patient, and the detail panel still shows the second patient. The typed `list` goes into the command box and lists all active patients.
 
    1. Test case: click the command box, then press `Tab` repeatedly<br>
-      Expected: The focus moves between the command box and the status message, and never reaches the patient list.
+      Expected: The focus moves between the command box and the result box, and never reaches the patient list.
 
 1. Filtering out the patient being viewed
 
@@ -2684,8 +2813,8 @@ testers are expected to do more *exploratory* testing.
       Expected: The data is unchanged. The status message says that no backup with that name was found, not that MediConnect may not read the folder.
 
    1. Prerequisites: The app is closed. Move the `data` folder elsewhere, and create an empty file named `data` (with no extension) in its place. Launch the app, which warns that the sample patients are not saved.<br>
-      Test case: `restore`, then `backup`<br>
-      Expected: `restore` says that `data` is a file, not a folder. `backup` says that there is a file named `data` where that folder should be. Afterwards, close the app, delete the file named `data` and move the `data` folder back.
+      Test case: `restore`, `restore old.json`, then `backup`<br>
+      Expected: Both forms of `restore` say that `data` is a file, not a folder. `backup` says that there is a file named `data` where that folder should be. Afterwards, close the app, delete the file named `data` and move the `data` folder back.
 
 ### Exporting a patient's record
 
