@@ -682,6 +682,9 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
 1. It writes one line per dose, as `HH:MM NAME: DESCRIPTION`, and adds ` (earlier today)` straight after the time of
    a dose whose time is before now. The mark is there, not at the end of the line, because the description is free
    text and could end in `(earlier today)` itself, whereas a name cannot contain brackets.
+   If two or more patients in the result have the same name, compared after `toLowerCase(Locale.ROOT)`, their lines
+   use `HH:MM NAME (NRIC): DESCRIPTION` (`Messages#MESSAGE_DUE_ENTRY_WITH_NRIC`) instead. So `José` typed with a
+   separate accent mark and `José` typed as one character count as different names.
    If there are no doses, it returns `No medications are due today.`, or
    `No medications are due today for NAME.` when an index was given.
 
@@ -1115,7 +1118,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 4.
 
-* 5c. An index is missing, or is not a positive integer.
+* 5c. An index is missing, is not a positive integer, or more than two indexes are given.
 
     * 5c1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
 
