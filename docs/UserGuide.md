@@ -298,6 +298,11 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   Standalone `s/o`, `d/o`, `c/o`, `a/l`, `a/p`, and `w/o` are also allowed, ignoring letter case, but must not have
   punctuation attached. Only lowercase `med/` and `t/` start fields;
   `editmed 1 1 med/Aspirin T/08:00` is rejected; use lowercase `t/08:00` to set the time.
+* Put a space before `t/`. Without one, the time is read as part of the description:
+  `editmed 1 1 med/Aspirin 75mgt/09:00` saves the description `Aspirin 75mgt/09:00` and keeps the old time. Check the
+  times in the result message, and if needed run the command again with the space, e.g.,
+  `editmed 1 1 med/Aspirin 75mg t/09:00`. A warning for a time joined to the description is planned for a future
+  version.
 
 Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1. Aspirin 100mg (08:00)` and
 `2. Amlodipine 5mg (08:00, 20:00)`):
@@ -748,8 +753,14 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
   `Mary O'Brien`.
 * Keywords are separated by any kind of space, including a no-break space copied from another application, so
   `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
+* Separate keywords with spaces only. A comma or semicolon stays part of the keyword, so `find alex, bernice` lists
+  only Bernice Yu. Use `find alex bernice` instead. Accepting commas and semicolons between keywords is planned for
+  a future version.
 * An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
   accent mark matches a name with the single character `é`.
+* Accents are not ignored: `find zoe` does not find `Zoë Tan`. Type the accented letter, e.g., `find zoë`, or
+  search for another word of the name, e.g., `find tan`. Matching names without their accents is planned for a
+  future version.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
