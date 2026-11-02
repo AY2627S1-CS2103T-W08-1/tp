@@ -776,6 +776,12 @@ Format: `delete INDEX`
 * Deletes the patient at the specified `INDEX`.
 * The index refers to the index number shown in the displayed patient list.
 * The index **must be a positive integer** 1, 2, 3, ...
+* Unlike `clear`, `delete` does not back up your data first, and there is no undo command.
+  To keep a patient's record but remove them from the patient list, use
+  [`archive`](#archiving-a-patient-archive) instead. To be able to get a deleted patient back, run
+  [`backup`](#backing-up-data-backup) before deleting. Restoring that backup with
+  [`restore`](#restoring-data-from-a-backup-restore) replaces all patient data with the data in it, so changes
+  made after the backup are replaced too; `restore` first saves them in a new backup.
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd patient in MediConnect.
