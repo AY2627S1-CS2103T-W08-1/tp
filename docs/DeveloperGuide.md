@@ -2186,8 +2186,12 @@ empty home folder. Run dependent test cases in the order given and complete any 
 1. Test case: `editmed 1 1 med/Amoxicillin 250 mg/ml t/08:00`.<br>
    Expected: The first medication has that description and the time `08:00`.
 
-1. Test case: `addcontact 1 n/Clinic A/B r/GP nt/Ask clinic and/or GP p/123`.<br>
+1. Test case: `addcontact 1 n/Clinic A or B r/GP nt/Ask clinic and/or GP p/123`.<br>
    Expected: The contact is added with its complete name and note, and phone `123`.
+
+1. Test cases: `edit 1 a/Block A/B` and `addcontact 1 n/Clinic A/B r/GP p/123`.<br>
+   Expected: Each reports `Unrecognized parameter: A/. Please check the command format.` Nothing changes.
+   `A/` is rejected as a wrongly capitalised reserved prefix even inside free text.
 
 1. Test case: `addappt 1 d/2027-01-02 t/10:00 w/Dr Tan nt/dose 2 mg/ml`.<br>
    Expected: The appointment is added with note `dose 2 mg/ml`.
@@ -2519,7 +2523,7 @@ empty home folder. Run dependent test cases in the order given and complete any 
 1. Prerequisites: Have active and archived patients, and run `view 1`.
 
 1. Test cases: `clear`, `clear 1`, `clear CONFIRM`, `clear confirm extra`<br>
-   Expected: `Invalid command format!` followed by the clearing warning and `Format: clear confirm`.
+   Expected: `Invalid command format!` followed by the clearing warning and `Parameters: clear confirm`.
    All patients and the viewed patient remain unchanged, and no backup is created.
 
 1. Test case: `clear confirm`<br>
