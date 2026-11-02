@@ -2,7 +2,7 @@
   "baseUrl": "",
   "titlePrefix": "",
   "titleSuffix": "MediConnect",
-  "faviconPath": "images/SeEduLogo.png",
+  "faviconPath": "images/MediConnectIcon.svg",
   "style": {
     "codeTheme": "light"
   },
