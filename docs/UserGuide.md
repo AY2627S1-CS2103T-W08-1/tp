@@ -290,6 +290,10 @@ Format: `editmed INDEX MED_INDEX [med/DESCRIPTION] [t/TIME]...`
   * Times are shown in ascending order, and a time given more than once is kept once.
   * `t/` with nothing after it **clears** all the times. It cannot be combined with another `t/`: for example,
     `t/08:00 t/` is rejected.
+* If a time is not valid, the error does not say which `t/` value is wrong. For example,
+  `editmed 1 1 t/08:00, t/20:00` returns `Time must be in H:MM or HH:MM (24-hour), e.g. 08:30.` because `08:00,`
+  ends with a comma. Check each `t/` value and separate the times with spaces only, e.g.,
+  `editmed 1 1 t/08:00 t/20:00`. Naming the invalid value in the message is planned for a future version.
 * Without `t/`, the existing times stay as they are. Without `med/`, the description stays as it is.
 * The patient's other details and other medications are not changed. After a successful command, the detail panel
   shows this patient with the updated medication, even if it showed another patient before.
