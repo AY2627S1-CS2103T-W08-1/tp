@@ -28,8 +28,9 @@
   descriptions, and perform preliminary pull request reviews. The resulting changes were reviewed and
   tested before use.
 * @akoromy used Claude Code to find bugs, beta-test the app, draft issues, commit messages and pull request
-  descriptions, draft code fixes and tests, and draft and review User Guide and Developer Guide text. @akoromy
-  reviewed, edited and tested all output before committing it.
+  descriptions, draft code fixes and tests, and draft and review User Guide and Developer Guide text, and used
+  ChatGPT to audit the docs and prepare test checklists. @akoromy reviewed, edited and tested all output
+  before committing it.
 
 --------------------------------------------------------------------------------------------------------------------
 
