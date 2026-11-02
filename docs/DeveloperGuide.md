@@ -877,7 +877,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | attach a note to a contact | remember specific advice from each provider |
 | `* *`    | caregiver                                  | see which medications are due today | give them to the patient on time |
 | `* *`    | caregiver                                  | see the medication times of today for one patient only | prepare that patient's doses without reading the others |
-| `* *`    | caregiver                                  | see which of today's medication times have already passed | check whether I missed a dose |
+| `* *`    | caregiver                                  | see which of today's medication times have already passed | know which doses should already have been given |
 | `* *`    | caregiver                                  | view a patient's full medication schedule at once | spot overlaps or issues easily |
 | `* *`    | caregiver                                  | add an appointment for a patient | keep track of upcoming visits |
 | `* *`    | caregiver                                  | see a list of upcoming appointments across all patients | plan my schedule |

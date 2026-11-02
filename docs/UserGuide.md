@@ -912,7 +912,7 @@ showed before.
 
 ### Listing today's medication times: `due`
 
-Lists the times at which medications are taken today, one line per dose, in the order they are due.
+Lists the times at which medications are to be taken today, one line per dose, in the order they are due.
 
 Format: `due [INDEX]`
 
@@ -928,11 +928,17 @@ Format: `due [INDEX]`
 * If two or more patients in the result have the same name, ignoring letter case, their lines also show the NRIC,
   as `HH:MM PATIENT_NAME (NRIC): DESCRIPTION`, so that you can tell them apart. A name that belongs to only one
   patient in the result is shown without the NRIC.
+* Apart from letter case, names count as the same here only if their letters are stored the same way. An accented
+  letter can be stored as one character or as a letter followed by a separate accent mark. Text pasted from another
+  application can use the second form. Two names that look the same but are stored differently, e.g., two `José Tan`,
+  are shown without their NRICs. To tell such patients apart, use `due INDEX` for each one.
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
   patient at the same time are listed in the order of the patient's medications.
 * A time that is earlier than the current time of your computer (in its time zone) is followed by
   ` (earlier today)` straight after the time, as in `08:00 (earlier today) Alex Yeoh: Aspirin 100mg`. A time in the
   current minute is not marked. Every time is a daily time, so the same times are listed each day.
+* `(earlier today)` only means that the time has passed. MediConnect does not record whether a dose was taken or
+  missed, and it does not send reminders.
 * Only the text right after the time is the mark from MediConnect. A description is free text, so it can itself end
   in `(earlier today)`, e.g., `20:00 Alex Yeoh: Aspirin (earlier today)`, which is not marked and is still to come.
 * Medications without times are not listed.
