@@ -127,7 +127,7 @@ How the `Logic` component works:
 1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
 1. The command can communicate with the `Model` when it is executed (e.g. to delete a patient).<br>
-   Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
+   Note that the diagram above shows only the main interactions with the `Model` for simplicity; the code can require more interactions between the command object and the `Model` to complete the operation.
 1. `LogicManager` saves through `Storage` if patient data changed or the command's
    `requiresSaveWhenUnchanged()` returns `true` (`clear confirm` and `restore FILENAME`). Before executing the
    command, it takes a `Model.Snapshot` of the patient data, filter and viewed patient. If saving fails, it restores
@@ -156,7 +156,9 @@ How the parsing works:
   rules; lowercase `n/` may start a name field in commands that support it. Existing standalone slash-word
   exceptions and their punctuation corrections still apply.
   Slash-word exceptions differ by parser: `add`, `edit`, `addcontact` and `editcontact` do not allow `w/o`,
-  whereas `addcare`, `editcare`, `addappt` and `editappt` allow it as a standalone word.
+  whereas `addcare`, `editmed`, `editcare`, `addappt` and `editappt` allow it as a standalone word. `addcare` and
+  `editmed` both use `CliSyntax#ALLOWED_SLASH_WORDS`; `editcare`, `addappt` and `editappt` declare the same words
+  in their own parsers.
   The validator also checks the first value word attached to a recognized prefix, carrying its free-text context
   but allowing no nested field prefixes: `a/x/123` is text, whereas `a/p/123` is rejected. This nested validation
   cannot recurse again because its set of valid prefixes is empty. Context switches follow tokenization's space
@@ -230,9 +232,9 @@ The list of patients is saved under the JSON key `persons`, kept from AB3. When 
 their model constraints. If any patient, medication, contact or appointment is invalid, two patients share
 an NRIC, a patient has duplicate contacts or appointments, two medications of a patient have the same description,
 or an allergen or care instruction is blank or duplicated, the whole file is rejected. Care-entry and medication
-duplicates ignore letter case and whitespace differences, as the care commands do. A medication saved by v1.3, as a
-plain string, is loaded as a medication with no times, as is a medication without a `times` list. A saved time must
-be written as `HH:MM`, so `8:30` makes the file invalid.
+duplicates ignore letter case, repeated or special spaces, and equivalent Unicode forms, as the care commands do.
+A medication saved by v1.3, as a plain string, is loaded as a medication with no times, as is a medication without a
+`times` list. A saved time must be written as `HH:MM`, so `8:30` makes the file invalid.
 
 `JsonAddressBookStorage` reads the file with `JsonUtil#readJsonFileStrictly()`, which also rejects a property that the
 JSON class does not have, e.g., a misspelled `careInstructons`, and a property given twice. Ignoring them, as Jackson
@@ -684,6 +686,9 @@ The sequence diagram below shows the successful execution of `due 1`. Error path
 1. It writes one line per dose, as `HH:MM NAME: DESCRIPTION`, and adds ` (earlier today)` straight after the time of
    a dose whose time is before now. The mark is there, not at the end of the line, because the description is free
    text and could end in `(earlier today)` itself, whereas a name cannot contain brackets.
+   If two or more patients in the result have the same name, compared after `toLowerCase(Locale.ROOT)`, their lines
+   use `HH:MM NAME (NRIC): DESCRIPTION` (`Messages#MESSAGE_DUE_ENTRY_WITH_NRIC`) instead. So `José` typed with a
+   separate accent mark and `José` typed as one character count as different names.
    If there are no doses, it returns `No medications are due today.`, or
    `No medications are due today for NAME.` when an index was given.
 
@@ -808,6 +813,7 @@ The following activity diagram summarizes what happens when a caregiver executes
 * [Testing guide](Testing.md)
 * [Logging guide](Logging.md)
 * [DevOps guide](DevOps.md)
+* [Configuration guide](Configuration.md)
 
 ### Defensive programming
 
@@ -879,7 +885,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | attach a note to a contact | remember specific advice from each provider |
 | `* *`    | caregiver                                  | see which medications are due today | give them to the patient on time |
 | `* *`    | caregiver                                  | see the medication times of today for one patient only | prepare that patient's doses without reading the others |
-| `* *`    | caregiver                                  | see which of today's medication times have already passed | check whether I missed a dose |
+| `* *`    | caregiver                                  | see which of today's medication times have already passed | know which doses should already have been given |
 | `* *`    | caregiver                                  | view a patient's full medication schedule at once | spot overlaps or issues easily |
 | `* *`    | caregiver                                  | add an appointment for a patient | keep track of upcoming visits |
 | `* *`    | caregiver                                  | see a list of upcoming appointments across all patients | plan my schedule |
@@ -1117,7 +1123,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 4.
 
-* 5c. An index is missing, or is not a positive integer.
+* 5c. An index is missing, is not a positive integer, or more than two indexes are given.
 
     * 5c1. MediConnect shows an error message about the invalid command format, with the correct usage of the command.
 
@@ -2206,6 +2212,9 @@ empty home folder. Run dependent test cases in the order given and complete any 
 1. Test case: `editmed 1 1 med/Amoxicillin 250 mg/ml t/08:00`.<br>
    Expected: The first medication has that description and the time `08:00`.
 
+1. Test case: `editmed 1 1 med/Amoxicillin 250 mg/ml w/o food`.<br>
+   Expected: The first medication's description becomes `Amoxicillin 250 mg/ml w/o food`, and its time stays `08:00`.
+
 1. Test cases: `add n/Without Test ic/S6000006A dob/1950-01-01 p/91234567 a/Flat w/o lift`,
    `edit 1 a/Flat w/o lift`, `addcontact 1 n/Clinic r/GP p/123 nt/MRI w/o contrast`, and
    `editcontact 1 1 nt/MRI w/o contrast`.<br>
@@ -2646,11 +2655,17 @@ empty home folder. Run dependent test cases in the order given and complete any 
    1. Test case: `find alex david`<br>
       Expected: `Alex Yeoh` and `David Li` are shown. The status message shows `2 patient(s) listed!`
 
+   1. Test case: `find alex, bernice`<br>
+      Expected: `Alex Yeoh` and `Bernice Yu` are shown. The status message shows `2 patient(s) listed!`
+
    1. Test case: `find Zebra`<br>
       Expected: The patient list is empty. The status message shows `No patients found matching the given keyword(s).`
 
-   1. Test case: `find`<br>
+   1. Test cases: `find` and `find ,`<br>
       Expected: The patient list is unchanged. The status message shows `Please provide at least one keyword to search for.`
+
+   1. Test case: `add n/Zoë Tan ic/S1000003A dob/1950-01-01 p/91234567 a/X`, then `find zoe`<br>
+      Expected: Only `Zoë Tan` is shown. The status message shows `1 patient(s) listed!`
 
 ### Viewing a patient
 
