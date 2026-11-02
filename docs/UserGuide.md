@@ -98,6 +98,9 @@ MediConnect reserves `n/`, `ic/`, `dob/`, `p/`, `a/`, `med/`, `al/`, `ci/`, `r/`
 After a space, a supported prefix starts another field; other reserved prefixes are rejected.
 A reserved prefix cannot be embedded at the start of a field value: `a/p/123` is rejected.
 Each command's existing standalone slash-word exceptions still apply; keep those words separate from punctuation.
+In `add` and `edit` addresses and in contact names, roles and notes, write `without` instead of `w/o`.
+For example, use `a/Flat without lift` or `nt/MRI without contrast`; `w/o` is rejected in these fields.
+`addcare`, `editcare`, `addappt` and `editappt` allow the standalone word `w/o`.
 Write field prefixes in lowercase. Incorrect capitalisation such as `NT/bring scans`, `Nt/bring scans`, or
 `T/08:00` is rejected even inside free text; use `nt/bring scans` or `t/08:00` instead.
 This also applies to ordinary text such as `A/B`, because `A/` matches the reserved `a/` prefix ignoring case.

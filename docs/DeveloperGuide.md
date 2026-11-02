@@ -23,6 +23,10 @@
 * @JellehBelleh used OpenAI Codex to generate and refine implementation changes and tests, investigate bugs,
   perform preliminary pull request reviews, and draft and revise the User Guide and Developer Guide,
   including UML diagrams. Codex also generated the MediConnect website favicon.
+* @Gauhet used Claude Code to help implement and debug changes, write tests, beta-test the app, draft
+  User Guide and Developer Guide text and UML diagrams, draft issues, commit messages and pull request
+  descriptions, and perform preliminary pull request reviews. The resulting changes were reviewed and
+  tested before use.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -147,6 +151,8 @@ How the parsing works:
   `N/A` (optionally followed by punctuation) is allowed in free text. Other spellings follow the usual prefix
   rules; lowercase `n/` may start a name field in commands that support it. Existing standalone slash-word
   exceptions and their punctuation corrections still apply.
+  Slash-word exceptions differ by parser: `add`, `edit`, `addcontact` and `editcontact` do not allow `w/o`,
+  whereas `addcare`, `editcare`, `addappt` and `editappt` allow it as a standalone word.
   The validator also checks the first value word attached to a recognized prefix, carrying its free-text context
   but allowing no nested field prefixes: `a/x/123` is text, whereas `a/p/123` is rejected. This nested validation
   cannot recurse again because its set of valid prefixes is empty. Context switches follow tokenization's space
@@ -2195,6 +2201,12 @@ empty home folder. Run dependent test cases in the order given and complete any 
 
 1. Test case: `editmed 1 1 med/Amoxicillin 250 mg/ml t/08:00`.<br>
    Expected: The first medication has that description and the time `08:00`.
+
+1. Test cases: `add n/Without Test ic/S6000006A dob/1950-01-01 p/91234567 a/Flat w/o lift`,
+   `edit 1 a/Flat w/o lift`, `addcontact 1 n/Clinic r/GP p/123 nt/MRI w/o contrast`, and
+   `editcontact 1 1 nt/MRI w/o contrast`.<br>
+   Expected: Each reports `Unrecognized parameter: w/. Please check the command format.` Nothing changes.
+   Replace `w/o` with `without` to use this wording in patient addresses or contact text.
 
 1. Test case: `addcontact 1 n/Clinic A or B r/GP nt/Ask clinic and/or GP p/123`.<br>
    Expected: The contact is added with its complete name and note, and phone `123`.
