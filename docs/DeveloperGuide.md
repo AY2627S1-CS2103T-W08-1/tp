@@ -2659,6 +2659,9 @@ empty home folder. Run dependent test cases in the order given and complete any 
    1. Test cases: `find` and `find ,`<br>
       Expected: The patient list is unchanged. The status message shows `Please provide at least one keyword to search for.`
 
+   1. Test case: `add n/Zoë Tan ic/S1000003A dob/1950-01-01 p/91234567 a/X`, then `find zoe`<br>
+      Expected: Only `Zoë Tan` is shown. The status message shows `1 patient(s) listed!`
+
 ### Viewing a patient
 
 1. Viewing a patient while all active patients are being shown

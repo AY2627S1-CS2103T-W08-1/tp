@@ -766,11 +766,9 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
   `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
 * Commas (`,`) and semicolons (`;`) also separate keywords, so `find alex, bernice` and `find alex;bernice` both
   search for `alex` and `bernice`.
-* An accented letter matches the same letter whichever way it was typed, e.g., a keyword with `e` and a separate
-  accent mark matches a name with the single character `é`.
-* Accents are not ignored: `find zoe` does not find `Zoë Tan`. Type the accented letter, e.g., `find zoë`, or
-  search for another word of the name, e.g., `find tan`. Matching names without their accents is planned for a
-  future version.
+* Accent marks are ignored, so `find zoe` and `find zoë` both match `Zoë Tan`, and `find josé` matches `Jose Tan`.
+  `find zoe` also matches a `Zoë` whose accent was typed as a separate mark after the letter. Only accent marks are
+  ignored. Letters such as `ø` or `ß` must be typed as they are.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
@@ -778,6 +776,7 @@ Examples:
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
   <img src="images/findAlexDavidResult.png" alt="result of find alex david: 2 patient(s) listed, Alex Yeoh and David Li" width="560" />
 * `find alex, bernice` returns `Alex Yeoh`, `Bernice Yu`
+* After `add n/Zoë Tan ic/S1000003A dob/1950-01-01 p/91234567 a/X`, `find zoe` returns `Zoë Tan`
 
 A successful command returns `N patient(s) listed!`, e.g., `2 patient(s) listed!` for `find alex david`. If no active
 patient matches, it returns `No patients found matching the given keyword(s).` and the patient list is empty. A
