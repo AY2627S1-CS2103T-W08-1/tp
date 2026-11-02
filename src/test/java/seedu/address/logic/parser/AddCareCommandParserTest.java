@@ -1,6 +1,9 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_PUNCTUATED_SLASH_TOKEN;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_PREFIX;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -11,6 +14,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCareCommand;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Medication;
 import seedu.address.model.patient.Patient;
 
@@ -50,6 +54,50 @@ public class AddCareCommandParserTest {
             assertParseSuccess(parser, "1 ci/" + instruction,
                     new AddCareCommand(INDEX_FIRST_PATIENT, List.of(), List.of(), List.of(instruction)));
         }
+    }
+
+    @Test
+    public void parse_standaloneSlashWordsInMedication_success() {
+        for (String word : List.of("s/o", "d/o", "c/o", "a/l", "a/p", "w/o", "W/O")) {
+            String medication = "Paracetamol 1g " + word + " food";
+            assertParseSuccess(parser, "1 med/" + medication,
+                    new AddCareCommand(INDEX_FIRST_PATIENT, List.of(medication), List.of(), List.of()));
+        }
+    }
+
+    @Test
+    public void parse_otherSlashWords_unchanged() {
+        assertParseSuccess(parser, "1 med/Take f/o g/d",
+                new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Take f/o g/d"), List.of(), List.of()));
+        assertParseFailure(parser, "1 med/Take A/B", String.format(MESSAGE_UNKNOWN_PREFIX, "A/"));
+        assertParseFailure(parser, "1 med/Take n/a", String.format(MESSAGE_UNKNOWN_PREFIX, "n/"));
+        assertParseSuccess(parser, "1 med/Take N/A",
+                new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Take N/A"), List.of(), List.of()));
+    }
+
+    @Test
+    public void parse_punctuatedSlashWord_throwsParseException() {
+        for (String word : List.of("c/o", "s/o", "w/o")) {
+            assertParseFailure(parser, "1 med/Take " + word + ", daughter",
+                    String.format(MESSAGE_PUNCTUATED_SLASH_TOKEN, word + ",", word));
+        }
+    }
+
+    @Test
+    public void parse_realPrefixesAfterSlashWord_stillDetected() {
+        assertParseSuccess(parser, "1 med/Take w/o food al/Latex",
+                new AddCareCommand(INDEX_FIRST_PATIENT, List.of("Take w/o food"), List.of("Latex"), List.of()));
+        assertParseFailure(parser, "1 med/Take w/o food t/08:00", String.format(MESSAGE_UNKNOWN_PREFIX, "t/"));
+        assertParseFailure(parser, "1 med/Take w/o food p/123", String.format(MESSAGE_UNKNOWN_PREFIX, "p/"));
+    }
+
+    @Test
+    public void parse_slashWordBeforeField_sameMessageAsOtherStrayWord() {
+        ParseException slashWordError = assertThrows(ParseException.class, () ->
+                parser.parse("1 w/o med/Paracetamol"));
+        ParseException strayWordError = assertThrows(ParseException.class, () ->
+                parser.parse("1 hello med/Paracetamol"));
+        assertEquals(strayWordError.getMessage(), slashWordError.getMessage());
     }
 
     @Test
