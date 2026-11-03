@@ -951,6 +951,7 @@ Format: `due [INDEX]`
   letter can be stored as one character or as a letter followed by a separate accent mark. Text pasted from another
   application can use the second form. Two names that look the same but are stored differently, e.g., two `José Tan`,
   are shown without their NRICs. To tell such patients apart, use `due INDEX` for each one.
+  Showing the NRIC in this case is planned for a future version. 
 * Lines are sorted by time, earliest first, and then by patient name, ignoring letter case. Doses of the same
   patient at the same time are listed in the order of the patient's medications.
 * A time that is earlier than the current time of your computer (in its time zone) is followed by
