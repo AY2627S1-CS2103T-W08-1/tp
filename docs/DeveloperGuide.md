@@ -27,6 +27,10 @@
   User Guide and Developer Guide text and UML diagrams, draft issues, commit messages and pull request
   descriptions, and perform preliminary pull request reviews. The resulting changes were reviewed and
   tested before use.
+* @akoromy used Claude Code to find bugs, beta-test the app, draft issues, commit messages and pull request
+  descriptions, draft code fixes and tests, and draft and review User Guide and Developer Guide text, and used
+  ChatGPT to audit the docs and prepare test checklists. @akoromy reviewed, edited and tested all output
+  before committing it.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -816,6 +820,7 @@ The following activity diagram summarizes what happens when a caregiver executes
 * [Testing guide](Testing.md)
 * [Logging guide](Logging.md)
 * [DevOps guide](DevOps.md)
+* [Configuration guide](Configuration.md)
 
 ### Defensive programming
 
@@ -2988,17 +2993,24 @@ the detail panel and in exported records. Patients can also be archived and rest
 
 **Challenges**:
 
-* Time-dependent behavior: `due` marks doses that were due earlier today, appointments are split into upcoming and
-  past ones, and appointment numbers stay as shown until the patient is shown again, so that `editappt` and
-  `cancelappt` act on the appointment the user sees. Commands that depend on the time take a `java.time.Clock`, so
-  that their tests do not depend on when they run.
+* Medications with daily times: `editmed` can replace a medication's times or clear them with `t/` alone, which
+  cannot be combined with other times. The times stay sorted and without repeats, a description cannot repeat
+  another medication's, and deleting a medication renumbers the ones after it.
+* Time-dependent behavior: `due` combines the doses of all active patients in time order, adds the NRIC when
+  patients share a name, and puts the `(earlier today)` mark straight after the time, so that a free-text
+  description cannot be mistaken for it. Appointments are split into upcoming and past ones, and appointment
+  numbers stay as shown until the patient is shown again, so that `editappt` and `cancelappt` act on the
+  appointment the user sees. Commands that depend on the time take a `java.time.Clock`, so that their tests do not
+  depend on when they run.
 * Real-world text: free-text fields accept slash text such as `and/or` and `s/o` while reserved prefixes still act
-  as syntax, special spaces copied from web pages count as spaces, and accented text typed in different ways counts
-  as the same in duplicate checks.
+  as syntax, special spaces copied from web pages count as spaces, times can have a one-digit hour, curly
+  apostrophes in names count as straight ones, and accented text typed in different ways counts as the same in
+  duplicate checks. Regression tests keep each of these cases working.
 * Data safety: every write of the data file, a backup or an exported record goes through a temporary file, so a
   failure partway never leaves a damaged file. `restore` and `clear` back up the current data first, a failed save
   restores the previous model, only one window may use an app folder at a time, and an unreadable data file is kept
-  as a recovery copy, with the position and reason of the first invalid entry.
+  as a recovery copy, with the position and reason of the first invalid entry. Data files from v1.3, which saved
+  medications as plain text, still load, as medications without times.
 * User interface: a detail panel that tracks the patient's index in the displayed list and lets lines be copied
   while the keyboard focus stays in the command box, a help window that lists every command, and a main window that
   fits small or scaled screens.

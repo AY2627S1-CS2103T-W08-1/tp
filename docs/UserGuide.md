@@ -766,9 +766,10 @@ Format: `find KEYWORD [MORE_KEYWORDS]...`
   `Alex Yeoh` with a no-break space between the words searches for `Alex` and `Yeoh`.
 * Commas (`,`) and semicolons (`;`) also separate keywords, so `find alex, bernice` and `find alex;bernice` both
   search for `alex` and `bernice`.
-* Accent marks are ignored, so `find zoe` and `find zoë` both match `Zoë Tan`, and `find josé` matches `Jose Tan`.
-  `find zoe` also matches a `Zoë` whose accent was typed as a separate mark after the letter. Only accent marks are
-  ignored. Letters such as `ø` or `ß` must be typed as they are.
+* Common accent marks, such as those in Zoë and José, are ignored. Other marks may still need to be typed.
+  For example, `find zoe` and `find zoë` both match `Zoë Tan`, and `find josé` matches `Jose Tan`.
+  `find zoe` also matches a `Zoë` whose accent was typed as a separate mark after the letter.
+  Letters such as `ø` or `ß` must be typed as they are.
 * Patients matching at least one keyword are returned (an `OR` search); for example, `Alex David` returns `Alex Yeoh` and `David Li`.
 
 Examples:
