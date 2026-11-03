@@ -4,7 +4,7 @@ skinparam ClassFontColor #000000
 skinparam ClassBorderColor #000000
 skinparam ClassBackgroundColor #FFFFAA
 
-title After command "editmed 1 1"
+title After command "editmed 1 1 med/Aspirin 75mg"
 
 package States <<rectangle>> {
     class State1 as "<u>s0:AddressBook</u>"

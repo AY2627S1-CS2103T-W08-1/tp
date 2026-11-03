@@ -140,9 +140,13 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600" alt="Classes in the Logic component that parse a command" />
 
 How the parsing works:
-* `AddressBookParser` lowercases only the command word with `Locale.ROOT` before dispatch, so `LIST`, `List`
-  and `list` select the same command regardless of the computer's language. Arguments are unchanged: field
-  prefixes remain case-sensitive and lowercase, while field values and other arguments keep their own rules.
+* `AddressBookParser#parseCommand` first calls `normalizeWhitespace`, which replaces every horizontal whitespace
+  character (`\h`: a tab, a no-break space or another special space) with an ordinary space and strips both ends of
+  the input. `parseCommand` then splits off the command word and lowercases only that word with `Locale.ROOT`, so
+  `LIST`, `List` and `list` select the same command regardless of the computer's language. It passes the rest of
+  the input to the command's parser without changing its letter case: field prefixes remain case-sensitive and
+  lowercase, while preambles and field values keep their own rules. A parser called directly, e.g., in its unit
+  tests, gets no whitespace normalization, so a tab there is not a field boundary.
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 * Field parsers use `ArgumentTokenizer#verifyNoInvalidPrefixes` before tokenization, declaring their free-text
@@ -161,8 +165,11 @@ How the parsing works:
   in their own parsers.
   The validator also checks the first value word attached to a recognized prefix, carrying its free-text context
   but allowing no nested field prefixes: `a/x/123` is text, whereas `a/p/123` is rejected. This nested validation
-  cannot recurse again because its set of valid prefixes is empty. Context switches follow tokenization's space
-  boundary, so a tab does not create a free-text field. Tokenization itself is unchanged.
+  cannot recurse again because its set of valid prefixes is empty. Context switches follow tokenization's
+  boundary, an ordinary space before a prefix. Because `AddressBookParser` has already turned tabs and other
+  special spaces into spaces, a pasted tab before a supported prefix also starts a field:
+  `addcare 1 med/Aspirin 75mg<Tab>ci/Rest daily`, where `<Tab>` is a tab character, adds a medication and a care
+  instruction. Pressing `Tab` in the command box moves the focus instead, so a tab can only be pasted.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W08-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
@@ -171,7 +178,7 @@ How the parsing works:
 
 The diagram below shows the `Patient` class in more detail.
 
-<puml src="diagrams/PatientClassDiagram.puml" width="450" alt="Structure of the Patient class and the details it holds" />
+<puml src="diagrams/PatientClassDiagram.puml" alt="Structure of the Patient class and the details it holds" />
 
 
 The `Model` component,
@@ -734,7 +741,9 @@ Step 1. The caregiver launches MediConnect for the first time. The `VersionedPat
 
 <puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
 
-Step 2. The caregiver executes `delete 5` to delete the 5th patient in the patient list. The `delete` command calls `Model#commitPatientData()`, causing the modified patient data after the `delete 5` command executes to be saved in the `patientDataStateList`, and the `currentStatePointer` is shifted to the newly inserted state.
+Step 2. The caregiver executes `delete 4` to delete the 4th patient in the patient list. The `delete` command
+calls `Model#commitPatientData()`, causing the modified patient data after the `delete 4` command executes to
+be saved in the `patientDataStateList`, and the `currentStatePointer` is shifted to the newly inserted state.
 
 <puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
 
