@@ -3008,6 +3008,8 @@ the detail panel and in exported records. Patients can also be archived and rest
   as syntax, special spaces copied from web pages count as spaces, times can have a one-digit hour, curly
   apostrophes in names count as straight ones, and accented text typed in different ways counts as the same in
   duplicate checks. Regression tests keep each of these cases working.
+  `find` also splits keywords at commas and semicolons and ignores common accent marks, so `find zoe` finds
+  `Zoë Tan`.
 * Data safety: every write of the data file, a backup or an exported record goes through a temporary file, so a
   failure partway never leaves a damaged file. `restore` and `clear` back up the current data first, a failed save
   restores the previous model, only one window may use an app folder at a time, and an unreadable data file is kept
