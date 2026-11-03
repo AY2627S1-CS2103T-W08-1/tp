@@ -1063,6 +1063,8 @@ Format: `restore [FILENAME]`
     still found, unless another backup's name differs from it only in its spaces.
 * The `.json` at the end of `FILENAME` can be left out, e.g., `restore mediconnect-20261020-083015`. If
   `data/backups` also has a file with exactly the name given, that file is restored instead.
+  For a backup whose name ends in `.JSON` or another letter case, e.g., one renamed by hand, type the full
+  name as `restore` lists it.
 * MediConnect checks the whole backup before changing anything. If the file is missing, cannot be read, or has invalid data, MediConnect says what is wrong and your data is not changed.
   For patient validation errors, `Details:` identifies the entry's position in the backup's `persons` array,
   counting from 1, and the validation reason.
