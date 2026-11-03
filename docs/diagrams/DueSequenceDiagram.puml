@@ -10,9 +10,6 @@ participant "d:DueCommand" as DueCommand LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
 
-participant "<<class>>\nClock" as Clock #555555
-participant "<<class>>\nLocalTime" as LocalTime #555555
-
 box Model MODEL_COLOR_T1
 participant "m:Model" as Model MODEL_COLOR
 end box
@@ -32,12 +29,6 @@ deactivate DueCommandParser
 
 AddressBookParser -> DueCommandParser : parse("1")
 activate DueCommandParser
-
-DueCommandParser -> Clock : systemDefaultZone()
-activate Clock
-
-Clock --> DueCommandParser : clock
-deactivate Clock
 
 create DueCommand
 DueCommandParser -> DueCommand : DueCommand(index, clock)
@@ -70,14 +61,9 @@ deactivate Model
 DueCommand --> DueCommand : candidates
 deactivate DueCommand
 
-DueCommand -> LocalTime : now(clock)
-activate LocalTime
-
-LocalTime --> DueCommand : now
-deactivate LocalTime
-
 note right of DueCommand
-Builds the due list using now.
+Gets the current time from its clock,
+then builds the due list.
 end note
 
 create CommandResult
