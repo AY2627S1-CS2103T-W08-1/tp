@@ -8,7 +8,7 @@ start
 'Since the beta syntax does not support placing the condition outside the
 'diamond we place it as the true branch instead.
 
-if () then ([command changes patient data])
+if () then ([command commits patient data])
     :Purge redundant states;
     :Save patient data to
     patientDataStateList;

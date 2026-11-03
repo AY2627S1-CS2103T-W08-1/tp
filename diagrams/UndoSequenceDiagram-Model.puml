@@ -13,7 +13,12 @@ activate Model
 Model -> VersionedPatientData : undo()
 activate VersionedPatientData
 
-VersionedPatientData -> VersionedPatientData :resetData(ReadOnlyAddressBook)
+VersionedPatientData -> VersionedPatientData : resetData(previousState)
+activate VersionedPatientData
+
+VersionedPatientData --> VersionedPatientData
+deactivate VersionedPatientData
+
 VersionedPatientData --> Model :
 deactivate VersionedPatientData
 
