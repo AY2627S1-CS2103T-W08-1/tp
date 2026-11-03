@@ -319,7 +319,9 @@ Examples (each one run on the sample data, where patient 1 is Alex Yeoh with `1.
 `2. Amlodipine 5mg (08:00, 20:00)`):
 
 * `editmed 1 2 t/07:30 t/19:30` replaces both times of Amlodipine 5mg.<br>
-  Returns `Updated medication 2 of Alex Yeoh: Amlodipine 5mg (07:30, 19:30)`
+  Returns `Updated medication 2 of Alex Yeoh: Amlodipine 5mg (07:30, 19:30)`<br>
+  <img src="images/editmedTimesResult.png" width="560"
+       alt="result of editmed 1 2 t/07:30 t/19:30: the detail panel lists 2. Amlodipine 5mg (07:30, 19:30)" />
 * `editmed 1 1 med/Aspirin 75mg` changes only the description and keeps the time.<br>
   Returns `Updated medication 1 of Alex Yeoh: Aspirin 75mg (08:00)`
 * `editmed 1 1 med/Aspirin 75mg t/09:00` changes the description and replaces the time.<br>
@@ -968,7 +970,9 @@ Examples (each one run on the sample data at 10:30, where patient 1 is Alex Yeoh
 * `due` returns<br>
   `08:00 (earlier today) Alex Yeoh: Aspirin 100mg`<br>
   `08:00 (earlier today) Alex Yeoh: Amlodipine 5mg`<br>
-  `20:00 Alex Yeoh: Amlodipine 5mg`
+  `20:00 Alex Yeoh: Amlodipine 5mg`<br>
+  <img src="images/dueResult.png" width="560"
+       alt="result of due at 10:30: two 08:00 doses marked (earlier today), then the 20:00 dose" />
 * `due 1` returns the same three lines, because only Alex Yeoh has times.
 * `due 2` returns `No medications are due today for Bernice Yu.`
 
