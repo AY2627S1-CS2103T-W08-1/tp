@@ -174,7 +174,7 @@ How the parsing works:
 
 The diagram below shows the `Patient` class in more detail.
 
-<puml src="diagrams/PatientClassDiagram.puml" width="450" alt="Structure of the Patient class and the details it holds" />
+<puml src="diagrams/PatientClassDiagram.puml" alt="Structure of the Patient class and the details it holds" />
 
 
 The `Model` component,
