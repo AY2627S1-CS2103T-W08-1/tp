@@ -910,11 +910,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | caregiver                                  | remove an allergy that was recorded by mistake | keep the patient's allergy information accurate |
 | `* *`    | caregiver                                  | edit or remove a care instruction | stop following routines that are no longer recommended |
 | `* *`    | caregiver                                  | edit or cancel an appointment | keep the schedule accurate when a visit is rescheduled |
+| `* *`    | caregiver                                  | copy an entry from a patient's details | paste it into a command without retyping it |
 | `* *`    | new user                                   | see sample patient data when I first open the app | understand what a complete record looks like before entering real data |
 | `* *`    | new user                                   | clear all sample data at once | start fresh with my own patients |
 | `*`      | caregiver                                  | see a daily summary of everything due today across all patients | check all my responsibilities in one place |
 | `*`      | caregiver                                  | mark a medication dose as taken | know that it has been given |
-| `*`      | caregiver                                  | copy an entry from a patient's details | paste it into a command without retyping it |
 | `*`      | caregiver                                  | set a reminder for an upcoming medication dose | be alerted before it is due |
 | `*`      | caregiver                                  | check for potential conflicts before adding a new medication | reduce the risk of harmful drug interactions |
 | `*`      | caregiver                                  | set a reminder for an appointment | remember to bring the patient to it |
@@ -2985,7 +2985,7 @@ in the last week of the project:
 |---|---|---|
 | User commands | 8 | 29 |
 | Functional code (`src/main`) | 3,868 lines | about 10,000 lines |
-| Test code (`src/test`) | 3,659 lines, 241 tests | about 15,400 lines, over 1,200 tests |
+| Test code (`src/test`) | 3,659 lines, 241 tests | about 15,600 lines, over 1,200 tests |
 
 **Difficulty**: AB3 manages one entity type, a person with a few single-valued fields and tags. A MediConnect patient
 has a profile and five lists: medications with daily times, allergens, care instructions, contacts and appointments,
